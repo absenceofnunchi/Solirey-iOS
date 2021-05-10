@@ -1,0 +1,931 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 51;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		49314F5F4CF8EC19FC270279 /* Pods_NFTrack_Firebase4Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */; };
+		4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45B2641B001005B3268 /* AppDelegate.swift */; };
+		4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45D2641B001005B3268 /* SceneDelegate.swift */; };
+		4964E4602641B001005B3268 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45F2641B001005B3268 /* SignInViewController.swift */; };
+		4964E4632641B001005B3268 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4964E4612641B001005B3268 /* Main.storyboard */; };
+		4964E4652641B006005B3268 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4964E4642641B006005B3268 /* Assets.xcassets */; };
+		4964E4682641B006005B3268 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4964E4662641B006005B3268 /* LaunchScreen.storyboard */; };
+		4964E4732641B007005B3268 /* NFTrack_Firebase4Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4722641B007005B3268 /* NFTrack_Firebase4Tests.swift */; };
+		4964E47E2641B007005B3268 /* NFTrack_Firebase4UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E47D2641B007005B3268 /* NFTrack_Firebase4UITests.swift */; };
+		4964E4BB2641BBEF005B3268 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4964E4BA2641BBEF005B3268 /* GoogleService-Info.plist */; };
+		4964E4C12641E12A005B3268 /* BlurEffectContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4C02641E12A005B3268 /* BlurEffectContainerView.swift */; };
+		4964E4CC26430BFB005B3268 /* SignUpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4CB26430BFB005B3268 /* SignUpViewController.swift */; };
+		4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4D126430FBE005B3268 /* AppExtensions.swift */; };
+		4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4E426436875005B3268 /* DissolveTransitionAnimator.swift */; };
+		4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4EC26445AED005B3268 /* AlertsView.swift */; };
+		4964E50026445EDB005B3268 /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4FF26445EDB005B3268 /* DetailViewController.swift */; };
+		4964E5052644891B005B3268 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5042644891B005B3268 /* MainViewController.swift */; };
+		4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5092644B07D005B3268 /* PostViewController.swift */; };
+		4964E50F264767A6005B3268 /* ImagePreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */; };
+		4964E516264777BF005B3268 /* ImageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E515264777BF005B3268 /* ImageCell.swift */; };
+		4964E52126489564005B3268 /* BigPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E52026489564005B3268 /* BigPreviewViewController.swift */; };
+		4964E5262648AB6A005B3268 /* ZoomAnimationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5252648AB6A005B3268 /* ZoomAnimationController.swift */; };
+		4964E52C2648B096005B3268 /* MyPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E52B2648B096005B3268 /* MyPresentationController.swift */; };
+		4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5332648C68A005B3268 /* WalletViewController.swift */; };
+		4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5392648C93F005B3268 /* CoreDataModel.xcdatamodeld */; };
+		5F2181656BA2F887A451E929 /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */; };
+		8BF7EDDB714370A039E12BAF /* Pods_NFTrack_Firebase4.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FF1612C9EA21D4904E1BD19 /* Pods_NFTrack_Firebase4.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4964E46F2641B007005B3268 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4964E4502641B001005B3268 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4964E4572641B001005B3268;
+			remoteInfo = "NFTrack-Firebase4";
+		};
+		4964E47A2641B007005B3268 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4964E4502641B001005B3268 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4964E4572641B001005B3268;
+			remoteInfo = "NFTrack-Firebase4";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		185327341381F410AFB911BC /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; sourceTree = "<group>"; };
+		2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4964E4582641B001005B3268 /* NFTrack-Firebase4.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NFTrack-Firebase4.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4964E45B2641B001005B3268 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4964E45D2641B001005B3268 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		4964E45F2641B001005B3268 /* SignInViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInViewController.swift; sourceTree = "<group>"; };
+		4964E4622641B001005B3268 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		4964E4642641B006005B3268 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4964E4672641B006005B3268 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		4964E4692641B006005B3268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4964E46E2641B007005B3268 /* NFTrack-Firebase4Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NFTrack-Firebase4Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4964E4722641B007005B3268 /* NFTrack_Firebase4Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrack_Firebase4Tests.swift; sourceTree = "<group>"; };
+		4964E4742641B007005B3268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4964E4792641B007005B3268 /* NFTrack-Firebase4UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NFTrack-Firebase4UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4964E47D2641B007005B3268 /* NFTrack_Firebase4UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrack_Firebase4UITests.swift; sourceTree = "<group>"; };
+		4964E47F2641B007005B3268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4964E4BA2641BBEF005B3268 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		4964E4C02641E12A005B3268 /* BlurEffectContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurEffectContainerView.swift; sourceTree = "<group>"; };
+		4964E4CB26430BFB005B3268 /* SignUpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpViewController.swift; sourceTree = "<group>"; };
+		4964E4D126430FBE005B3268 /* AppExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppExtensions.swift; sourceTree = "<group>"; };
+		4964E4E426436875005B3268 /* DissolveTransitionAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DissolveTransitionAnimator.swift; sourceTree = "<group>"; };
+		4964E4EC26445AED005B3268 /* AlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
+		4964E4FF26445EDB005B3268 /* DetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
+		4964E5042644891B005B3268 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		4964E5092644B07D005B3268 /* PostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostViewController.swift; sourceTree = "<group>"; };
+		4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviewViewController.swift; sourceTree = "<group>"; };
+		4964E515264777BF005B3268 /* ImageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCell.swift; sourceTree = "<group>"; };
+		4964E52026489564005B3268 /* BigPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigPreviewViewController.swift; sourceTree = "<group>"; };
+		4964E5252648AB6A005B3268 /* ZoomAnimationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomAnimationController.swift; sourceTree = "<group>"; };
+		4964E52B2648B096005B3268 /* MyPresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPresentationController.swift; sourceTree = "<group>"; };
+		4964E5332648C68A005B3268 /* WalletViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletViewController.swift; sourceTree = "<group>"; };
+		4964E53A2648C940005B3268 /* CoreDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = CoreDataModel.xcdatamodel; sourceTree = "<group>"; };
+		5C42156D98AD4812550FF489 /* Pods-NFTrack-Firebase4Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4Tests.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4Tests/Pods-NFTrack-Firebase4Tests.release.xcconfig"; sourceTree = "<group>"; };
+		5D3028929C2B2E423CDD6DAF /* Pods-NFTrack-Firebase4.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4.debug.xcconfig"; sourceTree = "<group>"; };
+		69497F4D2E3074B9F7D67603 /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig"; sourceTree = "<group>"; };
+		839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NFTrack_Firebase4Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F838648781EAE50974735C1 /* Pods-NFTrack-Firebase4.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4.release.xcconfig"; sourceTree = "<group>"; };
+		9FF1612C9EA21D4904E1BD19 /* Pods_NFTrack_Firebase4.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NFTrack_Firebase4.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A6B2A07F7EE782290792B249 /* Pods-NFTrack-Firebase4Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4Tests.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4Tests/Pods-NFTrack-Firebase4Tests.debug.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4964E4552641B001005B3268 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8BF7EDDB714370A039E12BAF /* Pods_NFTrack_Firebase4.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4964E46B2641B007005B3268 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49314F5F4CF8EC19FC270279 /* Pods_NFTrack_Firebase4Tests.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4964E4762641B007005B3268 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5F2181656BA2F887A451E929 /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		25917528F6C30BD7AA7DAC94 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				5D3028929C2B2E423CDD6DAF /* Pods-NFTrack-Firebase4.debug.xcconfig */,
+				8F838648781EAE50974735C1 /* Pods-NFTrack-Firebase4.release.xcconfig */,
+				185327341381F410AFB911BC /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig */,
+				69497F4D2E3074B9F7D67603 /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig */,
+				A6B2A07F7EE782290792B249 /* Pods-NFTrack-Firebase4Tests.debug.xcconfig */,
+				5C42156D98AD4812550FF489 /* Pods-NFTrack-Firebase4Tests.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		4964E44F2641B001005B3268 = {
+			isa = PBXGroup;
+			children = (
+				4964E45A2641B001005B3268 /* NFTrack-Firebase4 */,
+				4964E4712641B007005B3268 /* NFTrack-Firebase4Tests */,
+				4964E47C2641B007005B3268 /* NFTrack-Firebase4UITests */,
+				4964E4592641B001005B3268 /* Products */,
+				25917528F6C30BD7AA7DAC94 /* Pods */,
+				F64A6E3DD6EC3840BC56EC30 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		4964E4592641B001005B3268 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4964E4582641B001005B3268 /* NFTrack-Firebase4.app */,
+				4964E46E2641B007005B3268 /* NFTrack-Firebase4Tests.xctest */,
+				4964E4792641B007005B3268 /* NFTrack-Firebase4UITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4964E45A2641B001005B3268 /* NFTrack-Firebase4 */ = {
+			isa = PBXGroup;
+			children = (
+				4964E4FB26445EB1005B3268 /* ViewControllers */,
+				4964E5382648C8DD005B3268 /* Services */,
+				4964E52A2648B055005B3268 /* Presentation Controllers */,
+				4964E4E32643685E005B3268 /* Animators */,
+				4964E4D026430FA2005B3268 /* Extensions + Utilities */,
+				4964E4BF2641E118005B3268 /* View */,
+				4964E5142647779E005B3268 /* Cells and Supplementary Views */,
+				4964E4B32641BA6F005B3268 /* Supporting Files */,
+			);
+			path = "NFTrack-Firebase4";
+			sourceTree = "<group>";
+		};
+		4964E4712641B007005B3268 /* NFTrack-Firebase4Tests */ = {
+			isa = PBXGroup;
+			children = (
+				4964E4722641B007005B3268 /* NFTrack_Firebase4Tests.swift */,
+				4964E4742641B007005B3268 /* Info.plist */,
+			);
+			path = "NFTrack-Firebase4Tests";
+			sourceTree = "<group>";
+		};
+		4964E47C2641B007005B3268 /* NFTrack-Firebase4UITests */ = {
+			isa = PBXGroup;
+			children = (
+				4964E47D2641B007005B3268 /* NFTrack_Firebase4UITests.swift */,
+				4964E47F2641B007005B3268 /* Info.plist */,
+			);
+			path = "NFTrack-Firebase4UITests";
+			sourceTree = "<group>";
+		};
+		4964E4B32641BA6F005B3268 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				4964E4BA2641BBEF005B3268 /* GoogleService-Info.plist */,
+				4964E45B2641B001005B3268 /* AppDelegate.swift */,
+				4964E5392648C93F005B3268 /* CoreDataModel.xcdatamodeld */,
+				4964E45D2641B001005B3268 /* SceneDelegate.swift */,
+				4964E4642641B006005B3268 /* Assets.xcassets */,
+				4964E4692641B006005B3268 /* Info.plist */,
+				4964E4662641B006005B3268 /* LaunchScreen.storyboard */,
+				4964E4612641B001005B3268 /* Main.storyboard */,
+			);
+			path = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		4964E4BF2641E118005B3268 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				4964E4C02641E12A005B3268 /* BlurEffectContainerView.swift */,
+				4964E4EC26445AED005B3268 /* AlertsView.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		4964E4D026430FA2005B3268 /* Extensions + Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				4964E4D126430FBE005B3268 /* AppExtensions.swift */,
+			);
+			path = "Extensions + Utilities";
+			sourceTree = "<group>";
+		};
+		4964E4E32643685E005B3268 /* Animators */ = {
+			isa = PBXGroup;
+			children = (
+				4964E4E426436875005B3268 /* DissolveTransitionAnimator.swift */,
+				4964E5252648AB6A005B3268 /* ZoomAnimationController.swift */,
+			);
+			path = Animators;
+			sourceTree = "<group>";
+		};
+		4964E4FB26445EB1005B3268 /* ViewControllers */ = {
+			isa = PBXGroup;
+			children = (
+				4964E45F2641B001005B3268 /* SignInViewController.swift */,
+				4964E4CB26430BFB005B3268 /* SignUpViewController.swift */,
+				4964E4FF26445EDB005B3268 /* DetailViewController.swift */,
+				4964E5042644891B005B3268 /* MainViewController.swift */,
+				4964E5092644B07D005B3268 /* PostViewController.swift */,
+				4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */,
+				4964E52026489564005B3268 /* BigPreviewViewController.swift */,
+				4964E5332648C68A005B3268 /* WalletViewController.swift */,
+			);
+			path = ViewControllers;
+			sourceTree = "<group>";
+		};
+		4964E5142647779E005B3268 /* Cells and Supplementary Views */ = {
+			isa = PBXGroup;
+			children = (
+				4964E515264777BF005B3268 /* ImageCell.swift */,
+			);
+			path = "Cells and Supplementary Views";
+			sourceTree = "<group>";
+		};
+		4964E52A2648B055005B3268 /* Presentation Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				4964E52B2648B096005B3268 /* MyPresentationController.swift */,
+			);
+			path = "Presentation Controllers";
+			sourceTree = "<group>";
+		};
+		4964E5382648C8DD005B3268 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		F64A6E3DD6EC3840BC56EC30 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				9FF1612C9EA21D4904E1BD19 /* Pods_NFTrack_Firebase4.framework */,
+				2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */,
+				839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4964E4572641B001005B3268 /* NFTrack-Firebase4 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4964E4822641B007005B3268 /* Build configuration list for PBXNativeTarget "NFTrack-Firebase4" */;
+			buildPhases = (
+				61F622D4A34D32644CE6A28E /* [CP] Check Pods Manifest.lock */,
+				4964E4542641B001005B3268 /* Sources */,
+				4964E4552641B001005B3268 /* Frameworks */,
+				4964E4562641B001005B3268 /* Resources */,
+				C754D212D80FF5FCC4ADB0EA /* [CP] Embed Pods Frameworks */,
+				44C90A2C7678282592592ACD /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "NFTrack-Firebase4";
+			productName = "NFTrack-Firebase4";
+			productReference = 4964E4582641B001005B3268 /* NFTrack-Firebase4.app */;
+			productType = "com.apple.product-type.application";
+		};
+		4964E46D2641B007005B3268 /* NFTrack-Firebase4Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4964E4852641B007005B3268 /* Build configuration list for PBXNativeTarget "NFTrack-Firebase4Tests" */;
+			buildPhases = (
+				49893FA093585EDA93A7EB73 /* [CP] Check Pods Manifest.lock */,
+				4964E46A2641B007005B3268 /* Sources */,
+				4964E46B2641B007005B3268 /* Frameworks */,
+				4964E46C2641B007005B3268 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4964E4702641B007005B3268 /* PBXTargetDependency */,
+			);
+			name = "NFTrack-Firebase4Tests";
+			productName = "NFTrack-Firebase4Tests";
+			productReference = 4964E46E2641B007005B3268 /* NFTrack-Firebase4Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		4964E4782641B007005B3268 /* NFTrack-Firebase4UITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4964E4882641B007005B3268 /* Build configuration list for PBXNativeTarget "NFTrack-Firebase4UITests" */;
+			buildPhases = (
+				04A37D22777BEDE772F9855A /* [CP] Check Pods Manifest.lock */,
+				4964E4752641B007005B3268 /* Sources */,
+				4964E4762641B007005B3268 /* Frameworks */,
+				4964E4772641B007005B3268 /* Resources */,
+				00E9F1C1D6A612041B8ED96D /* [CP] Embed Pods Frameworks */,
+				7337F9A2B8B9CE478467A134 /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4964E47B2641B007005B3268 /* PBXTargetDependency */,
+			);
+			name = "NFTrack-Firebase4UITests";
+			productName = "NFTrack-Firebase4UITests";
+			productReference = 4964E4792641B007005B3268 /* NFTrack-Firebase4UITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4964E4502641B001005B3268 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1230;
+				LastUpgradeCheck = 1230;
+				TargetAttributes = {
+					4964E4572641B001005B3268 = {
+						CreatedOnToolsVersion = 12.3;
+					};
+					4964E46D2641B007005B3268 = {
+						CreatedOnToolsVersion = 12.3;
+						TestTargetID = 4964E4572641B001005B3268;
+					};
+					4964E4782641B007005B3268 = {
+						CreatedOnToolsVersion = 12.3;
+						TestTargetID = 4964E4572641B001005B3268;
+					};
+				};
+			};
+			buildConfigurationList = 4964E4532641B001005B3268 /* Build configuration list for PBXProject "NFTrack-Firebase4" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 4964E44F2641B001005B3268;
+			productRefGroup = 4964E4592641B001005B3268 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4964E4572641B001005B3268 /* NFTrack-Firebase4 */,
+				4964E46D2641B007005B3268 /* NFTrack-Firebase4Tests */,
+				4964E4782641B007005B3268 /* NFTrack-Firebase4UITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4964E4562641B001005B3268 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4964E4682641B006005B3268 /* LaunchScreen.storyboard in Resources */,
+				4964E4BB2641BBEF005B3268 /* GoogleService-Info.plist in Resources */,
+				4964E4652641B006005B3268 /* Assets.xcassets in Resources */,
+				4964E4632641B001005B3268 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4964E46C2641B007005B3268 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4964E4772641B007005B3268 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		00E9F1C1D6A612041B8ED96D /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		04A37D22777BEDE772F9855A /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		44C90A2C7678282592592ACD /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		49893FA093585EDA93A7EB73 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-NFTrack-Firebase4Tests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		61F622D4A34D32644CE6A28E /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-NFTrack-Firebase4-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		7337F9A2B8B9CE478467A134 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C754D212D80FF5FCC4ADB0EA /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4964E4542641B001005B3268 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4964E50026445EDB005B3268 /* DetailViewController.swift in Sources */,
+				4964E4C12641E12A005B3268 /* BlurEffectContainerView.swift in Sources */,
+				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
+				4964E4602641B001005B3268 /* SignInViewController.swift in Sources */,
+				4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */,
+				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
+				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
+				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
+				4964E52126489564005B3268 /* BigPreviewViewController.swift in Sources */,
+				4964E5262648AB6A005B3268 /* ZoomAnimationController.swift in Sources */,
+				4964E4CC26430BFB005B3268 /* SignUpViewController.swift in Sources */,
+				4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */,
+				4964E5052644891B005B3268 /* MainViewController.swift in Sources */,
+				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
+				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
+				4964E50F264767A6005B3268 /* ImagePreviewViewController.swift in Sources */,
+				4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */,
+				4964E52C2648B096005B3268 /* MyPresentationController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4964E46A2641B007005B3268 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4964E4732641B007005B3268 /* NFTrack_Firebase4Tests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4964E4752641B007005B3268 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4964E47E2641B007005B3268 /* NFTrack_Firebase4UITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4964E4702641B007005B3268 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4964E4572641B001005B3268 /* NFTrack-Firebase4 */;
+			targetProxy = 4964E46F2641B007005B3268 /* PBXContainerItemProxy */;
+		};
+		4964E47B2641B007005B3268 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4964E4572641B001005B3268 /* NFTrack-Firebase4 */;
+			targetProxy = 4964E47A2641B007005B3268 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		4964E4612641B001005B3268 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4964E4622641B001005B3268 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		4964E4662641B006005B3268 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4964E4672641B006005B3268 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		4964E4802641B007005B3268 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		4964E4812641B007005B3268 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		4964E4832641B007005B3268 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5D3028929C2B2E423CDD6DAF /* Pods-NFTrack-Firebase4.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 2RH2V33K5A;
+				INFOPLIST_FILE = "NFTrack-Firebase4/Supporting Files/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ovis.NFTrack-Firebase4";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4964E4842641B007005B3268 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8F838648781EAE50974735C1 /* Pods-NFTrack-Firebase4.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 2RH2V33K5A;
+				INFOPLIST_FILE = "NFTrack-Firebase4/Supporting Files/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ovis.NFTrack-Firebase4";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		4964E4862641B007005B3268 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A6B2A07F7EE782290792B249 /* Pods-NFTrack-Firebase4Tests.debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 2RH2V33K5A;
+				INFOPLIST_FILE = "NFTrack-Firebase4Tests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ovis.NFTrack-Firebase4Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NFTrack-Firebase4.app/NFTrack-Firebase4";
+			};
+			name = Debug;
+		};
+		4964E4872641B007005B3268 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5C42156D98AD4812550FF489 /* Pods-NFTrack-Firebase4Tests.release.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 2RH2V33K5A;
+				INFOPLIST_FILE = "NFTrack-Firebase4Tests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.3;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ovis.NFTrack-Firebase4Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NFTrack-Firebase4.app/NFTrack-Firebase4";
+			};
+			name = Release;
+		};
+		4964E4892641B007005B3268 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 185327341381F410AFB911BC /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 2RH2V33K5A;
+				INFOPLIST_FILE = "NFTrack-Firebase4UITests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ovis.NFTrack-Firebase4UITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "NFTrack-Firebase4";
+			};
+			name = Debug;
+		};
+		4964E48A2641B007005B3268 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 69497F4D2E3074B9F7D67603 /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 2RH2V33K5A;
+				INFOPLIST_FILE = "NFTrack-Firebase4UITests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ovis.NFTrack-Firebase4UITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "NFTrack-Firebase4";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4964E4532641B001005B3268 /* Build configuration list for PBXProject "NFTrack-Firebase4" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4964E4802641B007005B3268 /* Debug */,
+				4964E4812641B007005B3268 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4964E4822641B007005B3268 /* Build configuration list for PBXNativeTarget "NFTrack-Firebase4" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4964E4832641B007005B3268 /* Debug */,
+				4964E4842641B007005B3268 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4964E4852641B007005B3268 /* Build configuration list for PBXNativeTarget "NFTrack-Firebase4Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4964E4862641B007005B3268 /* Debug */,
+				4964E4872641B007005B3268 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4964E4882641B007005B3268 /* Build configuration list for PBXNativeTarget "NFTrack-Firebase4UITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4964E4892641B007005B3268 /* Debug */,
+				4964E48A2641B007005B3268 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		4964E5392648C93F005B3268 /* CoreDataModel.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				4964E53A2648C940005B3268 /* CoreDataModel.xcdatamodel */,
+			);
+			currentVersion = 4964E53A2648C940005B3268 /* CoreDataModel.xcdatamodel */;
+			path = CoreDataModel.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = 4964E4502641B001005B3268 /* Project object */;
+}
