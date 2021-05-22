@@ -246,8 +246,6 @@ extension SignUpViewController: UITextFieldDelegate {
                     repeatPasswordTextField.text?.isEmpty == true {
                     passwordsDontMatch.isHidden = true
                     createButton.isEnabled = true
-//                    createButton.isEnabled = (mode == .createKey)
-                    //                    createButton.isEnabled = (!(enterPrivateKeyTextField.text?.isEmpty ?? true) || mode == .createKey)
                 } else {
                     passwordsDontMatch.isHidden = false
                     createButton.isEnabled = false
@@ -257,7 +255,6 @@ extension SignUpViewController: UITextFieldDelegate {
                     futureString == passwordTextField.text {
                     passwordsDontMatch.isHidden = true
                     createButton.isEnabled = true
-//                    createButton.isEnabled = (mode == .createKey)
                 } else {
                     passwordsDontMatch.isHidden = false
                     createButton.isEnabled = false

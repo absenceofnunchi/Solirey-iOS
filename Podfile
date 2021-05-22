@@ -10,6 +10,7 @@ target 'NFTrack-Firebase4' do
   pod 'Firebase/Analytics'
   pod 'Firebase/Firestore'
   pod 'web3swift'
+  pod 'Firebase/Storage'
 
   target 'NFTrack-Firebase4Tests' do
     inherit! :search_paths

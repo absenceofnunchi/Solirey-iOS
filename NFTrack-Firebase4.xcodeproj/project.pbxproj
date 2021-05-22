@@ -8,6 +8,20 @@
 
 /* Begin PBXBuildFile section */
 		49314F5F4CF8EC19FC270279 /* Pods_NFTrack_Firebase4Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */; };
+		493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */; };
+		493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */; };
+		493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */; };
+		493BF9C8264C166000B9C9D2 /* CreditCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9C7264C166000B9C9D2 /* CreditCardView.swift */; };
+		493BF9CD264C493200B9C9D2 /* WalletButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9CC264C493200B9C9D2 /* WalletButtonView.swift */; };
+		493BF9D2264C4D3B00B9C9D2 /* SendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9D1264C4D3B00B9C9D2 /* SendViewController.swift */; };
+		493BF9D7264C4DE100B9C9D2 /* BackgroundView2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9D6264C4DE100B9C9D2 /* BackgroundView2.swift */; };
+		493BF9DC264C515C00B9C9D2 /* TransactionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9DB264C515C00B9C9D2 /* TransactionService.swift */; };
+		493BF9E4264C549D00B9C9D2 /* ScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9E3264C549D00B9C9D2 /* ScannerViewController.swift */; };
+		493BF9E9264C657200B9C9D2 /* ReceiveViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9E8264C657200B9C9D2 /* ReceiveViewController.swift */; };
+		493BF9EE264C65FA00B9C9D2 /* BackgroundView3.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9ED264C65FA00B9C9D2 /* BackgroundView3.swift */; };
+		493BF9F3264C6B4B00B9C9D2 /* PasswordResetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9F2264C6B4B00B9C9D2 /* PasswordResetViewController.swift */; };
+		493BF9F8264C6ECF00B9C9D2 /* PresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9F7264C6ECF00B9C9D2 /* PresentationController.swift */; };
+		493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */; };
 		4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45B2641B001005B3268 /* AppDelegate.swift */; };
 		4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45D2641B001005B3268 /* SceneDelegate.swift */; };
 		4964E4602641B001005B3268 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45F2641B001005B3268 /* SignInViewController.swift */; };
@@ -16,14 +30,13 @@
 		4964E4682641B006005B3268 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4964E4662641B006005B3268 /* LaunchScreen.storyboard */; };
 		4964E4732641B007005B3268 /* NFTrack_Firebase4Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4722641B007005B3268 /* NFTrack_Firebase4Tests.swift */; };
 		4964E47E2641B007005B3268 /* NFTrack_Firebase4UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E47D2641B007005B3268 /* NFTrack_Firebase4UITests.swift */; };
-		4964E4BB2641BBEF005B3268 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4964E4BA2641BBEF005B3268 /* GoogleService-Info.plist */; };
 		4964E4C12641E12A005B3268 /* BlurEffectContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4C02641E12A005B3268 /* BlurEffectContainerView.swift */; };
 		4964E4CC26430BFB005B3268 /* SignUpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4CB26430BFB005B3268 /* SignUpViewController.swift */; };
 		4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4D126430FBE005B3268 /* AppExtensions.swift */; };
 		4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4E426436875005B3268 /* DissolveTransitionAnimator.swift */; };
 		4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4EC26445AED005B3268 /* AlertsView.swift */; };
 		4964E50026445EDB005B3268 /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4FF26445EDB005B3268 /* DetailViewController.swift */; };
-		4964E5052644891B005B3268 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5042644891B005B3268 /* MainViewController.swift */; };
+		4964E5052644891B005B3268 /* AccountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5042644891B005B3268 /* AccountViewController.swift */; };
 		4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5092644B07D005B3268 /* PostViewController.swift */; };
 		4964E50F264767A6005B3268 /* ImagePreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */; };
 		4964E516264777BF005B3268 /* ImageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E515264777BF005B3268 /* ImageCell.swift */; };
@@ -32,6 +45,28 @@
 		4964E52C2648B096005B3268 /* MyPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E52B2648B096005B3268 /* MyPresentationController.swift */; };
 		4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5332648C68A005B3268 /* WalletViewController.swift */; };
 		4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5392648C93F005B3268 /* CoreDataModel.xcdatamodeld */; };
+		4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E55A2649645F005B3268 /* KeyWallet+CoreDataClass.swift */; };
+		4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E55B2649645F005B3268 /* KeyWallet+CoreDataProperties.swift */; };
+		4964E56226496852005B3268 /* KeysService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E56126496852005B3268 /* KeysService.swift */; };
+		4964E568264968A7005B3268 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E567264968A7005B3268 /* Errors.swift */; };
+		4964E56D2649694A005B3268 /* CoreDataServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E56C2649694A005B3268 /* CoreDataServices.swift */; };
+		4964E57226498541005B3268 /* Web3swiftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E57126498541005B3268 /* Web3swiftService.swift */; };
+		4964E57726499D74005B3268 /* RegisteredWalletViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E57626499D74005B3268 /* RegisteredWalletViewController.swift */; };
+		4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E57B26499FBE005B3268 /* UnregisteredWalletViewController.swift */; };
+		4964E5812649A047005B3268 /* AppProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5802649A047005B3268 /* AppProtocols.swift */; };
+		4964E5862649A745005B3268 /* CreateWalletViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5852649A745005B3268 /* CreateWalletViewController.swift */; };
+		4964E58B2649A75A005B3268 /* ImportWalletViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E58A2649A75A005B3268 /* ImportWalletViewController.swift */; };
+		4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */; };
+		4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5942649B6FA005B3268 /* PageViewController.swift */; };
+		496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F6FF2264EA3D100E4056B /* FirebaseService.swift */; };
+		496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F6FF72651AD6300E4056B /* ListViewController.swift */; };
+		496F6FFD2651F15200E4056B /* ListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F6FFC2651F15100E4056B /* ListCell.swift */; };
+		496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F70012652029F00E4056B /* ListDetailViewController.swift */; };
+		496F7007265207A700E4056B /* ImagePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F7006265207A700E4056B /* ImagePageViewController.swift */; };
+		496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F700B265421E200E4056B /* TxDetailViewController.swift */; };
+		497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9AEB2655A60300F09CAA /* NFTrackABI.swift */; };
+		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
+		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
 		5F2181656BA2F887A451E929 /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */; };
 		8BF7EDDB714370A039E12BAF /* Pods_NFTrack_Firebase4.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FF1612C9EA21D4904E1BD19 /* Pods_NFTrack_Firebase4.framework */; };
 /* End PBXBuildFile section */
@@ -56,6 +91,20 @@
 /* Begin PBXFileReference section */
 		185327341381F410AFB911BC /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; sourceTree = "<group>"; };
 		2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletGenerationController.swift; sourceTree = "<group>"; };
+		493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDataTypes.swift; sourceTree = "<group>"; };
+		493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
+		493BF9C7264C166000B9C9D2 /* CreditCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditCardView.swift; sourceTree = "<group>"; };
+		493BF9CC264C493200B9C9D2 /* WalletButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletButtonView.swift; sourceTree = "<group>"; };
+		493BF9D1264C4D3B00B9C9D2 /* SendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendViewController.swift; sourceTree = "<group>"; };
+		493BF9D6264C4DE100B9C9D2 /* BackgroundView2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView2.swift; sourceTree = "<group>"; };
+		493BF9DB264C515C00B9C9D2 /* TransactionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionService.swift; sourceTree = "<group>"; };
+		493BF9E3264C549D00B9C9D2 /* ScannerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerViewController.swift; sourceTree = "<group>"; };
+		493BF9E8264C657200B9C9D2 /* ReceiveViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiveViewController.swift; sourceTree = "<group>"; };
+		493BF9ED264C65FA00B9C9D2 /* BackgroundView3.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView3.swift; sourceTree = "<group>"; };
+		493BF9F2264C6B4B00B9C9D2 /* PasswordResetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordResetViewController.swift; sourceTree = "<group>"; };
+		493BF9F7264C6ECF00B9C9D2 /* PresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresentationController.swift; sourceTree = "<group>"; };
+		493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ERC721PresetABI.swift; sourceTree = "<group>"; };
 		4964E4582641B001005B3268 /* NFTrack-Firebase4.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NFTrack-Firebase4.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4964E45B2641B001005B3268 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4964E45D2641B001005B3268 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -70,14 +119,13 @@
 		4964E4792641B007005B3268 /* NFTrack-Firebase4UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NFTrack-Firebase4UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4964E47D2641B007005B3268 /* NFTrack_Firebase4UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrack_Firebase4UITests.swift; sourceTree = "<group>"; };
 		4964E47F2641B007005B3268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		4964E4BA2641BBEF005B3268 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		4964E4C02641E12A005B3268 /* BlurEffectContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurEffectContainerView.swift; sourceTree = "<group>"; };
 		4964E4CB26430BFB005B3268 /* SignUpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpViewController.swift; sourceTree = "<group>"; };
 		4964E4D126430FBE005B3268 /* AppExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppExtensions.swift; sourceTree = "<group>"; };
 		4964E4E426436875005B3268 /* DissolveTransitionAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DissolveTransitionAnimator.swift; sourceTree = "<group>"; };
 		4964E4EC26445AED005B3268 /* AlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
 		4964E4FF26445EDB005B3268 /* DetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
-		4964E5042644891B005B3268 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		4964E5042644891B005B3268 /* AccountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
 		4964E5092644B07D005B3268 /* PostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostViewController.swift; sourceTree = "<group>"; };
 		4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviewViewController.swift; sourceTree = "<group>"; };
 		4964E515264777BF005B3268 /* ImageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCell.swift; sourceTree = "<group>"; };
@@ -86,6 +134,28 @@
 		4964E52B2648B096005B3268 /* MyPresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPresentationController.swift; sourceTree = "<group>"; };
 		4964E5332648C68A005B3268 /* WalletViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletViewController.swift; sourceTree = "<group>"; };
 		4964E53A2648C940005B3268 /* CoreDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = CoreDataModel.xcdatamodel; sourceTree = "<group>"; };
+		4964E55A2649645F005B3268 /* KeyWallet+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeyWallet+CoreDataClass.swift"; sourceTree = SOURCE_ROOT; };
+		4964E55B2649645F005B3268 /* KeyWallet+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeyWallet+CoreDataProperties.swift"; sourceTree = SOURCE_ROOT; };
+		4964E56126496852005B3268 /* KeysService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeysService.swift; sourceTree = "<group>"; };
+		4964E567264968A7005B3268 /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
+		4964E56C2649694A005B3268 /* CoreDataServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataServices.swift; sourceTree = "<group>"; };
+		4964E57126498541005B3268 /* Web3swiftService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Web3swiftService.swift; sourceTree = "<group>"; };
+		4964E57626499D74005B3268 /* RegisteredWalletViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisteredWalletViewController.swift; sourceTree = "<group>"; };
+		4964E57B26499FBE005B3268 /* UnregisteredWalletViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnregisteredWalletViewController.swift; sourceTree = "<group>"; };
+		4964E5802649A047005B3268 /* AppProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppProtocols.swift; sourceTree = "<group>"; };
+		4964E5852649A745005B3268 /* CreateWalletViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateWalletViewController.swift; sourceTree = "<group>"; };
+		4964E58A2649A75A005B3268 /* ImportWalletViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportWalletViewController.swift; sourceTree = "<group>"; };
+		4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePageViewController.swift; sourceTree = "<group>"; };
+		4964E5942649B6FA005B3268 /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
+		496F6FF2264EA3D100E4056B /* FirebaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseService.swift; sourceTree = "<group>"; };
+		496F6FF72651AD6300E4056B /* ListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewController.swift; sourceTree = "<group>"; };
+		496F6FFC2651F15100E4056B /* ListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListCell.swift; sourceTree = "<group>"; };
+		496F70012652029F00E4056B /* ListDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailViewController.swift; sourceTree = "<group>"; };
+		496F7006265207A700E4056B /* ImagePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePageViewController.swift; sourceTree = "<group>"; };
+		496F700B265421E200E4056B /* TxDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TxDetailViewController.swift; sourceTree = "<group>"; };
+		497A9AEB2655A60300F09CAA /* NFTrackABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABI.swift; sourceTree = "<group>"; };
+		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		5C42156D98AD4812550FF489 /* Pods-NFTrack-Firebase4Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4Tests.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4Tests/Pods-NFTrack-Firebase4Tests.release.xcconfig"; sourceTree = "<group>"; };
 		5D3028929C2B2E423CDD6DAF /* Pods-NFTrack-Firebase4.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4.debug.xcconfig"; sourceTree = "<group>"; };
 		69497F4D2E3074B9F7D67603 /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig"; sourceTree = "<group>"; };
@@ -136,6 +206,34 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
+		493BF9B3264AC16F00B9C9D2 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */,
+				493BF9F7264C6ECF00B9C9D2 /* PresentationController.swift */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		493BF9BE264B6CBE00B9C9D2 /* Background Views */ = {
+			isa = PBXGroup;
+			children = (
+				493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */,
+				493BF9D6264C4DE100B9C9D2 /* BackgroundView2.swift */,
+				493BF9ED264C65FA00B9C9D2 /* BackgroundView3.swift */,
+			);
+			path = "Background Views";
+			sourceTree = "<group>";
+		};
+		493BF9FC264CDBDD00B9C9D2 /* Contracts */ = {
+			isa = PBXGroup;
+			children = (
+				493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */,
+				497A9AEB2655A60300F09CAA /* NFTrackABI.swift */,
+			);
+			path = Contracts;
+			sourceTree = "<group>";
+		};
 		4964E44F2641B001005B3268 = {
 			isa = PBXGroup;
 			children = (
@@ -161,11 +259,18 @@
 		4964E45A2641B001005B3268 /* NFTrack-Firebase4 */ = {
 			isa = PBXGroup;
 			children = (
+				497A9B192658085E00F09CAA /* GoogleService-Info.plist */,
+				4964E55A2649645F005B3268 /* KeyWallet+CoreDataClass.swift */,
+				4964E55B2649645F005B3268 /* KeyWallet+CoreDataProperties.swift */,
+				493BF9FC264CDBDD00B9C9D2 /* Contracts */,
+				493BF9BE264B6CBE00B9C9D2 /* Background Views */,
+				493BF9B3264AC16F00B9C9D2 /* Controllers */,
 				4964E4FB26445EB1005B3268 /* ViewControllers */,
 				4964E5382648C8DD005B3268 /* Services */,
 				4964E52A2648B055005B3268 /* Presentation Controllers */,
 				4964E4E32643685E005B3268 /* Animators */,
 				4964E4D026430FA2005B3268 /* Extensions + Utilities */,
+				4964E56626496891005B3268 /* Models */,
 				4964E4BF2641E118005B3268 /* View */,
 				4964E5142647779E005B3268 /* Cells and Supplementary Views */,
 				4964E4B32641BA6F005B3268 /* Supporting Files */,
@@ -194,7 +299,6 @@
 		4964E4B32641BA6F005B3268 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				4964E4BA2641BBEF005B3268 /* GoogleService-Info.plist */,
 				4964E45B2641B001005B3268 /* AppDelegate.swift */,
 				4964E5392648C93F005B3268 /* CoreDataModel.xcdatamodeld */,
 				4964E45D2641B001005B3268 /* SceneDelegate.swift */,
@@ -211,6 +315,8 @@
 			children = (
 				4964E4C02641E12A005B3268 /* BlurEffectContainerView.swift */,
 				4964E4EC26445AED005B3268 /* AlertsView.swift */,
+				493BF9CC264C493200B9C9D2 /* WalletButtonView.swift */,
+				493BF9C7264C166000B9C9D2 /* CreditCardView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -219,6 +325,8 @@
 			isa = PBXGroup;
 			children = (
 				4964E4D126430FBE005B3268 /* AppExtensions.swift */,
+				4964E5802649A047005B3268 /* AppProtocols.swift */,
+				493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */,
 			);
 			path = "Extensions + Utilities";
 			sourceTree = "<group>";
@@ -238,11 +346,26 @@
 				4964E45F2641B001005B3268 /* SignInViewController.swift */,
 				4964E4CB26430BFB005B3268 /* SignUpViewController.swift */,
 				4964E4FF26445EDB005B3268 /* DetailViewController.swift */,
-				4964E5042644891B005B3268 /* MainViewController.swift */,
+				493BF9F2264C6B4B00B9C9D2 /* PasswordResetViewController.swift */,
+				4964E5042644891B005B3268 /* AccountViewController.swift */,
+				497A9B1E2658927200F09CAA /* MainViewController.swift */,
 				4964E5092644B07D005B3268 /* PostViewController.swift */,
 				4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */,
 				4964E52026489564005B3268 /* BigPreviewViewController.swift */,
 				4964E5332648C68A005B3268 /* WalletViewController.swift */,
+				4964E57626499D74005B3268 /* RegisteredWalletViewController.swift */,
+				4964E57B26499FBE005B3268 /* UnregisteredWalletViewController.swift */,
+				4964E5852649A745005B3268 /* CreateWalletViewController.swift */,
+				4964E58A2649A75A005B3268 /* ImportWalletViewController.swift */,
+				4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */,
+				4964E5942649B6FA005B3268 /* PageViewController.swift */,
+				493BF9D1264C4D3B00B9C9D2 /* SendViewController.swift */,
+				493BF9E8264C657200B9C9D2 /* ReceiveViewController.swift */,
+				493BF9E3264C549D00B9C9D2 /* ScannerViewController.swift */,
+				496F6FF72651AD6300E4056B /* ListViewController.swift */,
+				496F70012652029F00E4056B /* ListDetailViewController.swift */,
+				496F7006265207A700E4056B /* ImagePageViewController.swift */,
+				496F700B265421E200E4056B /* TxDetailViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -251,6 +374,7 @@
 			isa = PBXGroup;
 			children = (
 				4964E515264777BF005B3268 /* ImageCell.swift */,
+				496F6FFC2651F15100E4056B /* ListCell.swift */,
 			);
 			path = "Cells and Supplementary Views";
 			sourceTree = "<group>";
@@ -266,8 +390,21 @@
 		4964E5382648C8DD005B3268 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				4964E56126496852005B3268 /* KeysService.swift */,
+				4964E57126498541005B3268 /* Web3swiftService.swift */,
+				4964E56C2649694A005B3268 /* CoreDataServices.swift */,
+				493BF9DB264C515C00B9C9D2 /* TransactionService.swift */,
+				496F6FF2264EA3D100E4056B /* FirebaseService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		4964E56626496891005B3268 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				4964E567264968A7005B3268 /* Errors.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		F64A6E3DD6EC3840BC56EC30 /* Frameworks */ = {
@@ -391,7 +528,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4964E4682641B006005B3268 /* LaunchScreen.storyboard in Resources */,
-				4964E4BB2641BBEF005B3268 /* GoogleService-Info.plist in Resources */,
+				497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */,
 				4964E4652641B006005B3268 /* Assets.xcassets in Resources */,
 				4964E4632641B001005B3268 /* Main.storyboard in Resources */,
 			);
@@ -555,23 +692,58 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				493BF9DC264C515C00B9C9D2 /* TransactionService.swift in Sources */,
+				4964E57226498541005B3268 /* Web3swiftService.swift in Sources */,
+				4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */,
+				496F7007265207A700E4056B /* ImagePageViewController.swift in Sources */,
+				493BF9F8264C6ECF00B9C9D2 /* PresentationController.swift in Sources */,
 				4964E50026445EDB005B3268 /* DetailViewController.swift in Sources */,
 				4964E4C12641E12A005B3268 /* BlurEffectContainerView.swift in Sources */,
+				4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */,
+				493BF9D7264C4DE100B9C9D2 /* BackgroundView2.swift in Sources */,
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
+				493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */,
+				496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */,
+				496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */,
 				4964E4602641B001005B3268 /* SignInViewController.swift in Sources */,
+				493BF9F3264C6B4B00B9C9D2 /* PasswordResetViewController.swift in Sources */,
 				4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */,
+				493BF9CD264C493200B9C9D2 /* WalletButtonView.swift in Sources */,
+				493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */,
 				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
+				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
 				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
 				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
+				496F6FFD2651F15200E4056B /* ListCell.swift in Sources */,
+				496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */,
 				4964E52126489564005B3268 /* BigPreviewViewController.swift in Sources */,
+				493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */,
 				4964E5262648AB6A005B3268 /* ZoomAnimationController.swift in Sources */,
+				4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */,
+				497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */,
+				4964E56D2649694A005B3268 /* CoreDataServices.swift in Sources */,
+				493BF9C8264C166000B9C9D2 /* CreditCardView.swift in Sources */,
+				493BF9EE264C65FA00B9C9D2 /* BackgroundView3.swift in Sources */,
+				4964E57726499D74005B3268 /* RegisteredWalletViewController.swift in Sources */,
+				493BF9E4264C549D00B9C9D2 /* ScannerViewController.swift in Sources */,
 				4964E4CC26430BFB005B3268 /* SignUpViewController.swift in Sources */,
 				4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */,
-				4964E5052644891B005B3268 /* MainViewController.swift in Sources */,
+				4964E5812649A047005B3268 /* AppProtocols.swift in Sources */,
+				4964E5052644891B005B3268 /* AccountViewController.swift in Sources */,
+				493BF9D2264C4D3B00B9C9D2 /* SendViewController.swift in Sources */,
+				493BF9E9264C657200B9C9D2 /* ReceiveViewController.swift in Sources */,
+				4964E56226496852005B3268 /* KeysService.swift in Sources */,
+				493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */,
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
+				4964E5862649A745005B3268 /* CreateWalletViewController.swift in Sources */,
+				4964E58B2649A75A005B3268 /* ImportWalletViewController.swift in Sources */,
+				497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */,
+				4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */,
+				4964E568264968A7005B3268 /* Errors.swift in Sources */,
 				4964E50F264767A6005B3268 /* ImagePreviewViewController.swift in Sources */,
 				4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */,
+				496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */,
 				4964E52C2648B096005B3268 /* MyPresentationController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -757,7 +929,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.ovis.NFTrack-Firebase4";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ovis.NFTrack10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -778,7 +950,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.ovis.NFTrack-Firebase4";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ovis.NFTrack10;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

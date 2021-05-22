@@ -132,6 +132,7 @@ extension UIView {
     }
 }
 
+// MARK: - UIResponder
 extension UIResponder {
     
     static weak var responder: UIResponder?
@@ -146,3 +147,55 @@ extension UIResponder {
         UIResponder.responder = self
     }
 }
+
+// MARK: - CGContext
+extension CGContext {
+    func drawLinearGradient(in rect: CGRect, startingWith startColor: CGColor, finishingWith endColor: CGColor) {
+        let colorsSpace = CGColorSpaceCreateDeviceRGB()
+        let colors = [startColor, endColor] as CFArray
+        let locations = [0.0, 1.0] as [CGFloat]
+        
+        guard let gradient = CGGradient(colorsSpace: colorsSpace, colors: colors, locations: locations) else { return }
+        
+        let startPoint = CGPoint(x: rect.maxX, y: rect.maxY)
+        let endPoint = CGPoint(x: rect.minX, y: rect.minY)
+        
+        saveGState()
+        addRect(rect)
+        clip()
+        drawLinearGradient(gradient, start: startPoint, end: endPoint, options: CGGradientDrawingOptions())
+        restoreGState()
+    }
+}
+
+// MARK: - UIFont
+extension UIFont {
+    static func systemFontItalic(size fontSize: CGFloat = 17.0, fontWeight: UIFont.Weight = .regular) -> UIFont {
+        let font = UIFont.systemFont(ofSize: fontSize, weight: fontWeight)
+        return UIFont(descriptor: font.fontDescriptor.withSymbolicTraits(.traitItalic)!, size: fontSize)
+    }
+}
+
+
+// MARK: - Scanner delegate
+protocol ScannerDelegate: AnyObject {
+    func scannerDidOutput(code: String)
+}
+
+// MARK: - UIImageView
+extension UIImageView {
+    func setImage(from urlAddress: String?) {
+        print("urlAddress", urlAddress)
+        guard let urlAddress = urlAddress, let url = URL(string: urlAddress) else { return }
+        print("url", url)
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data, error == nil else { return }
+            DispatchQueue.main.async {
+                print("data", data)
+                self.image = UIImage(data: data)
+            }
+        }
+        task.resume()
+    }
+}
+

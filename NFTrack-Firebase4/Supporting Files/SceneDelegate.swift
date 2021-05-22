@@ -23,8 +23,32 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             self.window = UIWindow(windowScene: windowScene)
             Auth.auth().addStateDidChangeListener { (auth, user) in
                 if let _ = user {
+                    
                     let tabBar = UITabBarController()
-                    tabBar.viewControllers = [MainViewController(), PostViewController()]
+                    
+                    let mainVC = MainViewController()
+                    mainVC.title = "Main"
+                    tabBar.addChild(mainVC)
+                    
+                    let acctVC = AccountViewController()
+                    acctVC.title = "Account"
+                    tabBar.addChild(acctVC)
+                    
+                    let postVC = PostViewController()
+                    postVC.title = "Post"
+                    tabBar.addChild(postVC)
+                    
+                    
+                    let listVC = ListViewController()
+                    listVC.title = "List"
+                    
+                    let nav = UINavigationController(rootViewController: listVC)
+                    tabBar.addChild(nav)
+                    
+                    let walletVC = WalletViewController()
+                    walletVC.title = "Wallet"
+                    tabBar.addChild(walletVC)
+                    
                     self.window!.rootViewController = tabBar
                 } else {
                     self.window!.rootViewController = SignInViewController()
@@ -40,6 +64,20 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This occurs shortly after the scene enters the background, or when its session is discarded.
         // Release any resources associated with this scene that can be re-created the next time the scene connects.
         // The scene may re-connect later, as its session was not necessarily discarded (see `application:didDiscardSceneSessions` instead).
+        let fileManager = FileManager.default
+        let documentsUrl =  FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let documentsPath = documentsUrl.path
+        
+        do {
+            let fileNames = try fileManager.contentsOfDirectory(atPath: "\(documentsPath)")
+            print("all files in cache: \(fileNames)")
+            for fileName in fileNames {
+                let filePathName = "\(documentsPath)/\(fileName)"
+                try fileManager.removeItem(atPath: filePathName)
+            }
+        } catch {
+            print("Could not clear temp folder: \(error)")
+        }
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
@@ -62,7 +100,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
     }
-
 
 }
 

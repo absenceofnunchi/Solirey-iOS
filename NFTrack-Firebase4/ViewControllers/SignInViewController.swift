@@ -61,7 +61,7 @@ extension SignInViewController {
         passwordTextField.layer.borderWidth = 1
         passwordTextField.layer.borderColor = UIColor.gray.cgColor
         passwordTextField.layer.cornerRadius = 10
-        passwordTextField.placeholder = "Enter your email"
+        passwordTextField.placeholder = "Enter your password"
         passwordTextField.setLeftPaddingPoints(10)
         textFields.append(passwordTextField)
         passwordTextField.translatesAutoresizingMaskIntoConstraints = false
@@ -322,7 +322,7 @@ extension SignInViewController {
                         } else {
                             let detailVC = DetailViewController(height: 250)
                             detailVC.titleString = "Sorry!"
-                            detailVC.message = "Password can't be empty"
+                            detailVC.message = error.localizedDescription
                             detailVC.buttonAction = { [weak self]vc in
                                 self?.dismiss(animated: true, completion: nil)
                             }

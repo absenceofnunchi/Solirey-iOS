@@ -6,10 +6,8 @@
 //
 
 import UIKit
-
-protocol PreviewDelegate: AnyObject {
-    func didDeleteImage(imageName: String)
-}
+import FirebaseFirestore
+import Firebase
 
 class PostViewController: UIViewController {
     var scrollView: UIScrollView!
@@ -25,6 +23,10 @@ class PostViewController: UIViewController {
     var imageNameArr = [String]()
     var imagePreviewVC: ImagePreviewViewController!
     var postButton: UIButton!
+    let transactionService = TransactionService()
+    let alert = Alerts()
+    var handle: AuthStateDidChangeListenerHandle!
+    var imageAddresses = [String]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,6 +49,7 @@ class PostViewController: UIViewController {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
         self.removeKeyboardObserver()
     }
 }
@@ -68,7 +71,7 @@ extension PostViewController {
         
         titleTextField = createTextField(sv: scrollView)
         scrollView.addSubview(titleTextField)
-    
+        
         priceLabel = createLabel(text: "Price")
         scrollView.addSubview(priceLabel)
         
@@ -177,6 +180,12 @@ extension PostViewController {
         ])
     }
     
+//    func configureFirebase() {
+//        let settings = FirestoreSettings()
+//        Firestore.firestore().settings = settings
+//        db = Firestore.firestore()
+//    }
+    
     func createLabel(text: String) -> UILabel {
         let label = UILabel()
         label.text = text
@@ -215,14 +224,21 @@ extension PostViewController {
                     imagePickerController.modalPresentationStyle = .fullScreen
                     present(imagePickerController, animated: true, completion: nil)
                 case 3:
-                    mint()
+                    handle = Auth.auth().addStateDidChangeListener { [weak self](auth, user) in
+                        if user != nil {
+                            self?.mint(userId: user!.uid)
+//                            self?.mint2(userId: user!.uid)
+                        } else {
+                            print("not logged in")
+                        }
+                    }
                 default:
                     break
             }
         } else {
             let detailVC = DetailViewController(height: 250)
             detailVC.titleString = "Image Upload Limit"
-            detailVC.message = "You can upload 6 images."
+            detailVC.message = "There is a limit of 6 images per post."
             detailVC.buttonAction = { [weak self]vc in
                 self?.dismiss(animated: true, completion: nil)
             }
@@ -352,8 +368,304 @@ extension PostViewController: PreviewDelegate {
 }
 
 extension PostViewController {
+    func mint2(userId: String) {
+        
+//        let usersRef = self.db.collection("users")
+//        usersRef.document(userId).collection("post").addDocument(data: [
+//            "key": "value"
+//        ]) { (error) in
+//            print("error", error?.localizedDescription as Any)
+//        }
+        
+        FirebaseService.sharedInstance.db.collection(userId).document("post").collection("mint").addDocument(data: [
+            "key": "value"
+        ]) { (error) in
+            if let error = error {
+                print("error", error.localizedDescription)
+            }
+        }
+        
+//        self.db.collection(userId).document("post").setData([
+//            "senderAddress": "yes"
+//        ], completion: { (error) in
+//            if let error = error {
+//                self.alert.showDetail("Error", with: error.localizedDescription, for: self) {
+//                    for image in self.imageNameArr {
+//                        self.deleteFile(fileName: image)
+//                    }
+//                }
+//            } else {
+//                print("success")
+//            }
+//        })
+//
+//        let citiesRef = db.collection("cities")
+//
+//        var data = ["name": "Golden Gate Bridge", "type": "bridge"]
+//        citiesRef.document("SF").collection("landmarks").addDocument(data: data)
+//
+//        data = ["name": "Legion of Honor", "type": "museum"]
+//        citiesRef.document("SF").collection("landmarks").addDocument(data: data)
+//
+//        data = ["name": "Griffith Park", "type": "park"]
+//        citiesRef.document("LA").collection("landmarks").addDocument(data: data)
+//
+//        data = ["name": "The Getty", "type": "museum"]
+//        citiesRef.document("LA").collection("landmarks").addDocument(data: data)
+//
+//        data = ["name": "Lincoln Memorial", "type": "memorial"]
+//        citiesRef.document("DC").collection("landmarks").addDocument(data: data)
+//
+//        data = ["name": "National Air and Space Museum", "type": "museum"]
+//        citiesRef.document("DC").collection("landmarks").addDocument(data: data)
+//
+//        data = ["name": "Ueno Park", "type": "park"]
+//        citiesRef.document("TOK").collection("landmarks").addDocument(data: data)
+//
+//        data = ["name": "National Museum of Nature and Science", "type": "museum"]
+//        citiesRef.document("TOK").collection("landmarks").addDocument(data: data)
+//
+//        data = ["name": "Jingshan Park", "type": "park"]
+//        citiesRef.document("BJ").collection("landmarks").addDocument(data: data)
+//
+//        data = ["name": "Beijing Ancient Observatory", "type": "museum"]
+//        citiesRef.document("BJ").collection("landmarks").addDocument(data: data)
+    }
+    
     // MARK: - mint
-    func mint() {
-        print("mint")
+    func mint(userId: String) {
+        //MARK: - create purchase contract
+        guard let price = priceTextField.text,
+              !price.isEmpty,
+              let title = titleTextField.text,
+              !title.isEmpty,
+              let desc = descTextView.text,
+              !desc.isEmpty else { return }
+        transactionService.prepareTransactionForNewContract(value: String(price), completion: { [weak self](transaction, error) in
+            if let error = error {
+                switch error {
+                    case .contractLoadingError:
+                        self?.alert.showDetail("Error", with: "Contract Loading Error", for: self!)
+                    case .createTransactionIssue:
+                        self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self!)
+                    default:
+                        self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self!)
+                }
+            }
+            
+            if let transaction = transaction {
+                let detailVC = DetailViewController(height: 250, isTextField: true)
+                detailVC.titleString = "Enter your password"
+                detailVC.buttonAction = { vc in
+                    if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
+                        self?.dismiss(animated: true, completion: {
+                            DispatchQueue.global().async {
+                                do {
+                                    let result = try transaction.send(password: password, transactionOptions: nil)
+                                    // minting
+                                    self?.transactionService.prepareTransactionForMinting { [self] (mintTransaction, mintError) in
+                                        if let error = mintError {
+                                            switch error {
+                                                case .contractLoadingError:
+                                                    self?.alert.showDetail("Error", with: "Contract Loading Error", for: self!)
+                                                case .createTransactionIssue:
+                                                    self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self!)
+                                                default:
+                                                    self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self!)
+                                            }
+                                        }
+
+                                        if let mintTransaction = mintTransaction {
+                                            do {
+                                                let mintResult = try mintTransaction.send(password: password,transactionOptions: nil)
+                                                print("mintResult", mintResult)
+
+                                                // firebase
+                                                let senderAddress = result.transaction.sender!.address
+                                                
+                                                FirebaseService.sharedInstance.db.collection("escrow").addDocument(data: [
+                                                    "postId": UUID().uuidString,
+                                                    "userId": userId,
+                                                    "senderAddress": senderAddress,
+                                                    "transactionHash": result.hash,
+                                                    "nonce": String(result.transaction.nonce.description),
+                                                    "date": Date(),
+                                                    "title": title,
+                                                    "description": desc,
+                                                    "price": price,
+                                                ], completion: { (error) in
+                                                    if let error = error {
+                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self!) {
+                                                            for image in self!.imageNameArr {
+                                                                self?.deleteFile(fileName: image)
+                                                            }
+                                                        }
+                                                    } else {
+                                                        FirebaseService.sharedInstance.db.collection("mint").addDocument(data: [
+                                                            "postId": UUID().uuidString,
+                                                            "type": "mint",
+                                                            "userId": userId,
+                                                            "senderAddress": senderAddress,
+                                                            "transactionHash": mintResult.hash,
+                                                            "nonce": String(mintResult.transaction.nonce.description),
+                                                            "date": Date(),
+                                                            "title": title,
+                                                            "description": desc,
+                                                            "price": price,
+                                                        ], completion: { (error) in
+                                                            if let error = error {
+                                                                self?.alert.showDetail("Error", with: error.localizedDescription, for: self!) {
+                                                                    for image in self!.imageNameArr {
+                                                                        self?.deleteFile(fileName: image)
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                let detailVC = DetailViewController(height: 250)
+                                                                detailVC.titleString = "Success"
+                                                                detailVC.message = "You have successfully minted a token"
+                                                                detailVC.buttonAction = { vc in
+                                                                    self?.dismiss(animated: true, completion: nil)
+                                                                }
+                                                                self?.present(detailVC, animated: true, completion: {
+                                                                    if self!.imageNameArr.count > 0, let imageNameArr = self?.imageNameArr {
+                                                                        for image in imageNameArr {
+                                                                            self?.uploadImages(image: image, userId: userId, txHash: result.hash)
+                                                                        }
+                                                                    }
+                                                                })
+                                                            }
+                                                        })
+                                                    }
+                                                })
+                                            } catch {
+                                                print("mint error", error.localizedDescription)
+                                                for image in self!.imageNameArr {
+                                                    self?.deleteFile(fileName: image)
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch {
+                                    self?.alert.showDetail("Error", with: error.localizedDescription, for: self!) {
+                                        for image in self!.imageNameArr {
+                                            self?.deleteFile(fileName: image)
+                                        }
+                                    }
+                                }
+                            }
+                        })
+                    }
+                }
+                self?.present(detailVC, animated: true, completion: nil)
+            }
+        })
+    }
+
+    func uploadImages(image: String, userId: String, txHash: String) {
+        FirebaseService.sharedInstance.uploadPhoto(fileName: image, userId: userId) { [weak self](uploadTask, fileUploadError) in
+            if let error = fileUploadError {
+                switch error {
+                    case .fileManagerError(let msg):
+                        self?.alert.showDetail("Error", with: msg, for: self!)
+                    case .fileNotAvailable:
+                        self?.alert.showDetail("Error", with: "Image file not found.", for: self!)
+                    case .userNotLoggedIn:
+                        self?.alert.showDetail("Error", with: "You need to be logged in!", for: self!)
+                }
+            }
+            
+            if let uploadTask = uploadTask {
+                // Listen for state changes, errors, and completion of the upload.
+                uploadTask.observe(.resume) { snapshot in
+                    // Upload resumed, also fires when the upload starts
+                }
+                
+                uploadTask.observe(.pause) { snapshot in
+                    // Upload paused
+                    self?.alert.showDetail("Image Upload", with: "The image uploading process has been paused.", for: self!)
+                }
+                
+                uploadTask.observe(.progress) { snapshot in
+                    // Upload reported progress
+                    let percentComplete = 100.0 * Double(snapshot.progress!.completedUnitCount)
+                        / Double(snapshot.progress!.totalUnitCount)
+                    print("percent Complete", percentComplete)
+                }
+                
+                uploadTask.observe(.success) { snapshot in
+                    // Upload completed successfully
+                    print("success")
+                    self?.deleteFile(fileName: image)
+                    snapshot.reference.downloadURL { (url, error) in
+                        if let error = error {
+                            print("downloadURL error", error)
+                        }
+                        
+                        if let url = url {
+                            FirebaseService.sharedInstance.db.collection(userId).document(txHash).updateData([
+                                "images": FieldValue.arrayUnion(["\(url)"])
+                            ], completion: { (error) in
+                                if let error = error {
+                                    self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                }
+                            })
+                        }
+                    }
+                }
+                
+                uploadTask.observe(.failure) { snapshot in
+                    if let error = snapshot.error as NSError? {
+                        switch (StorageErrorCode(rawValue: error.code)!) {
+                            case .objectNotFound:
+                                // File doesn't exist
+                                print("object not found")
+                                break
+                            case .unauthorized:
+                                // User doesn't have permission to access file
+                                print("unauthorized")
+                                break
+                            case .cancelled:
+                                // User canceled the upload
+                                print("cancelled")
+                                break
+                                
+                            /* ... */
+                            
+                            case .unknown:
+                                // Unknown error occurred, inspect the server response
+                                print("unknown")
+                                break
+                            default:
+                                // A separate error occurred. This is a good place to retry the upload.
+                                print("reload?")
+                                break
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - deleteFile
+    func deleteFile(fileName: String) {
+        let fileManager = FileManager.default
+        let documentsDirectory =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documentsPath = documentsDirectory.path
+        do {
+            
+            let filePathName = "\(documentsPath)/\(fileName)"
+            print("filePathName", filePathName)
+            try fileManager.removeItem(atPath: filePathName)
+            
+            let files = try fileManager.contentsOfDirectory(atPath: "\(documentsPath)")
+            print("all files in cache after deleting images: \(files)")
+            
+        } catch {
+            print("Could not clear temp folder: \(error)")
+        }
     }
 }
+
+
+// password 111111
+// 0x0b6fcFEc0133E77DcE6021Ff79BeFAd4b3af7564

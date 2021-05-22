@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>891532723522-6ilk6r9hi81lf2elu0hqjjv7964spi0q.apps.googleusercontent.com</string>
+	<string>891532723522-6a14h6dkbmfc3n5855fnvc4aes0eh5lg.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.891532723522-6ilk6r9hi81lf2elu0hqjjv7964spi0q</string>
+	<string>com.googleusercontent.apps.891532723522-6a14h6dkbmfc3n5855fnvc4aes0eh5lg</string>
 	<key>API_KEY</key>
 	<string>AIzaSyCHFZqHqrwgj9rlZVQhuivckGc7mnw_ulM</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.ovis.NFTrack</string>
+	<string>com.ovis.NFTrack10</string>
 	<key>PROJECT_ID</key>
 	<string>nftrack-69488</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:891532723522:ios:ccc2bde60577758b4d34db</string>
+	<string>1:891532723522:ios:4d1db041a9f6570f4d34db</string>
 </dict>
 </plist>

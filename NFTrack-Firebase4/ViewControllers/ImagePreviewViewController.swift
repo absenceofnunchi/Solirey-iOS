@@ -17,7 +17,7 @@ class ImagePreviewViewController: UIViewController {
         }
     }
     
-    var delegate: PreviewDelegate?
+    weak var delegate: PreviewDelegate?
     var collectionView: UICollectionView! = nil
     let reuseIdentifier = "image-cell-reuse-identifier"
     
