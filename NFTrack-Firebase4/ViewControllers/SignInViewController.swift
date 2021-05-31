@@ -44,7 +44,7 @@ extension SignInViewController {
         
         // title label
         titleLabel = UILabel()
-        titleLabel.text = "Create Account"
+        titleLabel.text = "Welcome Back"
         titleLabel.font = .rounded(ofSize: 25, weight: .bold)
         titleLabel.textColor = .gray
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -168,12 +168,12 @@ extension SignInViewController {
             
             additionalLabel.centerYAnchor.constraint(equalTo: additionalContainer.centerYAnchor),
             additionalLabel.leadingAnchor.constraint(equalTo: additionalContainer.leadingAnchor),
-            additionalLabel.widthAnchor.constraint(equalTo: additionalContainer.widthAnchor, multiplier: 0.8),
+            additionalLabel.widthAnchor.constraint(equalTo: additionalContainer.widthAnchor, multiplier: 0.7),
             additionalLabel.heightAnchor.constraint(equalToConstant: 40),
             
             toggleButton.centerYAnchor.constraint(equalTo: additionalContainer.centerYAnchor),
             toggleButton.trailingAnchor.constraint(equalTo: additionalContainer.trailingAnchor),
-            toggleButton.widthAnchor.constraint(equalTo: additionalContainer.widthAnchor, multiplier: 0.2),
+            toggleButton.widthAnchor.constraint(equalTo: additionalContainer.widthAnchor, multiplier: 0.3),
             toggleButton.heightAnchor.constraint(equalToConstant: 40)
         ])
     }
@@ -337,6 +337,7 @@ extension SignInViewController {
                     print("additional info", authResult.additionalUserInfo as Any)
                     print("credential", authResult.credential as Any)
                     print("user", authResult.user)
+                    UserDefaults.standard.set(authResult.user.uid, forKey: "userId")
                 }
             }
             // [END headless_email_auth]

@@ -20,7 +20,7 @@ class ListCell: UITableViewCell {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("not implemnted")
+        fatalError("not implemented")
     }
 
 }

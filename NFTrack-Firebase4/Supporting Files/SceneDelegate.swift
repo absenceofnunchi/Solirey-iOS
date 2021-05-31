@@ -18,17 +18,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let _ = (scene as? UIWindowScene) else { return }
         FirebaseApp.configure()
+        
+        let _ = SocketDelegate()
 
         if let windowScene = scene as? UIWindowScene {
             self.window = UIWindow(windowScene: windowScene)
             Auth.auth().addStateDidChangeListener { (auth, user) in
-                if let _ = user {
+                if let user = user {
+                    
+                    UserDefaults.standard.set(user.uid, forKey: "userId")
                     
                     let tabBar = UITabBarController()
                     
                     let mainVC = MainViewController()
                     mainVC.title = "Main"
-                    tabBar.addChild(mainVC)
+                    
+                    let mainNav = UINavigationController(rootViewController: mainVC)
+                    tabBar.addChild(mainNav)
                     
                     let acctVC = AccountViewController()
                     acctVC.title = "Account"
@@ -42,8 +48,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     let listVC = ListViewController()
                     listVC.title = "List"
                     
-                    let nav = UINavigationController(rootViewController: listVC)
-                    tabBar.addChild(nav)
+                    let listNav = UINavigationController(rootViewController: listVC)
+                    tabBar.addChild(listNav)
                     
                     let walletVC = WalletViewController()
                     walletVC.title = "Wallet"

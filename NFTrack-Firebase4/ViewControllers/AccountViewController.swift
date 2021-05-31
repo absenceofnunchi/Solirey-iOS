@@ -14,7 +14,6 @@ class AccountViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "main"
         view.backgroundColor = .white
         
         logoutButton = UIButton()

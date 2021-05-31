@@ -21,7 +21,6 @@ class ImagePageViewController: UIViewController {
     var imageView: UIImageView!
     
     init(gallery: String) {
-        print("gallery in imageVC", gallery)
         self.gallery = gallery
         self.imageView = UIImageView()
         self.imageView.setImage(from: gallery)
@@ -43,7 +42,6 @@ extension ImagePageViewController {
         view.backgroundColor = .blue
         view.addSubview(imageView)
         imageView.fill()
-        print("imageView", imageView)
         
 //        imageView = UIImageView(frame: CGRect(origin: .zero, size: CGSize(width: 300, height: 300)))
 //        imageView.setImage(from: "https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/DpUgBbZzpQhHKnvKURZbyp3jeOA3%2FDD422D51-C41F-4FB5-B7F7-970DF6236A2C?alt=media&token=f4dec0ef-d76a-4876-865a-f98170009c8c")

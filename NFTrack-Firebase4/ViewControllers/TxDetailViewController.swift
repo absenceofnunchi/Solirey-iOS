@@ -14,9 +14,6 @@ class TxDetailViewController: UIViewController {
     var txHashLabel: UILabelPadding!
     var contractTitleLabel: UILabel!
     var contractAddressLabel: UILabelPadding!
-    var nonceTitleLabel: UILabel!
-    var nonceLabel: UILabel!
-    var nonce: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -68,19 +65,6 @@ extension TxDetailViewController {
         contractAddressLabel.text = receipt.contractAddress?.address
         contractAddressLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(contractAddressLabel)
-        
-        nonceTitleLabel = UILabel()
-        nonceTitleLabel.text = "Nonce"
-        nonceTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(nonceTitleLabel)
-        
-        nonceLabel = UILabelPadding()
-        nonceLabel.sizeToFit()
-        nonceLabel.layer.borderColor = UIColor.lightGray.cgColor
-        nonceLabel.layer.borderWidth = 0.5
-        nonceLabel.text = nonce
-        nonceLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(nonceLabel)
     }
     
     func setConstraints() {
@@ -104,16 +88,6 @@ extension TxDetailViewController {
             contractAddressLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             contractAddressLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
 //            contractAddressLabel.heightAnchor.constraint(equalToConstant: 50),
-            
-            nonceTitleLabel.topAnchor.constraint(equalTo: contractAddressLabel.bottomAnchor, constant: 20),
-            nonceTitleLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            nonceTitleLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            nonceTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-            
-            nonceLabel.topAnchor.constraint(equalTo: nonceTitleLabel.bottomAnchor, constant: 0),
-            nonceLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            nonceLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-//            nonceLabel.heightAnchor.constraint(equalToConstant: 50),
         ])
     }
 }

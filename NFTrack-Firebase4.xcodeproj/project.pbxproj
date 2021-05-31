@@ -22,6 +22,8 @@
 		493BF9F3264C6B4B00B9C9D2 /* PasswordResetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9F2264C6B4B00B9C9D2 /* PasswordResetViewController.swift */; };
 		493BF9F8264C6ECF00B9C9D2 /* PresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9F7264C6ECF00B9C9D2 /* PresentationController.swift */; };
 		493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */; };
+		49409A75265946870060193C /* SearchResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A74265946870060193C /* SearchResultsViewController.swift */; };
+		49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */; };
 		4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45B2641B001005B3268 /* AppDelegate.swift */; };
 		4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45D2641B001005B3268 /* SceneDelegate.swift */; };
 		4964E4602641B001005B3268 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45F2641B001005B3268 /* SignInViewController.swift */; };
@@ -58,6 +60,13 @@
 		4964E58B2649A75A005B3268 /* ImportWalletViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E58A2649A75A005B3268 /* ImportWalletViewController.swift */; };
 		4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */; };
 		4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5942649B6FA005B3268 /* PageViewController.swift */; };
+		496D56B12659654A00C3E7FD /* CategoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56B02659654A00C3E7FD /* CategoryCell.swift */; };
+		496D56B62659E6F900C3E7FD /* MyDoneButtonVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */; };
+		496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */; };
+		496D56C02659E75D00C3E7FD /* PostViewController + Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56BF2659E75D00C3E7FD /* PostViewController + Picker.swift */; };
+		496D56C52659FF2100C3E7FD /* MainDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56C42659FF2100C3E7FD /* MainDetailViewController.swift */; };
+		496D56CA265A0BD700C3E7FD /* MainDetailCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56C9265A0BD700C3E7FD /* MainDetailCell.swift */; };
+		496D56D0265AEDAB00C3E7FD /* ImageDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56CF265AEDAB00C3E7FD /* ImageDataStore.swift */; };
 		496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F6FF2264EA3D100E4056B /* FirebaseService.swift */; };
 		496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F6FF72651AD6300E4056B /* ListViewController.swift */; };
 		496F6FFD2651F15200E4056B /* ListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F6FFC2651F15100E4056B /* ListCell.swift */; };
@@ -67,6 +76,8 @@
 		497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9AEB2655A60300F09CAA /* NFTrackABI.swift */; };
 		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
+		49D59C762663326500107F79 /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D59C752663326500107F79 /* SocketDelegate.swift */; };
+		49F694BE265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */; };
 		5F2181656BA2F887A451E929 /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */; };
 		8BF7EDDB714370A039E12BAF /* Pods_NFTrack_Firebase4.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FF1612C9EA21D4904E1BD19 /* Pods_NFTrack_Firebase4.framework */; };
 /* End PBXBuildFile section */
@@ -105,6 +116,8 @@
 		493BF9F2264C6B4B00B9C9D2 /* PasswordResetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordResetViewController.swift; sourceTree = "<group>"; };
 		493BF9F7264C6ECF00B9C9D2 /* PresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresentationController.swift; sourceTree = "<group>"; };
 		493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ERC721PresetABI.swift; sourceTree = "<group>"; };
+		49409A74265946870060193C /* SearchResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsViewController.swift; sourceTree = "<group>"; };
+		49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + ResultsUpdate.swift"; sourceTree = "<group>"; };
 		4964E4582641B001005B3268 /* NFTrack-Firebase4.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NFTrack-Firebase4.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4964E45B2641B001005B3268 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4964E45D2641B001005B3268 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -147,6 +160,13 @@
 		4964E58A2649A75A005B3268 /* ImportWalletViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportWalletViewController.swift; sourceTree = "<group>"; };
 		4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePageViewController.swift; sourceTree = "<group>"; };
 		4964E5942649B6FA005B3268 /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
+		496D56B02659654A00C3E7FD /* CategoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryCell.swift; sourceTree = "<group>"; };
+		496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDoneButtonVC.swift; sourceTree = "<group>"; };
+		496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPickerViewController.swift; sourceTree = "<group>"; };
+		496D56BF2659E75D00C3E7FD /* PostViewController + Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + Picker.swift"; sourceTree = "<group>"; };
+		496D56C42659FF2100C3E7FD /* MainDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainDetailViewController.swift; sourceTree = "<group>"; };
+		496D56C9265A0BD700C3E7FD /* MainDetailCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainDetailCell.swift; sourceTree = "<group>"; };
+		496D56CF265AEDAB00C3E7FD /* ImageDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDataStore.swift; sourceTree = "<group>"; };
 		496F6FF2264EA3D100E4056B /* FirebaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseService.swift; sourceTree = "<group>"; };
 		496F6FF72651AD6300E4056B /* ListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewController.swift; sourceTree = "<group>"; };
 		496F6FFC2651F15100E4056B /* ListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListCell.swift; sourceTree = "<group>"; };
@@ -156,6 +176,8 @@
 		497A9AEB2655A60300F09CAA /* NFTrackABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABI.swift; sourceTree = "<group>"; };
 		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		49D59C752663326500107F79 /* SocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
+		49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListDetailViewController + OptionsBar.swift"; sourceTree = "<group>"; };
 		5C42156D98AD4812550FF489 /* Pods-NFTrack-Firebase4Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4Tests.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4Tests/Pods-NFTrack-Firebase4Tests.release.xcconfig"; sourceTree = "<group>"; };
 		5D3028929C2B2E423CDD6DAF /* Pods-NFTrack-Firebase4.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4.debug.xcconfig"; sourceTree = "<group>"; };
 		69497F4D2E3074B9F7D67603 /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig"; sourceTree = "<group>"; };
@@ -350,6 +372,7 @@
 				4964E5042644891B005B3268 /* AccountViewController.swift */,
 				497A9B1E2658927200F09CAA /* MainViewController.swift */,
 				4964E5092644B07D005B3268 /* PostViewController.swift */,
+				496D56BF2659E75D00C3E7FD /* PostViewController + Picker.swift */,
 				4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */,
 				4964E52026489564005B3268 /* BigPreviewViewController.swift */,
 				4964E5332648C68A005B3268 /* WalletViewController.swift */,
@@ -364,8 +387,14 @@
 				493BF9E3264C549D00B9C9D2 /* ScannerViewController.swift */,
 				496F6FF72651AD6300E4056B /* ListViewController.swift */,
 				496F70012652029F00E4056B /* ListDetailViewController.swift */,
+				49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */,
 				496F7006265207A700E4056B /* ImagePageViewController.swift */,
 				496F700B265421E200E4056B /* TxDetailViewController.swift */,
+				49409A74265946870060193C /* SearchResultsViewController.swift */,
+				49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */,
+				496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */,
+				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
+				496D56C42659FF2100C3E7FD /* MainDetailViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -375,6 +404,8 @@
 			children = (
 				4964E515264777BF005B3268 /* ImageCell.swift */,
 				496F6FFC2651F15100E4056B /* ListCell.swift */,
+				496D56B02659654A00C3E7FD /* CategoryCell.swift */,
+				496D56C9265A0BD700C3E7FD /* MainDetailCell.swift */,
 			);
 			path = "Cells and Supplementary Views";
 			sourceTree = "<group>";
@@ -403,6 +434,8 @@
 			isa = PBXGroup;
 			children = (
 				4964E567264968A7005B3268 /* Errors.swift */,
+				496D56CF265AEDAB00C3E7FD /* ImageDataStore.swift */,
+				49D59C752663326500107F79 /* SocketDelegate.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -695,11 +728,15 @@
 				493BF9DC264C515C00B9C9D2 /* TransactionService.swift in Sources */,
 				4964E57226498541005B3268 /* Web3swiftService.swift in Sources */,
 				4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */,
+				496D56D0265AEDAB00C3E7FD /* ImageDataStore.swift in Sources */,
+				496D56B12659654A00C3E7FD /* CategoryCell.swift in Sources */,
 				496F7007265207A700E4056B /* ImagePageViewController.swift in Sources */,
 				493BF9F8264C6ECF00B9C9D2 /* PresentationController.swift in Sources */,
 				4964E50026445EDB005B3268 /* DetailViewController.swift in Sources */,
 				4964E4C12641E12A005B3268 /* BlurEffectContainerView.swift in Sources */,
+				49409A75265946870060193C /* SearchResultsViewController.swift in Sources */,
 				4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */,
+				496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */,
 				493BF9D7264C4DE100B9C9D2 /* BackgroundView2.swift in Sources */,
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
 				493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */,
@@ -713,6 +750,7 @@
 				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
 				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
 				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
+				49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */,
 				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
 				496F6FFD2651F15200E4056B /* ListCell.swift in Sources */,
 				496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */,
@@ -721,18 +759,24 @@
 				4964E5262648AB6A005B3268 /* ZoomAnimationController.swift in Sources */,
 				4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */,
 				497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */,
+				49F694BE265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift in Sources */,
 				4964E56D2649694A005B3268 /* CoreDataServices.swift in Sources */,
 				493BF9C8264C166000B9C9D2 /* CreditCardView.swift in Sources */,
 				493BF9EE264C65FA00B9C9D2 /* BackgroundView3.swift in Sources */,
+				496D56C52659FF2100C3E7FD /* MainDetailViewController.swift in Sources */,
 				4964E57726499D74005B3268 /* RegisteredWalletViewController.swift in Sources */,
 				493BF9E4264C549D00B9C9D2 /* ScannerViewController.swift in Sources */,
 				4964E4CC26430BFB005B3268 /* SignUpViewController.swift in Sources */,
 				4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */,
 				4964E5812649A047005B3268 /* AppProtocols.swift in Sources */,
 				4964E5052644891B005B3268 /* AccountViewController.swift in Sources */,
+				496D56C02659E75D00C3E7FD /* PostViewController + Picker.swift in Sources */,
 				493BF9D2264C4D3B00B9C9D2 /* SendViewController.swift in Sources */,
 				493BF9E9264C657200B9C9D2 /* ReceiveViewController.swift in Sources */,
+				496D56CA265A0BD700C3E7FD /* MainDetailCell.swift in Sources */,
+				496D56B62659E6F900C3E7FD /* MyDoneButtonVC.swift in Sources */,
 				4964E56226496852005B3268 /* KeysService.swift in Sources */,
+				49D59C762663326500107F79 /* SocketDelegate.swift in Sources */,
 				493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */,
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,

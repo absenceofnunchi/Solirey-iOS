@@ -102,6 +102,7 @@ private extension DetailViewController {
             messageLabel.text = message
             messageLabel.textColor = .gray
             messageLabel.numberOfLines = 0
+            messageLabel.sizeToFit()
             messageLabel.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(messageLabel)
             
@@ -113,8 +114,8 @@ private extension DetailViewController {
             view.addSubview(closeButton)
         }
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped))
-        view.addGestureRecognizer(tap)
+//        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped))
+//        view.addGestureRecognizer(tap)
     }
     
     func setConstraints() {
@@ -153,7 +154,7 @@ private extension DetailViewController {
                 messageLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
                 messageLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
                 messageLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                messageLabel.heightAnchor.constraint(equalToConstant: 50),
+//                messageLabel.heightAnchor.constraint(equalToConstant: 50),
                 
                 closeButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.4),
                 closeButton.heightAnchor.constraint(equalToConstant: 50),

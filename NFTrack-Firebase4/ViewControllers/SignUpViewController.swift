@@ -40,7 +40,7 @@ extension SignUpViewController {
         
         // title label
         titleLabel = UILabel()
-        titleLabel.text = "Welcome Back"
+        titleLabel.text = "Create Account"
         titleLabel.font = .rounded(ofSize: 25, weight: .bold)
         titleLabel.textColor = .gray
         titleLabel.translatesAutoresizingMaskIntoConstraints = false

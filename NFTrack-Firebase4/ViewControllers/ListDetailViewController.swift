@@ -6,31 +6,179 @@
 //
 
 import UIKit
-import FirebaseFirestore
 import web3swift
+import Firebase
+import FirebaseFirestore
+import BigInt
 
 class ListDetailViewController: UIViewController {
+    // MARK: - Properties
+    let alert = Alerts()
+    let transactionService = TransactionService()
     var scrollView: UIScrollView!
-    var post: Post!
+    var contractAddress: EthereumAddress!
+    var post: Post! {
+        didSet {
+            DispatchQueue.global().async {
+                do {
+                    let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(self.post.escrowHash)
+                    self.contractAddress = receipt.contractAddress
+                    self.transactionService.prepareTransactionForReading(method: "state", contractAddress: receipt.contractAddress!, completion: { (transaction, error) in
+                        if let error = error {
+                            switch error {
+                                case .contractLoadingError:
+                                    self.alert.showDetail("Error", with: "Contract Loading Error", for: self)
+                                case .createTransactionIssue:
+                                    self.alert.showDetail("Error", with: "Contract Transaction Issue", for: self)
+                                default:
+                                    self.alert.showDetail("Error", with: "There was an error minting your token.", for: self)
+                            }
+                        }
+
+                        if let transaction = transaction {
+                            DispatchQueue.global().async {
+                                do {
+                                    let result: [String: Any] = try transaction.call()
+                                    if let value = result["0"] as? BigUInt {
+                                        let serialized = value.serialize()
+                                        
+                                        print("serialized.count", serialized.count)
+                                        
+                                        var status: String!
+                                        var buyerButtonTitle: String!
+                                        var sellerButtonTitle: String!
+                                        var sellerTag: Int!
+                                        var buyerTag: Int!
+                                        
+                                        if serialized.count == 0 {
+                                            // abort
+                                            status = PurchaseStatus.created.rawValue
+                                            sellerButtonTitle = "Abort"
+                                            sellerTag = 1
+                                            
+                                            // buy
+                                            buyerButtonTitle = "Buy"
+                                            buyerTag = 2
+                                        } else if serialized.count == 1 {
+                                            let statusCode = serialized[0]
+                                            print("statusCode", statusCode)
+                                            switch statusCode {
+                                                case 1:
+                                                    status = PurchaseStatus.locked.rawValue
+                                                    sellerButtonTitle = "Pending"
+                                                    // default
+                                                    sellerTag = 4
+                                                    
+                                                    buyerButtonTitle = "Confirm Received"
+                                                    buyerTag = 3
+                                                case 2:
+                                                    status = "Inactive"
+                                                    sellerButtonTitle = "Transaction Completed"
+                                                    sellerTag = 4
+                                                    
+                                                    buyerButtonTitle = "Transaction Completed"
+                                                    buyerTag = 4
+                                                default:
+                                                    break
+                                            }
+                                        }
+                                        
+                                        if let userId = UserDefaults.standard.string(forKey: "userId") {
+                                            self.userId = userId
+                                            if  userId != self.post.userId {
+                                                DispatchQueue.main.async {
+                                                    self.configureStatusButton(buttonTitle: buyerButtonTitle, tag: buyerTag)
+                                                }
+                                            } else {
+                                                DispatchQueue.main.async {
+                                                    self.configureStatusButton(buttonTitle: sellerButtonTitle, tag: sellerTag)
+                                                }
+                                            }
+                                        } else {
+                                            self.alert.showDetail("Authorization", with: "You need to be logged in!", for: self) {
+                                                self.navigationController?.popViewController(animated: true)
+                                            }
+                                        }
+                                        
+//                                        if self.user == nil {
+//                                            self.handle = Auth.auth().addStateDidChangeListener { [weak self](auth, user) in
+//                                                if user != nil, user!.uid != self?.post.userId {
+//                                                    DispatchQueue.main.async {
+//                                                        self?.configureStatusButton(buttonTitle: buyerButtonTitle, tag: buyerTag)
+//                                                    }
+//                                                } else {
+//                                                    DispatchQueue.main.async {
+//                                                        self?.configureStatusButton(buttonTitle: sellerButtonTitle, tag: sellerTag)
+//                                                    }
+//                                                }
+//                                            }
+//                                        } else {
+//                                            if self.user != nil, self.user!.uid != self.post.userId {
+//                                                DispatchQueue.main.async {
+//                                                    self.configureStatusButton(buttonTitle: buyerButtonTitle, tag: buyerTag)
+//                                                }
+//                                            } else {
+//                                                DispatchQueue.main.async {
+//                                                    self.configureStatusButton(buttonTitle: sellerButtonTitle, tag: sellerTag)
+//                                                }
+//                                            }
+//                                        }
+                                        
+                                        if self.statusLabel != nil {
+                                            DispatchQueue.main.async {
+                                                self.statusLabel.text = status
+                                            }
+                                        }
+                                    } else {
+                                        DispatchQueue.main.async {
+                                            self.navigationController?.popViewController(animated: true)
+                                        }
+                                    }
+                                } catch {
+                                    self.alert.showDetail("Error", with: error.localizedDescription, for: self) {
+                                        DispatchQueue.main.async {
+                                            self.navigationController?.popViewController(animated: true)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    })
+                }  catch Web3Error.nodeError(let desc) {
+                    if let index = desc.firstIndex(of: ":") {
+                        let newIndex = desc.index(after: index)
+                        let newStr = desc[newIndex...]
+                        self.alert.showDetail("Alert", with: String(newStr), for: self)
+                    }
+                } catch {
+                    self.alert.showDetail("Error", with: "Unable to retrieve the contract adddress", for: self) {
+                        self.navigationController?.popViewController(animated: true)
+                    }
+                }
+            }
+        }
+    }
     var pvc: UIPageViewController!
     var galleries = [String]()
     var dateLabel: UILabel!
     var underLineView: UnderlineView!
     var priceTitleLabel: UILabel!
-    var priceLabel: UILabel!
+    var priceLabel: UILabelPadding!
     var descTitleLabel: UILabel!
     var descLabel: UILabelPadding!
-    var txDetailButton: UIButton!
-//    var db: Firestore!
-    var contractAddress: EthereumAddress!
+    var statusTitleLabel: UILabel!
+    var statusLabel: UILabel!
+    var updateStatusButton = UIButton()
+    var userId: String!
+    var buttonPanel: UIView!
+    var editButton: UIButton!
+    var deleteButton: UIButton!
+    var optionsBarItem: UIBarButtonItem!
     
-    let alert = Alerts()
-    let transactionService = TransactionService()
-
     override func viewDidLoad() {
         super.viewDidLoad()
+        configureOptionsBar()
         configureBackground()
-//        configureFirebase()
         configureData()
         configureUI()
         setConstraints()
@@ -38,29 +186,23 @@ class ListDetailViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        print("descLabel height", descLabel.bounds.size.height)
-        scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: 2000)
+        
+        scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: descLabel.bounds.size.height + 700)
     }
 }
 
 extension ListDetailViewController {
+    
     // MARK: - configureBackground
     func configureBackground() {
         title = post.title
         view.backgroundColor = .white
         scrollView = UIScrollView()
-        scrollView.bounces = false
+//        scrollView.bounces = false
         scrollView.backgroundColor = .white
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
     }
-    
-//    // MARK: - configureFirebase
-//    func configureFirebase() {
-//        let settings = FirestoreSettings()
-//        Firestore.firestore().settings = settings
-//        db = Firestore.firestore()
-//    }
     
     // MARK: - configureData
     func configureData() {
@@ -79,49 +221,6 @@ extension ListDetailViewController {
         } else {
             scrollView.fill()
         }
-        
-        FirebaseService.sharedInstance.db.collection("escrow").whereField("userId", isEqualTo: post.userId)
-            .getDocuments() { [weak self](querySnapshot, err) in
-                if let err = err {
-                    print("Error getting documents: \(err)")
-                } else {
-                    for document in querySnapshot!.documents {
-                        let data = document.data()
-                        guard let txHash = data["transactionHash"] as? String else { return }
-                        DispatchQueue.global().async {
-                            do {
-                                let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(txHash)
-                                self?.contractAddress = receipt.contractAddress
-                                self?.transactionService.prepareTransactionForReading(method: "state", contractAddress: receipt.contractAddress!, completion: { (transaction, error) in
-                                    if let error = error {
-                                        switch error {
-                                            case .contractLoadingError:
-                                                self?.alert.showDetail("Error", with: "Contract Loading Error", for: self!)
-                                            case .createTransactionIssue:
-                                                self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self!)
-                                            default:
-                                                self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self!)
-                                        }
-                                    }
-                                    
-                                    if let transaction = transaction {
-                                        DispatchQueue.global().async {
-                                            do {
-                                                let result = try transaction.call()
-                                                print("result", result)
-                                            } catch {
-                                                self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
-                                            }
-                                        }
-                                    }
-                                })
-                            } catch {
-                                self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
-                            }
-                        }
-                    }
-                }
-            }
     }
     
     // MARK: - configurePageVC
@@ -164,42 +263,28 @@ extension ListDetailViewController {
         
         underLineView = UnderlineView()
         underLineView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(underLineView)
+        scrollView.addSubview(underLineView)
         
         priceTitleLabel = UILabel()
         priceTitleLabel.text = "Price"
         priceTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(priceTitleLabel)
+        scrollView.addSubview(priceTitleLabel)
         
-        priceLabel = UILabel()
-        priceLabel.textAlignment = .center
-        priceLabel.text = post.price
+        priceLabel = UILabelPadding()
+        priceLabel.text = "\(post.price) ETH"
         priceLabel.layer.borderColor = UIColor.lightGray.cgColor
         priceLabel.layer.borderWidth = 0.5
         priceLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(priceLabel)
+        scrollView.addSubview(priceLabel)
         
         descTitleLabel = UILabel()
         descTitleLabel.text = "Description"
         descTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(descTitleLabel)
+        scrollView.addSubview(descTitleLabel)
         
         descLabel = UILabelPadding()
         descLabel.lineBreakMode = .byClipping
-        descLabel.text = """
-            Bundle ID in 'GoogleService-Info.plist', or the Bundle ID in the options if you are using a customized options. To ensure that everything can be configured correctly, you may need to make the Bundle IDs consistent. To continue with this plist file, you may change your app's bundle identifier to 'com.ovis.NFTrack'. Or you can download a new configuration file that matches your bundle identifier from https://console.firebase.google.com/ and replace the current one.
-        2021-05-17 21:44:56.289497-0400 NFTrack-Firebase4[7443:8988532] [] nw_protocol_get_quic_image_block_invoke dlopen libquic failed
-        2021-05-17 21:44:56.308206-0400 NFTrack-Firebase4[7443:8988524] 7.8.0 - [Firebase/Analytics][I-ACS023007] Analytics v.7.8.0 started
-        2021-05-17 21:44:56.309573-0400 NFTrack-Firebase4[7443:8988524] 7.8.0 - [Firebase/Analytics][I-ACS023008] To enable debug logging set the following application argument: -FIRAnalyticsDebugEnabled (see http://goo.gl/RfcP7r)
-        2021-05-17 21:44:56.991641-0400 NFTrack-Firebase4[7443:8988524] 7.8.0 - [Firebase/Analytics][I-ACS800023] No pending snapshot to activate. SDK name: app_measurement
-        2021-05-17 21:44:57.106485-0400 NFTrack-Firebase4[7443:8988524] 7.8.0 - [Firebase/Analytics][I-ACS023012] Analytics collection enabled
-        2021-05-17 21:44:57.133068-0400 NFTrack-Firebase4[7443:8988524] 7.8.0 - [Firebase/Analytics][I-ACS023220] Analytics screen reporting is enabled. Call +[FIRAnalytics logEventWithName:FIREventScreenView parameters:] to log a screen view event. To disable automatic screen reporting, set the flag FirebaseAutomaticScreenReportingEnabled to NO (boolean) in the Info.plist
-        gallery in imageVC https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/DpUgBbZzpQhHKnvKURZbyp3jeOA3%2FDD422D51-C41F-4FB5-B7F7-970DF6236A2C?alt=media&token=f4dec0ef-d76a-4876-865a-f98170009c8c
-        urlAddress Optional("https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/DpUgBbZzpQhHKnvKURZbyp3jeOA3%2FDD422D51-C41F-4FB5-B7F7-970DF6236A2C?alt=media&token=f4dec0ef-d76a-4876-865a-f98170009c8c")
-        url https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/DpUgBbZzpQhHKnvKURZbyp3jeOA3%2FDD422D51-C41F-4FB5-B7F7-970DF6236A2C?alt=media&token=f4dec0ef-d76a-4876-865a-f98170009c8c
-        imageView Optional(<UIImageView: 0x7fae7a808710; frame = (0 0; 0 0); userInteractionEnabled = NO; layer = <CALayer: 0x600001a698a0>>)
-        data 2049960 bytes
-        """
+        descLabel.text = post.description
         descLabel.numberOfLines = 0
         descLabel.sizeToFit()
         descLabel.layer.borderWidth = 0.5
@@ -208,12 +293,70 @@ extension ListDetailViewController {
         descLabel.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(descLabel)
         
-        txDetailButton = UIButton(type: .infoDark)
-        txDetailButton.setTitle("Transaction Detail", for: .normal)
-        txDetailButton.addTarget(self, action: #selector(buttonPressed), for: .touchUpInside)
-        txDetailButton.tag = 1
-        txDetailButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(txDetailButton)
+        statusTitleLabel = UILabel()
+        statusTitleLabel.text = "Status"
+        statusTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(statusTitleLabel)
+        
+        statusLabel = UILabelPadding()
+        statusLabel.layer.borderColor = UIColor.lightGray.cgColor
+        statusLabel.layer.borderWidth = 0.5
+        statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(statusLabel)
+        
+        updateStatusButton.backgroundColor = .black
+        updateStatusButton.layer.cornerRadius = 5
+        updateStatusButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        updateStatusButton.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(updateStatusButton)
+    }
+    
+    // MARK: - configureStatusButton
+    func configureStatusButton(buttonTitle: String = "Buy", tag: Int = 2) {
+        updateStatusButton.tag = tag
+        updateStatusButton.setTitle(buttonTitle, for: .normal)
+    }
+    
+    // MARK: - configureEditButton
+    func configureEditButton() {
+        buttonPanel = UIView()
+        buttonPanel.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(buttonPanel)
+        
+        editButton = UIButton()
+        editButton.tag = 3
+        editButton.backgroundColor = .blue
+        editButton.setTitle("Edit", for: .normal)
+        editButton.layer.cornerRadius = 5
+        editButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        editButton.translatesAutoresizingMaskIntoConstraints = false
+        buttonPanel.addSubview(editButton)
+        
+        deleteButton = UIButton()
+        deleteButton.tag = 4
+        deleteButton.backgroundColor = .red
+        deleteButton.setTitle("Delete", for: .normal)
+        deleteButton.layer.cornerRadius = 6
+        deleteButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        deleteButton.translatesAutoresizingMaskIntoConstraints = false
+        buttonPanel.addSubview(deleteButton)
+        
+        NSLayoutConstraint.activate([
+            buttonPanel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
+            buttonPanel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
+            buttonPanel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
+            buttonPanel.heightAnchor.constraint(equalToConstant: 50),
+            
+            editButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+            editButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
+            editButton.heightAnchor.constraint(equalToConstant: 50),
+            editButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+            
+            deleteButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+            deleteButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
+            deleteButton.heightAnchor.constraint(equalToConstant: 50),
+            deleteButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4)
+        ])
     }
     
     // MARK: - setConstraints
@@ -229,7 +372,7 @@ extension ListDetailViewController {
             underLineView.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             underLineView.heightAnchor.constraint(equalToConstant: 0.5),
             
-            priceTitleLabel.topAnchor.constraint(equalTo: underLineView.bottomAnchor, constant: 50),
+            priceTitleLabel.topAnchor.constraint(equalTo: underLineView.bottomAnchor, constant: 40),
             priceTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             priceTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             priceTitleLabel.heightAnchor.constraint(equalToConstant: 50),
@@ -239,29 +382,45 @@ extension ListDetailViewController {
             priceLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             priceLabel.heightAnchor.constraint(equalToConstant: 50),
             
-            descTitleLabel.topAnchor.constraint(equalTo: priceLabel.bottomAnchor, constant: 50),
+            descTitleLabel.topAnchor.constraint(equalTo: priceLabel.bottomAnchor, constant: 40),
             descTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             descTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             
             descLabel.topAnchor.constraint(equalTo: descTitleLabel.bottomAnchor, constant: 10),
             descLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             descLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
+            descLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
             
-            txDetailButton.topAnchor.constraint(equalTo: descLabel.bottomAnchor, constant: 20),
-            txDetailButton.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
-            txDetailButton.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
-            txDetailButton.heightAnchor.constraint(equalToConstant: 50),
+            statusTitleLabel.topAnchor.constraint(equalTo: descLabel.bottomAnchor, constant: 40),
+            statusTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
+            statusTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
+            statusTitleLabel.heightAnchor.constraint(equalToConstant: 50),
+            
+            statusLabel.topAnchor.constraint(equalTo: statusTitleLabel.bottomAnchor, constant: 0),
+            statusLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
+            statusLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
+            statusLabel.heightAnchor.constraint(equalToConstant: 50),
+            
+            updateStatusButton.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
+            updateStatusButton.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
+            updateStatusButton.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
+            updateStatusButton.heightAnchor.constraint(equalToConstant: 50),
         ])
     }
     
+    // MARK: - buttonPressed
     @objc func buttonPressed(_ sender: UIButton!) {
-        txDetailButton.tag = 1
         switch sender.tag {
             case 1:
-                let txDetailVC = TxDetailViewController()
-                txDetailVC.txHash = post.txHash
-                txDetailVC.nonce = post.nonce
-                self.navigationController?.pushViewController(txDetailVC, animated: true)
+                // abort by the seller
+                updateState(method: PurchaseMethods.abort.rawValue)
+            case 2:
+                // confirm purchase
+                let buyerHash = Web3swiftService.currentAddressString
+                updateState(method: PurchaseMethods.confirmPurchase.rawValue, price: String(post.price), status: .pending, buyerHash: buyerHash, buyerUserID: userId)
+            case 3:
+                // confirm received
+                updateState(method: PurchaseMethods.confirmReceived.rawValue, status: .complete)
             default:
                 break
         }
@@ -303,3 +462,136 @@ extension ListDetailViewController: UIPageViewControllerDataSource, UIPageViewCo
         }
     }
 }
+
+extension ListDetailViewController {
+    func updateState(method: String, price: String = "0", status: PostStatus? = nil, buyerHash: String? = nil, buyerUserID: String? = nil) {
+        transactionService.prepareTransactionForWriting(method: method, contractAddress: contractAddress, amountString: price) { [weak self](transaction, error) in
+            if let error = error {
+                switch error {
+                    case .invalidAmountFormat:
+                        self?.alert.showDetail("Error", with: "The ETH amount is not in a correct format!", for: self!)
+                    case .zeroAmount:
+                        self?.alert.showDetail("Error", with: "The ETH amount cannot be negative", for: self!)
+                    case .insufficientFund:
+                        self?.alert.showDetail("Error", with: "There is an insufficient amount of ETH in the wallet.", for: self!)
+                    case .contractLoadingError:
+                        self?.alert.showDetail("Error", with: "There was an error loading your contract.", for: self!)
+                    case .createTransactionIssue:
+                        self?.alert.showDetail("Error", with: "There was an error creating the transaction.", for: self!)
+                    default:
+                        self?.alert.showDetail("Sorry", with: "There was an error. Please try again.", for: self!)
+                }
+            }
+            
+            if let transaction = transaction {
+                let detailVC = DetailViewController(height: 250, isTextField: true)
+                detailVC.titleString = "Enter your password"
+                detailVC.buttonAction = { vc in
+                    if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
+                        self?.dismiss(animated: true, completion: {
+                            DispatchQueue.global().async {
+                                do {
+                                    let result = try transaction.send(password: password, transactionOptions: nil)
+                                    FirebaseService.sharedInstance.db.collection("post").document(self!.post.documentId).updateData([
+                                        "\(method)Hash": result.hash
+                                    ], completion: { (error) in
+                                        if let error = error {
+                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                        }
+                                        
+                                        var statusMessage: String!
+                                        if status == nil {
+                                            statusMessage = "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account."
+                                        } else if status == .pending {
+                                            statusMessage = "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item."
+                                        } else if status == .complete {
+                                            statusMessage = "You have confirmed that you recieved the item. Your ether will be released back to your account."
+                                        }
+                                        
+                                        self?.alert.showDetail("Success", with: statusMessage, height: 300, for: self!)
+                                    })
+                                } catch {
+                                    self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                }
+                            }
+                        })
+                    }
+                }
+                self?.present(detailVC, animated: true, completion: {
+                    if let status = status {
+                        /// tag 2
+                        /// confirmedPurchase
+                        if buyerHash != nil, buyerUserID != nil {
+                            FirebaseService.sharedInstance.db.collection("post").document(self!.post.documentId).updateData([
+                                "status": status.rawValue,
+                                "buyerHash": buyerHash ?? "NA",
+                                "buyerUserId": buyerUserID ?? "NA"
+                            ], completion: { (error) in
+                                if let error = error {
+                                    self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                }
+                            })
+                        } else {
+                            /// tag 3
+                            /// confirmRecieved
+                            FirebaseService.sharedInstance.db.collection("post").document(self!.post.documentId).updateData([
+                                "status": status.rawValue,
+                            ], completion: { (error) in
+                                if let error = error {
+                                    self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                }
+                            })
+                        }
+                    }
+                })
+            }
+        }
+    }
+}
+
+
+//FirebaseService.sharedInstance.db.collection("escrow").whereField("postId", isEqualTo: post.postId)
+//    .getDocuments() { [weak self](querySnapshot, err) in
+//        if let err = err {
+//            print("Error getting documents: \(err)")
+//        } else {
+//            for document in querySnapshot!.documents {
+//                let data = document.data()
+//                guard let txHash = data["transactionHash"] as? String else { return }
+//                DispatchQueue.global().async {
+//                    do {
+//                        let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(txHash)
+//                        self?.contractAddress = receipt.contractAddress
+//                        self?.transactionService.prepareTransactionForReading(method: "state", contractAddress: receipt.contractAddress!, completion: { (transaction, error) in
+//                            if let error = error {
+//                                switch error {
+//                                    case .contractLoadingError:
+//                                        self?.alert.showDetail("Error", with: "Contract Loading Error", for: self!)
+//                                    case .createTransactionIssue:
+//                                        self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self!)
+//                                    default:
+//                                        self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self!)
+//                                }
+//                            }
+//
+//                            if let transaction = transaction {
+//                                DispatchQueue.global().async {
+//                                    do {
+//                                        self?.result = try transaction.call()
+//                                        print("result", self?.result as Any)
+//                                        //                                                self?.status = result["0"] as String
+//                                    } catch {
+//                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+//                                    }
+//                                }
+//                            }
+//                        })
+//                    } catch {
+//                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+// 20.8769

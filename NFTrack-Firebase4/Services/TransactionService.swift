@@ -164,14 +164,14 @@ extension TransactionService {
         options.value = BigUInt(amount)
         
         let web3 = Web3swiftService.web3instance
-        guard let contract = web3.contract(someABI) else {
+        guard let contract = web3.contract(purchaseABI2) else {
             DispatchQueue.main.async {
                 completion(nil, SendEthErrors.contractLoadingError)
             }
             return
         }
         
-        let bytecode = Data(hex: purchaseBytecode)
+        let bytecode = Data(hex: purchaseBytecode2)
         guard let transaction = contract.deploy(bytecode: bytecode, parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
             DispatchQueue.main.async {
                 completion(nil, SendEthErrors.createTransactionIssue)
@@ -182,6 +182,7 @@ extension TransactionService {
         completion(transaction, nil)
     }
     
+    // MARK: - prepareTransactionForMinting
     func prepareTransactionForMinting(completion: @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
         guard let address = Web3swiftService.currentAddress else { return }
         var options = TransactionOptions.defaultOptions
@@ -211,7 +212,7 @@ extension TransactionService {
         }
     }
     
-    
+    // MARK: - prepareTransactionForReading
     func prepareTransactionForReading(method: String, abi: String = someABI, contractAddress: EthereumAddress, completion: @escaping (ReadTransaction?, SendEthErrors?) -> Void) {
         guard let address = Web3swiftService.currentAddress else { return }
         var options = TransactionOptions.defaultOptions
@@ -236,6 +237,67 @@ extension TransactionService {
 
         DispatchQueue.main.async {
             completion(transaction, nil)
+        }
+    }
+    
+    func prepareTransactionForWriting(method: String, abi: String = someABI, contractAddress: EthereumAddress, amountString: String = "0", completion: @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
+        let web3 = Web3swiftService.web3instance
+        guard let myAddress = Web3swiftService.currentAddress else { return }
+        var balance: BigUInt!
+        DispatchQueue.global().async {
+            balance = try? web3.eth.getBalance(address: myAddress)
+            
+            guard !amountString.isEmpty else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.emptyAmount)
+                }
+                return
+            }
+            
+            guard let amount = Web3.Utils.parseToBigUInt(amountString, units: .eth) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.invalidAmountFormat)
+                }
+                return
+            }
+            
+            guard amount >= 0 else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.zeroAmount)
+                }
+                return
+            }
+            
+            guard amount <= (balance ?? 0) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.insufficientFund)
+                }
+                return
+            }
+            
+            var options = TransactionOptions.defaultOptions
+            options.from = myAddress
+            options.value = amount
+            options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
+            options.gasPrice = TransactionOptions.GasPricePolicy.automatic
+            
+            guard let contract = web3.contract(abi, at: contractAddress, abiVersion: 2) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.contractLoadingError)
+                }
+                return
+            }
+            
+            guard let transaction = contract.write(method, parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.createTransactionIssue)
+                }
+                return
+            }
+            
+            DispatchQueue.main.async {
+                completion(transaction, nil)
+            }
         }
     }
 }

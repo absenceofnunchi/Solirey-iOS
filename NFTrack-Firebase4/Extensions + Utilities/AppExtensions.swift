@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Firebase
 
 // MARK: - UITextField
 extension UITextField {
@@ -58,6 +59,47 @@ extension UIViewController {
             SaveAlertHandle.clear()
             controller.dismiss(animated: true, completion: completion)
         }
+    }
+    
+    func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post] {
+        var postArr = [Post]()
+        for document in querySnapshot!.documents {
+//            print("\(document.documentID) => \(document.data())")
+            let data = document.data()
+            var postId, user, title, description, price, mintHash, escrowHash: String!
+            var date: Date!
+            var images: [String]?
+            data.forEach { (item) in
+                switch item.key {
+                    case "postId":
+                        postId = item.value as? String
+                    case "userId":
+                        user = item.value as? String
+                    case "title":
+                        title = item.value as? String
+                    case "description":
+                        description = item.value as? String
+                    case "date":
+                        let timeStamp = item.value as? Timestamp
+                        date = timeStamp?.dateValue()
+                    case "images":
+                        images = item.value as? [String]
+                    case "price":
+                        price = item.value as? String
+                    case "mintHash":
+                        mintHash = item.value as? String
+                    case "escrowHash":
+                        escrowHash = item.value as? String
+                    default:
+                        break
+                }
+            }
+            
+            let post = Post(documentId: document.documentID, postId: postId, userId: user, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash)
+            
+            postArr.append(post)
+        }
+        return postArr
     }
 }
 
@@ -185,9 +227,7 @@ protocol ScannerDelegate: AnyObject {
 // MARK: - UIImageView
 extension UIImageView {
     func setImage(from urlAddress: String?) {
-        print("urlAddress", urlAddress)
         guard let urlAddress = urlAddress, let url = URL(string: urlAddress) else { return }
-        print("url", url)
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else { return }
             DispatchQueue.main.async {

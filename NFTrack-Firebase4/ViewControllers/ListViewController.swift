@@ -6,15 +6,14 @@
 //
 
 import UIKit
-import Firebase
 import FirebaseFirestore
 
 class ListViewController: UIViewController {
-    var handle: AuthStateDidChangeListenerHandle!
     var tableView: UITableView!
     var postArr = [Post]()
     let refreshControl = UIRefreshControl()
-    
+    let alert = Alerts()
+    let userDefaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,7 +21,7 @@ class ListViewController: UIViewController {
         configureSwitch()
         configureNavigationBar()
         configureUI()
-        configureDataFetch()
+        configureDataFetch(isBuyer: true, status: .pending)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -34,8 +33,9 @@ extension ListViewController {
     // MARK: - configureSwitch
     func configureSwitch() {
         let segmentTextContent = [
-            NSLocalizedString("Progress", comment: ""),
-            NSLocalizedString("List", comment: ""),
+            NSLocalizedString("Pending", comment: ""),
+            NSLocalizedString("My Purchases", comment: ""),
+            NSLocalizedString("My Posts", comment: ""),
         ]
         
         // Segmented control as the custom title view.
@@ -43,67 +43,47 @@ extension ListViewController {
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.autoresizingMask = .flexibleWidth
         segmentedControl.frame = CGRect(x: 0, y: 0, width: 300, height: 30)
-        segmentedControl.addTarget(self, action: #selector(action(_:)), for: .valueChanged)
+        segmentedControl.addTarget(self, action: #selector(segmentedControlSelectionDidChange(_:)), for: .valueChanged)
         self.navigationItem.titleView = segmentedControl
     }
     
     // MARK: - configureDataFetch
-    func configureDataFetch() {
+    func configureDataFetch(isBuyer: Bool, status: PostStatus?) {
         postArr.removeAll()
-        handle = Auth.auth().addStateDidChangeListener { [weak self](auth, user) in
-            if user != nil {
-                FirebaseService.sharedInstance.db.collection("mint").whereField("userId", isEqualTo: user!.uid)
-                    .getDocuments() { (querySnapshot, err) in
-                        if let err = err {
-                            print("Error getting documents: \(err)")
-                        } else {
-                            for document in querySnapshot!.documents {
-                                print("\(document.documentID) => \(document.data())")
-                                let data = document.data()
-                                var postId, userId, title, description, price, txhash, nonce: String!
-                                var date: Date!
-                                var images: [String]?
-                                data.forEach { (item) in
-                                    switch item.key {
-                                        case "postId":
-                                            postId = item.value as? String
-                                        case "userId":
-                                            userId = item.value as? String
-                                        case "title":
-                                            title = item.value as? String
-                                        case "description":
-                                            description = item.value as? String
-                                        case "date":
-                                            let timeStamp = item.value as? Timestamp
-                                            date = timeStamp?.dateValue()
-                                        case "images":
-                                            images = item.value as? [String]
-                                        case "price":
-                                            price = item.value as? String
-                                        case "transactionHash":
-                                            txhash = item.value as? String
-                                        case "nonce":
-                                            nonce = item.value as? String
-                                        default:
-                                            break
-                                    }
-                                }
-                                
-                                let post = Post(postId: postId, userId: userId, title: title, description: description, date: date, images: images, price: price, txHash: txhash, nonce: nonce)
-                                
-                                self?.postArr.append(post)
-                            }
-                            
+        if let userId = userDefaults.string(forKey: "userId") {
+            var ref = FirebaseService.sharedInstance.db.collection("post")
+                .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.userId.rawValue, isEqualTo: userId)
+            
+            if status != nil {
+                ref = ref.whereField("status", isEqualTo: status!.rawValue)
+            }
+                
+            ref.getDocuments() { [weak self] (querySnapshot, err) in
+                    if let err = err {
+                        self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self!)
+                    } else {
+                        if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                            self?.postArr = data
+
                             DispatchQueue.main.async {
                                 self?.tableView.reloadData()
-                                self?.refreshControl.endRefreshing()
+                                self?.delay(1.0) {
+                                    DispatchQueue.main.async {
+                                        self?.refreshControl.endRefreshing()
+                                    }
+                                }
                             }
                         }
                     }
-            } else {
-                
-            }
+                }
+        } else {
+            self.alert.showDetail("Oops!", with: "You have to be logged in!", for: self)
         }
+    }
+    
+    func delay(_ delay:Double, closure:@escaping ()->()) {
+        let when = DispatchTime.now() + delay
+        DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
     }
     
     // MARK: - configureUI
@@ -111,7 +91,7 @@ extension ListViewController {
         view.backgroundColor = .white
         tableView = UITableView()
         tableView.backgroundColor = .systemBackground
-        tableView.register(ListCell.self, forCellReuseIdentifier: "ListCell")
+        tableView.register(ListCell.self, forCellReuseIdentifier: Cell.listCell)
         tableView.dataSource = self
         tableView.delegate = self
         view.addSubview(tableView)
@@ -126,9 +106,6 @@ extension ListViewController {
     
     // MARK: - configureNavigationBar
     func configureNavigationBar() {
-//        edgesForExtendedLayout = .top
-//        extendedLayoutIncludesOpaqueBars = true
-        
         // navigation controller
         self.navigationController?.navigationBar.tintColor = UIColor.gray
         self.navigationController?.navigationBar.isTranslucent = false
@@ -150,26 +127,33 @@ extension ListViewController {
             self.navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
             self.navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
         }
-        
-        // -----------------------------------------------------------
-        // NAVIGATION BAR SHADOW
-        // -----------------------------------------------------------
-//        self.navigationController?.navigationBar.layer.masksToBounds = false
-//        self.navigationController?.navigationBar.layer.shadowColor = UIColor.gray.cgColor
-//        self.navigationController?.navigationBar.layer.shadowOffset = CGSize(width: 0, height: 2)
-//        self.navigationController?.navigationBar.layer.shadowRadius = 5
-//        self.navigationController?.navigationBar.layer.shadowOpacity = 0.7
-        
-        // title
-        title = "Item List"
-    }
-    
-    @objc func action(_ sender: AnyObject) {
-        Swift.debugPrint("CustomTitleViewController IBAction invoked")
     }
     
     @objc func refresh(_ sender: UIRefreshControl) {
-        configureDataFetch()
+//        configureDataFetch()
+    }
+    
+    fileprivate enum Segment: Int {
+        case pending, purchases, posts
+    }
+    
+    // MARK: - segmentedControlSelectionDidChange
+    @objc func segmentedControlSelectionDidChange(_ sender: UISegmentedControl) {
+        guard let segment = Segment(rawValue: sender.selectedSegmentIndex)
+        else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
+        
+        switch segment {
+            case .pending:
+                // buyer, pending
+                configureDataFetch(isBuyer: true, status: .pending)
+            case .purchases:
+                // buyer, complete
+                configureDataFetch(isBuyer: true, status: .complete)
+            case .posts:
+                // seller, all status
+                // userId field means seller
+                configureDataFetch(isBuyer: false, status: nil)
+        }
     }
 }
 
@@ -179,7 +163,7 @@ extension ListViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ListCell", for: indexPath) as! ListCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: Cell.listCell, for: indexPath) as! ListCell
         cell.selectionStyle = .none
         
         let title = postArr[indexPath.row].title

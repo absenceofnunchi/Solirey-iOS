@@ -40,6 +40,7 @@ struct BorderStyle {
 // MARK: - Post
 /// ListViewController
 struct Post {
+    let documentId: String
     let postId: String
     let userId: String
     let title: String
@@ -47,8 +48,8 @@ struct Post {
     let date: Date
     let images: [String]?
     let price: String
-    let txHash: String
-    let nonce: String
+    let mintHash: String
+    let escrowHash: String
 }
 
 // MARK: - UILabelPadding
@@ -85,5 +86,71 @@ class UnderlineView: UIView {
         UIColor.lightGray.set()
         aPath.lineWidth = 0.1
         aPath.stroke()
+    }
+}
+
+// MARK: - Cell
+struct Cell {
+    static let mainCell = "MainCell"
+    static let listCell = "ListCell"
+    static let categoryCell = "CategoryCell"
+    static let mainDetailCell = "MainDetailCell"
+}
+
+// MARK: - PurchaseMethods
+enum PurchaseMethods: String {
+    case abort, confirmPurchase, confirmReceived
+}
+
+// MARK: - PurchaseStatus
+enum PurchaseStatus: String {
+    case created = "Created"
+    case locked = "Locked"
+    case inactive = "Inactive"
+}
+
+// MARK: - PostStatus
+/// determines whether to show the post or not
+/// when the seller first posts: ready
+/// when the seller aborts: read
+/// when the buyer buys: pending
+/// when the transaction is complete: complete
+enum PostStatus: String {
+    case ready, pending, complete
+}
+
+// MARK:- PositionStatus
+/// when a seller posts an item, it registers its own hash under userId
+enum PositionStatus: String {
+    case buyerUserId, userId
+}
+
+// MARK: - ViewControllerIdentifiers
+struct ViewControllerIdentifiers {
+    static let purchaseVC = "purchaseVC"
+    static let listVC = "listVC"
+}
+
+// MARK: - Category
+enum Category: String {
+    case electronics = "Electronics"
+    case vehicle = "Vehicle"
+    case realEstate = "Real Estate"
+    case other = "Other"
+    
+    static func getCategory(num: Int) -> Category? {
+        guard num >= 0, num < 4 else { return nil }
+        switch num {
+            case 0:
+                return .electronics
+            case 1:
+                return .vehicle
+            case 2:
+                return .realEstate
+            case 3:
+                return .other
+            default:
+                return .other
+        }
     }
 }
