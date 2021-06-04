@@ -11,6 +11,10 @@ import web3swift
 // 0x9A9C30E27FC797c287847bA37255c15940A081a2
 // 0x16bcb424E5C124CB5cB7AbBC79589B7Fe67C92d6
 
+
+// MARK: - erc721ContractAddress
+let erc721ContractAddress = EthereumAddress("0x656f9bf02fa8eff800f383e5678e699ce2788c5c")
+
 let ERC721PresetMinterPauserAutoIdContractAddress = EthereumAddress("0x16bcb424E5C124CB5cB7AbBC79589B7Fe67C92d6")
 
 // MARK: - ERC721PresetMinterPauserAutoIdABI
@@ -1675,124 +1679,6 @@ let someABI = """
                 "type": "uint256"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
-    }
-]
-"""
-
-// MARK:- ABI with
-
-let purchaseABI2 = """
-[
-    {
-        "constant": false,
-        "inputs": [],
-        "name": "abort",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": false,
-        "inputs": [],
-        "name": "confirmPurchase",
-        "outputs": [],
-        "payable": true,
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "payable": true,
-        "stateMutability": "payable",
-        "type": "constructor"
-    },
-    {
-        "anonymous": false,
-        "inputs": [],
-        "name": "Aborted",
-        "type": "event"
-    },
-    {
-        "constant": false,
-        "inputs": [],
-        "name": "confirmReceived",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "anonymous": false,
-        "inputs": [],
-        "name": "ItemReceived",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [],
-        "name": "PurchaseConfirmed",
-        "type": "event"
-    },
-    {
-        "constant": true,
-        "inputs": [],
-        "name": "buyer",
-        "outputs": [
-            {
-                "internalType": "address payable",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "constant": true,
-        "inputs": [],
-        "name": "seller",
-        "outputs": [
-            {
-                "internalType": "address payable",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "constant": true,
-        "inputs": [],
-        "name": "state",
-        "outputs": [
-            {
-                "internalType": "enum Purchase.State",
-                "name": "",
-                "type": "uint8"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "constant": true,
-        "inputs": [],
-        "name": "value",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "payable": false,
         "stateMutability": "view",
         "type": "function"
     }

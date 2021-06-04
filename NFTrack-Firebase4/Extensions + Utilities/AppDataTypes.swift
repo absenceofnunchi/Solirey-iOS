@@ -39,6 +39,7 @@ struct BorderStyle {
 
 // MARK: - Post
 /// ListViewController
+/// txHash is either for minting for the very first time or transferring the ownership afterwards
 struct Post {
     let documentId: String
     let postId: String
@@ -48,8 +49,10 @@ struct Post {
     let date: Date
     let images: [String]?
     let price: String
-    let mintHash: String
+    let txHash: String
     let escrowHash: String
+    let id: String
+    let buyerHash: String? = nil
 }
 
 // MARK: - UILabelPadding
@@ -112,11 +115,11 @@ enum PurchaseStatus: String {
 // MARK: - PostStatus
 /// determines whether to show the post or not
 /// when the seller first posts: ready
-/// when the seller aborts: read
+/// when the seller aborts: ready
 /// when the buyer buys: pending
 /// when the transaction is complete: complete
 enum PostStatus: String {
-    case ready, pending, complete
+    case ready, pending, complete, abort
 }
 
 // MARK:- PositionStatus

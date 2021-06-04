@@ -14,6 +14,7 @@ class PresentationController: UIPresentationController {
         dimmingView.translatesAutoresizingMaskIntoConstraints = false
         return dimmingView
     }()
+    var constraints = [NSLayoutConstraint]()
     
     override var frameOfPresentedViewInContainerView: CGRect {
         let bounds = presentingViewController.view.bounds
@@ -27,14 +28,28 @@ class PresentationController: UIPresentationController {
         
         self.height = height
         
-        presentedView?.autoresizingMask = [
-            .flexibleTopMargin,
-            .flexibleBottomMargin,
-            .flexibleLeftMargin,
-            .flexibleRightMargin
-        ]
+//        presentedView?.autoresizingMask = [
+//            .flexibleTopMargin,
+//            .flexibleBottomMargin,
+//            .flexibleLeftMargin,
+//            .flexibleRightMargin
+//        ]
+//
+//        presentedView?.translatesAutoresizingMaskIntoConstraints = true
         
-        presentedView?.translatesAutoresizingMaskIntoConstraints = true
+        addKeyboardObserver()
+        
+        guard let presentedView = presentedView, let containerView = containerView else { return }
+        presentedView.translatesAutoresizingMaskIntoConstraints = false
+        constraints.append(contentsOf: [
+            presentedView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            presentedView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
+        ])
+        NSLayoutConstraint.activate(constraints)
+    }
+    
+    deinit {
+        removeKeyboardObserver()
     }
 }
 
@@ -68,14 +83,31 @@ extension PresentationController {
     }
 }
 
-class TransitioningDelegate: NSObject, UIViewControllerTransitioningDelegate {
-    var height: CGFloat!
-    
-    init(height: CGFloat = 300) {
-        self.height = height
+extension PresentationController {
+    func addKeyboardObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
+                                               name: UIResponder.keyboardWillChangeFrameNotification,
+                                               object: nil)
     }
     
-    func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
-        return PresentationController(presentedViewController: presented, presenting: presenting, height: height)
+    func removeKeyboardObserver(){
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+    }
+    
+    @objc func keyboardNotifications(notification: NSNotification) {
+        NSLayoutConstraint.deactivate(constraints)
+        guard let presentedView = presentedView, let containerView = containerView else { return }
+        presentedView.translatesAutoresizingMaskIntoConstraints = false
+        let newConstraints = [
+            presentedView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            presentedView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 100),
+            presentedView.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.8),
+            presentedView.heightAnchor.constraint(equalToConstant: height)
+        ]
+        NSLayoutConstraint.activate(newConstraints)
+        
+        UIView.animate(withDuration: 0.5) {
+            containerView.layoutIfNeeded()
+        }
     }
 }

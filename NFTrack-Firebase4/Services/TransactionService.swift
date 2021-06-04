@@ -163,84 +163,91 @@ extension TransactionService {
         }
         options.value = BigUInt(amount)
         
-        let web3 = Web3swiftService.web3instance
-        guard let contract = web3.contract(purchaseABI2) else {
-            DispatchQueue.main.async {
-                completion(nil, SendEthErrors.contractLoadingError)
+        DispatchQueue.global().async {
+            let web3 = Web3swiftService.web3instance
+            guard let contract = web3.contract(purchaseABI2) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.contractLoadingError)
+                }
+                return
             }
-            return
-        }
-        
-        let bytecode = Data(hex: purchaseBytecode2)
-        guard let transaction = contract.deploy(bytecode: bytecode, parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
-            DispatchQueue.main.async {
-                completion(nil, SendEthErrors.createTransactionIssue)
+            
+            let bytecode = Data(hex: purchaseBytecode2)
+            guard let transaction = contract.deploy(bytecode: bytecode, parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.createTransactionIssue)
+                }
+                return
             }
-            return
+            
+            DispatchQueue.main.async {
+                completion(transaction, nil)
+            }
         }
-        
-        completion(transaction, nil)
     }
     
     // MARK: - prepareTransactionForMinting
     func prepareTransactionForMinting(completion: @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
-        guard let address = Web3swiftService.currentAddress else { return }
-        var options = TransactionOptions.defaultOptions
-        options.from = address
-        options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
-        options.gasPrice = TransactionOptions.GasPricePolicy.automatic
-
-        
-        let web3 = Web3swiftService.web3instance
-        guard let contract = web3.contract(NFTrackABI, at: NFTrackAddress, abiVersion: 2) else {
-            DispatchQueue.main.async {
-                completion(nil, SendEthErrors.contractLoadingError)
+        DispatchQueue.global().async {
+            guard let address = Web3swiftService.currentAddress else { return }
+            var options = TransactionOptions.defaultOptions
+            options.from = address
+            options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
+            options.gasPrice = TransactionOptions.GasPricePolicy.automatic
+            
+            let web3 = Web3swiftService.web3instance
+            guard let contract = web3.contract(NFTrackABI, at: NFTrackAddress, abiVersion: 2) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.contractLoadingError)
+                }
+                return
             }
-            return
-        }
-        
-        let parameters: [AnyObject] = [Web3swiftService.currentAddressString!] as [AnyObject]
-        guard let transaction = contract.write("mintNft", parameters: parameters, extraData: Data(), transactionOptions: options) else {
-            DispatchQueue.main.async {
-                completion(nil, SendEthErrors.createTransactionIssue)
+            
+            let parameters: [AnyObject] = [Web3swiftService.currentAddressString!] as [AnyObject]
+            guard let transaction = contract.write("mintNft", parameters: parameters, extraData: Data(), transactionOptions: options) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.createTransactionIssue)
+                }
+                return
             }
-            return
-        }
-        
-        DispatchQueue.main.async {
-            completion(transaction, nil)
+            
+            DispatchQueue.main.async {
+                completion(transaction, nil)
+            }
         }
     }
     
     // MARK: - prepareTransactionForReading
-    func prepareTransactionForReading(method: String, abi: String = someABI, contractAddress: EthereumAddress, completion: @escaping (ReadTransaction?, SendEthErrors?) -> Void) {
+    func prepareTransactionForReading(method: String, abi: String = purchaseABI2, contractAddress: EthereumAddress, completion: @escaping (ReadTransaction?, SendEthErrors?) -> Void) {
         guard let address = Web3swiftService.currentAddress else { return }
         var options = TransactionOptions.defaultOptions
         options.from = address
         options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
         options.gasPrice = TransactionOptions.GasPricePolicy.automatic
         
-        let web3 = Web3swiftService.web3instance
-        guard let contract = web3.contract(abi, at: contractAddress, abiVersion: 2) else {
-            DispatchQueue.main.async {
-                completion(nil, SendEthErrors.contractLoadingError)
+        DispatchQueue.global().async {
+            let web3 = Web3swiftService.web3instance
+            guard let contract = web3.contract(abi, at: contractAddress, abiVersion: 2) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.contractLoadingError)
+                }
+                return
             }
-            return
-        }
-        
-        guard let transaction = contract.read(method, parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
-            DispatchQueue.main.async {
-                completion(nil, SendEthErrors.createTransactionIssue)
+            
+            guard let transaction = contract.read(method, parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.createTransactionIssue)
+                }
+                return
             }
-            return
-        }
-
-        DispatchQueue.main.async {
-            completion(transaction, nil)
+            
+            DispatchQueue.main.async {
+                completion(transaction, nil)
+            }
         }
     }
     
-    func prepareTransactionForWriting(method: String, abi: String = someABI, contractAddress: EthereumAddress, amountString: String = "0", completion: @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
+    func prepareTransactionForWriting(method: String, abi: String = purchaseABI2, param: [AnyObject] = [AnyObject](), contractAddress: EthereumAddress, amountString: String = "0", completion: @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
         let web3 = Web3swiftService.web3instance
         guard let myAddress = Web3swiftService.currentAddress else { return }
         var balance: BigUInt!
@@ -288,7 +295,7 @@ extension TransactionService {
                 return
             }
             
-            guard let transaction = contract.write(method, parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
+            guard let transaction = contract.write(method, parameters: param, extraData: Data(), transactionOptions: options) else {
                 DispatchQueue.main.async {
                     completion(nil, SendEthErrors.createTransactionIssue)
                 }
@@ -310,3 +317,50 @@ extension TransactionService {
 //    options.gasPrice = .manual(wei)
 //}
 
+//TransactionSendingResult(transaction: Transaction
+//                         Nonce: 99
+//                         Gas price: 1000000000
+//                         Gas limit: 57289
+//                         To: 0x656f9BF02FA8EfF800f383E5678e699ce2788C5C
+//                         Value: 0
+//                         Data: 0xe9c2e14b0000000000000000000000009ce24c07aab108283b3518c6801c6e757b0c514c
+//                         v: 43
+//                         r: 2280159737137638003207476698716749457091804291606456927160914703478058179025
+//                         s: 1626766791259019315163922223723536520307630036486086251261618980737456711270
+//                         Intrinsic chainID: Optional(4)
+//                         Infered chainID: Optional(4)
+//                         sender: Optional("0x9Ce24C07AaB108283b3518c6801c6E757b0C514C")
+//                         hash: Optional("0x0cd134994977be4e5294d9c95b2b05a30240398495c68ab739699418bf8c0225")
+//                         , hash: "0x0cd134994977be4e5294d9c95b2b05a30240398495c68ab739699418bf8c0225")
+
+//TransactionSendingResult(transaction: Transaction
+//                         Nonce: 80
+//                         Gas price: 1000000000
+//                         Gas limit: 57289
+//                         To: 0x656f9BF02FA8EfF800f383E5678e699ce2788C5C
+//                         Value: 0
+//                         Data: 0xe9c2e14b0000000000000000000000006879f0a123056b5bb56c7e787cf64a67f3a16a71
+//                         v: 43
+//                         r: 68050701568546023666251596280823648350722752180838243890427235514308429619001
+//                         s: 4250613332262705056579686434897004420380205267553040033091827715143850010970
+//                         Intrinsic chainID: Optional(4)
+//                         Infered chainID: Optional(4)
+//                         sender: Optional("0x6879f0A123056B5Bb56c7E787cF64A67f3a16a71")
+//                         hash: Optional("0x83c91bfdbe0fba135d447c84d7c93c242e09e7415c02517e343247d7107781ed")
+//                         , hash: "0x83c91bfdbe0fba135d447c84d7c93c242e09e7415c02517e343247d7107781ed")
+
+// subscription
+//address = 0x656f9BF02FA8EfF800f383E5678e699ce2788C5C;
+//blockHash = 0x545365244348926581806b2e144679cfbfc48692a349a9ab0ad023bc42b62c82;
+//blockNumber = 0x849e11;
+//data = 0x;
+//logIndex = 0x5;
+//removed = 0;
+//topics =     (
+//0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef,
+//0x0000000000000000000000000000000000000000000000000000000000000000,
+//0x0000000000000000000000006879f0a123056b5bb56c7e787cf64a67f3a16a71,
+//0x0000000000000000000000000000000000000000000000000000000000000030
+//);
+//transactionHash = 0x60d5a11effe213fd143ca40133880d29819b3eff37580ed29ba0918f87b7c3c5;
+//transactionIndex = 0x4;

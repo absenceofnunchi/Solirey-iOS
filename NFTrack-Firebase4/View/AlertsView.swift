@@ -32,14 +32,16 @@ class Alerts {
     }
     
     func showDetail(_ title: String, with message: String?, height: CGFloat = 250, for controller: UIViewController, completion: Action? = nil) {
-        DispatchQueue.main.async {
-            let detailVC = DetailViewController(height: height)
-            detailVC.titleString = title
-            detailVC.message = message
-            detailVC.buttonAction = { vc in
-                controller.dismiss(animated: true, completion: completion)
+        controller.hideSpinner {
+            DispatchQueue.main.async {
+                let detailVC = DetailViewController(height: height)
+                detailVC.titleString = title
+                detailVC.message = message
+                detailVC.buttonAction = { vc in
+                    controller.dismiss(animated: true, completion: completion)
+                }
+                controller.present(detailVC, animated: true, completion: nil)
             }
-            controller.present(detailVC, animated: true, completion: nil)
         }
     }
         
@@ -68,6 +70,7 @@ class Alerts {
     }
     
     // MARK: - fading
+    /// shows for a brief period and disappears e.i "Copied"
     func fading(controller: UIViewController, toBePasted: String) {
         let dimmingView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
         dimmingView.translatesAutoresizingMaskIntoConstraints = false

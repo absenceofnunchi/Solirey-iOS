@@ -7,6 +7,7 @@
 
 import UIKit
 import Firebase
+import FirebaseFirestore
 
 // MARK: - UITextField
 extension UITextField {
@@ -54,11 +55,19 @@ extension UIViewController {
      @brief Hides the please wait spinner.
      @param completion Called after the spinner has been hidden.
      */
-    func hideSpinner(_ completion: (() -> Void)?) {
+   func hideSpinner(_ completion: (() -> Void)?) {
         if let controller = SaveAlertHandle.get() {
             SaveAlertHandle.clear()
-            controller.dismiss(animated: true, completion: completion)
+            DispatchQueue.main.async {
+                controller.dismiss(animated: true, completion: completion)
+            }
+        } else {
+            completion!()
         }
+    }
+    
+    func hideSpinnerLite() {
+        SaveAlertHandle.clear()
     }
     
     func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post] {
@@ -66,7 +75,7 @@ extension UIViewController {
         for document in querySnapshot!.documents {
 //            print("\(document.documentID) => \(document.data())")
             let data = document.data()
-            var postId, user, title, description, price, mintHash, escrowHash: String!
+            var postId, user, title, description, price, txHash, escrowHash, id: String!
             var date: Date!
             var images: [String]?
             data.forEach { (item) in
@@ -86,16 +95,18 @@ extension UIViewController {
                         images = item.value as? [String]
                     case "price":
                         price = item.value as? String
-                    case "mintHash":
-                        mintHash = item.value as? String
+                    case "txHash":
+                        txHash = item.value as? String
                     case "escrowHash":
                         escrowHash = item.value as? String
+                    case "itemIdentifier":
+                        id = item.value as? String
                     default:
                         break
                 }
             }
             
-            let post = Post(documentId: document.documentID, postId: postId, userId: user, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash)
+            let post = Post(documentId: document.documentID, postId: postId, userId: user, title: title, description: description, date: date, images: images, price: price, txHash: txHash, escrowHash: escrowHash, id: id)
             
             postArr.append(post)
         }
@@ -231,7 +242,6 @@ extension UIImageView {
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else { return }
             DispatchQueue.main.async {
-                print("data", data)
                 self.image = UIImage(data: data)
             }
         }

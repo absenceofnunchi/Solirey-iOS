@@ -28,45 +28,11 @@ class MainDetailViewController: UIViewController {
                     if let err = err {
                         print("Error getting documents: \(err)")
                     } else {
-                        for document in querySnapshot!.documents {
-//                            print("\(document.documentID) => \(document.data())")
-                            let data = document.data()
-                            var postId, userId, title, description, price, mintHash, escrowHash: String!
-                            var date: Date!
-                            var images: [String]?
-                            data.forEach { (item) in
-                                switch item.key {
-                                    case "postId":
-                                        postId = item.value as? String
-                                    case "userId":
-                                        userId = item.value as? String
-                                    case "title":
-                                        title = item.value as? String
-                                    case "description":
-                                        description = item.value as? String
-                                    case "date":
-                                        let timeStamp = item.value as? Timestamp
-                                        date = timeStamp?.dateValue()
-                                    case "images":
-                                        images = item.value as? [String]
-                                    case "price":
-                                        price = item.value as? String
-                                    case "mintHash":
-                                        mintHash = item.value as? String
-                                    case "escrowHash":
-                                        escrowHash = item.value as? String
-                                    default:
-                                        break
-                                }
+                        if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                            self?.postArr = data
+                            DispatchQueue.main.async {
+                                self?.tableView.reloadData()
                             }
-                            
-                            let post = Post(documentId: document.documentID, postId: postId, userId: userId, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash)
-                            
-                            self?.postArr.append(post)
-                        }
-                        
-                        DispatchQueue.main.async {
-                            self?.tableView.reloadData()
                         }
                     }
                 }
@@ -183,3 +149,49 @@ extension MainDetailViewController: UITableViewDataSourcePrefetching {
         }
     }
 }
+
+
+
+//for document in querySnapshot!.documents {
+//    //                            print("\(document.documentID) => \(document.data())")
+//    let data = document.data()
+//    var postId, userId, title, description, price, mintHash, escrowHash, id: String!
+//    var ownersId, ownersHash: [String]!
+//    var date: Date!
+//    var images: [String]?
+//    data.forEach { (item) in
+//        switch item.key {
+//            case "postId":
+//                postId = item.value as? String
+//            case "userId":
+//                userId = item.value as? String
+//            case "title":
+//                title = item.value as? String
+//            case "description":
+//                description = item.value as? String
+//            case "date":
+//                let timeStamp = item.value as? Timestamp
+//                date = timeStamp?.dateValue()
+//            case "images":
+//                images = item.value as? [String]
+//            case "price":
+//                price = item.value as? String
+//            case "mintHash":
+//                mintHash = item.value as? String
+//            case "escrowHash":
+//                escrowHash = item.value as? String
+//            case "id":
+//                id = item.value as? String
+//            case "ownersId":
+//                ownersId = item.value as? [String]
+//            case "ownersHash":
+//                ownersHash = item.value as? [String]
+//            default:
+//                break
+//        }
+//    }
+//    
+//    let post = Post(documentId: document.documentID, postId: postId, userId: userId, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, ownersId: ownersId, ownersHash: ownersHash)
+//    
+//    self?.postArr.append(post)
+//}

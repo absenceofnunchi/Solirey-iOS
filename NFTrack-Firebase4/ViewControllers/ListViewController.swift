@@ -49,7 +49,6 @@ extension ListViewController {
     
     // MARK: - configureDataFetch
     func configureDataFetch(isBuyer: Bool, status: PostStatus?) {
-        postArr.removeAll()
         if let userId = userDefaults.string(forKey: "userId") {
             var ref = FirebaseService.sharedInstance.db.collection("post")
                 .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.userId.rawValue, isEqualTo: userId)
@@ -63,6 +62,7 @@ extension ListViewController {
                         self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self!)
                     } else {
                         if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                            self?.postArr.removeAll()
                             self?.postArr = data
 
                             DispatchQueue.main.async {

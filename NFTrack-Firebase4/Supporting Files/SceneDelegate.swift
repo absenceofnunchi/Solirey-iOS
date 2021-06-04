@@ -19,7 +19,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let _ = (scene as? UIWindowScene) else { return }
         FirebaseApp.configure()
         
-        let _ = SocketDelegate()
+//        let _ = SocketDelegate()
 
         if let windowScene = scene as? UIWindowScene {
             self.window = UIWindow(windowScene: windowScene)
@@ -42,7 +42,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     
                     let postVC = PostViewController()
                     postVC.title = "Post"
-                    tabBar.addChild(postVC)
+                    
+                    let postNav = UINavigationController(rootViewController: postVC)
+                    tabBar.addChild(postNav)
                     
                     
                     let listVC = ListViewController()
