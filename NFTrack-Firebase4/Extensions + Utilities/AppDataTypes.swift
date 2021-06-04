@@ -43,16 +43,18 @@ struct BorderStyle {
 struct Post {
     let documentId: String
     let postId: String
-    let userId: String
+    let sellerUserId: String
+    let sellerHash: String
     let title: String
     let description: String
     let date: Date
     let images: [String]?
     let price: String
-    let txHash: String
+    let mintHash: String
     let escrowHash: String
     let id: String
     let buyerHash: String? = nil
+    let transferHash: String?
 }
 
 // MARK: - UILabelPadding
@@ -98,6 +100,7 @@ struct Cell {
     static let listCell = "ListCell"
     static let categoryCell = "CategoryCell"
     static let mainDetailCell = "MainDetailCell"
+    static let historyCell = "HistoryCell"
 }
 
 // MARK: - PurchaseMethods
@@ -117,15 +120,16 @@ enum PurchaseStatus: String {
 /// when the seller first posts: ready
 /// when the seller aborts: ready
 /// when the buyer buys: pending
+/// when the seller transfers the token: transferred
 /// when the transaction is complete: complete
 enum PostStatus: String {
-    case ready, pending, complete, abort
+    case ready, pending, complete, aborted, resold, transferred
 }
 
 // MARK:- PositionStatus
 /// when a seller posts an item, it registers its own hash under userId
 enum PositionStatus: String {
-    case buyerUserId, userId
+    case buyerUserId, sellerUserId
 }
 
 // MARK: - ViewControllerIdentifiers
@@ -156,4 +160,10 @@ enum Category: String {
                 return .other
         }
     }
+}
+
+// MARK: - CellPosition
+/// ListDetailViewController + History
+enum CellPosition {
+    case first, middle, last
 }

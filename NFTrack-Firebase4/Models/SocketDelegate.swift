@@ -31,6 +31,12 @@ class SocketDelegate: Web3SocketDelegate {
         }
     }
     
+    func disconnectSocket() {
+        if socketProvider != nil {
+            socketProvider!.disconnectSocket()
+        }
+    }
+    
     // Protocol method, here will be messages, received from WebSocket server
     func received(message: Any) {
         if let dict = message as? [String: Any], let topics = dict["topics"] as? [String] {

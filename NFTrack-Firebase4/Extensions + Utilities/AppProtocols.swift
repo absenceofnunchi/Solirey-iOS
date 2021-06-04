@@ -17,3 +17,13 @@ protocol WalletDelegate: AnyObject {
 protocol PreviewDelegate: AnyObject {
     func didDeleteImage(imageName: String)
 }
+
+// MARK: - MessageDelegate
+/// PostViewController
+protocol MessageDelegate: AnyObject {
+    func didReceiveMessage(topics: [String])
+}
+
+protocol TableViewRefreshDelegate: AnyObject {
+    func didRefreshTableView()
+}

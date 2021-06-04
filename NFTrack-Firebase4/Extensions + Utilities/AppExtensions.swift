@@ -75,15 +75,17 @@ extension UIViewController {
         for document in querySnapshot!.documents {
 //            print("\(document.documentID) => \(document.data())")
             let data = document.data()
-            var postId, user, title, description, price, txHash, escrowHash, id: String!
+            var postId, sellerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash: String!
             var date: Date!
             var images: [String]?
             data.forEach { (item) in
                 switch item.key {
                     case "postId":
                         postId = item.value as? String
-                    case "userId":
-                        user = item.value as? String
+                    case "sellerUserId":
+                        sellerUserId = item.value as? String
+                    case "senderAddress":
+                        sellerHash = item.value as? String
                     case "title":
                         title = item.value as? String
                     case "description":
@@ -95,18 +97,20 @@ extension UIViewController {
                         images = item.value as? [String]
                     case "price":
                         price = item.value as? String
-                    case "txHash":
-                        txHash = item.value as? String
+                    case "mintHash":
+                        mintHash = item.value as? String
                     case "escrowHash":
                         escrowHash = item.value as? String
                     case "itemIdentifier":
                         id = item.value as? String
+                    case "transferHash":
+                        transferHash = item.value as? String
                     default:
                         break
                 }
             }
             
-            let post = Post(documentId: document.documentID, postId: postId, userId: user, title: title, description: description, date: date, images: images, price: price, txHash: txHash, escrowHash: escrowHash, id: id)
+            let post = Post(documentId: document.documentID, postId: postId, sellerUserId: sellerUserId, sellerHash: sellerHash, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, transferHash: transferHash)
             
             postArr.append(post)
         }

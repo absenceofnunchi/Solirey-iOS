@@ -149,21 +149,21 @@ extension TransactionService {
     
     // MARK: - prepareTransactionForNewContract
     func prepareTransactionForNewContract(value: String, completion: @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
-        guard let address = Web3swiftService.currentAddress else { return }
-        var options = TransactionOptions.defaultOptions
-        options.from = address
-        options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
-        options.gasPrice = TransactionOptions.GasPricePolicy.automatic
-        
-        guard let amount = Web3.Utils.parseToBigUInt(value, units: .eth) else {
-            DispatchQueue.main.async {
-                completion(nil, SendEthErrors.invalidAmountFormat)
-            }
-            return
-        }
-        options.value = BigUInt(amount)
-        
         DispatchQueue.global().async {
+            guard let address = Web3swiftService.currentAddress else { return }
+            var options = TransactionOptions.defaultOptions
+            options.from = address
+            options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
+            options.gasPrice = TransactionOptions.GasPricePolicy.automatic
+            
+            guard let amount = Web3.Utils.parseToBigUInt(value, units: .eth) else {
+                DispatchQueue.main.async {
+                    completion(nil, SendEthErrors.invalidAmountFormat)
+                }
+                return
+            }
+            options.value = BigUInt(amount)
+            
             let web3 = Web3swiftService.web3instance
             guard let contract = web3.contract(purchaseABI2) else {
                 DispatchQueue.main.async {

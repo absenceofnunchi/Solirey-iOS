@@ -76,10 +76,15 @@
 		497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9AEB2655A60300F09CAA /* NFTrackABI.swift */; };
 		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
+		499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9948266AB20700FC6CDE /* HistoryCell.swift */; };
+		499F994E266ADA0E00FC6CDE /* HistoryDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */; };
+		499F9953266AED0E00FC6CDE /* DetailParentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9952266AED0E00FC6CDE /* DetailParentViewController.swift */; };
 		49D59C762663326500107F79 /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D59C752663326500107F79 /* SocketDelegate.swift */; };
 		49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759A726658DCC0064BB34 /* TransitioningDelegate.swift */; };
 		49E759AD26669ACB0064BB34 /* PostParentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759AC26669ACB0064BB34 /* PostParentViewController.swift */; };
 		49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759B72666BCCF0064BB34 /* ResellViewController.swift */; };
+		49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E75A02266A7C670064BB34 /* HistoryViewController.swift */; };
+		49E75A08266A7FD40064BB34 /* ListDetailViewController + History.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E75A07266A7FD40064BB34 /* ListDetailViewController + History.swift */; };
 		49F694BE265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */; };
 		5F2181656BA2F887A451E929 /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */; };
 		8BF7EDDB714370A039E12BAF /* Pods_NFTrack_Firebase4.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FF1612C9EA21D4904E1BD19 /* Pods_NFTrack_Firebase4.framework */; };
@@ -179,10 +184,15 @@
 		497A9AEB2655A60300F09CAA /* NFTrackABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABI.swift; sourceTree = "<group>"; };
 		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		499F9948266AB20700FC6CDE /* HistoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryCell.swift; sourceTree = "<group>"; };
+		499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDetailViewController.swift; sourceTree = "<group>"; };
+		499F9952266AED0E00FC6CDE /* DetailParentViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailParentViewController.swift; sourceTree = "<group>"; };
 		49D59C752663326500107F79 /* SocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
 		49E759A726658DCC0064BB34 /* TransitioningDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitioningDelegate.swift; sourceTree = "<group>"; };
 		49E759AC26669ACB0064BB34 /* PostParentViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostParentViewController.swift; sourceTree = "<group>"; };
 		49E759B72666BCCF0064BB34 /* ResellViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellViewController.swift; sourceTree = "<group>"; };
+		49E75A02266A7C670064BB34 /* HistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewController.swift; sourceTree = "<group>"; };
+		49E75A07266A7FD40064BB34 /* ListDetailViewController + History.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListDetailViewController + History.swift"; sourceTree = "<group>"; };
 		49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListDetailViewController + OptionsBar.swift"; sourceTree = "<group>"; };
 		5C42156D98AD4812550FF489 /* Pods-NFTrack-Firebase4Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4Tests.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4Tests/Pods-NFTrack-Firebase4Tests.release.xcconfig"; sourceTree = "<group>"; };
 		5D3028929C2B2E423CDD6DAF /* Pods-NFTrack-Firebase4.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4.debug.xcconfig"; sourceTree = "<group>"; };
@@ -396,6 +406,7 @@
 				496F6FF72651AD6300E4056B /* ListViewController.swift */,
 				496F70012652029F00E4056B /* ListDetailViewController.swift */,
 				49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */,
+				49E75A07266A7FD40064BB34 /* ListDetailViewController + History.swift */,
 				496F7006265207A700E4056B /* ImagePageViewController.swift */,
 				496F700B265421E200E4056B /* TxDetailViewController.swift */,
 				49409A74265946870060193C /* SearchResultsViewController.swift */,
@@ -403,6 +414,9 @@
 				496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */,
 				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
 				496D56C42659FF2100C3E7FD /* MainDetailViewController.swift */,
+				49E75A02266A7C670064BB34 /* HistoryViewController.swift */,
+				499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */,
+				499F9952266AED0E00FC6CDE /* DetailParentViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -411,6 +425,7 @@
 			isa = PBXGroup;
 			children = (
 				4964E515264777BF005B3268 /* ImageCell.swift */,
+				499F9948266AB20700FC6CDE /* HistoryCell.swift */,
 				496F6FFC2651F15100E4056B /* ListCell.swift */,
 				496D56B02659654A00C3E7FD /* CategoryCell.swift */,
 				496D56C9265A0BD700C3E7FD /* MainDetailCell.swift */,
@@ -749,6 +764,7 @@
 				493BF9D7264C4DE100B9C9D2 /* BackgroundView2.swift in Sources */,
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
 				493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */,
+				49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */,
 				496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */,
 				496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */,
 				4964E4602641B001005B3268 /* SignInViewController.swift in Sources */,
@@ -766,6 +782,7 @@
 				496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */,
 				4964E52126489564005B3268 /* BigPreviewViewController.swift in Sources */,
 				493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */,
+				499F994E266ADA0E00FC6CDE /* HistoryDetailViewController.swift in Sources */,
 				4964E5262648AB6A005B3268 /* ZoomAnimationController.swift in Sources */,
 				4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */,
 				49E759AD26669ACB0064BB34 /* PostParentViewController.swift in Sources */,
@@ -790,12 +807,15 @@
 				49D59C762663326500107F79 /* SocketDelegate.swift in Sources */,
 				49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */,
 				493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */,
+				49E75A08266A7FD40064BB34 /* ListDetailViewController + History.swift in Sources */,
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
 				4964E5862649A745005B3268 /* CreateWalletViewController.swift in Sources */,
+				499F9953266AED0E00FC6CDE /* DetailParentViewController.swift in Sources */,
 				4964E58B2649A75A005B3268 /* ImportWalletViewController.swift in Sources */,
 				497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */,
 				4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */,
+				499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */,
 				4964E568264968A7005B3268 /* Errors.swift in Sources */,
 				4964E50F264767A6005B3268 /* ImagePreviewViewController.swift in Sources */,
 				4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */,

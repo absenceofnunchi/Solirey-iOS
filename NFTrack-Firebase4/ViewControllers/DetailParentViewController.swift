@@ -1,9 +1,13 @@
 //
-//  ListDetailViewController.swift
+//  DetailParentViewController.swift
 //  NFTrack-Firebase4
 //
-//  Created by J C on 2021-05-16.
+//  Created by J C on 2021-06-04.
 //
+/*
+ Abstract:
+ Parent view controller for DetailParentViewController and HistoryDetailViewControler
+ */
 
 import UIKit
 import web3swift
@@ -11,7 +15,7 @@ import Firebase
 import FirebaseFirestore
 import BigInt
 
-class ListDetailViewController: UIViewController {
+class DetailParentViewController: UIViewController {
     // MARK: - Properties
     let alert = Alerts()
     let transactionService = TransactionService()
@@ -20,7 +24,6 @@ class ListDetailViewController: UIViewController {
     var post: Post! {
         didSet {
             self.getStatus()
-            self.getHistory()
         }
     }
     var pvc: UIPageViewController!
@@ -53,12 +56,10 @@ class ListDetailViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        configureOptionsBar()
         configureBackground()
         configureData()
         configureUI()
         setConstraints()
-        setHistoryVC()
     }
     
     override func viewDidLayoutSubviews() {
@@ -67,7 +68,7 @@ class ListDetailViewController: UIViewController {
     }
 }
 
-extension ListDetailViewController {
+extension DetailParentViewController {
     
     // MARK: - configureBackground
     func configureBackground() {
@@ -334,14 +335,14 @@ extension ListDetailViewController {
     }
 }
 
-extension ListDetailViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
+extension DetailParentViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
         guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
         index -= 1
         if index < 0 {
             return nil
         }
-
+        
         return ImagePageViewController(gallery: galleries[index])
     }
     
@@ -351,7 +352,7 @@ extension ListDetailViewController: UIPageViewControllerDataSource, UIPageViewCo
         if index >= galleries.count {
             return nil
         }
-
+        
         return ImagePageViewController(gallery: galleries[index])
     }
     
@@ -370,7 +371,7 @@ extension ListDetailViewController: UIPageViewControllerDataSource, UIPageViewCo
     }
 }
 
-extension ListDetailViewController {
+extension DetailParentViewController {
     func updateState(method: String, price: String = "0", status: PostStatus? = nil) {
         transactionService.prepareTransactionForWriting(method: method, contractAddress: contractAddress, amountString: price) { [weak self](transaction, error) in
             if let error = error {
@@ -480,7 +481,7 @@ extension ListDetailViewController {
     }
 }
 
-extension ListDetailViewController {
+extension DetailParentViewController {
     func transferToken() {
         FirebaseService.sharedInstance.db.collection("post")
             .whereField("postId", isEqualTo: post.postId)
@@ -586,7 +587,7 @@ extension ListDetailViewController {
     }
 }
 
-extension ListDetailViewController {
+extension DetailParentViewController {
     // MARK: - getStatus
     func getStatus() {
         DispatchQueue.global().async {

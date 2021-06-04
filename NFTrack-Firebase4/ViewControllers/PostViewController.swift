@@ -9,10 +9,6 @@ import UIKit
 import web3swift
 import FirebaseFirestore
 
-protocol MessageDelegate: AnyObject {
-    func didReceiveMessage(topics: [String])
-}
-
 class PostViewController: PostParentViewController {
 
     // MARK: - mint
@@ -24,6 +20,7 @@ class PostViewController: PostParentViewController {
     /// 6. update the token ID on firestore
     /// 7. upload the images
     override func mint() {
+        super.mint()
         if let userId = self.userDefaults.string(forKey: "userId") {
             self.userId = userId
             // create purchase contract
@@ -124,10 +121,10 @@ class PostViewController: PostParentViewController {
                                                                 // txHash is either minting or transferring the ownership
                                                                 FirebaseService.sharedInstance.db.collection("post").document(id).setData([
                                                                     "postId": postId,
-                                                                    "userId": userId,
+                                                                    "sellerUserId": userId,
                                                                     "senderAddress": senderAddress,
                                                                     "escrowHash": result.hash,
-                                                                    "txHash": mintResult.hash,
+                                                                    "mintHash": mintResult.hash,
                                                                     "date": Date(),
                                                                     "title": title,
                                                                     "description": desc,
@@ -144,8 +141,8 @@ class PostViewController: PostParentViewController {
                                                                             }
                                                                         }
                                                                     } else {
-                                                                        let socketDelegate = SocketDelegate(contractAddress: "0x656f9bf02fa8eff800f383e5678e699ce2788c5c", id: id)
-                                                                        socketDelegate.delegate = self
+                                                                        self?.socketDelegate = SocketDelegate(contractAddress: "0x656f9bf02fa8eff800f383e5678e699ce2788c5c", id: id)
+                                                                        self?.socketDelegate.delegate = self
                                                                     }
                                                                 }
                                                             } catch Web3Error.nodeError(let desc) {
@@ -198,5 +195,13 @@ class PostViewController: PostParentViewController {
         } else {
             self.alert.showDetail("Authorization", with: "You need to be logged in!", for: self)
         }
+    }
+}
+
+extension PostViewController {
+    override func didReceiveMessage(topics: [String]) {
+        super.didReceiveMessage(topics: topics)
+        self.socketDelegate.disconnectSocket()
+        print("did receive")
     }
 }

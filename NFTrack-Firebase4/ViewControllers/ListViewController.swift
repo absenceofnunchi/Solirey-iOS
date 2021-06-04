@@ -14,6 +14,7 @@ class ListViewController: UIViewController {
     let refreshControl = UIRefreshControl()
     let alert = Alerts()
     let userDefaults = UserDefaults.standard
+    var segmentedControl: UISegmentedControl!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,13 +34,14 @@ extension ListViewController {
     // MARK: - configureSwitch
     func configureSwitch() {
         let segmentTextContent = [
-            NSLocalizedString("Pending", comment: ""),
-            NSLocalizedString("My Purchases", comment: ""),
-            NSLocalizedString("My Posts", comment: ""),
+            NSLocalizedString("Buying", comment: ""),
+            NSLocalizedString("Selling", comment: ""),
+            NSLocalizedString("Purchases", comment: ""),
+//            NSLocalizedString("Posts", comment: ""),
         ]
         
         // Segmented control as the custom title view.
-        let segmentedControl = UISegmentedControl(items: segmentTextContent)
+        segmentedControl = UISegmentedControl(items: segmentTextContent)
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.autoresizingMask = .flexibleWidth
         segmentedControl.frame = CGRect(x: 0, y: 0, width: 300, height: 30)
@@ -51,7 +53,7 @@ extension ListViewController {
     func configureDataFetch(isBuyer: Bool, status: PostStatus?) {
         if let userId = userDefaults.string(forKey: "userId") {
             var ref = FirebaseService.sharedInstance.db.collection("post")
-                .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.userId.rawValue, isEqualTo: userId)
+                .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
             
             if status != nil {
                 ref = ref.whereField("status", isEqualTo: status!.rawValue)
@@ -134,7 +136,7 @@ extension ListViewController {
     }
     
     fileprivate enum Segment: Int {
-        case pending, purchases, posts
+        case buying, selling, purchases
     }
     
     // MARK: - segmentedControlSelectionDidChange
@@ -143,16 +145,16 @@ extension ListViewController {
         else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
         
         switch segment {
-            case .pending:
-                // buyer, pending
-                configureDataFetch(isBuyer: true, status: .pending)
+            case .buying:
+                // seller has already transferred, now the buyer has to respond
+                configureDataFetch(isBuyer: true, status: .transferred)
+            case .selling:
+                // buyer has confirmed purchase, seller has to transfer
+                configureDataFetch(isBuyer: false, status: .pending)
             case .purchases:
-                // buyer, complete
-                configureDataFetch(isBuyer: true, status: .complete)
-            case .posts:
                 // seller, all status
                 // userId field means seller
-                configureDataFetch(isBuyer: false, status: nil)
+                configureDataFetch(isBuyer: true, status: .complete)
         }
     }
 }
@@ -179,6 +181,16 @@ extension ListViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = postArr[indexPath.row]
+        listDetailVC.tableViewRefreshDelegate = self
         self.navigationController?.pushViewController(listDetailVC, animated: true)
+    }
+}
+
+extension ListViewController: TableViewRefreshDelegate {
+    // MARK: - didRefreshTableView
+    func didRefreshTableView() {
+        segmentedControl.selectedSegmentIndex = 1
+        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+        configureDataFetch(isBuyer: true, status: .complete)
     }
 }
