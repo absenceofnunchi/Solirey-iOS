@@ -28,47 +28,16 @@ class MainViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        configureNavigationBar(vc: self)
         configureSearchController()
         configureSearchBar()
         configureHierarchy()
-        configureUI()
         setConstraints()
     }
 }
 
-extension MainViewController {
-    func configureUI() {
-        view.backgroundColor = .white
-        
-        // navigation controller
-        self.navigationItem.largeTitleDisplayMode = .always
-        self.navigationController?.navigationBar.prefersLargeTitles = true
-        self.navigationController?.navigationBar.tintColor = UIColor.gray
-//        self.navigationController?.navigationBar.isTranslucent = false
-        self.navigationItem.hidesSearchBarWhenScrolling = false
-        navigationItem.largeTitleDisplayMode = .automatic
-
-        if #available(iOS 13.0, *) {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithDefaultBackground()
-            appearance.backgroundColor = .white
-            appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-            appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-
-            navigationController?.navigationBar.standardAppearance = appearance
-            navigationController?.navigationBar.scrollEdgeAppearance = appearance
-            navigationController?.navigationBar.compactAppearance = appearance
-
-        } else {
-            self.navigationController?.navigationBar.barTintColor = .white
-            self.navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-            self.navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-        }
-    }
-}
-
 extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
-    
     // configure search controller
     func configureSearchController() {
         searchResultsController = SearchResultsController()

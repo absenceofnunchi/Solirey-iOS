@@ -36,9 +36,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     let mainNav = UINavigationController(rootViewController: mainVC)
                     tabBar.addChild(mainNav)
                     
-                    let acctVC = AccountViewController()
-                    acctVC.title = "Account"
-                    tabBar.addChild(acctVC)
+                    let pendingVC = PendingViewController()
+                    pendingVC.title = "Pending"
+                    
+                    let pendingNav = UINavigationController(rootViewController: pendingVC)
+                    tabBar.addChild(pendingNav)
                     
                     let postVC = PostViewController()
                     postVC.title = "Post"
@@ -53,9 +55,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     let listNav = UINavigationController(rootViewController: listVC)
                     tabBar.addChild(listNav)
                     
-                    let walletVC = WalletViewController()
-                    walletVC.title = "Wallet"
-                    tabBar.addChild(walletVC)
+                    let acctVC = AccountViewController()
+                    acctVC.title = "Account"
+                    
+                    let acctNav = UINavigationController(rootViewController: acctVC)
+                    tabBar.addChild(acctNav)
                     
                     self.window!.rootViewController = tabBar
                 } else {

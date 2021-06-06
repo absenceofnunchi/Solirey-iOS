@@ -55,6 +55,9 @@ struct Post {
     let id: String
     let buyerHash: String? = nil
     let transferHash: String?
+    let status: String
+    let confirmPurchaseHash: String?
+    let confirmReceivedHash: String?
 }
 
 // MARK: - UILabelPadding
@@ -101,6 +104,7 @@ struct Cell {
     static let categoryCell = "CategoryCell"
     static let mainDetailCell = "MainDetailCell"
     static let historyCell = "HistoryCell"
+    static let accountCell = "AccountCell"
 }
 
 // MARK: - PurchaseMethods

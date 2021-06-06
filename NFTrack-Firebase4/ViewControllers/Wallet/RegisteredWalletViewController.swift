@@ -9,6 +9,7 @@ import UIKit
 import web3swift
 
 class RegisteredWalletViewController: UIViewController {
+    var closeButton: UIButton!
     var deleteWalletButton: UIButton!
     var privateKeyButton: UIButton!
     var resetPassword: UIButton!
@@ -40,6 +41,7 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         view.backgroundColor = UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1)
         
         upperContainer = UIView()
+        upperContainer.isUserInteractionEnabled = true
         upperContainer.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(upperContainer)
         
@@ -49,6 +51,17 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         refreshButton.tag = 4
         refreshButton.translatesAutoresizingMaskIntoConstraints = false
         upperContainer.addSubview(refreshButton)
+        
+        guard let closeButtonImage = UIImage(systemName: "multiply") else {
+            self.dismiss(animated: true, completion: nil)
+            return
+        }
+        
+        closeButton = UIButton.systemButton(with: closeButtonImage, target: self, action: #selector(buttonHandler))
+        closeButton.tag = 5
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        closeButton.tintColor = .white
+        upperContainer.addSubview(closeButton)
         
         // balance label
         balanceLabel = UILabel()
@@ -150,6 +163,12 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         }
     }
     
+//    override func configureCloseButton() {
+//        super.configureCloseButton()
+//
+//        closeButtonImage.withTintColor(.white, renderingMode: .alwaysOriginal)
+//    }
+    
     // MARK: - setConstraints
     func setConstraints() {
         NSLayoutConstraint.activate([
@@ -160,9 +179,15 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
             upperContainer.bottomAnchor.constraint(equalTo: lowerContainer.topAnchor),
             
             refreshButton.topAnchor.constraint(equalTo: upperContainer.layoutMarginsGuide.topAnchor, constant: 0),
-            refreshButton.trailingAnchor.constraint(equalTo: upperContainer.trailingAnchor, constant: -10),
-            refreshButton.widthAnchor.constraint(equalToConstant: 50),
-            refreshButton.heightAnchor.constraint(equalToConstant: 50),
+            refreshButton.trailingAnchor.constraint(equalTo: upperContainer.layoutMarginsGuide.trailingAnchor),
+            refreshButton.widthAnchor.constraint(equalToConstant: 60),
+            refreshButton.heightAnchor.constraint(equalToConstant: 60),
+            
+            // close button
+            closeButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            closeButton.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            closeButton.widthAnchor.constraint(equalToConstant: 60),
+            closeButton.heightAnchor.constraint(equalToConstant: 60),
             
             // balance label
             balanceLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -231,7 +256,6 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
                             }
                         }
                         self?.delegate?.didProcessWallet()
-
                     }
                 }))
                 ac.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
@@ -334,6 +358,8 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
                 present(prVC, animated: true, completion: nil)
             case 4:
                 configureWallet()
+            case 5:
+                self.dismiss(animated: true, completion: nil)
             default:
                 break
         }

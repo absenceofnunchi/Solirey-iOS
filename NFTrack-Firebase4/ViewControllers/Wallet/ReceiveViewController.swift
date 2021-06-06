@@ -7,12 +7,11 @@
 
 import UIKit
 
-class ReceiveViewController: UIViewController {
+class ReceiveViewController: ParentWalletViewController {
     var localDatabase: LocalDatabase!
     var wallet: KeyWalletModel!
     var address: String!
     var backgroundView: BackgroundView3!
-    var closeButton: UIButton!
     var copyButton: WalletButtonView!
     var shareButton: WalletButtonView!
     var stackView: UIStackView!
@@ -79,18 +78,6 @@ extension ReceiveViewController {
         backgroundView.alpha = 0
         view.addSubview(backgroundView)
         
-        // close button
-        guard let closeButtonImage = UIImage(systemName: "multiply") else {
-            self.dismiss(animated: true, completion: nil)
-            return
-        }
-        
-        closeButton = UIButton.systemButton(with: closeButtonImage, target: self, action: #selector(buttonHandler))
-        closeButton.tag = 1
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        closeButton.tintColor = .black
-        view.addSubview(closeButton)
-        
         qrCodeImage = generateQRCode(from: address)
         qrCodeImageView = UIImageView(image: qrCodeImage)
         //        let origin = CGPoint(x: view.frame.size.width / 2 - 100, y: view.frame.size.height / 2 - 300)
@@ -142,12 +129,6 @@ extension ReceiveViewController {
     
     func setConstraints() {
         NSLayoutConstraint.activate([
-            // close button
-            closeButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-            closeButton.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            closeButton.widthAnchor.constraint(equalToConstant: 60),
-            closeButton.heightAnchor.constraint(equalToConstant: 60),
-            
             // background view
             backgroundView.widthAnchor.constraint(equalTo: view.widthAnchor),
             backgroundView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 3/5),
@@ -187,17 +168,6 @@ extension ReceiveViewController {
         }
         
         return nil
-    }
-    
-    @objc func buttonHandler(_ sender: UIButton!) {
-        switch sender.tag {
-            case 1:
-                self.dismiss(animated: true, completion: nil)
-            case 2:
-                break
-            default:
-                break
-        }
     }
 }
 

@@ -8,8 +8,7 @@
 import UIKit
 import web3swift
 
-class SendViewController: UIViewController {
-    var closeButton: UIButton!
+class SendViewController: ParentWalletViewController {
     var destinationLabel: UILabel!
     var destinationTextField: UITextField!
     var amountLabel: UILabel!
@@ -99,18 +98,6 @@ extension SendViewController {
         backgroundView.setNeedsDisplay()
         view.addSubview(backgroundView)
         
-        // close button
-        guard let closeButtonImage = UIImage(systemName: "multiply") else {
-            self.dismiss(animated: true, completion: nil)
-            return
-        }
-        
-        closeButton = UIButton.systemButton(with: closeButtonImage, target: self, action: #selector(buttonHandler))
-        closeButton.tag = 1
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        closeButton.tintColor = .black
-        view.addSubview(closeButton)
-        
         destinationLabel = createTitleLabel(title: "To", v: self.view)
         destinationLabel.transform = CGAffineTransform(translationX: 0, y: 40)
         destinationLabel.alpha = 0
@@ -195,12 +182,6 @@ extension SendViewController {
             backgroundView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             backgroundView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 1/2),
             
-            // close button
-            closeButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-            closeButton.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            closeButton.widthAnchor.constraint(equalToConstant: 60),
-            closeButton.heightAnchor.constraint(equalToConstant: 60),
-            
             // destination label
             destinationLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             destinationLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 150),
@@ -262,13 +243,12 @@ extension SendViewController {
 
 extension SendViewController: UITextFieldDelegate {
     // MARK: - buttonHandler
-    @objc func buttonHandler(_ sender: UIButton) {
+    @objc override func buttonHandler(_ sender: UIButton!) {
+        super.buttonHandler(sender)
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
         switch sender.tag {
-            case 1:
-                self.dismiss(animated: true, completion: nil)
             case 2:
                 let scannerVC = ScannerViewController()
                 scannerVC.delegate = self

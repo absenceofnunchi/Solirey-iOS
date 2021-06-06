@@ -31,18 +31,21 @@ extension ListDetailViewController {
     }
 }
 
-extension ListDetailViewController {
+extension ListDetailViewController: TableViewConfigurable {
     func setHistoryVC() {
-        historyTableView = UITableView()
-        historyTableView.translatesAutoresizingMaskIntoConstraints = false
-        historyTableView.register(HistoryCell.self, forCellReuseIdentifier: Cell.historyCell)
-        historyTableView.isScrollEnabled = false
-        historyTableView.rowHeight = CELL_HEIGHT
-        historyTableView.estimatedRowHeight = CELL_HEIGHT
-        historyTableView.dataSource = self
-        historyTableView.delegate = self
+        historyTableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: HistoryCell.self, identifier: Cell.historyCell)
         historyTableView.separatorStyle = .none
+        historyTableView.isScrollEnabled = false
         scrollView.addSubview(historyTableView)
+
+//        historyTableView = UITableView()
+//        historyTableView.translatesAutoresizingMaskIntoConstraints = false
+//        historyTableView.register(HistoryCell.self, forCellReuseIdentifier: Cell.historyCell)
+//        historyTableView.rowHeight = CELL_HEIGHT
+//        historyTableView.estimatedRowHeight = CELL_HEIGHT
+//        historyTableView.dataSource = self
+//        historyTableView.delegate = self
+
 
         NSLayoutConstraint.activate([
             historyTableView.topAnchor.constraint(equalTo: updateStatusButton.bottomAnchor, constant: 40),
@@ -82,6 +85,7 @@ extension ListDetailViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let historyDetailVC = HistoryDetailViewController()
+        historyDetailVC.post = historicData[indexPath.row]
         self.navigationController?.pushViewController(historyDetailVC, animated: true)
     }
 }

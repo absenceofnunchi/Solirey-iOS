@@ -13,7 +13,6 @@ class SearchResultsController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        configureUI()
         configureTableView()
     }
     
@@ -29,13 +28,10 @@ class SearchResultsController: UITableViewController {
 }
 
 extension SearchResultsController {
-    func configureUI() {
+    func configureTableView() {
         tableView.backgroundColor = .systemBackground
         tableView.register(ListCell.self, forCellReuseIdentifier: Cell.listCell)
         tableView.rowHeight = 100
-    }
-    
-    func configureTableView() {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: Cell.mainCell)
 //        tableView.separatorStyle = .none
     }

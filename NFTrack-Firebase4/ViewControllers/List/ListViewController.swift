@@ -9,20 +9,20 @@ import UIKit
 import FirebaseFirestore
 
 class ListViewController: UIViewController {
-    var tableView: UITableView!
-    var postArr = [Post]()
-    let refreshControl = UIRefreshControl()
-    let alert = Alerts()
-    let userDefaults = UserDefaults.standard
-    var segmentedControl: UISegmentedControl!
+    private var tableView: UITableView!
+    private var postArr = [Post]()
+    private let refreshControl = UIRefreshControl()
+    private let alert = Alerts()
+    private let userDefaults = UserDefaults.standard
+    private var segmentedControl: UISegmentedControl!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        configureNavigationBar(vc: self)
         configureSwitch()
-        configureNavigationBar()
         configureUI()
-        configureDataFetch(isBuyer: true, status: .pending)
+        configureDataFetch(isBuyer: true, status: .complete)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -30,23 +30,52 @@ class ListViewController: UIViewController {
     }
 }
 
-extension ListViewController {
+extension ListViewController: TableViewConfigurable {
+    fileprivate enum Segment: Int, CaseIterable {
+        case purchases, posts
+        
+        func asString() -> String {
+            switch self {
+                case .purchases:
+                    return "Purchases"
+                case .posts:
+                    return "Posts"
+            }
+        }
+        
+        static func getSegmentText() -> [String] {
+            let segmentArr = Segment.allCases
+            var segmentTextArr = [String]()
+            for segment in segmentArr {
+                segmentTextArr.append(NSLocalizedString(segment.asString(), comment: ""))
+            }
+            return segmentTextArr
+        }
+    }
+    
     // MARK: - configureSwitch
     func configureSwitch() {
-        let segmentTextContent = [
-            NSLocalizedString("Buying", comment: ""),
-            NSLocalizedString("Selling", comment: ""),
-            NSLocalizedString("Purchases", comment: ""),
-//            NSLocalizedString("Posts", comment: ""),
-        ]
-        
         // Segmented control as the custom title view.
+        let segmentTextContent = Segment.getSegmentText()
         segmentedControl = UISegmentedControl(items: segmentTextContent)
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.autoresizingMask = .flexibleWidth
         segmentedControl.frame = CGRect(x: 0, y: 0, width: 300, height: 30)
         segmentedControl.addTarget(self, action: #selector(segmentedControlSelectionDidChange(_:)), for: .valueChanged)
         self.navigationItem.titleView = segmentedControl
+    }
+    
+    // MARK: - segmentedControlSelectionDidChange
+    @objc func segmentedControlSelectionDidChange(_ sender: UISegmentedControl) {
+        guard let segment = Segment(rawValue: sender.selectedSegmentIndex)
+        else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
+        
+        switch segment {
+            case .purchases:
+                configureDataFetch(isBuyer: true, status: .complete)
+            case .posts:
+                configureDataFetch(isBuyer: false, status: .ready)
+        }
     }
     
     // MARK: - configureDataFetch
@@ -83,79 +112,21 @@ extension ListViewController {
         }
     }
     
-    func delay(_ delay:Double, closure:@escaping ()->()) {
-        let when = DispatchTime.now() + delay
-        DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
-    }
-    
     // MARK: - configureUI
     func configureUI() {
-        view.backgroundColor = .white
-        tableView = UITableView()
-        tableView.backgroundColor = .systemBackground
-        tableView.register(ListCell.self, forCellReuseIdentifier: Cell.listCell)
-        tableView.dataSource = self
-        tableView.delegate = self
+        tableView = configureTableView(delegate: self, dataSource: self, height: 100, cellType: ListCell.self, identifier: Cell.listCell)
         view.addSubview(tableView)
         tableView.fill()
-        
-        tableView.rowHeight = 100
-        
+
         refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh")
         refreshControl.addTarget(self, action: #selector(self.refresh(_:)), for: .valueChanged)
         tableView.addSubview(refreshControl) // not required when using UITableViewController
     }
     
-    // MARK: - configureNavigationBar
-    func configureNavigationBar() {
-        // navigation controller
-        self.navigationController?.navigationBar.tintColor = UIColor.gray
-        self.navigationController?.navigationBar.isTranslucent = false
-        self.navigationController?.navigationBar.prefersLargeTitles = true
-        
-        if #available(iOS 13.0, *) {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithDefaultBackground()
-            appearance.backgroundColor = .white
-            appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-            appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-            
-            navigationController?.navigationBar.standardAppearance = appearance
-            navigationController?.navigationBar.scrollEdgeAppearance = appearance
-            navigationController?.navigationBar.compactAppearance = appearance
-            
-        } else {
-            self.navigationController?.navigationBar.barTintColor = .white
-            self.navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-            self.navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-        }
-    }
+
     
     @objc func refresh(_ sender: UIRefreshControl) {
 //        configureDataFetch()
-    }
-    
-    fileprivate enum Segment: Int {
-        case buying, selling, purchases
-    }
-    
-    // MARK: - segmentedControlSelectionDidChange
-    @objc func segmentedControlSelectionDidChange(_ sender: UISegmentedControl) {
-        guard let segment = Segment(rawValue: sender.selectedSegmentIndex)
-        else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
-        
-        switch segment {
-            case .buying:
-                // seller has already transferred, now the buyer has to respond
-                configureDataFetch(isBuyer: true, status: .transferred)
-            case .selling:
-                // buyer has confirmed purchase, seller has to transfer
-                configureDataFetch(isBuyer: false, status: .pending)
-            case .purchases:
-                // seller, all status
-                // userId field means seller
-                configureDataFetch(isBuyer: true, status: .complete)
-        }
     }
 }
 

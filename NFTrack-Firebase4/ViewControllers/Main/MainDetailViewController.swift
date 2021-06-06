@@ -8,7 +8,8 @@
 import UIKit
 import FirebaseFirestore
 
-class MainDetailViewController: UIViewController {
+class MainDetailViewController: UIViewController, TableViewConfigurable {
+
     private var dataStore: ImageDataStore!
     private lazy var loadingQueue = OperationQueue()
     private lazy var loadingOperations = [IndexPath : DataLoadOperation]()
@@ -49,15 +50,16 @@ extension MainDetailViewController {
     // MARK: - configureUI
     func configureUI() {
         view.backgroundColor = .white
+
+//        tableView = UITableView()
+//        tableView.register(MainDetailCell.self, forCellReuseIdentifier: Cell.mainDetailCell)
+//        tableView.estimatedRowHeight = 100
+//        tableView.rowHeight = 100
+//        tableView.dataSource = self
+//        tableView.delegate = self
         
-        tableView = UITableView()
-        tableView.register(MainDetailCell.self, forCellReuseIdentifier: Cell.mainDetailCell)
-        tableView.estimatedRowHeight = 100
-        tableView.rowHeight = 100
+        tableView = configureTableView(delegate: self, dataSource: self, height: 100, cellType: MainDetailCell.self, identifier: Cell.mainDetailCell)
         tableView.prefetchDataSource = self
-        tableView.dataSource = self
-        tableView.delegate = self
-        tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         tableView.fill()
     }

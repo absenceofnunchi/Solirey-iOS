@@ -34,11 +34,6 @@ class WalletViewController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-    }
 }
 
 extension WalletViewController {
@@ -60,6 +55,8 @@ extension WalletViewController {
             self.newPageVC = nil
         }
     }
+    
+
 }
 
 extension WalletViewController: WalletDelegate {
@@ -85,3 +82,4 @@ extension WalletViewController: WalletDelegate {
 }
 
 // send, receive, reset password, private key, delete
+

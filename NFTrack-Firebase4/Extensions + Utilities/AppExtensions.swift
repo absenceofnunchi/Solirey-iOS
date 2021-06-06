@@ -75,7 +75,7 @@ extension UIViewController {
         for document in querySnapshot!.documents {
 //            print("\(document.documentID) => \(document.data())")
             let data = document.data()
-            var postId, sellerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash: String!
+            var postId, sellerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
             var date: Date!
             var images: [String]?
             data.forEach { (item) in
@@ -105,17 +105,97 @@ extension UIViewController {
                         id = item.value as? String
                     case "transferHash":
                         transferHash = item.value as? String
+                    case "status":
+                        status = item.value as? String
+                    case "confirmPurchaseHash":
+                        confirmPurchaseHash = item.value as? String
+                    case "confirmReceivedHash":
+                        confirmReceivedHash = item.value as? String
                     default:
                         break
                 }
             }
             
-            let post = Post(documentId: document.documentID, postId: postId, sellerUserId: sellerUserId, sellerHash: sellerHash, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, transferHash: transferHash)
+            let post = Post(documentId: document.documentID, postId: postId, sellerUserId: sellerUserId, sellerHash: sellerHash, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, transferHash: transferHash, status: status, confirmPurchaseHash: confirmPurchaseHash, confirmReceivedHash: confirmReceivedHash)
             
             postArr.append(post)
         }
         return postArr
     }
+    
+    // MARK: - createTitleLabel
+    func createTitleLabel(text: String) -> UILabel {
+        let label = UILabel()
+        label.text = text
+        label.font = .rounded(ofSize: label.font.pointSize, weight: .bold)
+        label.textColor = .lightGray
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }
+    
+    // MARK: - createLabel
+    func createLabel(text: String, hashType: HashType? = nil, target: UIViewController? = nil, action: Selector? = nil) -> UILabelPadding {
+        let label = UILabelPadding()
+        if let hashType = hashType {
+            label.tag = hashType.rawValue
+            label.isUserInteractionEnabled = true
+            let tap = UITapGestureRecognizer(target: target, action: action)
+            label.addGestureRecognizer(tap)
+        }
+        label.text = text
+        label.layer.borderColor = UIColor.lightGray.cgColor
+        label.layer.borderWidth = 0.5
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }
+    
+    // MARK: - createTextField
+    func createTextField(placeHolder: String? = nil, delegate: UITextFieldDelegate) -> UITextField {
+        let textField = UITextField()
+        textField.setLeftPaddingPoints(10)
+        textField.delegate = delegate
+        textField.placeholder = placeHolder ?? ""
+        textField.layer.borderWidth = 0.7
+        textField.layer.cornerRadius = 5
+        textField.layer.borderColor = UIColor.lightGray.cgColor
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        return textField
+    }
+    
+    // MARK: - configureNavigationBar
+    func configureNavigationBar(vc: UIViewController) {
+        vc.view.backgroundColor = .white
+        // navigation controller
+        vc.navigationController?.navigationBar.tintColor = UIColor.gray
+        vc.navigationController?.navigationBar.isTranslucent = true
+        vc.navigationController?.navigationBar.prefersLargeTitles = true
+        
+        if #available(iOS 13.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithDefaultBackground()
+            appearance.backgroundColor = .white
+            appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
+            appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
+            
+            vc.navigationController?.navigationBar.standardAppearance = appearance
+            vc.navigationController?.navigationBar.scrollEdgeAppearance = appearance
+            vc.navigationController?.navigationBar.compactAppearance = appearance
+            
+        } else {
+            vc.navigationController?.navigationBar.barTintColor = .white
+            vc.navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
+            vc.navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
+        }
+    }
+    
+    func delay(_ delay:Double, closure:@escaping ()->()) {
+        let when = DispatchTime.now() + delay
+        DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
+    }
+}
+
+enum HashType: Int {
+    case tx, address
 }
 
 // MARK: - SaveAlertHandle

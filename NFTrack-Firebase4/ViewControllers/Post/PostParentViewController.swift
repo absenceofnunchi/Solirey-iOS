@@ -57,10 +57,7 @@ class PostParentViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let w = UIApplication.shared.windows.first!
-        w.backgroundColor = .white
-        
-        configureNavigationBar()
+        configureNavigationBar(vc: self)
         configureUI()
         configureImagePreview()
         setConstraints()
@@ -85,34 +82,9 @@ class PostParentViewController: UIViewController {
 }
 
 extension PostParentViewController {
-    // MARK: - configureNavigationBar
-    func configureNavigationBar() {
-        // navigation controller
-        self.navigationController?.navigationBar.tintColor = UIColor.gray
-        self.navigationController?.navigationBar.isTranslucent = false
-        self.navigationController?.navigationBar.prefersLargeTitles = true
-        
-        if #available(iOS 13.0, *) {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithDefaultBackground()
-            appearance.backgroundColor = .white
-            appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-            appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-            
-            navigationController?.navigationBar.standardAppearance = appearance
-            navigationController?.navigationBar.scrollEdgeAppearance = appearance
-            navigationController?.navigationBar.compactAppearance = appearance
-            
-        } else {
-            self.navigationController?.navigationBar.barTintColor = .white
-            self.navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-            self.navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
-        }
-    }
     
     @objc func configureUI() {
         title = "Post"
-        view.backgroundColor = .white
         self.hideKeyboardWhenTappedAround()
         
         scrollView = UIScrollView()
@@ -121,22 +93,22 @@ extension PostParentViewController {
         view.addSubview(scrollView)
         scrollView.fill()
         
-        titleLabel = createLabel(text: "Title")
+        titleLabel = createTitleLabel(text: "Title")
         scrollView.addSubview(titleLabel)
         
-        titleTextField = createTextField()
+        titleTextField = createTextField(delegate: self)
         titleTextField.autocorrectionType = .no
         scrollView.addSubview(titleTextField)
         
-        priceLabel = createLabel(text: "Price")
+        priceLabel = createTitleLabel(text: "Price")
         scrollView.addSubview(priceLabel)
         
-        priceTextField = createTextField()
+        priceTextField = createTextField(delegate: self)
         priceTextField.keyboardType = .decimalPad
         priceTextField.placeholder = "In ETH"
         scrollView.addSubview(priceTextField)
         
-        descLabel = createLabel(text: "Description")
+        descLabel = createTitleLabel(text: "Description")
         scrollView.addSubview(descLabel)
         
         descTextView = UITextView()
@@ -151,15 +123,15 @@ extension PostParentViewController {
         descTextView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(descTextView)
         
-        idTitleLabel = createLabel(text: "Unique Identifier")
+        idTitleLabel = createTitleLabel(text: "Unique Identifier")
         scrollView.addSubview(idTitleLabel)
         
-        idTextField = createTextField()
+        idTextField = createTextField(delegate: self)
         idTextField.autocapitalizationType = .none
         idTextField.placeholder = "Case insensitive, i.e. VIN, IMEI..."
         scrollView.addSubview(idTextField)
         
-        pickerTitleLabel = createLabel(text: "Category")
+        pickerTitleLabel = createTitleLabel(text: "Category")
         scrollView.addSubview(pickerTitleLabel)
         
         pickerLabel = UILabelPadding()
@@ -179,7 +151,7 @@ extension PostParentViewController {
         tagContainerView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(tagContainerView)
         
-        tagTitleLabel = createLabel(text: "Tags")
+        tagTitleLabel = createTitleLabel(text: "Tags")
         scrollView.addSubview(tagTitleLabel)
         
         tagTextField = UISearchTextField()
@@ -332,26 +304,7 @@ extension PostParentViewController {
         ])
     }
     
-    func createLabel(text: String) -> UILabel {
-        let label = UILabel()
-        label.text = text
-        label.font = .rounded(ofSize: label.font.pointSize, weight: .bold)
-        label.textColor = .lightGray
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }
-    
-    func createTextField(placeHolder: String? = nil) -> UITextField {
-        let textField = UITextField()
-        textField.setLeftPaddingPoints(10)
-        textField.delegate = self
-        textField.placeholder = placeHolder ?? ""
-        textField.layer.borderWidth = 0.7
-        textField.layer.cornerRadius = 5
-        textField.layer.borderColor = UIColor.lightGray.cgColor
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        return textField
-    }
+
     
     // MARK: - buttonPressed
     @objc func buttonPressed(_ sender: UIButton) {
@@ -547,8 +500,8 @@ extension PostParentViewController: PreviewDelegate {
         imagePreviewVC.delegate = self
         imagePreviewVC.view.translatesAutoresizingMaskIntoConstraints = false
         addChild(imagePreviewVC)
-        view.addSubview(imagePreviewVC.view)
         imagePreviewVC.view.frame = view.bounds
+        view.addSubview(imagePreviewVC.view)
         imagePreviewVC.didMove(toParent: self)
     }
     

@@ -7,7 +7,7 @@
 
 import UIKit
 
-class UnregisteredWalletViewController: UIViewController {
+class UnregisteredWalletViewController: ParentWalletViewController {
     var backgroundAnimator: UIViewPropertyAnimator!
     let galleries: [String] = ["1", "2"]
     var pvc: UIPageViewController!

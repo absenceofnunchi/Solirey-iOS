@@ -5,7 +5,8 @@
 //  Created by J C on 2021-05-10.
 //
 
-import Foundation
+import UIKit
+import FirebaseFirestore
 
 // WalletViewController
 protocol WalletDelegate: AnyObject {
@@ -24,6 +25,26 @@ protocol MessageDelegate: AnyObject {
     func didReceiveMessage(topics: [String])
 }
 
+// MARK: - TableViewRefreshDelegate
 protocol TableViewRefreshDelegate: AnyObject {
     func didRefreshTableView()
 }
+
+// MARK: - TableViewConfigurable
+protocol TableViewConfigurable {
+    func configureTableView(delegate: UITableViewDelegate, dataSource: UITableViewDataSource, height: CGFloat, cellType: UITableViewCell.Type, identifier: String) -> UITableView
+}
+
+extension TableViewConfigurable where Self: UITableViewDataSource {
+    func configureTableView(delegate: UITableViewDelegate, dataSource: UITableViewDataSource, height: CGFloat, cellType: UITableViewCell.Type, identifier: String) -> UITableView {
+        let tableView = UITableView()
+        tableView.register(cellType, forCellReuseIdentifier: identifier)
+        tableView.estimatedRowHeight = height
+        tableView.rowHeight = height
+        tableView.dataSource = dataSource
+        tableView.delegate = delegate
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        return tableView
+    }
+}
+
