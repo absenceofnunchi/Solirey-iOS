@@ -11,7 +11,7 @@ import Firebase
 import FirebaseFirestore
 import BigInt
 
-class ListDetailViewController: DetailParentViewController {
+class ListDetailViewController: ParentDetailViewController {
     override var post: Post! {
         didSet {
             self.getStatus()
@@ -19,13 +19,10 @@ class ListDetailViewController: DetailParentViewController {
         }
     }
     var optionsBarItem: UIBarButtonItem!
-    var statusTitleLabel: UILabel!
-    var statusLabel: UILabelPadding!
+    private var statusTitleLabel: UILabel!
+    private var statusLabel: UILabelPadding!
     var updateStatusButton = UIButton()
-    var userId: String!
-//    var buttonPanel: UIView!
-//    var editButton: UIButton!
-//    var deleteButton: UIButton!
+    private var userId: String!
     
     // history table view below the status update button
     var historyTableViewHeight: CGFloat! = 0
@@ -35,6 +32,9 @@ class ListDetailViewController: DetailParentViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        /// setHistory has to be here because DetailParentVC fetches the userInfo asynchronously
+        /// and the topAnchor of the tableView is against the updateStatusButton
         setHistoryVC()
     }
     
@@ -265,7 +265,7 @@ extension ListDetailViewController {
             }
             
             if let transaction = transaction {
-                let detailVC = DetailViewController(height: 250, isTextField: true)
+                let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
                 detailVC.titleString = "Enter your password"
                 detailVC.buttonAction = { vc in
                     if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
@@ -415,7 +415,7 @@ extension ListDetailViewController {
                             }
                             
                             if let transaction = transaction {
-                                let detailVC = DetailViewController(height: 250, isTextField: true)
+                                let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
                                 detailVC.titleString = "Enter your password"
                                 detailVC.buttonAction = { vc in
                                     if let dvc = vc as? DetailViewController, let password = dvc.textField.text {

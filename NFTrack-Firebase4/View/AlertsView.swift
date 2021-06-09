@@ -32,8 +32,8 @@ class Alerts {
     }
     
     func showDetail(_ title: String, with message: String?, height: CGFloat = 250, for controller: UIViewController, completion: Action? = nil) {
-        controller.hideSpinner {
-            DispatchQueue.main.async {
+        DispatchQueue.main.async {
+            controller.hideSpinner {
                 let detailVC = DetailViewController(height: height)
                 detailVC.titleString = title
                 detailVC.message = message

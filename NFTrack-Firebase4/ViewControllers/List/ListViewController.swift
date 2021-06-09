@@ -8,11 +8,7 @@
 import UIKit
 import FirebaseFirestore
 
-class ListViewController: UIViewController {
-    private var tableView: UITableView!
-    private var postArr = [Post]()
-    private let refreshControl = UIRefreshControl()
-    private let alert = Alerts()
+class ListViewController: ParentListViewController {
     private let userDefaults = UserDefaults.standard
     private var segmentedControl: UISegmentedControl!
     
@@ -21,8 +17,7 @@ class ListViewController: UIViewController {
         
         configureNavigationBar(vc: self)
         configureSwitch()
-        configureUI()
-        configureDataFetch(isBuyer: true, status: .complete)
+        configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -30,7 +25,7 @@ class ListViewController: UIViewController {
     }
 }
 
-extension ListViewController: TableViewConfigurable {
+extension ListViewController {
     fileprivate enum Segment: Int, CaseIterable {
         case purchases, posts
         
@@ -72,23 +67,19 @@ extension ListViewController: TableViewConfigurable {
         
         switch segment {
             case .purchases:
-                configureDataFetch(isBuyer: true, status: .complete)
+                configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
             case .posts:
-                configureDataFetch(isBuyer: false, status: .ready)
+                configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue, PostStatus.pending.rawValue, PostStatus.transferred.rawValue])
         }
     }
     
     // MARK: - configureDataFetch
-    func configureDataFetch(isBuyer: Bool, status: PostStatus?) {
-        if let userId = userDefaults.string(forKey: "userId") {
-            var ref = FirebaseService.sharedInstance.db.collection("post")
+    func configureDataFetch(isBuyer: Bool, status: [String]) {
+        if let userId = userDefaults.string(forKey: UserDefaultKeys.userId) {
+            FirebaseService.sharedInstance.db.collection("post")
                 .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
-            
-            if status != nil {
-                ref = ref.whereField("status", isEqualTo: status!.rawValue)
-            }
-                
-            ref.getDocuments() { [weak self] (querySnapshot, err) in
+                .whereField("status", in: status)
+                .getDocuments() { [weak self] (querySnapshot, err) in
                     if let err = err {
                         self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self!)
                     } else {
@@ -111,57 +102,14 @@ extension ListViewController: TableViewConfigurable {
             self.alert.showDetail("Oops!", with: "You have to be logged in!", for: self)
         }
     }
-    
-    // MARK: - configureUI
-    func configureUI() {
-        tableView = configureTableView(delegate: self, dataSource: self, height: 100, cellType: ListCell.self, identifier: Cell.listCell)
-        view.addSubview(tableView)
-        tableView.fill()
 
-        refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh")
-        refreshControl.addTarget(self, action: #selector(self.refresh(_:)), for: .valueChanged)
-        tableView.addSubview(refreshControl) // not required when using UITableViewController
-    }
-    
-
-    
-    @objc func refresh(_ sender: UIRefreshControl) {
-//        configureDataFetch()
-    }
 }
 
-extension ListViewController: UITableViewDataSource, UITableViewDelegate {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return postArr.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Cell.listCell, for: indexPath) as! ListCell
-        cell.selectionStyle = .none
-        
-        let title = postArr[indexPath.row].title
-        let date = postArr[indexPath.row].date
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        let formattedDate = formatter.string(from: date)
-        
-        cell.set(title: title, date: formattedDate)
-        return cell
-    }
-    
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = postArr[indexPath.row]
-        listDetailVC.tableViewRefreshDelegate = self
-        self.navigationController?.pushViewController(listDetailVC, animated: true)
-    }
-}
-
-extension ListViewController: TableViewRefreshDelegate {
+extension ListViewController {
     // MARK: - didRefreshTableView
-    func didRefreshTableView() {
+    override func didRefreshTableView() {
         segmentedControl.selectedSegmentIndex = 1
         segmentedControl.sendActions(for: UIControl.Event.valueChanged)
-        configureDataFetch(isBuyer: true, status: .complete)
+        configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
     }
 }

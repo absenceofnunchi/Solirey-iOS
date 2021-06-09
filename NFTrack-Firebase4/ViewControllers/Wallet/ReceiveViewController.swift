@@ -7,22 +7,25 @@
 
 import UIKit
 
-class ReceiveViewController: ParentWalletViewController {
-    var localDatabase: LocalDatabase!
-    var wallet: KeyWalletModel!
-    var address: String!
-    var backgroundView: BackgroundView3!
-    var copyButton: WalletButtonView!
-    var shareButton: WalletButtonView!
-    var stackView: UIStackView!
-    var qrCodeImageView: UIImageView!
-    var qrCodeImage: UIImage!
-    var addressLabel: EdgeInsetLabel!
-    let alert = Alerts()
+class ReceiveViewController: UIViewController, ModalConfigurable {
+    var closeButton: UIButton!
+    private var localDatabase: LocalDatabase!
+    private var wallet: KeyWalletModel!
+    private var address: String!
+    private var backgroundView: BackgroundView3!
+    private var copyButton: WalletButtonView!
+    private var shareButton: WalletButtonView!
+    private var stackView: UIStackView!
+    private var qrCodeImageView: UIImageView!
+    private var qrCodeImage: UIImage!
+    private var addressLabel: EdgeInsetLabel!
+    private let alert = Alerts()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        configureCloseButton()
+        setButtonConstraints()
         configureWallet()
         configureUI()
         setConstraints()
@@ -72,6 +75,7 @@ extension ReceiveViewController {
     
     func configureUI() {
         view.backgroundColor = .white
+        
         backgroundView = BackgroundView3()
         backgroundView.transform = CGAffineTransform(translationX: 0, y: 40)
         backgroundView.translatesAutoresizingMaskIntoConstraints = false

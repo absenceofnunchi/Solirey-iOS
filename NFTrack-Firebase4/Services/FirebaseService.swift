@@ -62,6 +62,22 @@ extension FirebaseService {
             print("downloadURL", downloadURL)
         }
     }
+    
+    func downloadImage(urlString: String, completion: @escaping (UIImage?, Error?) -> Void) {
+        // Create a reference to the file you want to download
+        let httpsReference = storage.reference(forURL: urlString)
+        
+        // Download in memory with a maximum allowed size of 1MB (1 * 1024 * 1024 bytes)
+        httpsReference.getData(maxSize: 15000000) { data, error in
+            if let error = error {
+                completion(nil, error)
+            } else {
+                // Data for "images/island.jpg" is returned
+                let image = UIImage(data: data!)
+                completion(image, nil)
+            }
+        }
+    }
 }
 
 enum FileUploadError: Error {

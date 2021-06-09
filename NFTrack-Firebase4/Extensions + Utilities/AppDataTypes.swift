@@ -43,8 +43,6 @@ struct BorderStyle {
 struct Post {
     let documentId: String
     let postId: String
-    let sellerUserId: String
-    let sellerHash: String
     let title: String
     let description: String
     let date: Date
@@ -53,11 +51,16 @@ struct Post {
     let mintHash: String
     let escrowHash: String
     let id: String
-    let buyerHash: String? = nil
-    let transferHash: String?
     let status: String
+    let sellerUserId: String
+    let sellerHash: String
+    let buyerHash: String?
     let confirmPurchaseHash: String?
+    let confirmPurchaseDate: Date?
+    let transferHash: String?
+    let transferDate: Date?
     let confirmReceivedHash: String?
+    let confirmReceivedDate: Date?
 }
 
 // MARK: - UILabelPadding
@@ -105,6 +108,7 @@ struct Cell {
     static let mainDetailCell = "MainDetailCell"
     static let historyCell = "HistoryCell"
     static let accountCell = "AccountCell"
+    static let progressCell = "ProgressCell"
 }
 
 // MARK: - PurchaseMethods
@@ -170,4 +174,25 @@ enum Category: String {
 /// ListDetailViewController + History
 enum CellPosition {
     case first, middle, last
+}
+
+// MARK: - AccountMenu
+struct AccountMenu {
+    let imageTitle: String
+    let imageColor: UIColor
+    let titleString: String
+}
+
+// MARK: - UserInfo
+struct UserInfo {
+    let email: String?
+    let displayName: String
+    let photoURL: String?
+    let uid: String?
+}
+
+struct UserDefaultKeys {
+    static let userId: String = "userId"
+    static let displayName: String = "displayName"
+    static let photoURL: String = "photoURL"
 }

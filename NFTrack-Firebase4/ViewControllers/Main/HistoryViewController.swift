@@ -16,7 +16,7 @@ class HistoryViewController: UITableViewController {
         }
         return data
     }
-    let CELL_HEIGHT: CGFloat = 50
+    private let CELL_HEIGHT: CGFloat = 50
     
     override func viewDidLoad() {
         super.viewDidLoad()

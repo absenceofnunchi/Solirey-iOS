@@ -8,25 +8,28 @@
 import UIKit
 import web3swift
 
-class SendViewController: ParentWalletViewController {
-    var destinationLabel: UILabel!
-    var destinationTextField: UITextField!
-    var amountLabel: UILabel!
-    var amountTextField: UITextField!
-    var scanButton: UIButton!
-    var sendButton: UIButton!
-    var gasPriceLabel: UILabel!
-    var maxButton: UIButton!
-    var backgroundView: BackgroundView2!
+class SendViewController: UIViewController, ModalConfigurable {
+    var closeButton: UIButton!
+    private var destinationLabel: UILabel!
+    private var destinationTextField: UITextField!
+    private var amountLabel: UILabel!
+    private var amountTextField: UITextField!
+    private var scanButton: UIButton!
+    private var sendButton: UIButton!
+    private var gasPriceLabel: UILabel!
+    private var maxButton: UIButton!
+    private var backgroundView: BackgroundView2!
     
-    let transactionService = TransactionService()
-    let localDatabase = LocalDatabase()
-    let alert = Alerts()
+    private let transactionService = TransactionService()
+    private let localDatabase = LocalDatabase()
+    private let alert = Alerts()
     
     // MARK: - viewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        configureCloseButton()
+        setButtonConstraints()
         configureUI()
         setConstraints()
         hideKeyboardWhenTappedAround()
@@ -243,8 +246,7 @@ extension SendViewController {
 
 extension SendViewController: UITextFieldDelegate {
     // MARK: - buttonHandler
-    @objc override func buttonHandler(_ sender: UIButton!) {
-        super.buttonHandler(sender)
+    @objc func buttonHandler(_ sender: UIButton!) {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
@@ -299,7 +301,7 @@ extension SendViewController: UITextFieldDelegate {
                     
                     if let transaction = transaction {
                         
-                        let detailVC = DetailViewController(height: 250, isTextField: true)
+                        let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
                         detailVC.titleString = "Sorry!"
                         detailVC.message = "Email can't be empty"
                         detailVC.buttonAction = { [weak self]_ in

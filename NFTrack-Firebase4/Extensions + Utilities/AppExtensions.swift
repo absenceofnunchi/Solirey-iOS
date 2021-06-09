@@ -75,8 +75,8 @@ extension UIViewController {
         for document in querySnapshot!.documents {
 //            print("\(document.documentID) => \(document.data())")
             let data = document.data()
-            var postId, sellerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
-            var date: Date!
+            var buyerHash, postId, sellerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
+            var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
             var images: [String]?
             data.forEach { (item) in
                 switch item.key {
@@ -111,13 +111,23 @@ extension UIViewController {
                         confirmPurchaseHash = item.value as? String
                     case "confirmReceivedHash":
                         confirmReceivedHash = item.value as? String
+                    case "confirmPurchaseDate":
+                        let timeStamp = item.value as? Timestamp
+                        confirmPurchaseDate = timeStamp?.dateValue()
+                    case "transferDate":
+                        let timeStamp = item.value as? Timestamp
+                        transferDate = timeStamp?.dateValue()
+                    case "confirmReceivedDate":
+                        let timeStamp = item.value as? Timestamp
+                        confirmReceivedDate = timeStamp?.dateValue()
+                    case "buyerHash":
+                        buyerHash = item.value as? String
                     default:
                         break
                 }
             }
             
-            let post = Post(documentId: document.documentID, postId: postId, sellerUserId: sellerUserId, sellerHash: sellerHash, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, transferHash: transferHash, status: status, confirmPurchaseHash: confirmPurchaseHash, confirmReceivedHash: confirmReceivedHash)
-            
+            let post = Post(documentId: document.documentID, postId: postId, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate)
             postArr.append(post)
         }
         return postArr
@@ -150,11 +160,17 @@ extension UIViewController {
     }
     
     // MARK: - createTextField
-    func createTextField(placeHolder: String? = nil, delegate: UITextFieldDelegate) -> UITextField {
+    func createTextField(placeHolder: String? = nil, content: String? = nil, delegate: UITextFieldDelegate) -> UITextField {
         let textField = UITextField()
         textField.setLeftPaddingPoints(10)
         textField.delegate = delegate
-        textField.placeholder = placeHolder ?? ""
+        
+        if let placeHolder = placeHolder {
+            textField.placeholder = placeHolder
+        } else if let content = content {
+            textField.text = content
+        }
+        
         textField.layer.borderWidth = 0.7
         textField.layer.cornerRadius = 5
         textField.layer.borderColor = UIColor.lightGray.cgColor

@@ -7,7 +7,7 @@
 
 import UIKit
 
-extension ListDetailViewController {
+extension ListDetailViewController: TableViewConfigurable {
     // MARK: - getHistory
     func getHistory() {
         FirebaseService.sharedInstance.db.collection("post")
@@ -29,9 +29,7 @@ extension ListDetailViewController {
                 }
             }
     }
-}
-
-extension ListDetailViewController: TableViewConfigurable {
+    
     func setHistoryVC() {
         historyTableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: HistoryCell.self, identifier: Cell.historyCell)
         historyTableView.separatorStyle = .none
@@ -52,6 +50,28 @@ extension ListDetailViewController: TableViewConfigurable {
             historyTableView.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             historyTableView.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
         ])
+    }
+    
+    func fetchUserData(id: String, completion: @escaping (UserInfo?) -> Void) {
+        showSpinner {
+            let docRef = FirebaseService.sharedInstance.db.collection("user").document(id)
+            docRef.getDocument { [weak self] (document, error) in
+                if let document = document, document.exists {
+                    if let data = document.data() {
+                        let displayName = data[UserDefaultKeys.displayName] as? String
+                        let photoURL = data[UserDefaultKeys.photoURL] as? String
+                        let userInfo = UserInfo(email: nil, displayName: displayName!, photoURL: photoURL, uid: nil)
+                        self?.hideSpinner {
+                            completion(userInfo)
+                        }
+                    }
+                } else {
+                    self?.hideSpinner {
+                        completion(nil)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -84,8 +104,16 @@ extension ListDetailViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let historyDetailVC = HistoryDetailViewController()
-        historyDetailVC.post = historicData[indexPath.row]
-        self.navigationController?.pushViewController(historyDetailVC, animated: true)
+        let data = historicData[indexPath.row]
+        fetchUserData(id: data.sellerUserId) { [weak self] (userInfo) in
+            if let userInfo = userInfo {
+                let historyDetailVC = HistoryDetailViewController()
+                historyDetailVC.post = data
+                historyDetailVC.userInfo = userInfo
+                self?.navigationController?.pushViewController(historyDetailVC, animated: true)
+            } else {
+                self?.alert.showDetail("Sorry", with: "Unable to retrieve data. Please try again", for: self!)
+            }
+        }
     }
 }

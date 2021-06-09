@@ -48,3 +48,77 @@ extension TableViewConfigurable where Self: UITableViewDataSource {
     }
 }
 
+// MARK: - ModalConfigurable
+protocol ModalConfigurable where Self: UIViewController {
+    var closeButton: UIButton! { get set }
+    func configureCloseButton()
+    func setButtonConstraints()
+    func closeButtonPressed()
+}
+
+extension ModalConfigurable {
+    func configureCloseButton() {
+        // close button
+        guard let closeButtonImage = UIImage(systemName: "multiply") else {
+            self.dismiss(animated: true, completion: nil)
+            return
+        }
+        
+        closeButton = UIButton(type: .custom)
+        closeButton.addAction { [weak self] in
+            self?.closeButtonPressed()
+        }
+        closeButton.setImage(closeButtonImage, for: .normal)
+        closeButton.tag = 10
+        closeButton.tintColor = .black
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(closeButton)
+    }
+    
+    func setButtonConstraints() {
+        NSLayoutConstraint.activate([
+            // close button
+            closeButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            closeButton.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            closeButton.widthAnchor.constraint(equalToConstant: 60),
+            closeButton.heightAnchor.constraint(equalToConstant: 60),
+        ])
+    }
+    
+    func closeButtonPressed() {
+        self.dismiss(animated: true, completion: nil)
+    }
+}
+
+typealias Closure = () -> ()
+
+///
+class ClosureSleeve {
+    let closure: Closure
+    init(_ closure: @escaping Closure) {
+        self.closure = closure
+    }
+    @objc func invoke () {
+        closure()
+    }
+}
+
+extension UIControl {
+    func addAction(for controlEvents: UIControl.Event = .touchUpInside, _ closure: @escaping Closure) {
+        let sleeve = ClosureSleeve(closure)
+        addTarget(sleeve, action: #selector(ClosureSleeve.invoke), for: controlEvents)
+        objc_setAssociatedObject(self, String(format: "[%d]", arc4random()), sleeve, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)
+    }
+}
+
+
+protocol FileUploadable {
+    func uploadSomething(completion: (() -> Void)?)
+}
+
+extension FileUploadable {
+    func uploadSomething(completion: (() -> Void)? = nil) {
+        print("hello")
+        completion?()
+    }
+}

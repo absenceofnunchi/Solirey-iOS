@@ -9,18 +9,18 @@ import UIKit
 import Firebase
 
 class SignInViewController: UIViewController {
-    var titleLabel: UILabel!
-    var signButton: UIButton!
-    var containerView: BlurEffectContainerView!
-    var emailTextField: UITextField!
-    var passwordTextField: UITextField!
-    var warningLabel: UILabel!
-    var textFields = [UITextField]()
-    var additionalContainer: UIView!
-    var additionalLabel: UILabel!
-    var toggleButton: UIButton!
-    let dissolveAnimator = DissolveTransitionAnimator()
-    let alert = Alerts()
+    private var titleLabel: UILabel!
+    private var signButton: UIButton!
+    private var containerView: BlurEffectContainerView!
+    private var emailTextField: UITextField!
+    private var passwordTextField: UITextField!
+    private var warningLabel: UILabel!
+    private var textFields = [UITextField]()
+    private var additionalContainer: UIView!
+    private var additionalLabel: UILabel!
+    private var toggleButton: UIButton!
+    private let dissolveAnimator = DissolveTransitionAnimator()
+    private let alert = Alerts()
     
     override func viewDidLoad() {
         super.viewDidLoad()

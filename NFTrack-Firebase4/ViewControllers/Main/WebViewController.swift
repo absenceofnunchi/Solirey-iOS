@@ -10,8 +10,8 @@ import WebKit
 
 class WebViewController: UIViewController {
     var urlString: String!
-    var webView: WKWebView!
-    let alert = Alerts()
+    private var webView: WKWebView!
+    private let alert = Alerts()
     
     override func loadView() {
         webView = WKWebView()

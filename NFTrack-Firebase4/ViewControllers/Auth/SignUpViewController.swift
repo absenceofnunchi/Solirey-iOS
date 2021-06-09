@@ -9,17 +9,40 @@ import UIKit
 import Firebase
 
 class SignUpViewController: UIViewController {
-    var titleLabel: UILabel!
-    var emailTextField: UITextField!
-    var passwordTextField: UITextField!
-    var repeatPasswordTextField: UITextField!
-    var createButton: UIButton!
-    var passwordsDontMatch: UILabel!
-    var textFields = [UITextField]()
-    var containerView: BlurEffectContainerView!
-    var additionalContainer: UIView!
-    var additionalLabel: UILabel!
-    var toggleButton: UIButton!
+    private var titleLabel: UILabel!
+    private var emailTextField: UITextField!
+    private var displayNameTextField: UITextField!
+    private var passwordTextField: UITextField!
+    private var repeatPasswordTextField: UITextField!
+    private var createButton: UIButton!
+    private var passwordsDontMatch: UILabel!
+    private var textFields = [UITextField]()
+    private var containerView: BlurEffectContainerView!
+    private var additionalContainer: UIView!
+    private var additionalLabel: UILabel!
+    private var toggleButton: UIButton!
+    private let alert = Alerts()
+    
+    lazy var ipadNoKeyboard: [NSLayoutConstraint] = [
+        containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+        containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+        containerView.heightAnchor.constraint(equalToConstant: 380),
+    ]
+    
+    lazy var mobileNoKeyboard: [NSLayoutConstraint] = [
+        containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+        containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+        containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.5),
+    ]
+    
+    lazy var withKeyboard: [NSLayoutConstraint] = [
+        containerView.topAnchor.constraint(equalTo: passwordsDontMatch.bottomAnchor, constant: 10),
+        containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+        containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+        containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.3),
+    ]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,6 +51,17 @@ class SignUpViewController: UIViewController {
         setConstraints()
         passwordTextField.delegate = self
         repeatPasswordTextField.delegate = self
+    }
+    
+    // MARK: - viewWillAppear
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.addKeyboardObserver()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.removeKeyboardObserver()
     }
 }
 
@@ -66,6 +100,18 @@ extension SignUpViewController {
         emailTextField.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(emailTextField)
         
+        displayNameTextField = UITextField()
+        displayNameTextField.layer.borderWidth = 1
+        displayNameTextField.layer.borderColor = UIColor.gray.cgColor
+        displayNameTextField.layer.cornerRadius = 10
+        displayNameTextField.placeholder = "Enter your display name"
+        displayNameTextField.autocapitalizationType = .none
+        displayNameTextField.autocorrectionType = .no
+        textFields.append(displayNameTextField)
+        displayNameTextField.setLeftPaddingPoints(10)
+        displayNameTextField.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(displayNameTextField)
+        
         // passwords don't match label
         passwordsDontMatch = UILabel()
         passwordsDontMatch.translatesAutoresizingMaskIntoConstraints = false
@@ -101,8 +147,8 @@ extension SignUpViewController {
         createButton.tag = 2
         createButton.backgroundColor = .black
         createButton.layer.cornerRadius = 10
-//        createButton.isEnabled = false
-        createButton.isEnabled = true
+        createButton.isEnabled = false
+//        createButton.isEnabled = true
         createButton.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(createButton)
         
@@ -129,21 +175,9 @@ extension SignUpViewController {
     
     func setConstraints() {
         if UIDevice.current.userInterfaceIdiom == .pad {
-            NSLayoutConstraint.activate([
-                // container view
-                containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-                containerView.heightAnchor.constraint(equalToConstant: 350),
-            ])
+            NSLayoutConstraint.activate(ipadNoKeyboard)
         }else{
-            NSLayoutConstraint.activate([
-                // container view
-                containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-                containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.3),
-            ])
+            NSLayoutConstraint.activate(mobileNoKeyboard)
         }
         
         NSLayoutConstraint.activate([
@@ -154,25 +188,31 @@ extension SignUpViewController {
             passwordsDontMatch.heightAnchor.constraint(equalToConstant: 50),
             
             // title label
-            titleLabel.topAnchor.constraint(equalTo: passwordsDontMatch.bottomAnchor, constant: 20),
+            titleLabel.topAnchor.constraint(equalTo: passwordsDontMatch.bottomAnchor, constant: 10),
             titleLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
             titleLabel.heightAnchor.constraint(equalToConstant: 80),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             // email text field
-            emailTextField.bottomAnchor.constraint(equalTo: passwordTextField.topAnchor, constant:  -30),
+            emailTextField.bottomAnchor.constraint(equalTo: displayNameTextField.topAnchor, constant:  -30),
             emailTextField.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             emailTextField.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.8),
             emailTextField.heightAnchor.constraint(equalToConstant: 50),
             
+            // email text field
+            displayNameTextField.bottomAnchor.constraint(equalTo: passwordTextField.topAnchor, constant:  -30),
+            displayNameTextField.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            displayNameTextField.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.8),
+            displayNameTextField.heightAnchor.constraint(equalToConstant: 50),
+            
             // password text field
-            passwordTextField.bottomAnchor.constraint(equalTo: repeatPasswordTextField.topAnchor, constant: -30),
+            passwordTextField.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
             passwordTextField.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             passwordTextField.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.8),
             passwordTextField.heightAnchor.constraint(equalToConstant: 50),
             
             // repeat password text field
-            repeatPasswordTextField.centerYAnchor.constraint(equalTo: containerView.centerYAnchor, constant: 30),
+            repeatPasswordTextField.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 30),
             repeatPasswordTextField.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             repeatPasswordTextField.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.8),
             repeatPasswordTextField.heightAnchor.constraint(equalToConstant: 50),
@@ -211,8 +251,6 @@ extension SignUpViewController {
                 self.dismiss(animated: true, completion: nil)
             case 2:
                 didCreateAccount()
-                print("sign up")
-                break
             default:
                 break
         }
@@ -318,24 +356,17 @@ extension SignUpViewController {
     // MARK: - didCreateAccount
     func didCreateAccount() {
         guard let email = emailTextField.text, !email.isEmpty else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Sorry!"
-            detailVC.message = "Email can't be empty"
-            detailVC.buttonAction = { [weak self]vc in
-                self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            alert.showDetail("Sorry", with: "Email cannot be empty", for: self)
+            return
+        }
+        
+        guard let displayName = displayNameTextField.text, !displayName.isEmpty else {
+            alert.showDetail("Sorry", with: "Display name cannot be empty", for: self)
             return
         }
                 
         guard let password = passwordTextField.text, !password.isEmpty else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Sorry!"
-            detailVC.message = "Password can't be empty"
-            detailVC.buttonAction = { [weak self]vc in
-                self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            alert.showDetail("Sorry", with: "Password cannot be empty", for: self)
             return
         }
                 
@@ -345,22 +376,70 @@ extension SignUpViewController {
                 // [START_EXCLUDE]
                 self?.hideSpinner {
                     guard let user = authResult?.user, error == nil else {
-//                        strongSelf.showMessagePrompt(error!.localizedDescription)
-                        let detailVC = DetailViewController(height: 250)
-                        detailVC.titleString = "Sorry!"
-                        detailVC.message = error!.localizedDescription
-                        detailVC.buttonAction = { vc in
-                            self?.dismiss(animated: true, completion: nil)
-                        }
-                        self?.present(detailVC, animated: true, completion: nil)
+                        self?.alert.showDetail("Sorry", with: error!.localizedDescription, for: self!)
                         return
                     }
-                    print("\(user.email!) created")
-                    self?.navigationController?.popViewController(animated: true)
+                    
+                    let createRequest = user.createProfileChangeRequest()
+                    createRequest.displayName = displayName
+                    createRequest.commitChanges { (error) in
+                        if let error = error {
+                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                        } else {
+                            self?.navigationController?.popViewController(animated: true)
+                        }
+                    }
                 }
                 // [END_EXCLUDE]
             }
             // [END create_user]
         }
     }
+}
+
+extension SignUpViewController {
+    // MARK: - addKeyboardObserver
+    func addKeyboardObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
+                                                       name: UIResponder.keyboardWillChangeFrameNotification,
+                                                       object: nil)
+    }
+    
+    // MARK: - removeKeyboardObserver
+    func removeKeyboardObserver(){
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+    }
+    
+    // MARK: - keyboardNotifications
+    // This method will notify when keyboard appears/ dissapears
+    @objc func keyboardNotifications(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            // here we will get frame of keyBoard (i.e. x, y, width, height)
+            let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+            let keyBoardFrameY = keyBoardFrame!.origin.y
+
+            //Check keyboards Y position and according to that move view up and down
+            if keyBoardFrameY >= UIScreen.main.bounds.size.height {
+                NSLayoutConstraint.deactivate(withKeyboard)
+                
+                if UIDevice.current.userInterfaceIdiom == .pad {
+                    NSLayoutConstraint.activate(ipadNoKeyboard)
+                } else {
+                    NSLayoutConstraint.activate(mobileNoKeyboard)
+                }
+            } else {
+                if UIDevice.current.userInterfaceIdiom == .pad {
+                    NSLayoutConstraint.deactivate(ipadNoKeyboard)
+                } else {
+                    NSLayoutConstraint.deactivate(mobileNoKeyboard)
+                }
+                
+                NSLayoutConstraint.activate(withKeyboard)
+                UIView.animate(withDuration: 1) {
+                    self.containerView.layoutIfNeeded()
+                }
+            }
+        }
+    }
+            
 }

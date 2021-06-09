@@ -26,7 +26,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             Auth.auth().addStateDidChangeListener { (auth, user) in
                 if let user = user {
                     
-                    UserDefaults.standard.set(user.uid, forKey: "userId")
+                    UserDefaults.standard.set(user.uid, forKey: UserDefaultKeys.userId)
+                    UserDefaults.standard.set(user.displayName, forKey: UserDefaultKeys.displayName)
+                    UserDefaults.standard.set(user.photoURL, forKey: UserDefaultKeys.photoURL)
+                    
+                    var urlString: String!
+                    if user.photoURL != nil {
+                        urlString = "\(user.photoURL!)"
+                    } else {
+                        urlString = "NA"
+                    }
+ 
+                    FirebaseService.sharedInstance.db.collection("user").document(user.uid).setData([
+                        "photoURL": urlString!,
+                        "displayName": user.displayName!,
+                        "uid": user.uid
+                    ], completion: { (error) in
+                        if let error = error {
+                            print("error updating profile", error.localizedDescription)
+                        }
+                    })
                     
                     let tabBar = UITabBarController()
                     
@@ -47,7 +66,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     
                     let postNav = UINavigationController(rootViewController: postVC)
                     tabBar.addChild(postNav)
-                    
                     
                     let listVC = ListViewController()
                     listVC.title = "List"

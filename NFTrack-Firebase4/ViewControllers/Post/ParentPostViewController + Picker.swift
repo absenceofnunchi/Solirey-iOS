@@ -7,7 +7,7 @@
 
 import UIKit
 
-extension PostParentViewController {
+extension ParentPostViewController {
     override var canBecomeFirstResponder: Bool {
         return showKeyboard
     }

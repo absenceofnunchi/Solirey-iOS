@@ -22,7 +22,7 @@ class PendingViewController: UIViewController {
         configureNavigationBar(vc: self)
         configureSwitch()
         configureUI()
-        configureDataFetch(isBuyer: false, status: .transferred)
+        configureDataFetch(isBuyer: true)
     }
 }
 
@@ -68,21 +68,26 @@ extension PendingViewController {
         
         switch segment {
             case .buying:
-                configureDataFetch(isBuyer: true, status: .transferred)
+                configureDataFetch(isBuyer: true)
             case .selling:
-                configureDataFetch(isBuyer: false, status: .pending)
+                configureDataFetch(isBuyer: false)
         }
     }
     
     // MARK: - configureDataFetch
-    func configureDataFetch(isBuyer: Bool, status: PostStatus?) {
+    func configureDataFetch(isBuyer: Bool) {
         if let userId = userDefaults.string(forKey: "userId") {
-            var ref = FirebaseService.sharedInstance.db.collection("post")
+            let ref = FirebaseService.sharedInstance.db.collection("post")
                 .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
+                .whereField("status", in: ["transferred", "pending"])
             
-            if status != nil {
-                ref = ref.whereField("status", isEqualTo: status!.rawValue)
-            }
+//            if isBuyer == true {
+//                ref = ref.whereField("status", isNotEqualTo: "completed")
+//                         .whereField("status", isNotEqualTo: "ready")
+//                         .whereField("status", isNotEqualTo: "aborted")
+//                         .whereField("status", isNotEqualTo: "completed")
+//                         .whereField("status", isNotEqualTo: "resold")
+//            }
             
             ref.getDocuments() { [weak self] (querySnapshot, err) in
                 if let err = err {
@@ -107,7 +112,8 @@ extension PendingViewController {
 extension PendingViewController: TableViewConfigurable {
     // MARK: - configureUI
     func configureUI() {
-        tableView = configureTableView(delegate: self, dataSource: self, height: 100, cellType: ListCell.self, identifier: Cell.listCell)
+        tableView = configureTableView(delegate: self, dataSource: self, height: 250, cellType: ProgressCell.self, identifier: Cell.progressCell)
+        tableView.separatorStyle = .none
         view.addSubview(tableView)
         tableView.fill()
         
@@ -128,7 +134,7 @@ extension PendingViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Cell.listCell, for: indexPath) as! ListCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: Cell.progressCell, for: indexPath) as! ProgressCell
         cell.selectionStyle = .none
         
         let post = postArr[indexPath.row]

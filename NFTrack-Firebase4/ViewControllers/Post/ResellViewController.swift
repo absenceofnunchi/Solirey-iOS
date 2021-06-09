@@ -8,10 +8,10 @@
 import UIKit
 import web3swift
 
-class ResellViewController: PostParentViewController {
+class ResellViewController: ParentPostViewController {
     var post: Post!
-    var closeButtonContainer: UIView!
-    var closeButton: UIButton!
+    private var closeButtonContainer: UIView!
+    private var closeButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -114,7 +114,7 @@ extension ResellViewController {
                 }
                 
                 if let transaction = transaction {
-                    let detailVC = DetailViewController(height: 250, isTextField: true)
+                    let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
                     detailVC.titleString = "Enter your password"
                     detailVC.buttonAction = { vc in
                         if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
@@ -222,14 +222,7 @@ extension ResellViewController {
                             })
                         }
                     }
-                    self?.present(detailVC, animated: true, completion: {
-                        self?.titleTextField.text?.removeAll()
-                        self?.priceTextField.text?.removeAll()
-                        self?.descTextView.text?.removeAll()
-                        self?.idTextField.text?.removeAll()
-                        self?.pickerLabel.text?.removeAll()
-                        self?.tagTextField.tokens.removeAll()
-                    })
+                    self?.present(detailVC, animated: true, completion: nil)
                 }
             })
         } else {

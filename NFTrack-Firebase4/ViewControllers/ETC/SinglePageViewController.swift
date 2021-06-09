@@ -11,11 +11,12 @@ class SinglePageViewController: UIViewController {
     var gallery: String!
     var containerView: BlurEffectContainerView!
     var textFields = [UITextField]()
-    let keyService = KeysService()
-    let localDatabase = LocalDatabase()
+    private let keyService = KeysService()
+    private let localDatabase = LocalDatabase()
+    private let alert = Alerts()
     weak var delegate: WalletDelegate?
     var mode: WalletCreationType = .createKey
-    let walletController = WalletGenerationController()
+    private let walletController = WalletGenerationController()
 
     // createWallet
     var passwordTextField: UITextField!
@@ -424,56 +425,27 @@ extension SinglePageViewController {
     // MARK: - importWallet
     func importWallet() {
         guard let password = passwordTextField.text, !password.isEmpty else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Warning"
-            detailVC.message = "The password cannot be empty"
-            detailVC.buttonAction = { [weak self]vc in
-                self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            self.alert.showDetail("Sorry", with: "The password cannot be empty", for: self)
             return
         }
         
         guard let privateKey = enterPrivateKeyTextField.text, !privateKey.isEmpty else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Warning"
-            detailVC.message = "The private key cannot be empty"
-            detailVC.buttonAction = { [weak self]vc in
-                self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            self.alert.showDetail("Sorry", with: "The private key cannot be empty", for: self)
             return
         }
 
         keyService.addNewWalletWithPrivateKey(key: privateKey, password: password) { [weak self](wallet, error) in
             if let _ = error {
-                DispatchQueue.main.async {
-                    let detailVC = DetailViewController(height: 250)
-                    detailVC.titleString = "Error"
-                    detailVC.message = "There was an error importing your wallet"
-                    detailVC.buttonAction = { [weak self]_ in
-                        self?.dismiss(animated: true, completion: nil)
-                    }
-                    self?.present(detailVC, animated: true, completion: nil)
-                }
+                self?.alert.showDetail("Sorry", with: "There was an error importing your wallet", for: self!)
                 return
             }
 
             guard let wallet = wallet else { return }
-            self?.localDatabase.saveWallet(isRegistered: true, wallet: wallet) { [weak self](error) in
+            self?.localDatabase.saveWallet(isRegistered: true, wallet: wallet) { (error) in
                 if let _ = error {
-                    DispatchQueue.main.async {
-                        let detailVC = DetailViewController(height: 250)
-                        detailVC.titleString = "Error"
-                        detailVC.message = "There was an error saving your imported wallet"
-                        detailVC.buttonAction = { [weak self]vc in
-                            self?.dismiss(animated: true, completion: nil)
-                        }
-                        self?.present(detailVC, animated: true, completion: nil)
-                    }
+                    self?.alert.showDetail("Sorry", with: "There was an error saving your imported wallet", for: self!)
                     return
                 }
-
 
                 self?.delegate?.didProcessWallet()
             }

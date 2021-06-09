@@ -19,7 +19,7 @@ class ImagePreviewViewController: UIViewController {
     
     weak var delegate: PreviewDelegate?
     var collectionView: UICollectionView! = nil
-    let reuseIdentifier = "image-cell-reuse-identifier"
+    private let reuseIdentifier = "image-cell-reuse-identifier"
     
     override func viewDidLoad() {
         super.viewDidLoad()

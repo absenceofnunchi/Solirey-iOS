@@ -1,12 +1,12 @@
 //
-//  DetailParentViewController.swift
+//  ParentDetailViewController.swift
 //  NFTrack-Firebase4
 //
 //  Created by J C on 2021-06-04.
 //
 /*
  Abstract:
- Parent view controller for DetailParentViewController and HistoryDetailViewControler
+ Parent view controller for ListDetailViewController and HistoryDetailViewControler
  */
 
 import UIKit
@@ -15,7 +15,7 @@ import Firebase
 import FirebaseFirestore
 import BigInt
 
-class DetailParentViewController: UIViewController {
+class ParentDetailViewController: UIViewController {
     // MARK: - Properties
     let alert = Alerts()
     let transactionService = TransactionService()
@@ -25,6 +25,8 @@ class DetailParentViewController: UIViewController {
     var pvc: UIPageViewController!
     var galleries = [String]()
     var dateLabel: UILabel!
+    let profileImageView = UIImageView()
+    var displayNameLabel: UILabel!
     var underLineView: UnderlineView!
     var priceTitleLabel: UILabel!
     var priceLabel: UILabelPadding!
@@ -32,6 +34,7 @@ class DetailParentViewController: UIViewController {
     var descLabel: UILabelPadding!
     var idTitleLabel: UILabel!
     var idLabel: UILabelPadding!
+    var userInfo: UserInfo!
     
     // to refresh after update
     weak var tableViewRefreshDelegate: TableViewRefreshDelegate?
@@ -45,8 +48,7 @@ class DetailParentViewController: UIViewController {
     }
 }
 
-extension DetailParentViewController {
-    
+extension ParentDetailViewController {
     // MARK: - configureBackground
     func configureBackground() {
         title = post.title
@@ -113,6 +115,46 @@ extension DetailParentViewController {
         dateLabel.text = formattedDate
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(dateLabel)
+                
+        if self.userInfo.photoURL != "NA" {
+            FirebaseService.sharedInstance.downloadImage(urlString: self.userInfo.photoURL!) { [weak self] (image, error) in
+                guard let strongSelf = self else { return }
+                if let error = error {
+                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
+                }
+
+                if let image = image {
+                    strongSelf.profileImageView.image = image
+                    strongSelf.profileImageView.layer.cornerRadius = strongSelf.profileImageView.bounds.height/2.0
+                    strongSelf.profileImageView.contentMode = .scaleToFill
+                    strongSelf.profileImageView.clipsToBounds = true
+                }
+            }
+        } else {
+            guard let image = UIImage(systemName: "person.crop.circle.fill") else {
+                self.dismiss(animated: true, completion: nil)
+                return
+            }
+//            let configuration = UIImage.SymbolConfiguration(pointSize: 60, weight: .bold, scale: .large)
+            let profileImage = image.withTintColor(.black, renderingMode: .alwaysOriginal)
+            profileImageView.image = profileImage
+        }
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+        profileImageView.addGestureRecognizer(tap)
+        profileImageView.isUserInteractionEnabled = true
+        profileImageView.tag = 1
+        profileImageView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(profileImageView)
+        
+        displayNameLabel = UILabel()
+        displayNameLabel.addGestureRecognizer(tap)
+        displayNameLabel.isUserInteractionEnabled = true
+        displayNameLabel.tag = 1
+        displayNameLabel.text = userInfo.displayName
+        displayNameLabel.lineBreakMode = .byTruncatingTail
+        displayNameLabel.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(displayNameLabel)
         
         underLineView = UnderlineView()
         underLineView.translatesAutoresizingMaskIntoConstraints = false
@@ -195,6 +237,16 @@ extension DetailParentViewController {
             dateLabel.heightAnchor.constraint(equalToConstant: 50),
             dateLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.4),
             
+            profileImageView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50),
+            profileImageView.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
+            profileImageView.heightAnchor.constraint(equalToConstant: 40),
+            profileImageView.widthAnchor.constraint(equalToConstant: 40),
+            
+            displayNameLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50),
+            displayNameLabel.leadingAnchor.constraint(equalTo: profileImageView.trailingAnchor, constant: 10),
+            displayNameLabel.heightAnchor.constraint(equalToConstant: 50),
+            displayNameLabel.widthAnchor.constraint(lessThanOrEqualTo: scrollView.widthAnchor, multiplier: 0.6),
+            
             underLineView.topAnchor.constraint(equalTo: dateLabel.bottomAnchor),
             underLineView.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             underLineView.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
@@ -229,9 +281,20 @@ extension DetailParentViewController {
             idLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
         ])
     }
+    
+    @objc func tapped(_ sender: UITapGestureRecognizer!) {
+        let tag = sender.view?.tag
+        switch tag {
+            case 1:
+                let profileDetailVC = ProfileDetailViewController()
+                self.navigationController?.pushViewController(profileDetailVC, animated: true)
+            default:
+                break
+        }
+    }
 }
 
-extension DetailParentViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
+extension ParentDetailViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
         guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
         index -= 1
@@ -266,8 +329,6 @@ extension DetailParentViewController: UIPageViewControllerDataSource, UIPageView
         }
     }
 }
-
-
 
 //FirebaseService.sharedInstance.db.collection("escrow").whereField("postId", isEqualTo: post.postId)
 //    .getDocuments() { [weak self](querySnapshot, err) in

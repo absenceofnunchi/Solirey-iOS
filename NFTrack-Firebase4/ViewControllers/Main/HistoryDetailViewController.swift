@@ -7,19 +7,19 @@
 
 import UIKit
 
-class HistoryDetailViewController: DetailParentViewController {
-    var ownerTitleHash: UILabel!
-    var ownerHash: UILabelPadding!
-    var escrowHashTitleLabel: UILabel!
-    var escrowHashLabel: UILabelPadding!
-    var mintHashTitleLabel: UILabel!
-    var mintHashLabel: UILabelPadding!
-    var confirmPurchaseHashTitleLabel: UILabel!
-    var confirmPurchaseLabel: UILabelPadding!
-    var transferTitleLabel: UILabel!
-    var transferLabel: UILabel!
-    var confirmReceivedHashTitleLabel: UILabel!
-    var confirmReceivedHashLabel: UILabelPadding!
+class HistoryDetailViewController: ParentDetailViewController {
+    private var ownerTitleHash: UILabel!
+    private var ownerHash: UILabelPadding!
+    private var escrowHashTitleLabel: UILabel!
+    private var escrowHashLabel: UILabelPadding!
+    private var mintHashTitleLabel: UILabel!
+    private var mintHashLabel: UILabelPadding!
+    private var confirmPurchaseHashTitleLabel: UILabel!
+    private var confirmPurchaseLabel: UILabelPadding!
+    private var transferTitleLabel: UILabel!
+    private var transferLabel: UILabel!
+    private var confirmReceivedHashTitleLabel: UILabel!
+    private var confirmReceivedHashLabel: UILabelPadding!
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -167,7 +167,6 @@ extension HistoryDetailViewController {
 
 extension HistoryDetailViewController {
     @objc func buttonPressed(_ sender: UITapGestureRecognizer) {
-        print("pressed", sender)
         if let label = sender.view as? UILabel, let text = label.text {
             let webVC = WebViewController()
             let hashType = label.tag == 0 ? "tx" : "address"

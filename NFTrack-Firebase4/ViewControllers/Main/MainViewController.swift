@@ -13,18 +13,18 @@ struct MainMenu {
 }
 
 class MainViewController: UIViewController {
-    let data = [
+    private let data = [
         MainMenu(image: UIImage(named: "electronics")!, title: Category.electronics.rawValue),
         MainMenu(image: UIImage(named: "car")!, title: Category.vehicle.rawValue),
         MainMenu(image: UIImage(named: "real estate")!, title: Category.realEstate.rawValue),
         MainMenu(image: UIImage(named: "kayak")!, title: Category.other.rawValue)
     ]
-    var searchController: UISearchController!
-    var searchResultsController: SearchResultsController!
-    var collectionView: UICollectionView! = nil
-    let alert = Alerts()
-    var category: String! = "Electronics"
-    var searchItems = [String]()
+    private var searchController: UISearchController!
+    private var searchResultsController: SearchResultsController!
+    private var collectionView: UICollectionView! = nil
+    private let alert = Alerts()
+    private var category: String! = "Electronics"
+    private var searchItems = [String]()
     
     override func viewDidLoad() {
         super.viewDidLoad()

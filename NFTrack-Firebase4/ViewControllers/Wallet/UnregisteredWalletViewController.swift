@@ -7,7 +7,8 @@
 
 import UIKit
 
-class UnregisteredWalletViewController: ParentWalletViewController {
+class UnregisteredWalletViewController: UIViewController, ModalConfigurable {
+    var closeButton: UIButton!
     var backgroundAnimator: UIViewPropertyAnimator!
     let galleries: [String] = ["1", "2"]
     var pvc: UIPageViewController!
@@ -16,14 +17,16 @@ class UnregisteredWalletViewController: ParentWalletViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        configureUI()
+        view.backgroundColor = .white
+        configureCloseButton()
+        setButtonConstraints()
         configurePageVC()
         setConstraints()
     }
     
     // MARK: - viewWillAppear
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         
         UIView.animateKeyframes(withDuration: 0.6, delay: 0.0, animations: {
             UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 0.4) {
@@ -55,12 +58,6 @@ class UnregisteredWalletViewController: ParentWalletViewController {
 }
 
 extension UnregisteredWalletViewController {
-    // MARK: - ConfigureUI
-    /// If the user doesn't have a wallet
-    func configureUI() {
-        view.backgroundColor = .white
-    }
-    
     // MARK: - configurePageVC
     func configurePageVC() {
         let singlePageVC = SinglePageViewController(gallery: "1")
@@ -102,28 +99,6 @@ extension UnregisteredWalletViewController {
             ])
         }
     }
-    
-//    @objc func buttonHandler(_ sender: UIButton!) {
-//        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
-//        feedbackGenerator.impactOccurred()
-//        
-//        switch sender.tag {
-//            case 1:
-//                let createWalletVC = CreateWalletViewController()
-//                let delegateVC = self.parent as! WalletViewController
-//                createWalletVC.delegate = delegateVC
-//                createWalletVC.modalPresentationStyle = .fullScreen
-//                present(createWalletVC, animated: true)
-//            case 2:
-//                let importWalletVC = ImportWalletViewController()
-//                let delegateVC = self.parent as! WalletViewController
-//                importWalletVC.delegate = delegateVC
-//                importWalletVC.modalPresentationStyle = .fullScreen
-//                present(importWalletVC, animated: true)
-//            default:
-//                break
-//        }
-//    }
 }
 
 extension UnregisteredWalletViewController: UIPageViewControllerDataSource {
@@ -135,7 +110,6 @@ extension UnregisteredWalletViewController: UIPageViewControllerDataSource {
         }
         let spv = SinglePageViewController(gallery: galleries[index])
         guard let walletVC = self.parent as? WalletViewController else { return nil }
-        print("unregistered walletVC1", walletVC)
         spv.delegate = walletVC
         return spv
     }
@@ -148,7 +122,6 @@ extension UnregisteredWalletViewController: UIPageViewControllerDataSource {
         }
         let spv = SinglePageViewController(gallery: galleries[index])
         guard let walletVC = self.parent as? WalletViewController else { return nil }
-        print("unregistered walletVC2", walletVC)
         spv.delegate = walletVC
         return spv
 //        return SinglePageViewController(gallery: galleries[index])

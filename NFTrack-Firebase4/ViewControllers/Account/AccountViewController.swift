@@ -16,9 +16,12 @@ import Firebase
 
 class AccountViewController: UIViewController {
     let alert = Alerts()
+    let localDatabase = LocalDatabase()
+    
     var tableView: UITableView!
     let data: [AccountMenu] = [
         AccountMenu(imageTitle: "creditcard.circle", imageColor: UIColor(red: 238/255, green: 183/255, blue: 107/255, alpha: 1), titleString: "Wallet"),
+        AccountMenu(imageTitle: "person.circle", imageColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), titleString: "Update Profile"),
         AccountMenu(imageTitle: "lock.circle", imageColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), titleString: "Reset Password"),
         AccountMenu(imageTitle: "arrowshape.turn.up.right.circle", imageColor: UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1), titleString: "Logout"),
         AccountMenu(imageTitle: "envelope.circle", imageColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), titleString: "Feedback"),
@@ -30,18 +33,10 @@ class AccountViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        test()
         configureNavigationBar(vc: self)
         configureUI()
         setConstraints()
-    }
-    
-    @objc func buttonPressed() {
-        let firebaseAuth = Auth.auth()
-        do {
-            try firebaseAuth.signOut()
-        } catch let signOutError as NSError {
-            print ("Error signing out: %@", signOutError)
-        }
     }
 }
 
@@ -83,12 +78,14 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
                 walletVC.modalPresentationStyle = .fullScreen
                 self.present(walletVC, animated: true)
             case 1:
-                didRequestPasswordReset()
+                didUpdateProfile()
             case 2:
-                didLogout()
+                didRequestPasswordReset()
             case 3:
-                print("feedback")
+                didLogout()
             case 4:
+                print("feedback")
+            case 5:
                 didDeleteUser()
             default:
                 break
@@ -99,8 +96,8 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
 extension AccountViewController {
     //MARK: - didRequestPasswordReset
     func didRequestPasswordReset() {
-        let detailVC = DetailViewController(height: 250, isTextField: true)
-        detailVC.titleString = "Enter your email"
+        let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
+        detailVC.titleString = "Enter your email of your account"
         detailVC.buttonAction = { [weak self] vc in
             if let dvc = vc as? DetailViewController, let email = dvc.textField.text {
                 self?.dismiss(animated: true, completion: {
@@ -125,30 +122,73 @@ extension AccountViewController {
     
     // MARK: - didLogout
     func didLogout() {
-        let firebaseAuth = Auth.auth()
-        do {
-            try firebaseAuth.signOut()
-        } catch let signOutError as NSError {
-            self.alert.showDetail("Error", with: "Error signing out: \(signOutError)", for: self)
+        
+        let detailVC = DetailViewController(height: 280, detailVCStyle: .withCancelButton)
+        detailVC.titleString = "Logout"
+        detailVC.message = "Logging out will also delete your wallet from the local storage. Please make sure to remember your password and the private key."
+        detailVC.buttonAction = { [weak self] vc in
+            self?.dismiss(animated: true, completion: nil)
+            self?.showSpinner({
+                self?.localDatabase.deleteWallet { (error) in
+                    if let error = error {
+                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                    } else {
+                        let firebaseAuth = Auth.auth()
+                        do {
+                            try firebaseAuth.signOut()
+                        } catch let signOutError as NSError {
+                            self?.alert.showDetail("Error", with: "Error signing out: \(signOutError)", for: self!)
+                        }
+                    }
+                }
+            })
         }
+        self.present(detailVC, animated: true, completion: {
+            self.hideSpinner {}
+        })
     }
     
     // MARK: - didDeleteUser
     func didDeleteUser() {
-        let user = Auth.auth().currentUser
-        
-        user?.delete { error in
-            if let error = error {
-                self.alert.showDetail("Error resetting the user", with: error.localizedDescription, for: self)
-            } else {
-                self.alert.showDetail("Success!", with: "You account has been successfully deleted.", for: self)
-            }
+        let detailVC = DetailViewController(height: 280, detailVCStyle: .withCancelButton)
+        detailVC.titleString = "Delete Account"
+        detailVC.message = "Are you sure you want to delete your account? Any transaction records on the blockchain will remain intact."
+        detailVC.buttonAction = { [weak self] vc in
+            self?.dismiss(animated: true, completion: nil)
+            self?.showSpinner({
+                self?.localDatabase.deleteWallet { (error) in
+                    if let error = error {
+                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                    } else {
+                        let user = Auth.auth().currentUser
+                        user?.delete { error in
+                            if let error = error {
+                                self?.alert.showDetail("Error resetting the user", with: error.localizedDescription, for: self!)
+                            } else {
+                                self?.alert.showDetail("Success!", with: "You account has been successfully deleted.", for: self!)
+                            }
+                        }
+                    }
+                }
+            })
         }
+        self.present(detailVC, animated: true, completion: {
+            self.hideSpinner {}
+        })
+    }
+    
+    // MARK: - didUpdateProfile
+    func didUpdateProfile() {
+        let profileVC = ProfileViewController()
+        profileVC.modalPresentationStyle = .fullScreen
+        present(profileVC, animated: true, completion: nil)
     }
 }
 
-struct AccountMenu {
-    let imageTitle: String
-    let imageColor: UIColor
-    let titleString: String
+extension AccountViewController: FileUploadable {
+    func test() {
+        uploadSomething() {
+            print("yo")
+        }
+    }
 }

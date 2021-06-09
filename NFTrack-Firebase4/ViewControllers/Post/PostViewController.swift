@@ -9,7 +9,7 @@ import UIKit
 import web3swift
 import FirebaseFirestore
 
-class PostViewController: PostParentViewController {
+class PostViewController: ParentPostViewController {
 
     // MARK: - mint
     /// 1. check for existing ID
@@ -21,7 +21,7 @@ class PostViewController: PostParentViewController {
     /// 7. upload the images
     override func mint() {
         super.mint()
-        if let userId = self.userDefaults.string(forKey: "userId") {
+        if let userId = self.userDefaults.string(forKey: UserDefaultKeys.userId) {
             self.userId = userId
             // create purchase contract
             guard let price = self.priceTextField.text,
@@ -81,7 +81,7 @@ class PostViewController: PostParentViewController {
                         }
                         
                         if let transaction = transaction {
-                            let detailVC = DetailViewController(height: 250, isTextField: true)
+                            let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
                             detailVC.titleString = "Enter your password"
                             detailVC.buttonAction = { vc in
                                 if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
@@ -114,10 +114,10 @@ class PostViewController: PostParentViewController {
                                                                 let postId = UUID().uuidString
                                                                 let ref = FirebaseService.sharedInstance.db.collection("mint")
                                                                 let id = ref.document().documentID
-                                                                
+
                                                                 // for deleting photos afterwards
                                                                 self?.documentId = id
-                                                                
+                                                                                                                                
                                                                 // txHash is either minting or transferring the ownership
                                                                 FirebaseService.sharedInstance.db.collection("post").document(id).setData([
                                                                     "postId": postId,
@@ -180,14 +180,7 @@ class PostViewController: PostParentViewController {
                                     })
                                 }
                             }
-                            self?.present(detailVC, animated: true, completion: {
-                                self?.titleTextField.text?.removeAll()
-                                self?.priceTextField.text?.removeAll()
-                                self?.descTextView.text?.removeAll()
-                                self?.idTextField.text?.removeAll()
-                                self?.pickerLabel.text?.removeAll()
-                                self?.tagTextField.tokens.removeAll()
-                            })
+                            self?.present(detailVC, animated: true, completion: nil)
                         }
                     })
                 }

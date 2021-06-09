@@ -8,13 +8,12 @@
 import UIKit
 
 class WalletViewController: UIViewController {
-    let localDatabase = LocalDatabase()
+    private let localDatabase = LocalDatabase()
     var newPageVC: UIViewController!
     var oldPageVC: UIViewController!
     
     init() {
         super.init(nibName: nil, bundle: nil)
-        
         if let _ = localDatabase.getWallet() {
             let vc = RegisteredWalletViewController()
             vc.delegate = self
@@ -38,8 +37,8 @@ class WalletViewController: UIViewController {
 
 extension WalletViewController {
     func configureChildVC() {
-        addChild(newPageVC)
         oldPageVC.willMove(toParent: nil)
+        addChild(newPageVC)
         oldPageVC.beginAppearanceTransition(false, animated: true)
         newPageVC.beginAppearanceTransition(true, animated: true)
         
@@ -48,35 +47,47 @@ extension WalletViewController {
             self.newPageVC.endAppearanceTransition()
             self.newPageVC.didMove(toParent: self)
             self.oldPageVC.removeFromParent()
-            self.oldPageVC = nil
+//            self.oldPageVC = nil
             self.oldPageVC = self.newPageVC
             self.newPageVC.view.translatesAutoresizingMaskIntoConstraints = false
             self.oldPageVC.view.fill()
-            self.newPageVC = nil
+//            self.newPageVC = nil
         }
     }
-    
-
 }
 
 extension WalletViewController: WalletDelegate {
     func didProcessWallet() {
+        print("self.children", self.children)
         if let _ = localDatabase.getWallet() {
-            if !(self.children[0].isKind(of: RegisteredWalletViewController.self)) {
+            newPageVC = RegisteredWalletViewController()
+            print("newPageVC", newPageVC as Any)
+            (newPageVC as! RegisteredWalletViewController).delegate = self
+            delay(0.2) {
+                self.configureChildVC()
+            }
+            
+            
+//            if !(self.children[0].isKind(of: RegisteredWalletViewController.self)) {
 //                if self.parent == nil {
 //                    let window = UIApplication.shared.windows.first
 //                    let root = window?.rootViewController
 //                    window?.rootViewController = nav
 //                }
-                newPageVC = RegisteredWalletViewController()
-                (newPageVC as! RegisteredWalletViewController).delegate = self
-                configureChildVC()
-            }
+//                newPageVC = RegisteredWalletViewController()
+//                print("newPageVC", newPageVC)~
+//                (newPageVC as! RegisteredWalletViewController).delegate = self
+            //                self.configureChildVC()
+//            }
         } else {
-            if !(self.children[0].isKind(of: UnregisteredWalletViewController.self)) {
-                newPageVC = UnregisteredWalletViewController()
-                configureChildVC()
+            newPageVC = UnregisteredWalletViewController()
+            delay(0.2) {
+                self.configureChildVC()
             }
+//            if !(self.children[0].isKind(of: UnregisteredWalletViewController.self)) {
+//                newPageVC = UnregisteredWalletViewController()
+//                configureChildVC()
+//            }
         }
     }
 }

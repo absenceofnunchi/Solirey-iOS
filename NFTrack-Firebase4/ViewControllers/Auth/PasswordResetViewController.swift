@@ -13,18 +13,18 @@ import UIKit
 
 class PasswordResetViewController: UIViewController {
     var titleString: String?
-    var titleLabel: UILabel!
-    var messageLabel: UILabel!
-    var height: CGFloat!
+    private var titleLabel: UILabel!
+    private var messageLabel: UILabel!
+    private var height: CGFloat!
     var buttonAction: ((UIViewController)->Void)?
-    var buttonPanel: UIView!
-    var closeButton: UIButton!
-    var cancelButton: UIButton!
+    private var buttonPanel: UIView!
+    private var closeButton: UIButton!
+    private var cancelButton: UIButton!
     var currentPasswordTextField: UITextField!
     var passwordTextField: UITextField!
     var repeatPasswordTextField: UITextField!
-    var passwordsDontMatch: UILabel!
-    var textFields = [UITextField]()
+    private var passwordsDontMatch: UILabel!
+    private var textFields = [UITextField]()
     
     private lazy var customTransitioningDelegate = TransitioningDelegate(height: height)
     

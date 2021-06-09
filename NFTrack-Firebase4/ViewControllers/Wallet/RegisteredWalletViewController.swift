@@ -21,9 +21,10 @@ class RegisteredWalletViewController: UIViewController {
     var receiveButton: WalletButtonView!
     var refreshButton: UIButton!
     
-    let localDatabase = LocalDatabase()
-    let keyService = KeysService()
-    let transactionService = TransactionService()
+    private let localDatabase = LocalDatabase()
+    private let keyService = KeysService()
+    private let transactionService = TransactionService()
+    private let alert = Alerts()
     
     // MARK: - viewDidLoad
     override func viewDidLoad() {
@@ -32,6 +33,13 @@ class RegisteredWalletViewController: UIViewController {
         configure()
         configureWallet()
         setConstraints()
+    }
+    
+    private var presentingController: UIViewController?
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        presentingController = presentingViewController
     }
 }
 
@@ -238,28 +246,19 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         switch sender.tag {
             case 1:
                 // delete
-                let ac = UIAlertController(title: "Delete Wallet", message: "Are you sure you want to delete your wallet?", preferredStyle: .alert)
-                ac.addAction(UIAlertAction(title: "Yes", style: .destructive, handler: { [weak self](_) in
-                    self?.localDatabase.deleteWallet { [weak self](error) in
+                let detailVC = DetailViewController(height: 250, detailVCStyle: .withCancelButton)
+                detailVC.titleString = "Delete Wallet"
+                detailVC.message = "Are you sure you want to delete your wallet from your local storage?"
+                detailVC.buttonAction = { [weak self] vc in
+                    self?.dismiss(animated: true, completion: nil)
+                    self?.localDatabase.deleteWallet { (error) in
                         if let error = error {
-                            switch error {
-                                case .couldNotDeleteTheWallet:
-                                    let detailVC = DetailViewController(height: 250)
-                                    detailVC.titleString = "Error"
-                                    detailVC.message = "Could not delete the wallet."
-                                    detailVC.buttonAction = { [weak self]vc in
-                                        self?.dismiss(animated: true, completion: nil)
-                                    }
-                                    self?.present(detailVC, animated: true, completion: nil)
-                                default:
-                                    break
-                            }
+                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
                         }
                         self?.delegate?.didProcessWallet()
                     }
-                }))
-                ac.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-                self.present(ac, animated: true, completion: nil)
+                }
+                self.present(detailVC, animated: true, completion: nil)
             case 2:
                 // show private key
                 let ac = UIAlertController(title: "Enter the password", message: nil, preferredStyle: .alert)
@@ -359,11 +358,12 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
             case 4:
                 configureWallet()
             case 5:
-                self.dismiss(animated: true, completion: nil)
+                self.view.window?.rootViewController?.dismiss(animated: true, completion: nil)
             default:
                 break
         }
     }
+
 }
 
 // private key

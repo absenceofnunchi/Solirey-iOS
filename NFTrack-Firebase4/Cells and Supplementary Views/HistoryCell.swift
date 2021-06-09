@@ -11,8 +11,6 @@ class HistoryCell: UITableViewCell {
     var hashLabel: UILabel!
     var dateLabel: UILabel!
     var cellPosition: CellPosition!
-    
-//    var mas: NSMutableAttributedString!
     var strokeColor: UIColor = .black {
         didSet {
             shapeLayer.strokeColor = strokeColor.cgColor

@@ -7,6 +7,10 @@
 
 import UIKit
 
+enum DetailVCStyle {
+    case regular, withCancelButton, withTextField
+}
+
 class DetailViewController: UIViewController {
     var titleString: String?
     var message: String?
@@ -18,11 +22,11 @@ class DetailViewController: UIViewController {
     var closeButton: UIButton!
     var cancelButton: UIButton!
     var textField: UITextField!
-    var isTextField = false
+    private var detailVCStyle: DetailVCStyle = .regular
 
     private lazy var customTransitioningDelegate = TransitioningDelegate(height: height)
     
-    init(height: CGFloat = 300, buttonTitle: String = "OK", messageTextAlignment: NSTextAlignment = .center, isTextField: Bool = false) {
+    init(height: CGFloat = 300, buttonTitle: String = "OK", messageTextAlignment: NSTextAlignment = .center, detailVCStyle: DetailVCStyle = .regular) {
         super.init(nibName: nil, bundle: nil)
 
         self.height = height
@@ -33,7 +37,7 @@ class DetailViewController: UIViewController {
         self.closeButton = UIButton()
         self.closeButton.setTitle(buttonTitle, for: .normal)
         
-        self.isTextField = isTextField
+        self.detailVCStyle = detailVCStyle
         
         configure()
     }
@@ -70,48 +74,75 @@ private extension DetailViewController {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(titleLabel)
         
-        if self.isTextField {
-            textField = UITextField()
-            textField.autocapitalizationType = .none
-            textField.setLeftPaddingPoints(10)
-            textField.layer.borderWidth = 0.7
-            textField.layer.cornerRadius = 5
-            textField.layer.borderColor = UIColor.lightGray.cgColor
-            textField.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(textField)
-            
-            buttonPanel = UIView()
-            buttonPanel.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(buttonPanel)
-            
-            closeButton.addTarget(self, action: #selector(tapped), for: .touchUpInside)
-            closeButton.backgroundColor = .black
-            closeButton.layer.cornerRadius = 10
-            closeButton.setTitleColor(.white, for: .normal)
-            closeButton.translatesAutoresizingMaskIntoConstraints = false
-            buttonPanel.addSubview(closeButton)
-            
-            cancelButton = UIButton()
-            cancelButton.backgroundColor = .red
-            cancelButton.layer.cornerRadius = 10
-            cancelButton.setTitle("Cancel", for: .normal)
-            cancelButton.addTarget(self, action: #selector(cancelHandler), for: .touchUpInside)
-            cancelButton.translatesAutoresizingMaskIntoConstraints = false
-            buttonPanel.addSubview(cancelButton)
-        } else {
-            messageLabel.text = message
-            messageLabel.textColor = .gray
-            messageLabel.numberOfLines = 0
-            messageLabel.sizeToFit()
-            messageLabel.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(messageLabel)
-            
-            closeButton.addTarget(self, action: #selector(tapped), for: .touchUpInside)
-            closeButton.backgroundColor = .darkGray
-            closeButton.layer.cornerRadius = 10
-            closeButton.setTitleColor(.white, for: .normal)
-            closeButton.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(closeButton)
+        switch detailVCStyle {
+            case .regular:
+                messageLabel.text = message
+                messageLabel.textColor = .gray
+                messageLabel.numberOfLines = 0
+                messageLabel.sizeToFit()
+                messageLabel.translatesAutoresizingMaskIntoConstraints = false
+                view.addSubview(messageLabel)
+                
+                closeButton.addTarget(self, action: #selector(tapped), for: .touchUpInside)
+                closeButton.backgroundColor = .darkGray
+                closeButton.layer.cornerRadius = 10
+                closeButton.setTitleColor(.white, for: .normal)
+                closeButton.translatesAutoresizingMaskIntoConstraints = false
+                view.addSubview(closeButton)
+            case .withCancelButton:
+                messageLabel.text = message
+                messageLabel.textColor = .gray
+                messageLabel.numberOfLines = 0
+                messageLabel.sizeToFit()
+                messageLabel.translatesAutoresizingMaskIntoConstraints = false
+                view.addSubview(messageLabel)
+                
+                buttonPanel = UIView()
+                buttonPanel.translatesAutoresizingMaskIntoConstraints = false
+                view.addSubview(buttonPanel)
+                
+                closeButton.addTarget(self, action: #selector(tapped), for: .touchUpInside)
+                closeButton.backgroundColor = .black
+                closeButton.layer.cornerRadius = 10
+                closeButton.setTitleColor(.white, for: .normal)
+                closeButton.translatesAutoresizingMaskIntoConstraints = false
+                buttonPanel.addSubview(closeButton)
+                
+                cancelButton = UIButton()
+                cancelButton.backgroundColor = .red
+                cancelButton.layer.cornerRadius = 10
+                cancelButton.setTitle("Cancel", for: .normal)
+                cancelButton.addTarget(self, action: #selector(cancelHandler), for: .touchUpInside)
+                cancelButton.translatesAutoresizingMaskIntoConstraints = false
+                buttonPanel.addSubview(cancelButton)
+            case .withTextField:
+                textField = UITextField()
+                textField.autocapitalizationType = .none
+                textField.setLeftPaddingPoints(10)
+                textField.layer.borderWidth = 0.7
+                textField.layer.cornerRadius = 5
+                textField.layer.borderColor = UIColor.lightGray.cgColor
+                textField.translatesAutoresizingMaskIntoConstraints = false
+                view.addSubview(textField)
+                
+                buttonPanel = UIView()
+                buttonPanel.translatesAutoresizingMaskIntoConstraints = false
+                view.addSubview(buttonPanel)
+                
+                closeButton.addTarget(self, action: #selector(tapped), for: .touchUpInside)
+                closeButton.backgroundColor = .black
+                closeButton.layer.cornerRadius = 10
+                closeButton.setTitleColor(.white, for: .normal)
+                closeButton.translatesAutoresizingMaskIntoConstraints = false
+                buttonPanel.addSubview(closeButton)
+                
+                cancelButton = UIButton()
+                cancelButton.backgroundColor = .red
+                cancelButton.layer.cornerRadius = 10
+                cancelButton.setTitle("Cancel", for: .normal)
+                cancelButton.addTarget(self, action: #selector(cancelHandler), for: .touchUpInside)
+                cancelButton.translatesAutoresizingMaskIntoConstraints = false
+                buttonPanel.addSubview(cancelButton)
         }
         
 //        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped))
@@ -127,40 +158,61 @@ private extension DetailViewController {
             titleLabel.heightAnchor.constraint(equalToConstant: 50),
         ])
         
-        if isTextField {
-            constraints.append(contentsOf: [
-                textField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                textField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                textField.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                textField.heightAnchor.constraint(equalToConstant: 50),
-                
-                buttonPanel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                buttonPanel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                buttonPanel.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
-                buttonPanel.heightAnchor.constraint(equalToConstant: 50),
-                
-                closeButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
-                closeButton.heightAnchor.constraint(equalToConstant: 50),
-                closeButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
-                closeButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
-                
-                cancelButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
-                cancelButton.heightAnchor.constraint(equalToConstant: 50),
-                cancelButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
-                cancelButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
-            ])
-        } else {
-            constraints.append(contentsOf: [
-                messageLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                messageLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                messageLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-//                messageLabel.heightAnchor.constraint(equalToConstant: 50),
-                
-                closeButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.4),
-                closeButton.heightAnchor.constraint(equalToConstant: 50),
-                closeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                closeButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
-            ])
+        switch detailVCStyle {
+            case .regular:
+                constraints.append(contentsOf: [
+                    messageLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                    messageLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                    messageLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+                    
+                    closeButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.4),
+                    closeButton.heightAnchor.constraint(equalToConstant: 50),
+                    closeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                    closeButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
+                ])
+            case .withCancelButton:
+                constraints.append(contentsOf: [
+                    messageLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                    messageLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                    messageLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+                    
+                    buttonPanel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                    buttonPanel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                    buttonPanel.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
+                    buttonPanel.heightAnchor.constraint(equalToConstant: 50),
+                    
+                    closeButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
+                    closeButton.heightAnchor.constraint(equalToConstant: 50),
+                    closeButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+                    closeButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+                    
+                    cancelButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
+                    cancelButton.heightAnchor.constraint(equalToConstant: 50),
+                    cancelButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+                    cancelButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+                ])
+            case .withTextField:
+                constraints.append(contentsOf: [
+                    textField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                    textField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                    textField.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+                    textField.heightAnchor.constraint(equalToConstant: 50),
+                    
+                    buttonPanel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                    buttonPanel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                    buttonPanel.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
+                    buttonPanel.heightAnchor.constraint(equalToConstant: 50),
+                    
+                    closeButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
+                    closeButton.heightAnchor.constraint(equalToConstant: 50),
+                    closeButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+                    closeButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+                    
+                    cancelButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
+                    cancelButton.heightAnchor.constraint(equalToConstant: 50),
+                    cancelButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+                    cancelButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+                ])
         }
         
         NSLayoutConstraint.activate(constraints)

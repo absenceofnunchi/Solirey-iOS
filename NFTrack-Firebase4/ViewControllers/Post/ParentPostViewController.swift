@@ -1,5 +1,5 @@
 //
-//  PostParentViewController.swift
+//  ParentPostViewController.swift
 //  NFTrack-Firebase4
 //
 //  Created by J C on 2021-06-01.
@@ -13,7 +13,7 @@ import FirebaseStorage
 import Firebase
 import web3swift
 
-class PostParentViewController: UIViewController {
+class ParentPostViewController: UIViewController {
     var scrollView: UIScrollView!
     var titleLabel: UILabel!
     var titleTextField: UITextField!
@@ -81,7 +81,7 @@ class PostParentViewController: UIViewController {
     }
 }
 
-extension PostParentViewController {
+extension ParentPostViewController {
     
     @objc func configureUI() {
         title = "Post"
@@ -386,7 +386,7 @@ extension PostParentViewController {
 }
 
 // MARK: - Image picker
-extension PostParentViewController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
+extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
         
@@ -405,7 +405,7 @@ extension PostParentViewController: UIImagePickerControllerDelegate & UINavigati
     }
 }
 
-extension PostParentViewController {
+extension ParentPostViewController {
     // MARK: - addKeyboardObserver
     func addKeyboardObserver() {
 //        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
@@ -466,7 +466,7 @@ extension PostParentViewController {
     }
 }
 
-extension PostParentViewController {
+extension ParentPostViewController {
     // MARK: - saveImage
     func saveImage(imageName: String, image: UIImage) {
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
@@ -492,7 +492,7 @@ extension PostParentViewController {
     }
 }
 
-extension PostParentViewController: PreviewDelegate {
+extension ParentPostViewController: PreviewDelegate {
     // MARK: - configureImagePreview
     func configureImagePreview() {
         imagePreviewVC = ImagePreviewViewController()
@@ -511,7 +511,7 @@ extension PostParentViewController: PreviewDelegate {
     }
 }
 
-extension PostParentViewController {
+extension ParentPostViewController {
     // MARK: - checkExistingId
     func checkExistingId(id: String, completion: @escaping (Bool) -> Void) {
         FirebaseService.sharedInstance.db.collection("post")
@@ -635,7 +635,7 @@ extension PostParentViewController {
     }
 }
 
-extension PostParentViewController: UITextFieldDelegate, UITextViewDelegate {
+extension ParentPostViewController: UITextFieldDelegate, UITextViewDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
         showKeyboard = false
         mdbvc.view.alpha = 0
@@ -647,7 +647,7 @@ extension PostParentViewController: UITextFieldDelegate, UITextViewDelegate {
     }
 }
 
-extension PostParentViewController {
+extension ParentPostViewController {
     //    let eventABI = [
     //        {
     //            "indexed": true,
@@ -697,7 +697,7 @@ extension PostParentViewController {
     }
 }
 
-extension PostParentViewController: MessageDelegate {
+extension ParentPostViewController: MessageDelegate {
     // MARK: - didReceiveMessage
     @objc func didReceiveMessage(topics: [String]) {
         // get the token ID to be uploaded to Firestore
@@ -730,6 +730,13 @@ extension PostParentViewController: MessageDelegate {
                                     }
                                 }
                             }
+                            
+                            self?.titleTextField.text?.removeAll()
+                            self?.priceTextField.text?.removeAll()
+                            self?.descTextView.text?.removeAll()
+                            self?.idTextField.text?.removeAll()
+                            self?.pickerLabel.text?.removeAll()
+                            self?.tagTextField.tokens.removeAll()
                         }
                     }
                 }
