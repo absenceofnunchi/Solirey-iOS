@@ -530,7 +530,7 @@ extension ParentPostViewController {
     }
     
     // MARK: - uploadImages
-    func uploadImages(image: String, userId: String, id: String) {
+    func uploadImages(image: String, userId: String, completion: @escaping (URL) -> Void) {
         FirebaseService.sharedInstance.uploadPhoto(fileName: image, userId: userId) { [weak self](uploadTask, fileUploadError) in
             if let error = fileUploadError {
                 switch error {
@@ -571,13 +571,14 @@ extension ParentPostViewController {
                         }
                         
                         if let url = url {
-                            FirebaseService.sharedInstance.db.collection("post").document(id).updateData([
-                                "images": FieldValue.arrayUnion(["\(url)"])
-                            ], completion: { (error) in
-                                if let error = error {
-                                    self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
-                                }
-                            })
+                            completion(url)
+//                            FirebaseService.sharedInstance.db.collection("post").document(id).updateData([
+//                                "images": FieldValue.arrayUnion(["\(url)"])
+//                            ], completion: { (error) in
+//                                if let error = error {
+//                                    self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+//                                }
+//                            })
                         }
                     }
                 }
@@ -721,7 +722,9 @@ extension ParentPostViewController: MessageDelegate {
                             // upload images and delete them afterwards
                             if self!.imageNameArr.count > 0, let imageNameArr = self?.imageNameArr {
                                 for image in imageNameArr {
-                                    self?.uploadImages(image: image, userId: self!.userId, id: self!.documentId)
+                                    self?.uploadImages(image: image, userId: self!.userId) {(url) in
+                                        
+                                    }
                                     imageCount += 1
                                     if imageCount == imageNameArr.count, let ipvc = self?.imagePreviewVC {
                                         self?.imageNameArr.removeAll()
@@ -729,6 +732,7 @@ extension ParentPostViewController: MessageDelegate {
                                         ipvc.collectionView.reloadData()
                                     }
                                 }
+                                
                             }
                             
                             self?.titleTextField.text?.removeAll()

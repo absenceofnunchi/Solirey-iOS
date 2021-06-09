@@ -7,6 +7,7 @@
 
 import UIKit
 import FirebaseFirestore
+import FirebaseStorage
 
 // WalletViewController
 protocol WalletDelegate: AnyObject {
@@ -112,13 +113,145 @@ extension UIControl {
 }
 
 
-protocol FileUploadable {
+protocol FileUploadable1 {
     func uploadSomething(completion: (() -> Void)?)
 }
 
-extension FileUploadable {
+extension FileUploadable1 {
     func uploadSomething(completion: (() -> Void)? = nil) {
         print("hello")
         completion?()
     }
 }
+
+// MARK: - FileUploadable
+protocol FileUploadable where Self:UIViewController {
+    var alert: Alerts! { get set }
+    func uploadImages(image: String, userId: String, completion: @escaping (URL) -> Void)
+    func deleteFile(fileName: String)
+    func saveImage(imageName: String, image: UIImage)
+}
+
+extension FileUploadable {
+    func uploadImages(image: String, userId: String, completion: @escaping (URL) -> Void) {
+        FirebaseService.sharedInstance.uploadPhoto(fileName: image, userId: userId) { [weak self](uploadTask, fileUploadError) in
+            if let error = fileUploadError {
+                switch error {
+                    case .fileManagerError(let msg):
+                        self?.alert.showDetail("Error", with: msg, for: self!)
+                    case .fileNotAvailable:
+                        self?.alert.showDetail("Error", with: "Image file not found.", for: self!)
+                    case .userNotLoggedIn:
+                        self?.alert.showDetail("Error", with: "You need to be logged in!", for: self!)
+                }
+            }
+            
+            if let uploadTask = uploadTask {
+                // Listen for state changes, errors, and completion of the upload.
+                uploadTask.observe(.resume) { snapshot in
+                    // Upload resumed, also fires when the upload starts
+                }
+                
+                uploadTask.observe(.pause) { snapshot in
+                    // Upload paused
+                    self?.alert.showDetail("Image Upload", with: "The image uploading process has been paused.", for: self!)
+                }
+                
+                uploadTask.observe(.progress) { snapshot in
+                    // Upload reported progress
+                    let percentComplete = 100.0 * Double(snapshot.progress!.completedUnitCount)
+                        / Double(snapshot.progress!.totalUnitCount)
+                    print("percent Complete", percentComplete)
+                }
+                
+                uploadTask.observe(.success) { snapshot in
+                    // Upload completed successfully
+                    print("success")
+                    self?.deleteFile(fileName: image)
+                    snapshot.reference.downloadURL { (url, error) in
+                        if let error = error {
+                            print("downloadURL error", error)
+                        }
+                        
+                        if let url = url {
+                            completion(url)
+                        }
+                    }
+                }
+                
+                uploadTask.observe(.failure) { snapshot in
+                    if let error = snapshot.error as NSError? {
+                        switch (StorageErrorCode(rawValue: error.code)!) {
+                            case .objectNotFound:
+                                // File doesn't exist
+                                print("object not found")
+                                break
+                            case .unauthorized:
+                                // User doesn't have permission to access file
+                                print("unauthorized")
+                                break
+                            case .cancelled:
+                                // User canceled the upload
+                                print("cancelled")
+                                break
+                                
+                            /* ... */
+                            
+                            case .unknown:
+                                // Unknown error occurred, inspect the server response
+                                print("unknown")
+                                break
+                            default:
+                                // A separate error occurred. This is a good place to retry the upload.
+                                print("reload?")
+                                break
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - deleteFile
+    func deleteFile(fileName: String) {
+        // delete images from the system
+        let fileManager = FileManager.default
+        let documentsDirectory =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documentsPath = documentsDirectory.path
+        do {
+            
+            let filePathName = "\(documentsPath)/\(fileName)"
+            try fileManager.removeItem(atPath: filePathName)
+            
+            let files = try fileManager.contentsOfDirectory(atPath: "\(documentsPath)")
+            print("all files in cache after deleting images: \(files)")
+            
+        } catch {
+            print("Could not clear temp folder: \(error)")
+        }
+    }
+    
+    func saveImage(imageName: String, image: UIImage) {
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        
+        let fileName = imageName
+        let fileURL = documentsDirectory.appendingPathComponent(fileName)
+        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
+        
+        //Checks if file exists, removes it if so.
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            do {
+                try FileManager.default.removeItem(atPath: fileURL.path)
+            } catch let removeError {
+                print("couldn't remove file at path", removeError)
+            }
+        }
+        
+        do {
+            try data.write(to: fileURL)
+        } catch let error {
+            print("error saving file with error", error)
+        }
+    }
+}
+

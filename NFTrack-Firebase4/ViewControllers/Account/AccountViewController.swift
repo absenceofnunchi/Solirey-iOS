@@ -33,7 +33,6 @@ class AccountViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        test()
         configureNavigationBar(vc: self)
         configureUI()
         setConstraints()
@@ -182,13 +181,5 @@ extension AccountViewController {
         let profileVC = ProfileViewController()
         profileVC.modalPresentationStyle = .fullScreen
         present(profileVC, animated: true, completion: nil)
-    }
-}
-
-extension AccountViewController: FileUploadable {
-    func test() {
-        uploadSomething() {
-            print("yo")
-        }
     }
 }
