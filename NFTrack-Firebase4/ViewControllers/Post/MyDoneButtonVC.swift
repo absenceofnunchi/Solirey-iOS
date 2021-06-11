@@ -22,12 +22,19 @@ class MyDoneButtonVC : UIInputViewController {
         let b = UIButton(type: .system)
         b.tintColor = .black
         b.setTitle("Done", for: .normal)
-        b.sizeToFit()
+//        b.sizeToFit()
         b.addTarget(self, action: #selector(doDone), for: .touchUpInside)
         b.backgroundColor = UIColor.lightGray
+        b.layer.zPosition = 100
         iv.addSubview(b)
         b.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
+//            iv.topAnchor.constraint(equalTo: view.topAnchor),
+                        iv.heightAnchor.constraint(equalToConstant: 50),
+            iv.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            iv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            iv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            
             b.topAnchor.constraint(equalTo: iv.topAnchor),
 //            b.heightAnchor.constraint(equalToConstant: 50),
             b.bottomAnchor.constraint(equalTo: iv.bottomAnchor),

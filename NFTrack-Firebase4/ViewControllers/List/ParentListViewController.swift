@@ -49,28 +49,6 @@ extension ParentListViewController {
         tableView.fill()
     }
     
-    func fetchUserData(id: String, completion: @escaping (UserInfo?) -> Void) {
-        showSpinner {
-            let docRef = FirebaseService.sharedInstance.db.collection("user").document(id)
-            docRef.getDocument { [weak self] (document, error) in
-                if let document = document, document.exists {
-                    if let data = document.data() {
-                        let displayName = data[UserDefaultKeys.displayName] as? String
-                        let photoURL = data[UserDefaultKeys.photoURL] as? String
-                        let userInfo = UserInfo(email: nil, displayName: displayName!, photoURL: photoURL, uid: nil)
-                        self?.hideSpinner {
-                            completion(userInfo)
-                        }
-                    }
-                } else {
-                    self?.hideSpinner {
-                        completion(nil)
-                    }
-                }
-            }
-        }
-    }
-    
     @objc func refresh(_ sender: UIRefreshControl) {
         //        configureDataFetch()
     }
@@ -136,17 +114,10 @@ extension ParentListViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
-        fetchUserData(id: post.sellerUserId) { [weak self] (userInfo) in
-            if let userInfo = userInfo {
-                let listDetailVC = ListDetailViewController()
-                listDetailVC.post = post
-                listDetailVC.userInfo = userInfo
-                listDetailVC.tableViewRefreshDelegate = self
-                self?.navigationController?.pushViewController(listDetailVC, animated: true)
-            } else {
-                self?.alert.showDetail("Sorry", with: "There was an error fetching Data. Please try again", for: self!)
-            }
-        }
+        let listDetailVC = ListDetailViewController()
+        listDetailVC.post = post
+        listDetailVC.tableViewRefreshDelegate = self
+        self.navigationController?.pushViewController(listDetailVC, animated: true)
     }
 }
 

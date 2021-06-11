@@ -79,6 +79,7 @@
 		497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9AEB2655A60300F09CAA /* NFTrackABI.swift */; };
 		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
+		499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702A52672E0BA001DD80A /* ToolBarView.swift */; };
 		499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9948266AB20700FC6CDE /* HistoryCell.swift */; };
 		499F994E266ADA0E00FC6CDE /* HistoryDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */; };
 		499F9953266AED0E00FC6CDE /* ParentDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9952266AED0E00FC6CDE /* ParentDetailViewController.swift */; };
@@ -87,6 +88,7 @@
 		499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9961266C061A00FC6CDE /* ParentNavViewController.swift */; };
 		499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9966266C195F00FC6CDE /* AccountCell.swift */; };
 		499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F998D266C8D9700FC6CDE /* ProgressCell.swift */; };
+		49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */; };
 		49D59C762663326500107F79 /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D59C752663326500107F79 /* SocketDelegate.swift */; };
 		49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759A726658DCC0064BB34 /* TransitioningDelegate.swift */; };
 		49E759AD26669ACB0064BB34 /* ParentPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */; };
@@ -195,6 +197,7 @@
 		497A9AEB2655A60300F09CAA /* NFTrackABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABI.swift; sourceTree = "<group>"; };
 		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		499702A52672E0BA001DD80A /* ToolBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolBarView.swift; sourceTree = "<group>"; };
 		499F9948266AB20700FC6CDE /* HistoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryCell.swift; sourceTree = "<group>"; };
 		499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDetailViewController.swift; sourceTree = "<group>"; };
 		499F9952266AED0E00FC6CDE /* ParentDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentDetailViewController.swift; sourceTree = "<group>"; };
@@ -203,6 +206,7 @@
 		499F9961266C061A00FC6CDE /* ParentNavViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentNavViewController.swift; sourceTree = "<group>"; };
 		499F9966266C195F00FC6CDE /* AccountCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCell.swift; sourceTree = "<group>"; };
 		499F998D266C8D9700FC6CDE /* ProgressCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCell.swift; sourceTree = "<group>"; };
+		49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		49D59C752663326500107F79 /* SocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
 		49E759A726658DCC0064BB34 /* TransitioningDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitioningDelegate.swift; sourceTree = "<group>"; };
 		49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentPostViewController.swift; sourceTree = "<group>"; };
@@ -258,6 +262,14 @@
 				5C42156D98AD4812550FF489 /* Pods-NFTrack-Firebase4Tests.release.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		49221B9B2671DE8C0031A756 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */,
+			);
+			path = Chat;
 			sourceTree = "<group>";
 		};
 		493BF9B3264AC16F00B9C9D2 /* Controllers */ = {
@@ -371,6 +383,7 @@
 				4964E4EC26445AED005B3268 /* AlertsView.swift */,
 				493BF9CC264C493200B9C9D2 /* WalletButtonView.swift */,
 				493BF9C7264C166000B9C9D2 /* CreditCardView.swift */,
+				499702A52672E0BA001DD80A /* ToolBarView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -404,6 +417,7 @@
 				499F997C266C698200FC6CDE /* List */,
 				499F9988266C6A4200FC6CDE /* Account */,
 				499F996E266C68CD00FC6CDE /* Wallet */,
+				49221B9B2671DE8C0031A756 /* Chat */,
 				499F9989266C6A7D00FC6CDE /* ETC */,
 			);
 			path = ViewControllers;
@@ -889,6 +903,7 @@
 				496D56C52659FF2100C3E7FD /* MainDetailViewController.swift in Sources */,
 				4964E57726499D74005B3268 /* RegisteredWalletViewController.swift in Sources */,
 				493BF9E4264C549D00B9C9D2 /* ScannerViewController.swift in Sources */,
+				49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */,
 				4964E4CC26430BFB005B3268 /* SignUpViewController.swift in Sources */,
 				4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */,
 				4964E5812649A047005B3268 /* AppProtocols.swift in Sources */,
@@ -908,6 +923,7 @@
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
 				499F9953266AED0E00FC6CDE /* ParentDetailViewController.swift in Sources */,
+				499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */,
 				497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */,
 				4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */,
 				499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */,

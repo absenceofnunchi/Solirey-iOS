@@ -10,7 +10,7 @@ import web3swift
 
 // 0x9A9C30E27FC797c287847bA37255c15940A081a2
 // 0x16bcb424E5C124CB5cB7AbBC79589B7Fe67C92d6
-
+// 0xb3f34dF0fAa3e7bCCa9e5f18F72B9AFC0A14e1e5 final
 
 // MARK: - erc721ContractAddress
 let erc721ContractAddress = EthereumAddress("0x656f9bf02fa8eff800f383e5678e699ce2788c5c")

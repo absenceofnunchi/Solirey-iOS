@@ -125,14 +125,14 @@ extension FileUploadable1 {
 }
 
 // MARK: - FileUploadable
-protocol FileUploadable where Self:UIViewController {
+protocol ImageUploadable where Self:UIViewController {
     var alert: Alerts! { get set }
     func uploadImages(image: String, userId: String, completion: @escaping (URL) -> Void)
     func deleteFile(fileName: String)
     func saveImage(imageName: String, image: UIImage)
 }
 
-extension FileUploadable {
+extension ImageUploadable {
     func uploadImages(image: String, userId: String, completion: @escaping (URL) -> Void) {
         FirebaseService.sharedInstance.uploadPhoto(fileName: image, userId: userId) { [weak self](uploadTask, fileUploadError) in
             if let error = fileUploadError {

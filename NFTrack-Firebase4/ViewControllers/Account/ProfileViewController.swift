@@ -22,7 +22,6 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
         configureCloseButton()
         setButtonConstraints()
         configureNavigationBar(vc: self)
-        setConstraints()
     }
 }
 
@@ -30,7 +29,7 @@ extension ProfileViewController {
     func fetchUserInfo() {
         let user = Auth.auth().currentUser
         if let user = user {
-            self.userInfo = UserInfo(email: user.email, displayName: user.displayName ?? "N/A", photoURL: (user.photoURL != nil) ? "\(user.photoURL!)" : nil, uid: user.uid)
+            self.userInfo = UserInfo(email: user.email, displayName: user.displayName ?? "N/A", photoURL: (user.photoURL != nil) ? "\(user.photoURL!)" : "NA", uid: user.uid)
         }
     }
     
@@ -41,10 +40,10 @@ extension ProfileViewController {
         self.hideKeyboardWhenTappedAround()
         
         emailTitleLabel = createTitleLabel(text: "Email")
-        view.addSubview(emailTitleLabel)
+        scrollView.addSubview(emailTitleLabel)
 
         emailTextField = createTextField(content: userInfo.email, delegate: self)
-        view.addSubview(emailTextField)
+        scrollView.addSubview(emailTextField)
         
         updateButton = UIButton()
         updateButton.backgroundColor = .black
@@ -53,7 +52,7 @@ extension ProfileViewController {
         updateButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
         updateButton.setTitle("Update", for: .normal)
         updateButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(updateButton)
+        scrollView.addSubview(updateButton)
     }
     
     override func setConstraints() {
@@ -61,18 +60,18 @@ extension ProfileViewController {
         
         NSLayoutConstraint.activate([
             emailTitleLabel.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 40),
-            emailTitleLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor, constant: 20),
-            emailTitleLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor, constant: -20),
+            emailTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            emailTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
             
             emailTextField.topAnchor.constraint(equalTo: emailTitleLabel.bottomAnchor, constant: 10),
             emailTextField.heightAnchor.constraint(equalToConstant: 50),
-            emailTextField.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor, constant: 20),
-            emailTextField.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor, constant: -20),
+            emailTextField.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            emailTextField.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
             
             updateButton.topAnchor.constraint(equalTo: emailTextField.bottomAnchor, constant: 50),
             updateButton.heightAnchor.constraint(equalToConstant: 50),
-            updateButton.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor, constant: 20),
-            updateButton.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor, constant: -20),
+            updateButton.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            updateButton.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
         ])
     }
     
@@ -179,7 +178,7 @@ extension ProfileViewController: UIImagePickerControllerDelegate & UINavigationC
     }
 }
 
-extension ProfileViewController {
+extension ProfileViewController: ImageUploadable {
     // MARK: - updateProfile
     func updateProfile() {
         guard let email = self.emailTextField.text,
@@ -199,19 +198,29 @@ extension ProfileViewController {
                     changeRequest?.photoURL = url
                     changeRequest?.commitChanges { [weak self] (error) in
                         if let error = error {
-                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+                                self?.deleteFile(fileName: self!.profileImageName)
+                                self?.dismiss(animated: true, completion: nil)
+                            }
                         }
                         
                         if self?.userInfo.email != email {
                             Auth.auth().currentUser?.updateEmail(to: email) { (error) in
                                 if let error = error {
-                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+                                        self?.deleteFile(fileName: self!.profileImageName)
+                                        self?.dismiss(animated: true, completion: nil)
+                                    }
                                 } else {
                                     self?.updateUser(displayName: displayName, photoURL: "\(url)", completion: { (error) in
                                         if let error = error {
-                                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+                                                self?.deleteFile(fileName: self!.profileImageName)
+                                                self?.dismiss(animated: true, completion: nil)
+                                            }
                                         } else {
                                             self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self!) {
+                                                self?.deleteFile(fileName: self!.profileImageName)
                                                 self?.dismiss(animated: true, completion: nil)
                                             }
                                         }
@@ -221,9 +230,13 @@ extension ProfileViewController {
                         } else {
                             self?.updateUser(displayName: displayName, photoURL: "\(url)", completion: { (error) in
                                 if let error = error {
-                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+                                        self?.deleteFile(fileName: self!.profileImageName)
+                                        self?.dismiss(animated: true, completion: nil)
+                                    }
                                 } else {
                                     self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self!) {
+                                        self?.deleteFile(fileName: self!.profileImageName)
                                         self?.dismiss(animated: true, completion: nil)
                                     }
                                 }
@@ -271,129 +284,7 @@ extension ProfileViewController {
             }
         }
     }
-    
-    // MARK: - uploadImages
-    func uploadImages(image: String, userId: String, completion: @escaping (URL) -> Void) {
-        FirebaseService.sharedInstance.uploadPhoto(fileName: image, userId: userId) { [weak self](uploadTask, fileUploadError) in
-            if let error = fileUploadError {
-                switch error {
-                    case .fileManagerError(let msg):
-                        self?.alert.showDetail("Error", with: msg, for: self!)
-                    case .fileNotAvailable:
-                        self?.alert.showDetail("Error", with: "Image file not found.", for: self!)
-                    case .userNotLoggedIn:
-                        self?.alert.showDetail("Error", with: "You need to be logged in!", for: self!)
-                }
-            }
-            
-            if let uploadTask = uploadTask {
-                // Listen for state changes, errors, and completion of the upload.
-                uploadTask.observe(.resume) { snapshot in
-                    print("resumed")
-                }
-                
-                uploadTask.observe(.pause) { snapshot in
-                    // Upload paused
-                    self?.alert.showDetail("Image Upload", with: "The image uploading process has been paused.", for: self!)
-                }
-                
-                uploadTask.observe(.progress) { snapshot in
-                    // Upload reported progress
-                    let percentComplete = 100.0 * Double(snapshot.progress!.completedUnitCount)
-                        / Double(snapshot.progress!.totalUnitCount)
-                    print("percent Complete", percentComplete)
-                }
-                
-                uploadTask.observe(.success) { snapshot in
-                    // Upload completed successfully
-                    self?.deleteFile(fileName: image)
-                    snapshot.reference.downloadURL { (url, error) in
-                        if let error = error {
-                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
-                        }
-                        
-                        if let url = url {
-                            completion(url)
-                        }
-                    }
-                }
-                
-                uploadTask.observe(.failure) { snapshot in
-                    if let error = snapshot.error as NSError? {
-                        switch (StorageErrorCode(rawValue: error.code)!) {
-                            case .objectNotFound:
-                                // File doesn't exist
-                                print("object not found")
-                                break
-                            case .unauthorized:
-                                // User doesn't have permission to access file
-                                print("unauthorized")
-                                break
-                            case .cancelled:
-                                // User canceled the upload
-                                print("cancelled")
-                                break
-                                
-                            /* ... */
-                            
-                            case .unknown:
-                                // Unknown error occurred, inspect the server response
-                                print("unknown")
-                                break
-                            default:
-                                // A separate error occurred. This is a good place to retry the upload.
-                                print("reload?")
-                                break
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    // MARK: - deleteFile
-    func deleteFile(fileName: String) {
-        // delete images from the system
-        let fileManager = FileManager.default
-        let documentsDirectory =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let documentsPath = documentsDirectory.path
-        do {
-            
-            let filePathName = "\(documentsPath)/\(fileName)"
-            try fileManager.removeItem(atPath: filePathName)
-            
-            let files = try fileManager.contentsOfDirectory(atPath: "\(documentsPath)")
-            print("all files in cache after deleting images: \(files)")
-            
-        } catch {
-            print("Could not clear temp folder: \(error)")
-        }
-    }
-        
-    // MARK: - saveImage
-    func saveImage(imageName: String, image: UIImage) {
-        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        
-        let fileName = imageName
-        let fileURL = documentsDirectory.appendingPathComponent(fileName)
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
-        
-        //Checks if file exists, removes it if so.
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            do {
-                try FileManager.default.removeItem(atPath: fileURL.path)
-            } catch let removeError {
-                print("couldn't remove file at path", removeError)
-            }
-        }
-        
-        do {
-            try data.write(to: fileURL)
-        } catch let error {
-            print("error saving file with error", error)
-        }
-    }
-    
+ 
     func deleteProfileImage() {
         self.alert.showDetail("Update", with: "Press update button to execute the change.", for: self) {
             guard let image = UIImage(systemName: "person.crop.circle.fill") else {
@@ -408,31 +299,12 @@ extension ProfileViewController {
             self.profileImageName = nil
         }
     }
-    
-    // MARK: - createDeleteImageButton
-//    func createDeleteImageButton(deleteImageButton: UIButton, target: UIViewController) {
-//        guard let deleteImage = UIImage(systemName: "minus.circle.fill") else {
-//            dismiss(animated: true, completion: nil)
-//            return
-//        }
-//
-//        deleteImageButton = UIButton.systemButton(with: deleteImage.withTintColor(.red, renderingMode: .alwaysOriginal), target: target, action: #selector(buttonPressed(_:)))
-//        deleteImageButton.tag = 3
-//        deleteImageButton.translatesAutoresizingMaskIntoConstraints = false
-//        view.addSubview(deleteImageButton)
-//
-//        NSLayoutConstraint.activate([
-//            deleteImageButton.topAnchor.constraint(equalTo: profileImageButton.topAnchor, constant: -8),
-//            deleteImageButton.trailingAnchor.constraint(equalTo: profileImageButton.trailingAnchor, constant: 8)
-//        ])
-//    }
 }
 
 extension ProfileViewController {
     /// this is for when ListDetailVC downloads and displays the user info
     /// you want it on a separate collection so that when a profile is updated, you only have to update a single document, not every post
     func updateUser(displayName: String, photoURL: String?, completion: @escaping (Error?) -> Void) {
-        print("self.userInfo.uid!", self.userInfo.uid!)
         FirebaseService.sharedInstance.db.collection("user").document(self.userInfo.uid!).setData([
             "photoURL": photoURL ?? "NA",
             "displayName": displayName,

@@ -36,15 +36,6 @@ extension ListDetailViewController: TableViewConfigurable {
         historyTableView.isScrollEnabled = false
         scrollView.addSubview(historyTableView)
 
-//        historyTableView = UITableView()
-//        historyTableView.translatesAutoresizingMaskIntoConstraints = false
-//        historyTableView.register(HistoryCell.self, forCellReuseIdentifier: Cell.historyCell)
-//        historyTableView.rowHeight = CELL_HEIGHT
-//        historyTableView.estimatedRowHeight = CELL_HEIGHT
-//        historyTableView.dataSource = self
-//        historyTableView.delegate = self
-
-
         NSLayoutConstraint.activate([
             historyTableView.topAnchor.constraint(equalTo: updateStatusButton.bottomAnchor, constant: 40),
             historyTableView.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),

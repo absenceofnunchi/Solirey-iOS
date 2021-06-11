@@ -48,6 +48,15 @@ extension ListDetailViewController {
     override func configureUI() {
         super.configureUI()
         
+        if let userId = UserDefaults.standard.string(forKey: "userId"), userId != self.post.sellerUserId {
+            guard let image = UIImage(systemName: "message") else {
+                self.navigationController?.popViewController(animated: true)
+                return
+            }
+            let barButtonItem = UIBarButtonItem(image: image.withTintColor(.black, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(barButtonPressed))
+            self.navigationItem.rightBarButtonItem = barButtonItem
+        }
+        
         statusTitleLabel = UILabel()
         statusTitleLabel.text = "Status"
         statusTitleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -111,6 +120,12 @@ extension ListDetailViewController {
             default:
                 break
         }
+    }
+    
+    @objc func barButtonPressed() {
+        let chatVC = ChatViewController()
+        chatVC.userInfo = userInfo
+        self.navigationController?.pushViewController(chatVC, animated: true)
     }
     
     // MARK: - configureStatusButton

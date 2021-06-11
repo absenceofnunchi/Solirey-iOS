@@ -25,7 +25,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             self.window = UIWindow(windowScene: windowScene)
             Auth.auth().addStateDidChangeListener { (auth, user) in
                 if let user = user {
-                    
                     UserDefaults.standard.set(user.uid, forKey: UserDefaultKeys.userId)
                     UserDefaults.standard.set(user.displayName, forKey: UserDefaultKeys.displayName)
                     UserDefaults.standard.set(user.photoURL, forKey: UserDefaultKeys.photoURL)
@@ -39,7 +38,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
  
                     FirebaseService.sharedInstance.db.collection("user").document(user.uid).setData([
                         "photoURL": urlString!,
-                        "displayName": user.displayName!,
+                        "displayName": user.displayName ?? "No name",
                         "uid": user.uid
                     ], completion: { (error) in
                         if let error = error {

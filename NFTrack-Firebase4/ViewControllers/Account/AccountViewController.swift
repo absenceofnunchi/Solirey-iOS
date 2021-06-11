@@ -19,8 +19,7 @@ class AccountViewController: UIViewController {
     let localDatabase = LocalDatabase()
     
     var tableView: UITableView!
-    let data: [AccountMenu] = [
-        AccountMenu(imageTitle: "creditcard.circle", imageColor: UIColor(red: 238/255, green: 183/255, blue: 107/255, alpha: 1), titleString: "Wallet"),
+    var data: [AccountMenu] = [
         AccountMenu(imageTitle: "person.circle", imageColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), titleString: "Update Profile"),
         AccountMenu(imageTitle: "lock.circle", imageColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), titleString: "Reset Password"),
         AccountMenu(imageTitle: "arrowshape.turn.up.right.circle", imageColor: UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1), titleString: "Logout"),
@@ -32,6 +31,13 @@ class AccountViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if #available(iOS 14.0, *) {
+            data.insert(AccountMenu(imageTitle: "creditcard.circle", imageColor: UIColor(red: 238/255, green: 183/255, blue: 107/255, alpha: 1), titleString: "Wallet")
+, at: 0)
+        } else {
+            data.insert(AccountMenu(imageTitle: "folder.circle", imageColor: UIColor(red: 238/255, green: 183/255, blue: 107/255, alpha: 1), titleString: "Wallet"), at: 0)
+        }
 
         configureNavigationBar(vc: self)
         configureUI()
@@ -121,7 +127,6 @@ extension AccountViewController {
     
     // MARK: - didLogout
     func didLogout() {
-        
         let detailVC = DetailViewController(height: 280, detailVCStyle: .withCancelButton)
         detailVC.titleString = "Logout"
         detailVC.message = "Logging out will also delete your wallet from the local storage. Please make sure to remember your password and the private key."

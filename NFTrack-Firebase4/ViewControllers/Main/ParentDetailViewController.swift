@@ -26,7 +26,7 @@ class ParentDetailViewController: UIViewController {
     var galleries = [String]()
     var dateLabel: UILabel!
     let profileImageView = UIImageView()
-    var displayNameLabel: UILabel!
+    var displayNameLabel = UILabel()
     var underLineView: UnderlineView!
     var priceTitleLabel: UILabel!
     var priceLabel: UILabelPadding!
@@ -34,14 +34,44 @@ class ParentDetailViewController: UIViewController {
     var descLabel: UILabelPadding!
     var idTitleLabel: UILabel!
     var idLabel: UILabelPadding!
-    var userInfo: UserInfo!
+    var fetchedImage: UIImage!
+    var userInfo: UserInfo! {
+        didSet {
+            displayNameLabel.text = userInfo.displayName
+            
+            if let info = self.userInfo, info.photoURL != "NA" {
+                FirebaseService.sharedInstance.downloadImage(urlString: self.userInfo.photoURL!) { [weak self] (image, error) in
+                    guard let strongSelf = self else { return }
+                    if let error = error {
+                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
+                    }
+                    
+                    if let image = image {
+                        strongSelf.fetchedImage = image
+                        strongSelf.profileImageView.image = image
+                        strongSelf.profileImageView.layer.cornerRadius = strongSelf.profileImageView.bounds.height/2.0
+                        strongSelf.profileImageView.contentMode = .scaleToFill
+                        strongSelf.profileImageView.clipsToBounds = true
+                                                
+                        strongSelf.profileImageView.isUserInteractionEnabled = true
+                        strongSelf.displayNameLabel.isUserInteractionEnabled = true
+                    }
+                }
+            } else {
+                profileImageView.isUserInteractionEnabled = true
+                displayNameLabel.isUserInteractionEnabled = true
+            }
+        }
+    }
     
     // to refresh after update
     weak var tableViewRefreshDelegate: TableViewRefreshDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
+                
         configureBackground()
+        fetchUserData(id: post.sellerUserId)
         configureData()
         configureUI()
         setConstraints()
@@ -57,6 +87,28 @@ extension ParentDetailViewController {
         scrollView.backgroundColor = .white
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
+    }
+    
+    func fetchUserData(id: String) {
+        showSpinner {
+            let docRef = FirebaseService.sharedInstance.db.collection("user").document(id)
+            docRef.getDocument { [weak self] (document, error) in
+                if let document = document, document.exists {
+                    if let data = document.data() {
+                        let displayName = data[UserDefaultKeys.displayName] as? String
+                        let photoURL = data[UserDefaultKeys.photoURL] as? String
+                        let userInfo = UserInfo(email: nil, displayName: displayName!, photoURL: photoURL, uid: id)
+                        self?.hideSpinner {
+                            self?.userInfo = userInfo
+                        }
+                    }
+                } else {
+                    self?.hideSpinner {
+                        return
+                    }
+                }
+            }
+        }
     }
     
     // MARK: - configureData
@@ -115,43 +167,22 @@ extension ParentDetailViewController {
         dateLabel.text = formattedDate
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(dateLabel)
-                
-        if self.userInfo.photoURL != "NA" {
-            FirebaseService.sharedInstance.downloadImage(urlString: self.userInfo.photoURL!) { [weak self] (image, error) in
-                guard let strongSelf = self else { return }
-                if let error = error {
-                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
-                }
 
-                if let image = image {
-                    strongSelf.profileImageView.image = image
-                    strongSelf.profileImageView.layer.cornerRadius = strongSelf.profileImageView.bounds.height/2.0
-                    strongSelf.profileImageView.contentMode = .scaleToFill
-                    strongSelf.profileImageView.clipsToBounds = true
-                }
-            }
-        } else {
-            guard let image = UIImage(systemName: "person.crop.circle.fill") else {
-                self.dismiss(animated: true, completion: nil)
-                return
-            }
-//            let configuration = UIImage.SymbolConfiguration(pointSize: 60, weight: .bold, scale: .large)
-            let profileImage = image.withTintColor(.black, renderingMode: .alwaysOriginal)
-            profileImageView.image = profileImage
+        guard let image = UIImage(systemName: "person.crop.circle.fill") else {
+            self.dismiss(animated: true, completion: nil)
+            return
         }
-
+        let profileImage = image.withTintColor(.black, renderingMode: .alwaysOriginal)
+        profileImageView.image = profileImage
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         profileImageView.addGestureRecognizer(tap)
-        profileImageView.isUserInteractionEnabled = true
         profileImageView.tag = 1
         profileImageView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(profileImageView)
         
-        displayNameLabel = UILabel()
         displayNameLabel.addGestureRecognizer(tap)
-        displayNameLabel.isUserInteractionEnabled = true
         displayNameLabel.tag = 1
-        displayNameLabel.text = userInfo.displayName
+        displayNameLabel.text = userInfo?.displayName
         displayNameLabel.lineBreakMode = .byTruncatingTail
         displayNameLabel.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(displayNameLabel)
@@ -287,6 +318,8 @@ extension ParentDetailViewController {
         switch tag {
             case 1:
                 let profileDetailVC = ProfileDetailViewController()
+                profileDetailVC.userInfo = userInfo
+                profileDetailVC.profileImage = fetchedImage
                 self.navigationController?.pushViewController(profileDetailVC, animated: true)
             default:
                 break

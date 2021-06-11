@@ -29,6 +29,8 @@ class MainDetailViewController: ParentListViewController {
                 }
         }
     }
+    
+    
 }
 
 extension MainDetailViewController {

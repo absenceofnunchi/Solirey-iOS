@@ -112,7 +112,7 @@ class PostViewController: ParentPostViewController {
                                                                 // firebase
                                                                 let senderAddress = result.transaction.sender!.address
                                                                 let postId = UUID().uuidString
-                                                                let ref = FirebaseService.sharedInstance.db.collection("mint")
+                                                                let ref = FirebaseService.sharedInstance.db.collection("post")
                                                                 let id = ref.document().documentID
 
                                                                 // for deleting photos afterwards

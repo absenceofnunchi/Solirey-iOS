@@ -36,7 +36,7 @@ class ParentPostViewController: UIViewController {
     var imagePreviewVC: ImagePreviewViewController!
     var postButton: UIButton!
     let transactionService = TransactionService()
-    let alert = Alerts()
+    var alert: Alerts!
     var imageAddresses = [String]()
     let userDefaults = UserDefaults.standard
     var observation: NSKeyValueObservation?
@@ -45,6 +45,7 @@ class ParentPostViewController: UIViewController {
     var socketDelegate: SocketDelegate!
 
     let pvc = MyPickerVC()
+    /// MyDoneButtonVC
     let mdbvc = MyDoneButtonVC()
     var showKeyboard = false
     
@@ -62,22 +63,11 @@ class ParentPostViewController: UIViewController {
         configureImagePreview()
         setConstraints()
     }
-    
-    // MARK: - viewWillAppear
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        self.addKeyboardObserver()
-    }
-    
+ 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         imagePreviewVC.data = imageNameArr
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        self.removeKeyboardObserver()
     }
 }
 
@@ -86,6 +76,7 @@ extension ParentPostViewController {
     @objc func configureUI() {
         title = "Post"
         self.hideKeyboardWhenTappedAround()
+        alert = Alerts()
         
         scrollView = UIScrollView()
         scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: 1200)
@@ -353,7 +344,6 @@ extension ParentPostViewController {
         return searchToken
     }
     
-    
     // colors for the tokens
     func suggestedColor(fromIndex: Int) -> UIColor {
         var suggestedColor: UIColor!
@@ -405,93 +395,6 @@ extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigati
     }
 }
 
-extension ParentPostViewController {
-    // MARK: - addKeyboardObserver
-    func addKeyboardObserver() {
-//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
-//                                               name: UIResponder.keyboardWillChangeFrameNotification,
-//                                               object: nil)
-    }
-    
-    // MARK: - removeKeyboardObserver
-    func removeKeyboardObserver(){
-//        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
-    }
-    
-    // MARK: - keyboardNotifications
-    // This method will notify when keyboard appears/ dissapears
-    @objc func keyboardNotifications(notification: NSNotification) {
-        
-        var txtFieldY : CGFloat = 0.0  //Using this we will calculate the selected textFields Y Position
-        let spaceBetweenTxtFieldAndKeyboard : CGFloat = 5.0 //Specify the space between textfield and keyboard
-        
-        
-        var frame = CGRect(x: 0, y: 0, width: 0, height: 0)
-        if let activeTextField = UIResponder.currentFirst() as? UITextField ?? UIResponder.currentFirst() as? UITextView {
-            // Here we will get accurate frame of textField which is selected if there are multiple textfields
-            frame = self.view.convert(activeTextField.frame, from:activeTextField.superview!.superview)
-            txtFieldY = frame.origin.y + frame.size.height
-        }
-        
-        if let userInfo = notification.userInfo {
-            // here we will get frame of keyBoard (i.e. x, y, width, height)
-            let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
-            let keyBoardFrameY = keyBoardFrame!.origin.y
-            let keyBoardFrameHeight = keyBoardFrame!.size.height
-//            print("keyBoardFrameHeight", keyBoardFrameHeight)
-            var viewOriginY: CGFloat = 0.0
-            //Check keyboards Y position and according to that move view up and down
-            if keyBoardFrameY >= UIScreen.main.bounds.size.height {
-//                print("keyBoardFrameY", keyBoardFrameY)
-//                print("UIScreen.main.bounds.size.height", UIScreen.main.bounds.size.height)
-                viewOriginY = 0.0
-            } else {
-                // if textfields y is greater than keyboards y then only move View to up
-                if txtFieldY >= keyBoardFrameY {
-                    
-                    print("txtFieldY", txtFieldY)
-                    print("keyBoardFrameY", keyBoardFrameY)
-//                    print("spaceBetweenTxtFieldAndKeyboard", spaceBetweenTxtFieldAndKeyboard)
-                    viewOriginY = (txtFieldY - keyBoardFrameY) + spaceBetweenTxtFieldAndKeyboard
-//                    print("viewOriginY before", viewOriginY)
-                    // This condition is just to check viewOriginY should not be greator than keyboard height
-                    // if its more than keyboard height then there will be black space on the top of keyboard.
-                    if viewOriginY > keyBoardFrameHeight { viewOriginY = keyBoardFrameHeight }
-                }
-            }
-            print("viewOriginY", viewOriginY)
-            //set the Y position of view
-            self.view.frame.origin.y = -viewOriginY
-        }
-    }
-}
-
-extension ParentPostViewController {
-    // MARK: - saveImage
-    func saveImage(imageName: String, image: UIImage) {
-        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        
-        let fileName = imageName
-        let fileURL = documentsDirectory.appendingPathComponent(fileName)
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
-        
-        //Checks if file exists, removes it if so.
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            do {
-                try FileManager.default.removeItem(atPath: fileURL.path)
-            } catch let removeError {
-                print("couldn't remove file at path", removeError)
-            }
-        }
-        
-        do {
-            try data.write(to: fileURL)
-        } catch let error {
-            print("error saving file with error", error)
-        }
-    }
-}
-
 extension ParentPostViewController: PreviewDelegate {
     // MARK: - configureImagePreview
     func configureImagePreview() {
@@ -527,112 +430,6 @@ extension ParentPostViewController {
     
     @objc func mint() {
 
-    }
-    
-    // MARK: - uploadImages
-    func uploadImages(image: String, userId: String, completion: @escaping (URL) -> Void) {
-        FirebaseService.sharedInstance.uploadPhoto(fileName: image, userId: userId) { [weak self](uploadTask, fileUploadError) in
-            if let error = fileUploadError {
-                switch error {
-                    case .fileManagerError(let msg):
-                        self?.alert.showDetail("Error", with: msg, for: self!)
-                    case .fileNotAvailable:
-                        self?.alert.showDetail("Error", with: "Image file not found.", for: self!)
-                    case .userNotLoggedIn:
-                        self?.alert.showDetail("Error", with: "You need to be logged in!", for: self!)
-                }
-            }
-            
-            if let uploadTask = uploadTask {
-                // Listen for state changes, errors, and completion of the upload.
-                uploadTask.observe(.resume) { snapshot in
-                    // Upload resumed, also fires when the upload starts
-                }
-                
-                uploadTask.observe(.pause) { snapshot in
-                    // Upload paused
-                    self?.alert.showDetail("Image Upload", with: "The image uploading process has been paused.", for: self!)
-                }
-                
-                uploadTask.observe(.progress) { snapshot in
-                    // Upload reported progress
-                    let percentComplete = 100.0 * Double(snapshot.progress!.completedUnitCount)
-                        / Double(snapshot.progress!.totalUnitCount)
-                    print("percent Complete", percentComplete)
-                }
-                
-                uploadTask.observe(.success) { snapshot in
-                    // Upload completed successfully
-                    print("success")
-                    self?.deleteFile(fileName: image)
-                    snapshot.reference.downloadURL { (url, error) in
-                        if let error = error {
-                            print("downloadURL error", error)
-                        }
-                        
-                        if let url = url {
-                            completion(url)
-//                            FirebaseService.sharedInstance.db.collection("post").document(id).updateData([
-//                                "images": FieldValue.arrayUnion(["\(url)"])
-//                            ], completion: { (error) in
-//                                if let error = error {
-//                                    self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
-//                                }
-//                            })
-                        }
-                    }
-                }
-                
-                uploadTask.observe(.failure) { snapshot in
-                    if let error = snapshot.error as NSError? {
-                        switch (StorageErrorCode(rawValue: error.code)!) {
-                            case .objectNotFound:
-                                // File doesn't exist
-                                print("object not found")
-                                break
-                            case .unauthorized:
-                                // User doesn't have permission to access file
-                                print("unauthorized")
-                                break
-                            case .cancelled:
-                                // User canceled the upload
-                                print("cancelled")
-                                break
-                                
-                            /* ... */
-                            
-                            case .unknown:
-                                // Unknown error occurred, inspect the server response
-                                print("unknown")
-                                break
-                            default:
-                                // A separate error occurred. This is a good place to retry the upload.
-                                print("reload?")
-                                break
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    // MARK: - deleteFile
-    func deleteFile(fileName: String) {
-        // delete images from the system
-        let fileManager = FileManager.default
-        let documentsDirectory =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let documentsPath = documentsDirectory.path
-        do {
-            
-            let filePathName = "\(documentsPath)/\(fileName)"
-            try fileManager.removeItem(atPath: filePathName)
-            
-            let files = try fileManager.contentsOfDirectory(atPath: "\(documentsPath)")
-            print("all files in cache after deleting images: \(files)")
-            
-        } catch {
-            print("Could not clear temp folder: \(error)")
-        }
     }
 }
 
@@ -698,7 +495,7 @@ extension ParentPostViewController {
     }
 }
 
-extension ParentPostViewController: MessageDelegate {
+extension ParentPostViewController: MessageDelegate, ImageUploadable {
     // MARK: - didReceiveMessage
     @objc func didReceiveMessage(topics: [String]) {
         // get the token ID to be uploaded to Firestore
@@ -723,7 +520,13 @@ extension ParentPostViewController: MessageDelegate {
                             if self!.imageNameArr.count > 0, let imageNameArr = self?.imageNameArr {
                                 for image in imageNameArr {
                                     self?.uploadImages(image: image, userId: self!.userId) {(url) in
-                                        
+                                        FirebaseService.sharedInstance.db.collection("post").document(self!.documentId).updateData([
+                                            "images": FieldValue.arrayUnion(["\(url)"])
+                                        ], completion: { (error) in
+                                            if let error = error {
+                                                self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                            }
+                                        })
                                     }
                                     imageCount += 1
                                     if imageCount == imageNameArr.count, let ipvc = self?.imagePreviewVC {
