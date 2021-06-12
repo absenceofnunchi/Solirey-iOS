@@ -33,15 +33,22 @@ protocol TableViewRefreshDelegate: AnyObject {
 
 // MARK: - TableViewConfigurable
 protocol TableViewConfigurable {
-    func configureTableView(delegate: UITableViewDelegate, dataSource: UITableViewDataSource, height: CGFloat, cellType: UITableViewCell.Type, identifier: String) -> UITableView
+    func configureTableView(delegate: UITableViewDelegate?, dataSource: UITableViewDataSource, height: CGFloat?, cellType: UITableViewCell.Type, identifier: String) -> UITableView
 }
 
 extension TableViewConfigurable where Self: UITableViewDataSource {
-    func configureTableView(delegate: UITableViewDelegate, dataSource: UITableViewDataSource, height: CGFloat, cellType: UITableViewCell.Type, identifier: String) -> UITableView {
+    func configureTableView(delegate: UITableViewDelegate?, dataSource: UITableViewDataSource, height: CGFloat?, cellType: UITableViewCell.Type, identifier: String) -> UITableView {
         let tableView = UITableView()
         tableView.register(cellType, forCellReuseIdentifier: identifier)
-        tableView.estimatedRowHeight = height
-        tableView.rowHeight = height
+        
+        if let height = height {
+            tableView.estimatedRowHeight = height
+            tableView.rowHeight = height
+        } else {
+            tableView.estimatedRowHeight = 80
+            tableView.rowHeight = UITableView.automaticDimension
+        }
+        
         tableView.dataSource = dataSource
         tableView.delegate = delegate
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -112,14 +119,13 @@ extension UIControl {
     }
 }
 
-
+/// test
 protocol FileUploadable1 {
     func uploadSomething(completion: (() -> Void)?)
 }
 
 extension FileUploadable1 {
     func uploadSomething(completion: (() -> Void)? = nil) {
-        print("hello")
         completion?()
     }
 }

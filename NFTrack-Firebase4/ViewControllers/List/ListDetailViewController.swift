@@ -125,6 +125,7 @@ extension ListDetailViewController {
     @objc func barButtonPressed() {
         let chatVC = ChatViewController()
         chatVC.userInfo = userInfo
+        chatVC.itemId = post.id
         self.navigationController?.pushViewController(chatVC, animated: true)
     }
     

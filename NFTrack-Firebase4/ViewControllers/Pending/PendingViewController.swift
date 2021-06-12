@@ -28,7 +28,7 @@ class PendingViewController: UIViewController {
 
 extension PendingViewController {
     fileprivate enum Segment: Int, CaseIterable {
-        case buying, selling
+        case buying, selling, purchases, posts
         
         func asString() -> String {
             switch self {
@@ -36,6 +36,10 @@ extension PendingViewController {
                     return "Buying"
                 case .selling:
                     return "Selling"
+                case .purchases:
+                    return "Purchases"
+                case .posts:
+                    return "Posts"
             }
         }
         
@@ -71,6 +75,10 @@ extension PendingViewController {
                 configureDataFetch(isBuyer: true)
             case .selling:
                 configureDataFetch(isBuyer: false)
+            case .purchases:
+                print("purchases")
+            case .posts:
+                print("posts")
         }
     }
     

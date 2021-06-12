@@ -35,16 +35,21 @@ class ToolBarView : UIView {
     }
 }
 
-extension ToolBarView {
+extension ToolBarView: UITextViewDelegate {
     func configure() {
+        addSeparator()
+        
         textView = UITextView(frame: CGRect(x: 4, y: 4, width: 0, height: 0))
+        textView.delegate = self
+        textView.text = "Enter your message"
+        textView.font = UIFont.systemFont(ofSize: 18)
         let fixedWidth = textView.frame.size.width
         let newSize = textView.sizeThatFits(CGSize(width: fixedWidth, height: CGFloat.greatestFiniteMagnitude))
         //        textView.frame.size = CGSize(width: max(newSize.width, fixedWidth), height: newSize.height)
         textView.frame.size = CGSize(width: fixedWidth, height: newSize.height)
         internalHeight = newSize.height
-        textView.layer.borderWidth = 0.7
-        textView.layer.cornerRadius = 10
+        textView.textColor = .lightGray
+        textView.layer.cornerRadius = 30
         textView.layer.borderColor = UIColor.lightGray.cgColor
         textView.isScrollEnabled = false
         textView.translatesAutoresizingMaskIntoConstraints = false
@@ -57,7 +62,9 @@ extension ToolBarView {
             sendImage = UIImage(systemName: "arrow.up.circle.fill")
         }
         
-        sendButton = UIButton.systemButton(with: sendImage, target: self, action: #selector(sent))
+        let configuration = UIImage.SymbolConfiguration(pointSize: 30, weight: .bold, scale: .medium)
+        let configuredImage = sendImage.withConfiguration(configuration)
+        sendButton = UIButton.systemButton(with: configuredImage, target: self, action: #selector(sent))
         sendButton.tag = 1
         sendButton.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(sendButton)
@@ -69,16 +76,42 @@ extension ToolBarView {
             sendButton.heightAnchor.constraint(equalTo: self.heightAnchor),
             sendButton.trailingAnchor.constraint(equalTo: self.layoutMarginsGuide.trailingAnchor),
             
-            textView.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -2),
-            textView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.7),
-            textView.heightAnchor.constraint(equalTo: self.heightAnchor),
+            textView.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -10),
+            textView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 10),
+            textView.heightAnchor.constraint(equalTo: self.heightAnchor, constant: -20),
+            textView.centerYAnchor.constraint(equalTo: self.centerYAnchor)
         ])
     }
     
     @objc func sent(_ sender: UIButton!) {
-        print("send pressed")
         if let buttonAction = self.buttonAction {
             buttonAction()
+        }
+    }
+    
+    func addSeparator() {
+        let v = UIView()
+        v.backgroundColor = UIColor.lightGray
+        v.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(v)
+        
+        NSLayoutConstraint.activate([
+            v.topAnchor.constraint(equalTo: self.topAnchor),
+            v.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+            v.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            v.heightAnchor.constraint(equalToConstant: 0.5)
+        ])
+    }
+    
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        textView.text = ""
+        textView.textColor = UIColor.black
+    }
+    
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if textView.text.isEmpty {
+            textView.text = "Enter your message"
+            textView.textColor = UIColor.lightGray
         }
     }
 }

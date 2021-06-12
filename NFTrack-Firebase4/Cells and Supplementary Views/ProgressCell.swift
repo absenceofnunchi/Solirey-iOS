@@ -114,7 +114,7 @@ extension ProgressCell {
         dateLabel3 = createStatusLabel(text: "")
         contentView.addSubview(dateLabel3)
         
-        mandateLabel = createStatusLabel(text: "STatus")
+//        mandateLabel = createStatusLabel(text: "Status")
     }
     
     func createStatusLabel(text: String) -> UILabel {
@@ -163,14 +163,16 @@ extension ProgressCell {
         titleLabel.text = post.title
                 
         switch post.status {
-            case "pending":
+            case PostStatus.ready.rawValue:
+                break
+            case PostStatus.pending.rawValue:
                 circleShapeLayer.fillColor = selectedColor.cgColor
                 circleShapeLayer.strokeColor = selectedColor.cgColor
                 statusLabel1.textColor = selectedColor
                 
                 dateLabel1.text = processDate(date: post.confirmPurchaseDate!)
                 dateLabel1.textColor = selectedColor
-            case "transferred":
+            case PostStatus.transferred.rawValue:
                 circleShapeLayer.fillColor = selectedColor.cgColor
                 circleShapeLayer.strokeColor = selectedColor.cgColor
                 statusLabel1.textColor = selectedColor
@@ -184,7 +186,7 @@ extension ProgressCell {
                 
                 dateLabel1.text = processDate(date: post.transferDate!)
                 dateLabel1.textColor = selectedColor
-            case "complete":
+            case PostStatus.complete.rawValue:
                 circleShapeLayer.fillColor = selectedColor.cgColor
                 circleShapeLayer.strokeColor = selectedColor.cgColor
                 statusLabel1.textColor = selectedColor

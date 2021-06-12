@@ -66,7 +66,8 @@ struct Post {
 // MARK: - UILabelPadding
 /// ListDetailVC
 class UILabelPadding: UILabel {
-    let padding = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
+    var top: CGFloat = 10
+    lazy var padding = UIEdgeInsets(top: top, left: 10, bottom: 10, right: 10)
     override func drawText(in rect: CGRect) {
         super.drawText(in: rect.inset(by: padding))
     }

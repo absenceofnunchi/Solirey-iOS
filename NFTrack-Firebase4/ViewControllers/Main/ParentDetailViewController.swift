@@ -90,7 +90,7 @@ extension ParentDetailViewController {
     }
     
     func fetchUserData(id: String) {
-        showSpinner {
+        DispatchQueue.global(qos: .background).async {
             let docRef = FirebaseService.sharedInstance.db.collection("user").document(id)
             docRef.getDocument { [weak self] (document, error) in
                 if let document = document, document.exists {
@@ -98,9 +98,7 @@ extension ParentDetailViewController {
                         let displayName = data[UserDefaultKeys.displayName] as? String
                         let photoURL = data[UserDefaultKeys.photoURL] as? String
                         let userInfo = UserInfo(email: nil, displayName: displayName!, photoURL: photoURL, uid: id)
-                        self?.hideSpinner {
-                            self?.userInfo = userInfo
-                        }
+                        self?.userInfo = userInfo
                     }
                 } else {
                     self?.hideSpinner {
