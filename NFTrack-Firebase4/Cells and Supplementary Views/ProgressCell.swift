@@ -7,7 +7,10 @@
 
 import UIKit
 
-class ProgressCell: UITableViewCell {
+class ProgressCell: ParentTableCell {
+    class override var identifier: String {
+        return "ProgressCell"
+    }
     let selectedColor = UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1)
     let containerView = UIView()
     let titleLabel = UILabel()
@@ -60,63 +63,113 @@ class ProgressCell: UITableViewCell {
     var dateLabel2: UILabel!
     var statusLabel3: UILabel!
     var dateLabel3: UILabel!
-    var mandateLabel: UILabel!
+    var indicatorPanel: UIView!
+    var meterContainer = UIView()
+    var myConstraints = [NSLayoutConstraint]()
     
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
+    override func configure(_ post: Post?) {
+        guard let post = post else { return }
         
-        configure()
-        setConstraints()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("not implemented")
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        updatePath()
-    }
-}
-
-extension ProgressCell {
-    func configure() {
         containerView.dropShadow()
         contentView.addSubview(containerView)
         containerView.fill(inset: 20)
         
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.sizeToFit()
+        titleLabel.textAlignment = .center
         titleLabel.font = .rounded(ofSize: titleLabel.font.pointSize, weight: .bold)
         titleLabel.textColor = .lightGray
         containerView.addSubview(titleLabel)
         
-        layer.addSublayer(shapeLayer)
-        layer.addSublayer(circleShapeLayer)
-        layer.addSublayer(circleShapeLayer2)
-        layer.addSublayer(circleShapeLayer3)
+        thumbImageView.image = UIImage(named: "placeholder")
+        thumbImageView.contentMode = .scaleAspectFill
+        thumbImageView.clipsToBounds = true
+        thumbImageView.layer.cornerRadius = 5
+        thumbImageView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(thumbImageView)
         
+        thumbImageView.addSubview(loadingIndicator)
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        if let images = post.images, images.count > 0 {
+            loadingIndicator.startAnimating()
+        }
+        
+        meterContainer.translatesAutoresizingMaskIntoConstraints = false
+        meterContainer.layer.addSublayer(shapeLayer)
+        meterContainer.layer.addSublayer(circleShapeLayer)
+        meterContainer.layer.addSublayer(circleShapeLayer2)
+        meterContainer.layer.addSublayer(circleShapeLayer3)
+        containerView.addSubview(meterContainer)
+
         statusLabel1 = createStatusLabel(text: "Purchased")
-        contentView.addSubview(statusLabel1)
+        statusLabel1.textAlignment  = .center
+        meterContainer.addSubview(statusLabel1)
         
         dateLabel1 = createStatusLabel(text: "")
-        contentView.addSubview(dateLabel1)
+        meterContainer.addSubview(dateLabel1)
         
         statusLabel2 = createStatusLabel(text: "Transferred")
-        contentView.addSubview(statusLabel2)
+        meterContainer.addSubview(statusLabel2)
         
         dateLabel2 = createStatusLabel(text: "")
-        contentView.addSubview(dateLabel2)
+        meterContainer.addSubview(dateLabel2)
         
         statusLabel3 = createStatusLabel(text: "Received")
-        contentView.addSubview(statusLabel3)
+        meterContainer.addSubview(statusLabel3)
         
         dateLabel3 = createStatusLabel(text: "")
-        contentView.addSubview(dateLabel3)
+        meterContainer.addSubview(dateLabel3)
         
-//        mandateLabel = createStatusLabel(text: "Status")
+        myConstraints += [
+            loadingIndicator.centerXAnchor.constraint(equalTo: thumbImageView.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: thumbImageView.centerYAnchor),
+            
+            titleLabel.heightAnchor.constraint(equalToConstant: 50),
+            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 10),
+            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            
+            thumbImageView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
+            thumbImageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 0),
+            thumbImageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: 0),
+            thumbImageView.heightAnchor.constraint(equalToConstant: 200),
+            
+            meterContainer.topAnchor.constraint(equalTo: thumbImageView.bottomAnchor, constant: 20),
+            meterContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 5),
+            meterContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -5),
+            meterContainer.heightAnchor.constraint(equalToConstant: 100),
+            
+            dateLabel1.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor, constant: 20),
+            dateLabel1.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: 0),
+            dateLabel1.heightAnchor.constraint(equalToConstant: 30),
+            
+            statusLabel1.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor, constant: 20),
+            statusLabel1.bottomAnchor.constraint(equalTo: dateLabel1.topAnchor, constant: 0),
+            
+            dateLabel2.centerXAnchor.constraint(equalTo: meterContainer.centerXAnchor, constant: 20),
+            dateLabel2.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: 0),
+            dateLabel2.heightAnchor.constraint(equalToConstant: 30),
+            
+            statusLabel2.centerXAnchor.constraint(equalTo: meterContainer.centerXAnchor),
+            statusLabel2.bottomAnchor.constraint(equalTo: dateLabel2.topAnchor, constant: -0),
+            
+            dateLabel3.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor, constant: 20),
+            dateLabel3.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: 0),
+            dateLabel3.heightAnchor.constraint(equalToConstant: 30),
+            
+            statusLabel3.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor, constant: -20),
+            statusLabel3.bottomAnchor.constraint(equalTo: dateLabel3.topAnchor, constant: 0),
+        ]
+        
+        NSLayoutConstraint.activate(myConstraints)
+        meterContainer.layoutIfNeeded()
+        dateLabel1.layoutIfNeeded()
+        statusLabel1.layoutIfNeeded()
+        updatePath()
+        set(post: post)
     }
-    
+}
+
+extension ProgressCell {
     func createStatusLabel(text: String) -> UILabel {
         let statusLabel = UILabel()
         statusLabel.text = text
@@ -125,31 +178,6 @@ extension ProgressCell {
         statusLabel.sizeToFit()
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         return statusLabel
-    }
-    
-    func setConstraints() {
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: containerView.layoutMarginsGuide.topAnchor),
-            titleLabel.leadingAnchor.constraint(equalTo: containerView.layoutMarginsGuide.leadingAnchor),
-            
-            statusLabel1.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            statusLabel1.centerYAnchor.constraint(equalTo: containerView.centerYAnchor, constant: 10),
-            
-            dateLabel1.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            dateLabel1.centerYAnchor.constraint(equalTo: containerView.centerYAnchor, constant: 30),
-            
-            statusLabel2.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            statusLabel2.centerYAnchor.constraint(equalTo: containerView.centerYAnchor, constant: 10),
-            
-            dateLabel2.centerXAnchor.constraint(equalTo: containerView.centerXAnchor, constant: 20),
-            dateLabel2.centerYAnchor.constraint(equalTo: containerView.centerYAnchor, constant: 30),
-            
-            statusLabel3.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
-            statusLabel3.centerYAnchor.constraint(equalTo: containerView.centerYAnchor, constant: 10),
-            
-            dateLabel3.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: 20),
-            dateLabel3.centerYAnchor.constraint(equalTo: containerView.centerYAnchor, constant: 30),
-        ])
     }
     
     func processDate(date: Date) -> String {
@@ -164,7 +192,12 @@ extension ProgressCell {
                 
         switch post.status {
             case PostStatus.ready.rawValue:
-                break
+                circleShapeLayer.fillColor = UIColor.white.cgColor
+                circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
+                statusLabel1.textColor = .lightGray
+                
+                dateLabel1.text = ""
+                dateLabel1.textColor = .lightGray
             case PostStatus.pending.rawValue:
                 circleShapeLayer.fillColor = selectedColor.cgColor
                 circleShapeLayer.strokeColor = selectedColor.cgColor
@@ -208,7 +241,12 @@ extension ProgressCell {
                 dateLabel1.text = processDate(date: post.confirmReceivedDate!)
                 dateLabel1.textColor = selectedColor
             default:
-                break
+                circleShapeLayer.fillColor = UIColor.white.cgColor
+                circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
+                statusLabel1.textColor = .lightGray
+                
+                dateLabel1.text = ""
+                dateLabel1.textColor = .lightGray
         }
     }
     
@@ -216,24 +254,48 @@ extension ProgressCell {
     func updatePath() {
         let offset: CGFloat = -20
         let path = UIBezierPath()
-        path.move(to: CGPoint(x: contentView.bounds.minX + INSET, y: contentView.bounds.midY + offset))
-        path.addLine(to: CGPoint(x: contentView.bounds.maxX - INSET, y: contentView.bounds.midY + offset))
+        path.move(to: CGPoint(x: meterContainer.bounds.minX + INSET, y: meterContainer.bounds.midY + offset))
+        path.addLine(to: CGPoint(x: meterContainer.bounds.maxX - INSET, y: meterContainer.bounds.midY + offset))
         shapeLayer.path = path.cgPath
         shapeLayer.lineWidth = lineWidth
         
-        let circlePath = UIBezierPath(arcCenter: CGPoint(x: contentView.bounds.minX + INSET, y: contentView.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
+        let circlePath = UIBezierPath(arcCenter: CGPoint(x: meterContainer.bounds.minX + INSET, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
         circlePath.lineWidth = lineWidth
         circleShapeLayer.path = circlePath.cgPath
         circleShapeLayer.lineWidth = lineWidth
         
-        let circlePath2 = UIBezierPath(arcCenter: CGPoint(x: contentView.bounds.midX, y: contentView.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
+        let circlePath2 = UIBezierPath(arcCenter: CGPoint(x: meterContainer.bounds.midX, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
         circlePath.lineWidth = lineWidth
         circleShapeLayer2.path = circlePath2.cgPath
         circleShapeLayer2.lineWidth = lineWidth
         
-        let circlePath3 = UIBezierPath(arcCenter: CGPoint(x: contentView.bounds.maxX - INSET, y: contentView.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
+        let circlePath3 = UIBezierPath(arcCenter: CGPoint(x: meterContainer.bounds.maxX - INSET, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
         circlePath.lineWidth = lineWidth
         circleShapeLayer3.path = circlePath3.cgPath
         circleShapeLayer3.lineWidth = lineWidth
+    }
+    
+    override func prepareForReuse() {
+        thumbImageView.image = nil
+        circleShapeLayer.fillColor = UIColor.white.cgColor
+        circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
+        statusLabel1.textColor = .lightGray
+        
+        dateLabel1.text = ""
+        dateLabel1.textColor = .lightGray
+        
+        circleShapeLayer2.fillColor = UIColor.white.cgColor
+        circleShapeLayer2.strokeColor = UIColor.lightGray.cgColor
+        statusLabel2.textColor = selectedColor
+        
+        dateLabel1.text = ""
+        dateLabel1.textColor = selectedColor
+        
+        circleShapeLayer3.fillColor = UIColor.white.cgColor
+        circleShapeLayer3.strokeColor = UIColor.lightGray.cgColor
+        statusLabel3.textColor = selectedColor
+        
+        dateLabel1.text = ""
+        dateLabel1.textColor = selectedColor
     }
 }

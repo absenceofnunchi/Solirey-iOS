@@ -32,7 +32,7 @@ class HistoryViewController: UITableViewController {
 
 extension HistoryViewController {
     func configureUI() {
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: Cell.historyCell)
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: HistoryCell.identifier)
 //        tableView.isScrollEnabled = false
         tableView.rowHeight = CELL_HEIGHT
         tableView.estimatedRowHeight = CELL_HEIGHT
@@ -61,7 +61,7 @@ extension HistoryViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Cell.historyCell, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: HistoryCell.identifier, for: indexPath)
         cell.textLabel?.text = data[indexPath.row]
         return cell
     }

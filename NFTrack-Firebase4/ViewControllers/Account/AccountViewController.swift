@@ -47,7 +47,7 @@ class AccountViewController: UIViewController {
 
 extension AccountViewController: TableViewConfigurable {
     func configureUI() {
-        tableView = configureTableView(delegate: self, dataSource: self, height: 80, cellType: AccountCell.self, identifier: Cell.accountCell)
+        tableView = configureTableView(delegate: self, dataSource: self, height: 80, cellType: AccountCell.self, identifier: AccountCell.identifier)
         tableView.isScrollEnabled = false
         tableView.separatorStyle = .none
         view.addSubview(tableView)
@@ -69,7 +69,7 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = AccountCell(style: UITableViewCell.CellStyle.default, reuseIdentifier: Cell.accountCell)
+        let cell = AccountCell(style: UITableViewCell.CellStyle.default, reuseIdentifier: AccountCell.identifier)
         cell.selectionStyle = .none
         let datum = data[indexPath.row]
         cell.set(data: datum)

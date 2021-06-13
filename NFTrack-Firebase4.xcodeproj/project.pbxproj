@@ -80,7 +80,10 @@
 		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
 		499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702A52672E0BA001DD80A /* ToolBarView.swift */; };
-		499702AB2673F75E001DD80A /* ChatCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AA2673F75E001DD80A /* ChatCell.swift */; };
+		499702AB2673F75E001DD80A /* MessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AA2673F75E001DD80A /* MessageCell.swift */; };
+		499702B02674533E001DD80A /* ParentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AF2674533E001DD80A /* ParentCell.swift */; };
+		499702B5267459D8001DD80A /* ChatListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702B4267459D8001DD80A /* ChatListViewController.swift */; };
+		499702DD26745BC0001DD80A /* ChatCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702DC26745BC0001DD80A /* ChatCell.swift */; };
 		499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9948266AB20700FC6CDE /* HistoryCell.swift */; };
 		499F994E266ADA0E00FC6CDE /* HistoryDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */; };
 		499F9953266AED0E00FC6CDE /* ParentDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9952266AED0E00FC6CDE /* ParentDetailViewController.swift */; };
@@ -199,7 +202,10 @@
 		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		499702A52672E0BA001DD80A /* ToolBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolBarView.swift; sourceTree = "<group>"; };
-		499702AA2673F75E001DD80A /* ChatCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCell.swift; sourceTree = "<group>"; };
+		499702AA2673F75E001DD80A /* MessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCell.swift; sourceTree = "<group>"; };
+		499702AF2674533E001DD80A /* ParentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentCell.swift; sourceTree = "<group>"; };
+		499702B4267459D8001DD80A /* ChatListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListViewController.swift; sourceTree = "<group>"; };
+		499702DC26745BC0001DD80A /* ChatCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCell.swift; sourceTree = "<group>"; };
 		499F9948266AB20700FC6CDE /* HistoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryCell.swift; sourceTree = "<group>"; };
 		499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDetailViewController.swift; sourceTree = "<group>"; };
 		499F9952266AED0E00FC6CDE /* ParentDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentDetailViewController.swift; sourceTree = "<group>"; };
@@ -270,6 +276,7 @@
 			isa = PBXGroup;
 			children = (
 				49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */,
+				499702B4267459D8001DD80A /* ChatListViewController.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -435,7 +442,9 @@
 				496D56C9265A0BD700C3E7FD /* MainDetailCell.swift */,
 				499F9966266C195F00FC6CDE /* AccountCell.swift */,
 				499F998D266C8D9700FC6CDE /* ProgressCell.swift */,
-				499702AA2673F75E001DD80A /* ChatCell.swift */,
+				499702AA2673F75E001DD80A /* MessageCell.swift */,
+				499702AF2674533E001DD80A /* ParentCell.swift */,
+				499702DC26745BC0001DD80A /* ChatCell.swift */,
 			);
 			path = "Cells and Supplementary Views";
 			sourceTree = "<group>";
@@ -883,7 +892,8 @@
 				493BF9CD264C493200B9C9D2 /* WalletButtonView.swift in Sources */,
 				493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */,
 				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
-				499702AB2673F75E001DD80A /* ChatCell.swift in Sources */,
+				499702B5267459D8001DD80A /* ChatListViewController.swift in Sources */,
+				499702AB2673F75E001DD80A /* MessageCell.swift in Sources */,
 				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
 				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
 				49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */,
@@ -895,6 +905,7 @@
 				493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */,
 				499F994E266ADA0E00FC6CDE /* HistoryDetailViewController.swift in Sources */,
 				4964E5262648AB6A005B3268 /* ZoomAnimationController.swift in Sources */,
+				499702B02674533E001DD80A /* ParentCell.swift in Sources */,
 				4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */,
 				49E759AD26669ACB0064BB34 /* ParentPostViewController.swift in Sources */,
 				499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */,
@@ -913,6 +924,7 @@
 				4964E5812649A047005B3268 /* AppProtocols.swift in Sources */,
 				4964E5052644891B005B3268 /* AccountViewController.swift in Sources */,
 				496D56C02659E75D00C3E7FD /* ParentPostViewController + Picker.swift in Sources */,
+				499702DD26745BC0001DD80A /* ChatCell.swift in Sources */,
 				493BF9D2264C4D3B00B9C9D2 /* SendViewController.swift in Sources */,
 				493BF9E9264C657200B9C9D2 /* ReceiveViewController.swift in Sources */,
 				496D56CA265A0BD700C3E7FD /* MainDetailCell.swift in Sources */,

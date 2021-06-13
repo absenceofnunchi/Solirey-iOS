@@ -60,7 +60,7 @@ extension ProfileDetailViewController: TableViewConfigurable {
         itemsTitleLabel = createTitleLabel(text: "Details")
         scrollView.addSubview(itemsTitleLabel)
         
-        tableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: ListCell.self, identifier: Cell.listCell)
+        tableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: ListCell.self, identifier: ListCell.identifier)
         tableView.isScrollEnabled = false
         scrollView.addSubview(tableView)
     }
@@ -110,7 +110,7 @@ extension ProfileDetailViewController: UITableViewDataSource, UITableViewDelegat
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Cell.listCell, for: indexPath) as! ListCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: ListCell.identifier, for: indexPath) as! ListCell
         cell.selectionStyle = .none
         
         let post = postArr[indexPath.row]

@@ -101,16 +101,6 @@ class UnderlineView: UIView {
     }
 }
 
-// MARK: - Cell
-struct Cell {
-    static let mainCell = "MainCell"
-    static let listCell = "ListCell"
-    static let categoryCell = "CategoryCell"
-    static let mainDetailCell = "MainDetailCell"
-    static let historyCell = "HistoryCell"
-    static let accountCell = "AccountCell"
-    static let progressCell = "ProgressCell"
-}
 
 // MARK: - PurchaseMethods
 enum PurchaseMethods: String {

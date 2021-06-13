@@ -8,6 +8,7 @@
 import UIKit
 
 class ListCell: UITableViewCell {
+    static var identifier = "ListCell"
     var titleLabel: UILabel!
     var dateLabel: UILabel!
     var mas: NSMutableAttributedString!

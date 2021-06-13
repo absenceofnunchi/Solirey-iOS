@@ -30,10 +30,8 @@ class SearchResultsController: UITableViewController {
 extension SearchResultsController {
     func configureTableView() {
         tableView.backgroundColor = .systemBackground
-        tableView.register(ListCell.self, forCellReuseIdentifier: Cell.listCell)
+        tableView.register(ListCell.self, forCellReuseIdentifier: ListCell.identifier)
         tableView.rowHeight = 100
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: Cell.mainCell)
-//        tableView.separatorStyle = .none
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -45,7 +43,7 @@ extension SearchResultsController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: Cell.listCell, for: indexPath) as? ListCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ListCell.identifier, for: indexPath) as? ListCell else {
             fatalError("Sorry, could not load cell")
         }
         cell.selectionStyle = .none

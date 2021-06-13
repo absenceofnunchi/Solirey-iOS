@@ -8,6 +8,7 @@
 import UIKit
 
 class HistoryCell: UITableViewCell {
+    static var identifier = "HistoryCell"
     var hashLabel: UILabel!
     var dateLabel: UILabel!
     var cellPosition: CellPosition!

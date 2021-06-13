@@ -70,7 +70,7 @@ extension ChatViewController {
         toolBarView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(toolBarView)
         
-        tableView = configureTableView(delegate: nil, dataSource: self, height: nil, cellType: ChatCell.self, identifier: ChatCell.identifier)
+        tableView = configureTableView(delegate: nil, dataSource: self, height: nil, cellType: MessageCell.self, identifier: MessageCell.identifier)
         tableView.separatorStyle = .none
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ChatViewController.dismissKeyboard))
@@ -265,7 +265,7 @@ extension ChatViewController: TableViewConfigurable, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: ChatCell.identifier, for: indexPath) as! ChatCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: MessageCell.identifier, for: indexPath) as! MessageCell
         cell.selectionStyle = .none
         let message = messages[indexPath.row]
         cell.set(with: message, senderId: userInfo.uid!)

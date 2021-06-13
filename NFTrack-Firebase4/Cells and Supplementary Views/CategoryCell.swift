@@ -8,6 +8,7 @@
 import UIKit
 
 class CategoryCell: UICollectionViewCell {
+    static var identifier = "CategoryCell"
     let imageView = UIImageView()
     var titleLabel: UILabel!
     var buttonAction: ((UICollectionViewCell)->Void)?

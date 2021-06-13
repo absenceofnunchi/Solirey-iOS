@@ -17,7 +17,7 @@ class ListViewController: ParentListViewController {
         
         configureNavigationBar(vc: self)
         configureSwitch()
-        configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
+        configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -26,11 +26,26 @@ class ListViewController: ParentListViewController {
 }
 
 extension ListViewController {
+    override func configureUI() {
+        super.configureUI()
+        
+        tableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
+        tableView.prefetchDataSource = self
+        view.addSubview(tableView)
+        tableView.fill()
+    }
+}
+
+extension ListViewController {
     fileprivate enum Segment: Int, CaseIterable {
-        case purchases, posts
+        case buying, selling, purchases, posts
         
         func asString() -> String {
             switch self {
+                case .buying:
+                    return "Buying"
+                case .selling:
+                    return "Selling"
                 case .purchases:
                     return "Purchases"
                 case .posts:
@@ -64,12 +79,16 @@ extension ListViewController {
     @objc func segmentedControlSelectionDidChange(_ sender: UISegmentedControl) {
         guard let segment = Segment(rawValue: sender.selectedSegmentIndex)
         else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
-        
+
         switch segment {
+            case .buying:
+                configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+            case .selling:
+                configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
             case .purchases:
                 configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
             case .posts:
-                configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue, PostStatus.pending.rawValue, PostStatus.transferred.rawValue])
+                configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
         }
     }
     
@@ -113,3 +132,46 @@ extension ListViewController {
         configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
     }
 }
+
+extension ListViewController {
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ProgressCell.identifier) as? ProgressCell else {
+            fatalError("Sorry, could not load cell")
+        }
+        cell.selectionStyle = .none
+        let post = postArr[indexPath.row]
+        cell.updateAppearanceFor(.pending(post))
+        return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        guard let cell = cell as? ProgressCell else { return }
+        
+        // How should the operation update the cell once the data has been loaded?
+        let updateCellClosure: (UIImage?) -> () = { [unowned self] (image) in
+            cell.updateAppearanceFor(.fetched(image))
+            self.loadingOperations.removeValue(forKey: indexPath)
+        }
+        
+        // Try to find an existing data loader
+        if let dataLoader = loadingOperations[indexPath] {
+            // Has the data already been loaded?
+            if let image = dataLoader.image {
+                cell.updateAppearanceFor(.fetched(image))
+                loadingOperations.removeValue(forKey: indexPath)
+            } else {
+                // No data loaded yet, so add the completion closure to update the cell once the data arrives
+                dataLoader.loadingCompleteHandler = updateCellClosure
+            }
+        } else {
+            // Need to create a data loaded for this index path
+            if let dataLoader = dataStore.loadImage(at: indexPath.row) {
+                // Provide the completion closure, and kick off the loading operation
+                dataLoader.loadingCompleteHandler = updateCellClosure
+                loadingQueue.addOperation(dataLoader)
+                loadingOperations[indexPath] = dataLoader
+            }
+        }
+    }
+}
+

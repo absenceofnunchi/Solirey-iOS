@@ -31,7 +31,7 @@ extension ListDetailViewController: TableViewConfigurable {
     }
     
     func setHistoryVC() {
-        historyTableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: HistoryCell.self, identifier: Cell.historyCell)
+        historyTableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: HistoryCell.self, identifier: HistoryCell.identifier)
         historyTableView.separatorStyle = .none
         historyTableView.isScrollEnabled = false
         scrollView.addSubview(historyTableView)
@@ -73,7 +73,7 @@ extension ListDetailViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Cell.historyCell, for: indexPath) as! HistoryCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: HistoryCell.identifier, for: indexPath) as! HistoryCell
         cell.selectionStyle = .none
         let data = historicData[indexPath.row]
         let date = data.date

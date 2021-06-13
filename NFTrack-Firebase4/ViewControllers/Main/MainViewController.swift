@@ -143,7 +143,7 @@ extension MainViewController: UICollectionViewDelegate {
         collectionView.backgroundColor = .systemBackground
         collectionView.delegate = self
         collectionView.dataSource = self
-        collectionView.register(CategoryCell.self, forCellWithReuseIdentifier: Cell.categoryCell)
+        collectionView.register(CategoryCell.self, forCellWithReuseIdentifier: CategoryCell.identifier)
         collectionView.contentInset = UIEdgeInsets(top: 64, left: 0, bottom: 0, right: 0)
         collectionView.contentOffset = CGPoint(x: 0, y: -64)
         collectionView.isScrollEnabled = false
@@ -171,7 +171,7 @@ extension MainViewController: UICollectionViewDataSource {
     
     // make a cell for each cell index path
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Cell.categoryCell, for: indexPath as IndexPath) as! CategoryCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CategoryCell.identifier, for: indexPath as IndexPath) as! CategoryCell
         
         let mainMenu = data[indexPath.row]
         cell.set(mainMenu: mainMenu)

@@ -54,23 +54,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     let mainNav = UINavigationController(rootViewController: mainVC)
                     tabBar.addChild(mainNav)
                     
-                    let pendingVC = PendingViewController()
-                    pendingVC.title = "Pending"
-                    
-                    let pendingNav = UINavigationController(rootViewController: pendingVC)
-                    tabBar.addChild(pendingNav)
-                    
-                    let postVC = PostViewController()
-                    postVC.title = "Post"
-                    
-                    let postNav = UINavigationController(rootViewController: postVC)
-                    tabBar.addChild(postNav)
+//                    let pendingVC = PendingViewController()
+//                    pendingVC.title = "Pending"
+//                    
+//                    let pendingNav = UINavigationController(rootViewController: pendingVC)
+//                    tabBar.addChild(pendingNav)
                     
                     let listVC = ListViewController()
                     listVC.title = "List"
                     
                     let listNav = UINavigationController(rootViewController: listVC)
                     tabBar.addChild(listNav)
+                    
+                    let postVC = PostViewController()
+                    postVC.title = "Post"
+                    
+                    let postNav = UINavigationController(rootViewController: postVC)
+                    tabBar.addChild(postNav)
                     
                     let acctVC = AccountViewController()
                     acctVC.title = "Account"

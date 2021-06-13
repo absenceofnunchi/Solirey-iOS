@@ -13,9 +13,9 @@ import UIKit
 import FirebaseFirestore
 
 class ParentListViewController: UIViewController, TableViewConfigurable {
-    private var dataStore: ImageDataStore!
-    private lazy var loadingQueue = OperationQueue()
-    private lazy var loadingOperations = [IndexPath : DataLoadOperation]()
+    var dataStore: ImageDataStore!
+    var loadingQueue = OperationQueue()
+    var loadingOperations = [IndexPath : DataLoadOperation]()
     let refreshControl = UIRefreshControl()
     let alert = Alerts()
     var postArr = [Post]() {
@@ -33,20 +33,8 @@ class ParentListViewController: UIViewController, TableViewConfigurable {
 
 extension ParentListViewController {
     // MARK: - configureUI
-    func configureUI() {
+    @objc func configureUI() {
         view.backgroundColor = .white
-        
-        //        tableView = UITableView()
-        //        tableView.register(MainDetailCell.self, forCellReuseIdentifier: Cell.mainDetailCell)
-        //        tableView.estimatedRowHeight = 100
-        //        tableView.rowHeight = 100
-        //        tableView.dataSource = self
-        //        tableView.delegate = self
-        
-        tableView = configureTableView(delegate: self, dataSource: self, height: 100, cellType: MainDetailCell.self, identifier: Cell.mainDetailCell)
-        tableView.prefetchDataSource = self
-        view.addSubview(tableView)
-        tableView.fill()
     }
     
     @objc func refresh(_ sender: UIRefreshControl) {
@@ -59,49 +47,21 @@ extension ParentListViewController: UITableViewDataSource {
         return postArr.count
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: Cell.mainDetailCell) as? MainDetailCell else {
+    @objc func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ParentTableCell.identifier) as? ParentTableCell else {
             fatalError("Sorry, could not load cell")
         }
         cell.selectionStyle = .none
-        cell.updateAppearanceFor(.pending)
+        let post = postArr[indexPath.row]
+        cell.updateAppearanceFor(.pending(post))
         return cell
     }
 }
 
 // MARK:- TableView Delegate
 extension ParentListViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        guard let cell = cell as? MainDetailCell else { return }
-        let post = postArr[indexPath.row]
-        
-        // How should the operation update the cell once the data has been loaded?
-        let updateCellClosure: (UIImage?) -> () = { [unowned self] (image) in
-            cell.updateAppearanceFor(.fetched(image, post))
-            self.loadingOperations.removeValue(forKey: indexPath)
-        }
-        
-        // Try to find an existing data loader
-        if let dataLoader = loadingOperations[indexPath] {
-            // Has the data already been loaded?
-            if let image = dataLoader.image {
-                cell.updateAppearanceFor(.fetched(image, post))
-                loadingOperations.removeValue(forKey: indexPath)
-            } else {
-                // No data loaded yet, so add the completion closure to update the cell once the data arrives
-                dataLoader.loadingCompleteHandler = updateCellClosure
-            }
-        } else {
-            // Need to create a data loaded for this index path
-            if let dataLoader = dataStore.loadImage(at: indexPath.row) {
-                // Provide the completion closure, and kick off the loading operation
-                dataLoader.loadingCompleteHandler = updateCellClosure
-                loadingQueue.addOperation(dataLoader)
-                loadingOperations[indexPath] = dataLoader
-            } else {
-                cell.updateAppearanceFor(.none(post))
-            }
-        }
+    @objc func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+
     }
     
     func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {

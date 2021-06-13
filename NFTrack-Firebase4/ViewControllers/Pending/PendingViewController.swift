@@ -22,7 +22,7 @@ class PendingViewController: UIViewController {
         configureNavigationBar(vc: self)
         configureSwitch()
         configureUI()
-        configureDataFetch(isBuyer: true)
+        configurePendingDataFetch(isBuyer: true)
     }
 }
 
@@ -72,9 +72,9 @@ extension PendingViewController {
         
         switch segment {
             case .buying:
-                configureDataFetch(isBuyer: true)
+                configurePendingDataFetch(isBuyer: true)
             case .selling:
-                configureDataFetch(isBuyer: false)
+                configurePendingDataFetch(isBuyer: false)
             case .purchases:
                 print("purchases")
             case .posts:
@@ -82,8 +82,8 @@ extension PendingViewController {
         }
     }
     
-    // MARK: - configureDataFetch
-    func configureDataFetch(isBuyer: Bool) {
+    // MARK: - configurePendingDataFetch
+    func configurePendingDataFetch(isBuyer: Bool) {
         if let userId = userDefaults.string(forKey: "userId") {
             let ref = FirebaseService.sharedInstance.db.collection("post")
                 .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
@@ -120,7 +120,7 @@ extension PendingViewController {
 extension PendingViewController: TableViewConfigurable {
     // MARK: - configureUI
     func configureUI() {
-        tableView = configureTableView(delegate: self, dataSource: self, height: 250, cellType: ProgressCell.self, identifier: Cell.progressCell)
+        tableView = configureTableView(delegate: self, dataSource: self, height: 250, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
         tableView.separatorStyle = .none
         view.addSubview(tableView)
         tableView.fill()
@@ -132,7 +132,7 @@ extension PendingViewController: TableViewConfigurable {
     
     // MARK: - refresh
     @objc func refresh(_ sender: UIRefreshControl) {
-        //        configureDataFetch()
+        //        configurePendingDataFetch()
     }
 }
 
@@ -142,7 +142,7 @@ extension PendingViewController: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Cell.progressCell, for: indexPath) as! ProgressCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: ProgressCell.identifier, for: indexPath) as! ProgressCell
         cell.selectionStyle = .none
         
         let post = postArr[indexPath.row]

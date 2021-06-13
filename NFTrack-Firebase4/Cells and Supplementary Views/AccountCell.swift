@@ -8,6 +8,7 @@
 import UIKit
 
 class AccountCell: UITableViewCell {
+    static var identifier = "AccountCell"
     var iconView = UIImageView()
     var titleLabel = UILabel()
     
