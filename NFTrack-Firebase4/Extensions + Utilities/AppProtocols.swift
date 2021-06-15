@@ -140,7 +140,7 @@ protocol ImageUploadable where Self:UIViewController {
 
 extension ImageUploadable {
     func uploadImages(image: String, userId: String, completion: @escaping (URL) -> Void) {
-        FirebaseService.sharedInstance.uploadPhoto(fileName: image, userId: userId) { [weak self](uploadTask, fileUploadError) in
+        FirebaseService.shared.uploadPhoto(fileName: image, userId: userId) { [weak self](uploadTask, fileUploadError) in
             if let error = fileUploadError {
                 switch error {
                     case .fileManagerError(let msg):
@@ -261,3 +261,7 @@ extension ImageUploadable {
     }
 }
 
+// MARK: - RefetchDataDelegate
+protocol RefetchDataDelegate: AnyObject {
+    func didFetchData()
+}

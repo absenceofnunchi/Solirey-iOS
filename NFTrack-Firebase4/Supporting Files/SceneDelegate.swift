@@ -36,7 +36,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                         urlString = "NA"
                     }
  
-                    FirebaseService.sharedInstance.db.collection("user").document(user.uid).setData([
+                    FirebaseService.shared.db.collection("user").document(user.uid).setData([
                         "photoURL": urlString!,
                         "displayName": user.displayName ?? "No name",
                         "uid": user.uid
@@ -54,12 +54,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     let mainNav = UINavigationController(rootViewController: mainVC)
                     tabBar.addChild(mainNav)
                     
-//                    let pendingVC = PendingViewController()
-//                    pendingVC.title = "Pending"
-//                    
-//                    let pendingNav = UINavigationController(rootViewController: pendingVC)
-//                    tabBar.addChild(pendingNav)
-                    
                     let listVC = ListViewController()
                     listVC.title = "List"
                     
@@ -71,6 +65,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     
                     let postNav = UINavigationController(rootViewController: postVC)
                     tabBar.addChild(postNav)
+                    
+                    let chatListVC = ChatListViewController()
+                    chatListVC.title = "Inbox"
+                    
+                    let chatListNav = UINavigationController(rootViewController: chatListVC)
+                    tabBar.addChild(chatListNav)
                     
                     let acctVC = AccountViewController()
                     acctVC.title = "Account"

@@ -111,16 +111,14 @@ class PostViewController: ParentPostViewController {
                                                                 
                                                                 // firebase
                                                                 let senderAddress = result.transaction.sender!.address
-                                                                let postId = UUID().uuidString
-                                                                let ref = FirebaseService.sharedInstance.db.collection("post")
+                                                                let ref = FirebaseService.shared.db.collection("post")
                                                                 let id = ref.document().documentID
 
                                                                 // for deleting photos afterwards
                                                                 self?.documentId = id
                                                                                                                                 
                                                                 // txHash is either minting or transferring the ownership
-                                                                FirebaseService.sharedInstance.db.collection("post").document(id).setData([
-                                                                    "postId": postId,
+                                                                FirebaseService.shared.db.collection("post").document(id).setData([
                                                                     "sellerUserId": userId,
                                                                     "senderAddress": senderAddress,
                                                                     "escrowHash": result.hash,

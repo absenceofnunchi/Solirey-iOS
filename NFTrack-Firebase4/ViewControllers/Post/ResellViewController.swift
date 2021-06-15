@@ -145,14 +145,14 @@ extension ResellViewController {
                                                         // firebase
                                                         let senderAddress = result.transaction.sender!.address
                                                         let postId = UUID().uuidString
-                                                        let ref = FirebaseService.sharedInstance.db.collection("mint")
+                                                        let ref = FirebaseService.shared.db.collection("mint")
                                                         let id = ref.document().documentID
                                                         
                                                         // for deleting photos afterwards
                                                         self?.documentId = id
                                                         
                                                         // txHash is either minting or transferring the ownership
-                                                        FirebaseService.sharedInstance.db.collection("post").document(id).setData([
+                                                        FirebaseService.shared.db.collection("post").document(id).setData([
                                                             "postId": postId,
                                                             "sellerUserId": userId,
                                                             "senderAddress": senderAddress,
@@ -178,7 +178,7 @@ extension ResellViewController {
                                                                 self?.socketDelegate.delegate = self
                                                                 
                                                                 // update the previous post to "resold" status
-                                                                FirebaseService.sharedInstance.db.collection("post").document(self!.post.documentId).updateData([
+                                                                FirebaseService.shared.db.collection("post").document(self!.post.documentId).updateData([
                                                                     "status": PostStatus.resold.rawValue,
                                                                 ]) { (error) in
                                                                     if let error = error {

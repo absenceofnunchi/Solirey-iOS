@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ChatCell: ParentTableCell {
+class ChatCell: ParentTableCell<ChatListModel> {
     override class var identifier: String {
         return "ChatCell"
     }

@@ -9,92 +9,91 @@
  Abstract:
  Parent cell with images that needs asynchrous fetching.
  Used by MainDetailCell and ProgressCell
+ 
+ for chat list
  */
 
 import UIKit
 
-class MainDetailCell: ParentTableCell {
+class MainDetailCell: ParentTableCell<ChatListModel> {
     override class var identifier: String {
         return "MainDetailCell"
     }
-    var titleLabel: UILabel!
-    var descLabel: UILabel!
-    var dateLabel: UILabel!
+    private var titleLabel: UILabel!
+    private var descLabel: UILabel!
+    private var dateLabel: UILabel!
+    var userId: String!
+    private var displayName: String!
+    private var photoURL: String!
     
-    override func configure(_ post: Post?) {
+    override func configure(_ post: ChatListModel?) {
         guard let post = post else { return }
-        let title = post.title
-        let description = post.description
         
+        if post.sellerId != userId {
+            displayName = post.sellerDisplayName
+            photoURL = post.sellerPhotoURL
+        } else {
+            displayName = post.buyerDisplayName
+            photoURL = post.buyerPhotoURL
+        }
+        
+        guard let image = UIImage(systemName: "person.crop.circle.fill") else {
+            return
+        }
+        let configuration = UIImage.SymbolConfiguration(pointSize: 30, weight: .regular, scale: .medium)
+        let profileImage = image.withTintColor(.orange, renderingMode: .alwaysOriginal).withConfiguration(configuration)
+        thumbImageView.image = profileImage
         thumbImageView.contentMode = .scaleAspectFill
         thumbImageView.clipsToBounds = true
         thumbImageView.layer.cornerRadius = 5
         thumbImageView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(thumbImageView)
         
-        thumbImageView.addSubview(loadingIndicator)
-        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
-        loadingIndicator.startAnimating()
-        
-        NSLayoutConstraint.activate([
-            loadingIndicator.centerXAnchor.constraint(equalTo: thumbImageView.centerXAnchor),
-            loadingIndicator.centerYAnchor.constraint(equalTo: thumbImageView.centerYAnchor),
-        ])
+        if photoURL != "NA" {
+            thumbImageView.addSubview(loadingIndicator)
+            loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+            loadingIndicator.startAnimating()
+            
+            NSLayoutConstraint.activate([
+                loadingIndicator.centerXAnchor.constraint(equalTo: thumbImageView.centerXAnchor),
+                loadingIndicator.centerYAnchor.constraint(equalTo: thumbImageView.centerYAnchor),
+            ])
+        }
         
         titleLabel = UILabel()
-        titleLabel.text = title
+        titleLabel.text = displayName
         titleLabel.adjustsFontForContentSizeCategory = true
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(titleLabel)
         
         descLabel = UILabel()
-        descLabel.text = description
+        descLabel.text = post.latestMessage
         descLabel.adjustsFontForContentSizeCategory = true
         descLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(descLabel)
         
         dateLabel = UILabel()
-        let date = post.date
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        let dateString = formatter.string(from: date)
-        dateLabel.text = dateString
+        dateLabel.text = post.date
         dateLabel.textAlignment = .right
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(dateLabel)
-        
-        if let images = post.images, images.count > 0 {
-            NSLayoutConstraint.activate([
-                thumbImageView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-                thumbImageView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-                thumbImageView.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
-                thumbImageView.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.3),
-                
-                titleLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
-                titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-                titleLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
-                titleLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.3),
-                
-                descLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
-                descLabel.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
-                descLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
-                descLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.3),
-            ])
-        } else {
-            NSLayoutConstraint.activate([
-                titleLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-                titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-                titleLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
-                titleLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.3),
-                
-                descLabel.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-                descLabel.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
-                descLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
-                descLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.3),
-            ])
-        }
-        
+
         NSLayoutConstraint.activate([
+            thumbImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            thumbImageView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            thumbImageView.widthAnchor.constraint(equalToConstant: 80),
+            thumbImageView.heightAnchor.constraint(equalToConstant: 80),
+            
+            titleLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
+            titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            titleLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
+            titleLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.3),
+            
+            descLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
+            descLabel.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+            descLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
+            descLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.3),
+            
             dateLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             dateLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
             dateLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),

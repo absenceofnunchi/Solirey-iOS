@@ -18,18 +18,28 @@ class ListDetailViewController: ParentDetailViewController {
             self.getHistory()
         }
     }
-    var optionsBarItem: UIBarButtonItem!
+    final var optionsBarItem: UIBarButtonItem!
     private var statusTitleLabel: UILabel!
     private var statusLabel: UILabelPadding!
-    var updateStatusButton = UIButton()
-    private var userId: String!
+    final var updateStatusButton = UIButton()
+    private var userId: String! {
+        return UserDefaults.standard.string(forKey: "userId")
+    }
     
     // history table view below the status update button
-    var historyTableViewHeight: CGFloat! = 0
-    var historyTableView: UITableView!
-    var historicData = [Post]()
-    let CELL_HEIGHT: CGFloat = 100
-    
+    final var historyTableViewHeight: CGFloat! = 0
+    final var historyTableView: UITableView!
+    final var historicData = [Post]()
+    final let CELL_HEIGHT: CGFloat = 100
+    final var isSaved: Bool! = false {
+        didSet {
+            configureNavigationBar()
+        }
+    }
+    final var chatButtonItem: UIBarButtonItem!
+    final var starButtonItem: UIBarButtonItem!
+    weak var delegate: RefetchDataDelegate?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -45,18 +55,46 @@ class ListDetailViewController: ParentDetailViewController {
 }
 
 extension ListDetailViewController {
-    override func configureUI() {
-        super.configureUI()
-        
-        if let userId = UserDefaults.standard.string(forKey: "userId"), userId != self.post.sellerUserId {
-            guard let image = UIImage(systemName: "message") else {
-                self.navigationController?.popViewController(animated: true)
-                return
-            }
-            let barButtonItem = UIBarButtonItem(image: image.withTintColor(.black, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(barButtonPressed))
-            self.navigationItem.rightBarButtonItem = barButtonItem
+    final func fetchSavedPostData() {
+        if let savedBy = post.savedBy, savedBy.contains(userId) {
+            isSaved = true
+        } else {
+            isSaved = false
+        }
+    }
+    
+    override func userInfoDidSet() {
+        super.userInfoDidSet()
+        if userInfo.uid != userId {
+            configureNavigationBar()
+            fetchSavedPostData()
+        }
+    }
+    
+    final func configureNavigationBar() {
+        guard let chatImage = UIImage(systemName: "message"),
+              let starImage = UIImage(systemName: "star"),
+              let starImageFill = UIImage(systemName: "star.fill") else {
+            self.navigationController?.popViewController(animated: true)
+            return
         }
         
+        var buttonItemsArr = [UIBarButtonItem]()
+        chatButtonItem = UIBarButtonItem(image: chatImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed))
+        chatButtonItem.tag = 6
+        buttonItemsArr.append(chatButtonItem)
+        
+        let finalImage = isSaved ? starImageFill : starImage
+        starButtonItem = UIBarButtonItem(image: finalImage.withTintColor(isSaved ? .red : .gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed))
+        starButtonItem.tag = 7
+        buttonItemsArr.append(starButtonItem)
+        
+        self.navigationItem.rightBarButtonItems = buttonItemsArr
+    }
+    
+    override func configureUI() {
+        super.configureUI()
+
         statusTitleLabel = UILabel()
         statusTitleLabel.text = "Status"
         statusTitleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -97,7 +135,7 @@ extension ListDetailViewController {
 
 extension ListDetailViewController {
     // MARK: - buttonPressed
-    @objc func buttonPressed(_ sender: UIButton!) {
+    @objc final func buttonPressed(_ sender: UIButton!) {
         switch sender.tag {
             case 1:
                 // abort by the seller
@@ -117,20 +155,32 @@ extension ListDetailViewController {
             case 5:
                 // transfer ownership
                 transferToken()
+            case 6:
+                let chatVC = ChatViewController()
+                chatVC.userInfo = userInfo
+                chatVC.itemId = post.id
+                self.navigationController?.pushViewController(chatVC, animated: true)
+            case 7:
+                // saving the favourite post
+                isSaved = !isSaved
+                FirebaseService.shared.db.collection("post").document(post.documentId).updateData([
+                    "savedBy": isSaved ? FieldValue.arrayUnion(["\(userId!)"]) : FieldValue.arrayRemove(["\(userId!)"])
+                ]) {(error) in
+                    if let error = error {
+                        self.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
+                            self.navigationController?.popViewController(animated: true)
+                        }
+                    } else {
+                        self.delegate?.didFetchData()
+                    }
+                }
             default:
                 break
         }
     }
     
-    @objc func barButtonPressed() {
-        let chatVC = ChatViewController()
-        chatVC.userInfo = userInfo
-        chatVC.itemId = post.id
-        self.navigationController?.pushViewController(chatVC, animated: true)
-    }
-    
     // MARK: - configureStatusButton
-    func configureStatusButton(buttonTitle: String = "Buy", tag: Int = 2) {
+    final func configureStatusButton(buttonTitle: String = "Buy", tag: Int = 2) {
         updateStatusButton.tag = tag
         updateStatusButton.setTitle(buttonTitle, for: .normal)
     }
@@ -138,7 +188,7 @@ extension ListDetailViewController {
 
 extension ListDetailViewController {
     // MARK: - getStatus
-    func getStatus() {
+    final func getStatus() {
         DispatchQueue.global().async {
             do {
                 let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(self.post.escrowHash)
@@ -208,16 +258,13 @@ extension ListDetailViewController {
                                         }
                                     }
                                     
-                                    if let userId = UserDefaults.standard.string(forKey: "userId") {
-                                        self.userId = userId
-                                        if  userId != self.post.sellerUserId {
-                                            DispatchQueue.main.async {
-                                                self.configureStatusButton(buttonTitle: buyerButtonTitle, tag: buyerTag)
-                                            }
-                                        } else {
-                                            DispatchQueue.main.async {
-                                                self.configureStatusButton(buttonTitle: sellerButtonTitle, tag: sellerTag)
-                                            }
+                                    if self.userId != self.post.sellerUserId {
+                                        DispatchQueue.main.async {
+                                            self.configureStatusButton(buttonTitle: buyerButtonTitle, tag: buyerTag)
+                                        }
+                                    } else if self.userId == self.post.sellerUserId {
+                                        DispatchQueue.main.async {
+                                            self.configureStatusButton(buttonTitle: sellerButtonTitle, tag: sellerTag)
                                         }
                                     } else {
                                         self.alert.showDetail("Authorization", with: "You need to be logged in!", for: self) {
@@ -261,7 +308,7 @@ extension ListDetailViewController {
 }
 
 extension ListDetailViewController {
-    func updateState(method: String, price: String = "0", status: PostStatus? = nil) {
+    final func updateState(method: String, price: String = "0", status: PostStatus? = nil) {
         transactionService.prepareTransactionForWriting(method: method, contractAddress: contractAddress, amountString: price) { [weak self](transaction, error) in
             if let error = error {
                 switch error {
@@ -299,7 +346,7 @@ extension ListDetailViewController {
                                                     /// tag 2
                                                     /// confirmedPurchase
                                                     let buyerHash = Web3swiftService.currentAddressString
-                                                    FirebaseService.sharedInstance.db.collection("post").document(self!.post.documentId).updateData([
+                                                    FirebaseService.shared.db.collection("post").document(self!.post.documentId).updateData([
                                                         "status": status.rawValue,
                                                         "buyerHash": buyerHash ?? "NA",
                                                         "buyerUserId": self?.userId ?? "NA",
@@ -318,7 +365,7 @@ extension ListDetailViewController {
                                                 case .complete:
                                                     /// tag 3
                                                     /// confirmRecieved
-                                                    FirebaseService.sharedInstance.db.collection("post").document(self!.post.documentId).updateData([
+                                                    FirebaseService.shared.db.collection("post").document(self!.post.documentId).updateData([
                                                         "status": status.rawValue,
                                                         "\(method)Hash": result.hash,
                                                         "\(method)Date": Date()
@@ -333,7 +380,7 @@ extension ListDetailViewController {
                                                         }
                                                     })
                                                 case .aborted:
-                                                    FirebaseService.sharedInstance.db.collection("post").document(self!.post.documentId).delete() { err in
+                                                    FirebaseService.shared.db.collection("post").document(self!.post.documentId).delete() { err in
                                                         if let err = err {
                                                             self?.alert.showDetail("Error", with: err.localizedDescription, for: self!)
                                                         } else {
@@ -371,108 +418,101 @@ extension ListDetailViewController {
 }
 
 extension ListDetailViewController {
-    func transferToken() {
-        FirebaseService.sharedInstance.db.collection("post")
-            .whereField("postId", isEqualTo: post.postId)
-            .getDocuments() { [weak self](querySnapshot, err) in
-                if let err = err {
-                    self?.alert.showDetail("Error", with: err.localizedDescription, for: self!)
-                } else {
-                    guard let querySnapshot = querySnapshot, !querySnapshot.isEmpty else {
-                        self?.alert.showDetail("Error", with: "No post found", for: self!)
-                        return
-                    }
-                    
-                    for document in querySnapshot.documents {
-                        guard document.exists == true else { return }
-                        print("\(document.documentID) => \(document.data())")
-                        let data = document.data()
-                        var buyerHash: String!
-                        var tokenId: String!
-                        data.forEach { (item) in
-                            switch item.key {
-                                case "buyerHash":
-                                    buyerHash = item.value as? String
-                                case "tokenId":
-                                    tokenId = item.value as? String
-                                default:
-                                    break
-                            }
-                        }
-                        guard let bh = buyerHash else {
-                            self?.alert.showDetail("Error", with: "The item has not been purchased by a buyer yet.", for: self!)
-                            return
-                        }
-                        
-                        guard let ti = tokenId else {
-                            self?.alert.showDetail("Error", with: "The item does not have token ID registered.", for: self!)
-                            return
-                        }
-                        
-                        let fromAddress = Web3swiftService.currentAddress
-                        let toAddress = EthereumAddress(bh)
-                        let param: [AnyObject] = [fromAddress!, toAddress!, ti] as [AnyObject]
-                        self?.transactionService.prepareTransactionForWriting(method: "transferFrom", abi: NFTrackABI, param: param, contractAddress: erc721ContractAddress!, completion: { (transaction, error) in
-                            if let error = error {
-                                switch error {
-                                    case .invalidAmountFormat:
-                                        self?.alert.showDetail("Error", with: "The ETH amount is not in a correct format!", for: self!)
-                                    case .zeroAmount:
-                                        self?.alert.showDetail("Error", with: "The ETH amount cannot be negative", for: self!)
-                                    case .insufficientFund:
-                                        self?.alert.showDetail("Error", with: "There is an insufficient amount of ETH in the wallet.", for: self!)
-                                    case .contractLoadingError:
-                                        self?.alert.showDetail("Error", with: "There was an error loading your contract.", for: self!)
-                                    case .createTransactionIssue:
-                                        self?.alert.showDetail("Error", with: "There was an error creating the transaction.", for: self!)
-                                    default:
-                                        self?.alert.showDetail("Sorry", with: "There was an error. Please try again.", for: self!)
-                                }
-                            }
-                            
-                            if let transaction = transaction {
-                                let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
-                                detailVC.titleString = "Enter your password"
-                                detailVC.buttonAction = { vc in
-                                    if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
-                                        self?.dismiss(animated: true, completion: {
-                                            self?.showSpinner({
-                                                DispatchQueue.global().async {
-                                                    do {
-                                                        let receipt = try transaction.send(password: password, transactionOptions: nil)
-                                                        FirebaseService.sharedInstance.db.collection("post").document(document.documentID).updateData([
-                                                            "transferHash": receipt.hash,
-                                                            "transferDate": Date(),
-                                                            "status": PostStatus.transferred.rawValue
-                                                        ], completion: { (error) in
-                                                            if let error = error {
-                                                                self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
-                                                            } else {
-                                                                self?.alert.showDetail("Success!", with: "The token has been successfully transferred.", for: self!) {
-                                                                    
-                                                                }
-                                                            }
-                                                        })
-                                                    } catch Web3Error.nodeError(let desc) {
-                                                        if let index = desc.firstIndex(of: ":") {
-                                                            let newIndex = desc.index(after: index)
-                                                            let newStr = desc[newIndex...]
-                                                            self?.alert.showDetail("Alert", with: String(newStr), for: self!)
-                                                        }
-                                                    } catch {
-                                                        self?.alert.showDetail("Error", with: "There was an error with the transfer transaction.", for: self!)
-                                                    }
-                                                }
-                                            })
-                                        })
-                                    }
-                                }
-                                self?.present(detailVC, animated: true, completion: nil)
-                            }
-                        })
+    final func transferToken() {
+        let docRef = FirebaseService.shared.db.collection("post").document(post.documentId)
+        docRef.getDocument { [weak self] (document, error) in
+            if let document = document,
+               document.exists,
+               let data = document.data() {
+                
+                var buyerHash: String!
+                var tokenId: String!
+                data.forEach { (item) in
+                    switch item.key {
+                        case "buyerHash":
+                            buyerHash = item.value as? String
+                        case "tokenId":
+                            tokenId = item.value as? String
+                        default:
+                            break
                     }
                 }
+                
+                guard let bh = buyerHash else {
+                    self?.alert.showDetail("Error", with: "The item has not been purchased by a buyer yet.", for: self!)
+                    return
+                }
+                
+                guard let ti = tokenId else {
+                    self?.alert.showDetail("Error", with: "The item does not have token ID registered.", for: self!)
+                    return
+                }
+                
+                let fromAddress = Web3swiftService.currentAddress
+                let toAddress = EthereumAddress(bh)
+                let param: [AnyObject] = [fromAddress!, toAddress!, ti] as [AnyObject]
+                self?.transactionService.prepareTransactionForWriting(method: "transferFrom", abi: NFTrackABI, param: param, contractAddress: erc721ContractAddress!, completion: { (transaction, error) in
+                    if let error = error {
+                        switch error {
+                            case .invalidAmountFormat:
+                                self?.alert.showDetail("Error", with: "The ETH amount is not in a correct format!", for: self!)
+                            case .zeroAmount:
+                                self?.alert.showDetail("Error", with: "The ETH amount cannot be negative", for: self!)
+                            case .insufficientFund:
+                                self?.alert.showDetail("Error", with: "There is an insufficient amount of ETH in the wallet.", for: self!)
+                            case .contractLoadingError:
+                                self?.alert.showDetail("Error", with: "There was an error loading your contract.", for: self!)
+                            case .createTransactionIssue:
+                                self?.alert.showDetail("Error", with: "There was an error creating the transaction.", for: self!)
+                            default:
+                                self?.alert.showDetail("Sorry", with: "There was an error. Please try again.", for: self!)
+                        }
+                    }
+                    
+                    if let transaction = transaction {
+                        let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
+                        detailVC.titleString = "Enter your password"
+                        detailVC.buttonAction = { vc in
+                            if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
+                                self?.dismiss(animated: true, completion: {
+                                    self?.showSpinner({
+                                        DispatchQueue.global().async {
+                                            do {
+                                                let receipt = try transaction.send(password: password, transactionOptions: nil)
+                                                FirebaseService.shared.db.collection("post").document(document.documentID).updateData([
+                                                    "transferHash": receipt.hash,
+                                                    "transferDate": Date(),
+                                                    "status": PostStatus.transferred.rawValue
+                                                ], completion: { (error) in
+                                                    if let error = error {
+                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                                    } else {
+                                                        self?.alert.showDetail("Success!", with: "The token has been successfully transferred.", for: self!) {
+                                                            
+                                                        }
+                                                    }
+                                                })
+                                            } catch Web3Error.nodeError(let desc) {
+                                                if let index = desc.firstIndex(of: ":") {
+                                                    let newIndex = desc.index(after: index)
+                                                    let newStr = desc[newIndex...]
+                                                    self?.alert.showDetail("Alert", with: String(newStr), for: self!)
+                                                }
+                                            } catch {
+                                                self?.alert.showDetail("Error", with: "There was an error with the transfer transaction.", for: self!)
+                                            }
+                                        }
+                                    })
+                                })
+                            }
+                        }
+                        self?.present(detailVC, animated: true, completion: nil)
+                    }
+                })
+            } else {
+                self?.alert.showDetail("Sorry", with: "Unable to find the token to transfer.", for: self!)
             }
+        }
     }
 }
 

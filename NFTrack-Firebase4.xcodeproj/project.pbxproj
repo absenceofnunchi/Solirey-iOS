@@ -84,6 +84,8 @@
 		499702B02674533E001DD80A /* ParentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AF2674533E001DD80A /* ParentCell.swift */; };
 		499702B5267459D8001DD80A /* ChatListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702B4267459D8001DD80A /* ChatListViewController.swift */; };
 		499702DD26745BC0001DD80A /* ChatCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702DC26745BC0001DD80A /* ChatCell.swift */; };
+		4997030526769A36001DD80A /* CardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4997030426769A36001DD80A /* CardCell.swift */; };
+		4997030A2676CC00001DD80A /* SavedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499703092676CBFF001DD80A /* SavedViewController.swift */; };
 		499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9948266AB20700FC6CDE /* HistoryCell.swift */; };
 		499F994E266ADA0E00FC6CDE /* HistoryDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */; };
 		499F9953266AED0E00FC6CDE /* ParentDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9952266AED0E00FC6CDE /* ParentDetailViewController.swift */; };
@@ -206,6 +208,8 @@
 		499702AF2674533E001DD80A /* ParentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentCell.swift; sourceTree = "<group>"; };
 		499702B4267459D8001DD80A /* ChatListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListViewController.swift; sourceTree = "<group>"; };
 		499702DC26745BC0001DD80A /* ChatCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCell.swift; sourceTree = "<group>"; };
+		4997030426769A36001DD80A /* CardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardCell.swift; sourceTree = "<group>"; };
+		499703092676CBFF001DD80A /* SavedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewController.swift; sourceTree = "<group>"; };
 		499F9948266AB20700FC6CDE /* HistoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryCell.swift; sourceTree = "<group>"; };
 		499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDetailViewController.swift; sourceTree = "<group>"; };
 		499F9952266AED0E00FC6CDE /* ParentDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentDetailViewController.swift; sourceTree = "<group>"; };
@@ -445,6 +449,7 @@
 				499702AA2673F75E001DD80A /* MessageCell.swift */,
 				499702AF2674533E001DD80A /* ParentCell.swift */,
 				499702DC26745BC0001DD80A /* ChatCell.swift */,
+				4997030426769A36001DD80A /* CardCell.swift */,
 			);
 			path = "Cells and Supplementary Views";
 			sourceTree = "<group>";
@@ -546,6 +551,7 @@
 				499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */,
 				499F9952266AED0E00FC6CDE /* ParentDetailViewController.swift */,
 				499F9957266B2ADB00FC6CDE /* WebViewController.swift */,
+				499703092676CBFF001DD80A /* SavedViewController.swift */,
 			);
 			path = Main;
 			sourceTree = "<group>";
@@ -893,6 +899,7 @@
 				493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */,
 				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
 				499702B5267459D8001DD80A /* ChatListViewController.swift in Sources */,
+				4997030A2676CC00001DD80A /* SavedViewController.swift in Sources */,
 				499702AB2673F75E001DD80A /* MessageCell.swift in Sources */,
 				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
 				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
@@ -949,6 +956,7 @@
 				4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */,
 				496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */,
 				4964E52C2648B096005B3268 /* MyPresentationController.swift in Sources */,
+				4997030526769A36001DD80A /* CardCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

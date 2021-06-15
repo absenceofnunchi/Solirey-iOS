@@ -10,7 +10,7 @@ import UIKit
 extension ListDetailViewController: TableViewConfigurable {
     // MARK: - getHistory
     func getHistory() {
-        FirebaseService.sharedInstance.db.collection("post")
+        FirebaseService.shared.db.collection("post")
             .whereField("itemIdentifier", isEqualTo: post.id)
             .getDocuments { [weak self] (querySnapshot, err) in
                 if let err = err {
@@ -45,7 +45,7 @@ extension ListDetailViewController: TableViewConfigurable {
     
     func fetchUserData(id: String, completion: @escaping (UserInfo?) -> Void) {
         showSpinner {
-            let docRef = FirebaseService.sharedInstance.db.collection("user").document(id)
+            let docRef = FirebaseService.shared.db.collection("user").document(id)
             docRef.getDocument { [weak self] (document, error) in
                 if let document = document, document.exists {
                     if let data = document.data() {

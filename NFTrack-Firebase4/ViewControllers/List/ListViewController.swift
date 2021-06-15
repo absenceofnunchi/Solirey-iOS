@@ -8,7 +8,7 @@
 import UIKit
 import FirebaseFirestore
 
-class ListViewController: ParentListViewController {
+class ListViewController: ParentListViewController<Post> {
     private let userDefaults = UserDefaults.standard
     private var segmentedControl: UISegmentedControl!
     
@@ -23,9 +23,11 @@ class ListViewController: ParentListViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
     }
-}
-
-extension ListViewController {
+    
+    override func setDataStore(postArr: [Post]) {
+        dataStore = PostImageDataStore(posts: postArr)
+    }
+    
     override func configureUI() {
         super.configureUI()
         
@@ -34,9 +36,7 @@ extension ListViewController {
         view.addSubview(tableView)
         tableView.fill()
     }
-}
-
-extension ListViewController {
+    
     fileprivate enum Segment: Int, CaseIterable {
         case buying, selling, purchases, posts
         
@@ -79,7 +79,7 @@ extension ListViewController {
     @objc func segmentedControlSelectionDidChange(_ sender: UISegmentedControl) {
         guard let segment = Segment(rawValue: sender.selectedSegmentIndex)
         else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
-
+        
         switch segment {
             case .buying:
                 configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
@@ -95,7 +95,7 @@ extension ListViewController {
     // MARK: - configureDataFetch
     func configureDataFetch(isBuyer: Bool, status: [String]) {
         if let userId = userDefaults.string(forKey: UserDefaultKeys.userId) {
-            FirebaseService.sharedInstance.db.collection("post")
+            FirebaseService.shared.db.collection("post")
                 .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
                 .whereField("status", in: status)
                 .getDocuments() { [weak self] (querySnapshot, err) in
@@ -105,7 +105,7 @@ extension ListViewController {
                         if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                             self?.postArr.removeAll()
                             self?.postArr = data
-
+                            
                             DispatchQueue.main.async {
                                 self?.tableView.reloadData()
                                 self?.delay(1.0) {
@@ -121,19 +121,7 @@ extension ListViewController {
             self.alert.showDetail("Oops!", with: "You have to be logged in!", for: self)
         }
     }
-
-}
-
-extension ListViewController {
-    // MARK: - didRefreshTableView
-    override func didRefreshTableView() {
-        segmentedControl.selectedSegmentIndex = 1
-        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
-        configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
-    }
-}
-
-extension ListViewController {
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: ProgressCell.identifier) as? ProgressCell else {
             fatalError("Sorry, could not load cell")
@@ -173,5 +161,19 @@ extension ListViewController {
             }
         }
     }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let post = postArr[indexPath.row]
+        let listDetailVC = ListDetailViewController()
+        listDetailVC.post = post
+        listDetailVC.tableViewRefreshDelegate = self
+        self.navigationController?.pushViewController(listDetailVC, animated: true)
+    }
+    
+    // MARK: - didRefreshTableView
+    override func didRefreshTableView() {
+        segmentedControl.selectedSegmentIndex = 1
+        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+        configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
+    }
 }
-

@@ -81,7 +81,7 @@ extension ProfileDetailViewController: TableViewConfigurable {
     }
     
     func getCurrentPosts(uid: String) {
-        FirebaseService.sharedInstance.db.collection("post")
+        FirebaseService.shared.db.collection("post")
             .whereField("sellerUserId", isEqualTo: uid)
             .whereField("status", isEqualTo: "ready")
             .getDocuments { [weak self] (querySnapshot, err) in

@@ -1,33 +1,35 @@
 //
-//  MainDetailViewController.swift
+//  SavedViewController.swift
 //  NFTrack-Firebase4
 //
-//  Created by J C on 2021-05-22.
+//  Created by J C on 2021-06-13.
 //
 
 import UIKit
 import FirebaseFirestore
 
-class MainDetailViewController: ParentListViewController<Post> {
-    var category: String! {
-        didSet {
-            title = category!
-            FirebaseService.shared.db.collection("post")
-                .whereField("category", isEqualTo: category! as String)
-                .whereField("status", isEqualTo: "ready")
-                .getDocuments() { [weak self](querySnapshot, err) in
-                    if let err = err {
-                        print("Error getting documents: \(err)")
-                    } else {
-                        if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                            self?.postArr = data
-                            DispatchQueue.main.async {
-                                self?.tableView.reloadData()
-                            }
+class SavedViewController: ParentListViewController<Post>, RefetchDataDelegate {
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        fetchData()
+    }
+    
+    func fetchData() {
+        FirebaseService.shared.db.collection("post")
+            .whereField("savedBy", arrayContainsAny: [userId!])
+            .getDocuments() { [weak self](querySnapshot, err) in
+                if let err = err {
+                    print("Error getting documents: \(err)")
+                } else {
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        self?.postArr = data
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
                         }
                     }
                 }
-        }
+            }
     }
     
     override func setDataStore(postArr: [Post]) {
@@ -41,6 +43,7 @@ class MainDetailViewController: ParentListViewController<Post> {
     
     override func configureUI() {
         super.configureUI()
+        
         tableView = configureTableView(delegate: self, dataSource: self, height: 330, cellType: CardCell.self, identifier: CardCell.identifier)
         tableView.prefetchDataSource = self
         view.addSubview(tableView)
@@ -94,7 +97,13 @@ class MainDetailViewController: ParentListViewController<Post> {
         let post = postArr[indexPath.row]
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = post
+        listDetailVC.delegate = self
         listDetailVC.tableViewRefreshDelegate = self
         self.navigationController?.pushViewController(listDetailVC, animated: true)
+        
+    }
+    
+    func didFetchData() {
+        fetchData()
     }
 }

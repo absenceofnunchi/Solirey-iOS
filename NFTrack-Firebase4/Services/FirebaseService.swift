@@ -11,7 +11,7 @@ import Firebase
 import FirebaseFirestore
 
 class FirebaseService {
-    static let sharedInstance = FirebaseService()
+    static let shared = FirebaseService()
     var db: Firestore! {
         let settings = FirestoreSettings()
         Firestore.firestore().settings = settings

@@ -14,19 +14,19 @@
 import UIKit
 import FirebaseFirestore
 
-enum ImageFetchStatus {
+enum ImageFetchStatus<T> {
     case fetched(UIImage?)
-    case pending(Post)
+    case pending(T)
 }
 
-class ParentTableCell: UITableViewCell {
+class ParentTableCell<T>: UITableViewCell {
     class var identifier: String {
         return "ParentTableCell"
     }
     var thumbImageView = UIImageView()
     var loadingIndicator = UIActivityIndicatorView()
     
-    func updateAppearanceFor(_ status: ImageFetchStatus) {
+    func updateAppearanceFor(_ status: ImageFetchStatus<T>) {
         DispatchQueue.main.async { [unowned self] in
             switch status {
                 case .fetched(let image):
@@ -42,7 +42,11 @@ class ParentTableCell: UITableViewCell {
         }
     }
     
-    func configure(_ post: Post?) {
-
+    func configure(_ post: T?) {
+        
+    }
+    
+    override func prepareForReuse() {
+        thumbImageView.image = nil
     }
 }

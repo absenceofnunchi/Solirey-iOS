@@ -42,7 +42,6 @@ struct BorderStyle {
 /// txHash is either for minting for the very first time or transferring the ownership afterwards
 struct Post {
     let documentId: String
-    let postId: String
     let title: String
     let description: String
     let date: Date
@@ -61,6 +60,7 @@ struct Post {
     let transferDate: Date?
     let confirmReceivedHash: String?
     let confirmReceivedDate: Date?
+    let savedBy: [String]?
 }
 
 // MARK: - UILabelPadding
@@ -78,6 +78,17 @@ class UILabelPadding: UILabel {
         let heigth = superContentSize.height + padding.top + padding.bottom
         return CGSize(width: width, height: heigth)
     }
+}
+
+// MARK: - TopAlignedLabel
+class TopAlignedLabel: UILabel {
+    var top: CGFloat = 10
+    lazy var padding = UIEdgeInsets(top: top, left: 10, bottom: 10, right: 10)
+    override func drawText(in rect: CGRect) {
+        let textRect = super.textRect(forBounds: bounds.inset(by: padding), limitedToNumberOfLines: numberOfLines)
+        super.drawText(in: textRect)
+    }
+
 }
 
 // MARK: - UnderlineView
@@ -186,4 +197,16 @@ struct UserDefaultKeys {
     static let userId: String = "userId"
     static let displayName: String = "displayName"
     static let photoURL: String = "photoURL"
+}
+
+// MARK: - ChatListModel
+struct ChatListModel {
+    let docId: String
+    let latestMessage: String
+    let date: String
+    let buyerDisplayName: String
+    let buyerPhotoURL: String
+    let sellerDisplayName: String
+    let sellerPhotoURL: String
+    let sellerId: String
 }

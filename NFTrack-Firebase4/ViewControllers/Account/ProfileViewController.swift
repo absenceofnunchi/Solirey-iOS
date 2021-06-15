@@ -100,7 +100,7 @@ extension ProfileViewController {
 extension ProfileViewController {
     override func configureCustomProfileImage(from url: String) {
         showSpinner {
-            FirebaseService.sharedInstance.downloadImage(urlString: url) { [weak self] (image, error) in
+            FirebaseService.shared.downloadImage(urlString: url) { [weak self] (image, error) in
                 guard let strongSelf = self else { return }
                 if let error = error {
                     self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
@@ -305,7 +305,7 @@ extension ProfileViewController {
     /// this is for when ListDetailVC downloads and displays the user info
     /// you want it on a separate collection so that when a profile is updated, you only have to update a single document, not every post
     func updateUser(displayName: String, photoURL: String?, completion: @escaping (Error?) -> Void) {
-        FirebaseService.sharedInstance.db.collection("user").document(self.userInfo.uid!).setData([
+        FirebaseService.shared.db.collection("user").document(self.userInfo.uid!).setData([
             "photoURL": photoURL ?? "NA",
             "displayName": displayName,
             "uid": self.userInfo.uid!

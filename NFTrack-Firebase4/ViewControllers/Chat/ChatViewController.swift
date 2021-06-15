@@ -17,9 +17,9 @@ struct Message {
 
 class ChatViewController: UIViewController {
     var userInfo: UserInfo!
-    var itemId: String!
-    var messages = [Message]()
-//    var messages = [
+    final var itemId: String!
+    final var messages = [Message]()
+//    final var messages = [
 //        Message(id: "dkfjl", content: "First", displayName: "Hello", sentAt: "10/2"),
 //        Message(id: "dkfjl", content: "alsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfals;fjldjsflaksdjfl;adjsfldjslfjsdlfkajsdf", displayName: "Hello", sentAt: "10/2"),
 //        Message(id: "dkfjl", content: "First", displayName: "Hello", sentAt: "10/2"),
@@ -27,28 +27,38 @@ class ChatViewController: UIViewController {
 //        Message(id: "AWHlYSzRCQcYz3zZvVvkXMRrZa72", content: "asdfja;ljsfladjsflkajslfjasdiouaosdfjsdjl", displayName: "Hello", sentAt: "10/2"),
 //        Message(id: "AWHlYSzRCQcYz3zZvVvkXMRrZa72", content: "First", displayName: "Hello", sentAt: "10/2"),
 //    ]
-    var toolBarView: ToolBarView!
-    var constraints = [NSLayoutConstraint]()
+    final var toolBarView: ToolBarView!
+    final var constraints = [NSLayoutConstraint]()
     let alert = Alerts()
-    var docId: String! {
+    final var docId: String! {
         didSet {
             fetchData(docId: docId)
         }
     }
-    var tableView: UITableView!
-    
+    final var tableView: UITableView!
+    final var userId: String!
+    final var photoURL: String! {
+        return UserDefaults.standard.string(forKey: "photoURL")
+    }
+    final var displayName: String!
+    final var lastCell: CGRect!
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationItem.largeTitleDisplayMode = .never
         
+        getProfileInfo()
         getDocId()
         configureUI()
         setConstraints()
+        
+//        tableView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         addKeyboardObserver()
+        tableView.scrollToBottom()
         self.tabBarController?.tabBar.isHidden = true
     }
     
@@ -59,7 +69,19 @@ class ChatViewController: UIViewController {
 }
 
 extension ChatViewController {
-    func configureUI() {
+    private func getProfileInfo() {
+        if let uid = UserDefaults.standard.string(forKey: "userId"),
+           let displayName = UserDefaults.standard.string(forKey: "displayName") {
+            self.userId = uid
+            self.displayName = displayName
+        } else {
+            self.alert.showDetail("Sorry", with: "Unable to retrieve your profile. Please try again.", for: self) {
+                self.navigationController?.popViewController(animated: true)
+            }
+        }
+    }
+    
+    private func configureUI() {
         view.backgroundColor = .white
         title = userInfo.displayName
         
@@ -72,6 +94,8 @@ extension ChatViewController {
         
         tableView = configureTableView(delegate: nil, dataSource: self, height: nil, cellType: MessageCell.self, identifier: MessageCell.identifier)
         tableView.separatorStyle = .none
+        tableView.keyboardDismissMode = .onDrag
+        tableView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0)
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ChatViewController.dismissKeyboard))
         tap.cancelsTouchesInView = false
@@ -83,7 +107,7 @@ extension ChatViewController {
         view.addSubview(tableView)
     }
     
-    func setConstraints() {
+    private func setConstraints() {
         NSLayoutConstraint.activate([
             toolBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             toolBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -99,10 +123,10 @@ extension ChatViewController {
 }
 
 extension ChatViewController {
-    func getDocId() {
+    private func getDocId() {
         let sellerUid = userInfo.uid!
 
-        guard let buyerUid = UserDefaults.standard.string(forKey: "userId") else {
+        guard let buyerUid = userId else {
             self.alert.showDetail("Sorry", with: "You're currently not logged in. Please log in and try again.", for: self) {
                 self.navigationController?.popViewController(animated: true)
             }
@@ -114,17 +138,16 @@ extension ChatViewController {
         self.docId = hashedId
     }
     
-    func fetchData(docId: String) {
-        FirebaseService.sharedInstance.db.collection("chatrooms").document(docId).collection("messages")
+    private func fetchData(docId: String) {
+        FirebaseService.shared.db.collection("chatrooms").document(docId).collection("messages")
             .order(by: "sentAt", descending: false).addSnapshotListener { [weak self] (snapShot, error) in
                 if let error = error {
                     self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
                 }
                 
                 guard let documents = snapShot?.documents else {
-                    print("no document")
                     return
-                    }
+                }
                 
                 self?.messages = documents.map { docSnapshot -> Message in
                     let data = docSnapshot.data()
@@ -144,24 +167,47 @@ extension ChatViewController {
             }
     }
     
-    func sendMessage() {
+    private func sendMessage() {
         guard let messageContent = toolBarView.textView.text, !messageContent.isEmpty else {
             return
         }
   
-        let ref = FirebaseService.sharedInstance.db.collection("chatrooms").document(docId)
-        
+        let ref = FirebaseService.shared.db.collection("chatrooms").document(docId)
         if self.messages.count == 0 {
-            print("run")
-            ref.setData(["new": "new"])
+            /// docId is the hashedId that corresponds to the unique ID of the chat room
+            guard let sellerId = userInfo.uid else {
+                self.alert.showDetail("Sorry", with: "Unable to retrieve the seller's info. Please try again", for: self) {
+                    self.navigationController?.popViewController(animated: true)
+                }
+                return
+            }
+            
+            ref.setData([
+                "members": [sellerId, userId],
+                "sellerId": sellerId,
+                "sellerDisplayName": userInfo.displayName,
+                "sellerPhotoURL": userInfo.photoURL ?? "NA",
+                "buyerId": userId!,
+                "buyerDisplayName": displayName!,
+                "buyerPhotoURL": photoURL ?? "NA",
+                "docId": docId!,
+                "latestMessage": messageContent,
+                "sentAt": Date()
+            ])
+        } else {
+            ref.updateData([
+                "latestMessage": messageContent,
+                "sentAt": Date()
+            ])
         }
         
         ref.collection("messages").addDocument(data: [
             "sentAt": Date(),
-            "displayName": userInfo.email ?? "NA",
             "content": messageContent,
-            "sender": userInfo.uid ?? "NA"
+            "sender": userId!
         ])
+        
+        
         
 //        FirebaseService.sharedInstance.db.collection("chatrooms").document(docId).collection("messages").addDocument(data: [
 //            "sentAt": Date(),
@@ -180,7 +226,7 @@ extension ChatViewController {
         toolBarView.textView.text.removeAll()
     }
     
-    func MD5(string: String) -> String {
+    private func MD5(string: String) -> String {
         let digest = Insecure.MD5.hash(data: string.data(using: .utf8) ?? Data())
         
         return digest.map {
@@ -191,7 +237,7 @@ extension ChatViewController {
 
 extension ChatViewController {
     // MARK: - addKeyboardObserver
-    func addKeyboardObserver() {
+    private func addKeyboardObserver() {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
                                                name: UIResponder.keyboardWillChangeFrameNotification,
                                                object: nil)
@@ -202,38 +248,27 @@ extension ChatViewController {
     }
     
     // MARK: - removeKeyboardObserver
-    func removeKeyboardObserver(){
+    private func removeKeyboardObserver(){
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
-
-//        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
     // MARK: - keyboardNotifications
-    @objc func keyboardNotifications(notification: NSNotification) {
+    @objc private func keyboardNotifications(notification: NSNotification) {
         if let userInfo = notification.userInfo {
             let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
             let keyboardViewEndFrame = view.convert(keyBoardFrame!, from: view.window)
             let keyboardHeight = keyboardViewEndFrame.height
-
-//            let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as! TimeInterval
-//            let curve = (userInfo[UIResponder.keyboardAnimationCurveUserInfoKey] as? NSNumber)?.uintValue
             
             if notification.name == UIResponder.keyboardWillHideNotification {
-//                applyConstraints(bottomDistance: 0, duration: duration, curve: curve!)
                 self.view.frame.origin.y = 0
-                tableView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
             } else {
-//                applyConstraints(isHidden: false, bottomDistance: -keyboardHeight, duration: duration, curve: curve!)
                 self.view.frame.origin.y = -keyboardHeight
-                
-                tableView.scrollToBottom()
-                tableView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width + 600)
-
+//                tableView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width + 600)
             }
         }
     }
     
-    func applyConstraints(isHidden: Bool = true, bottomDistance: CGFloat, duration: TimeInterval = 0, curve: UInt = 0) {
+    private func applyConstraints(isHidden: Bool = true, bottomDistance: CGFloat, duration: TimeInterval = 0, curve: UInt = 0) {
         NSLayoutConstraint.deactivate(constraints)
         constraints.removeAll()
         
@@ -260,15 +295,22 @@ extension ChatViewController {
 }
 
 extension ChatViewController: TableViewConfigurable, UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    final func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return messages.count
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    final func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: MessageCell.identifier, for: indexPath) as! MessageCell
         cell.selectionStyle = .none
         let message = messages[indexPath.row]
         cell.set(with: message, senderId: userInfo.uid!)
+        
+        let totalRows = tableView.numberOfRows(inSection: indexPath.section)
+        //first get total rows in that section by current indexPath.
+        if indexPath.row == totalRows - 1 {
+            //this is the last row in section.
+
+        }
         return cell
     }
 }

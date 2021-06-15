@@ -417,7 +417,7 @@ extension ParentPostViewController: PreviewDelegate {
 extension ParentPostViewController {
     // MARK: - checkExistingId
     func checkExistingId(id: String, completion: @escaping (Bool) -> Void) {
-        FirebaseService.sharedInstance.db.collection("post")
+        FirebaseService.shared.db.collection("post")
             .whereField("id", isEqualTo: id)
             .getDocuments() { (querySnapshot, err) in
                 if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
@@ -505,7 +505,7 @@ extension ParentPostViewController: MessageDelegate, ImageUploadable {
             }
             
             if let tokenId = tokenId {
-                FirebaseService.sharedInstance.db.collection("post").document(self!.documentId).updateData([
+                FirebaseService.shared.db.collection("post").document(self!.documentId).updateData([
                     "tokenId": tokenId
                 ]) { (error) in
                     if let error = error {
@@ -520,7 +520,7 @@ extension ParentPostViewController: MessageDelegate, ImageUploadable {
                             if self!.imageNameArr.count > 0, let imageNameArr = self?.imageNameArr {
                                 for image in imageNameArr {
                                     self?.uploadImages(image: image, userId: self!.userId) {(url) in
-                                        FirebaseService.sharedInstance.db.collection("post").document(self!.documentId).updateData([
+                                        FirebaseService.shared.db.collection("post").document(self!.documentId).updateData([
                                             "images": FieldValue.arrayUnion(["\(url)"])
                                         ], completion: { (error) in
                                             if let error = error {

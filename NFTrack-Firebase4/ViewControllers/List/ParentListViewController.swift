@@ -12,43 +12,41 @@
 import UIKit
 import FirebaseFirestore
 
-class ParentListViewController: UIViewController, TableViewConfigurable {
-    var dataStore: ImageDataStore!
+class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITableViewDataSource, UITableViewDelegate, UITableViewDataSourcePrefetching, TableViewRefreshDelegate {
+    var dataStore: ImageDataStore<T>!
     var loadingQueue = OperationQueue()
     var loadingOperations = [IndexPath : DataLoadOperation]()
     let refreshControl = UIRefreshControl()
     let alert = Alerts()
-    var postArr = [Post]() {
+    var postArr = [T]() {
         didSet {
-            dataStore = ImageDataStore(posts: postArr)
+            setDataStore(postArr: postArr)
         }
     }
     var tableView: UITableView!
+    var userId: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
     }
-}
-
-extension ParentListViewController {
-    // MARK: - configureUI
-    @objc func configureUI() {
-        view.backgroundColor = .white
+    
+    func setDataStore(postArr: [T]) {
+        dataStore = ImageDataStore(posts: postArr)
     }
     
-    @objc func refresh(_ sender: UIRefreshControl) {
-        //        configureDataFetch()
+    // MARK: - configureUI
+    func configureUI() {
+        view.backgroundColor = .white
+        userId = UserDefaults.standard.string(forKey: "userId")
     }
-}
-
-extension ParentListViewController: UITableViewDataSource {
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return postArr.count
     }
     
-    @objc func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: ParentTableCell.identifier) as? ParentTableCell else {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ParentTableCell<T>.identifier) as? ParentTableCell<T> else {
             fatalError("Sorry, could not load cell")
         }
         cell.selectionStyle = .none
@@ -56,12 +54,9 @@ extension ParentListViewController: UITableViewDataSource {
         cell.updateAppearanceFor(.pending(post))
         return cell
     }
-}
-
-// MARK:- TableView Delegate
-extension ParentListViewController: UITableViewDelegate {
-    @objc func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        
     }
     
     func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
@@ -72,17 +67,12 @@ extension ParentListViewController: UITableViewDelegate {
         }
     }
     
+    // MARK:- TableView Delegate
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let post = postArr[indexPath.row]
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = post
-        listDetailVC.tableViewRefreshDelegate = self
-        self.navigationController?.pushViewController(listDetailVC, animated: true)
-    }
-}
 
-// MARK:- TableView Prefetching DataSource
-extension ParentListViewController: UITableViewDataSourcePrefetching {
+    }
+    
+    // MARK:- TableView Prefetching DataSource
     func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
         for indexPath in indexPaths {
             if let _ = loadingOperations[indexPath] { return }
@@ -101,12 +91,9 @@ extension ParentListViewController: UITableViewDataSourcePrefetching {
             }
         }
     }
-}
-
-
-extension ParentListViewController: TableViewRefreshDelegate {
+    
     // MARK: - didRefreshTableView
     @objc func didRefreshTableView() {
-
+        
     }
 }

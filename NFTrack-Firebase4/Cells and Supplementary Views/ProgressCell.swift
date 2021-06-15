@@ -7,41 +7,32 @@
 
 import UIKit
 
-class ProgressCell: ParentTableCell {
+class ProgressCell: CardCell {
     class override var identifier: String {
         return "ProgressCell"
     }
-    let selectedColor = UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1)
-    let containerView = UIView()
-    let titleLabel = UILabel()
-    let INSET: CGFloat = 60
-    var strokeColor: UIColor = .gray {
+    final let selectedColor = UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1)
+
+    final let INSET: CGFloat = 45
+    final var strokeColor: UIColor = .gray {
         didSet {
             shapeLayer.strokeColor = strokeColor.cgColor
         }
     }
-    var lineWidth: CGFloat = 0.5 {
+    final var lineWidth: CGFloat = 0.5 {
         didSet {
             updatePath()
         }
     }
     
-    lazy var shapeLayer: CAShapeLayer = {
+    final lazy var shapeLayer: CAShapeLayer = {
         let shapeLayer = CAShapeLayer()
         shapeLayer.strokeColor = strokeColor.cgColor
         shapeLayer.lineWidth = lineWidth
         return shapeLayer
     }()
     
-    lazy var circleShapeLayer: CAShapeLayer = {
-        let shapeLayer = CAShapeLayer()
-        shapeLayer.strokeColor = strokeColor.cgColor
-        shapeLayer.fillColor = UIColor.white.cgColor
-        shapeLayer.lineWidth = lineWidth
-        return shapeLayer
-    }()
-    
-    lazy var circleShapeLayer2: CAShapeLayer = {
+    final lazy var circleShapeLayer: CAShapeLayer = {
         let shapeLayer = CAShapeLayer()
         shapeLayer.strokeColor = strokeColor.cgColor
         shapeLayer.fillColor = UIColor.white.cgColor
@@ -49,7 +40,7 @@ class ProgressCell: ParentTableCell {
         return shapeLayer
     }()
     
-    lazy var circleShapeLayer3: CAShapeLayer = {
+    final lazy var circleShapeLayer2: CAShapeLayer = {
         let shapeLayer = CAShapeLayer()
         shapeLayer.strokeColor = strokeColor.cgColor
         shapeLayer.fillColor = UIColor.white.cgColor
@@ -57,110 +48,98 @@ class ProgressCell: ParentTableCell {
         return shapeLayer
     }()
     
-    var statusLabel1: UILabel!
-    var dateLabel1: UILabel!
-    var statusLabel2: UILabel!
-    var dateLabel2: UILabel!
-    var statusLabel3: UILabel!
-    var dateLabel3: UILabel!
-    var indicatorPanel: UIView!
-    var meterContainer = UIView()
-    var myConstraints = [NSLayoutConstraint]()
+    final lazy var circleShapeLayer3: CAShapeLayer = {
+        let shapeLayer = CAShapeLayer()
+        shapeLayer.strokeColor = strokeColor.cgColor
+        shapeLayer.fillColor = UIColor.white.cgColor
+        shapeLayer.lineWidth = lineWidth
+        return shapeLayer
+    }()
     
+    final var statusLabel1: UILabel!
+    final var dateLabel1: UILabel!
+    final var statusLabel2: UILabel!
+    final var dateLabel2: UILabel!
+    final var statusLabel3: UILabel!
+    final var dateLabel3: UILabel!
+    final var indicatorPanel: UIView!
+    final var meterContainer: UIView!
+
     override func configure(_ post: Post?) {
+        super.configure(post)
         guard let post = post else { return }
-        
-        containerView.dropShadow()
-        contentView.addSubview(containerView)
-        containerView.fill(inset: 20)
-        
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.textAlignment = .center
-        titleLabel.font = .rounded(ofSize: titleLabel.font.pointSize, weight: .bold)
-        titleLabel.textColor = .lightGray
-        containerView.addSubview(titleLabel)
-        
-        thumbImageView.image = UIImage(named: "placeholder")
-        thumbImageView.contentMode = .scaleAspectFill
-        thumbImageView.clipsToBounds = true
-        thumbImageView.layer.cornerRadius = 5
-        thumbImageView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(thumbImageView)
-        
-        thumbImageView.addSubview(loadingIndicator)
-        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
-        if let images = post.images, images.count > 0 {
-            loadingIndicator.startAnimating()
-        }
-        
-        meterContainer.translatesAutoresizingMaskIntoConstraints = false
+
+        meterContainer = UIView()
         meterContainer.layer.addSublayer(shapeLayer)
         meterContainer.layer.addSublayer(circleShapeLayer)
         meterContainer.layer.addSublayer(circleShapeLayer2)
         meterContainer.layer.addSublayer(circleShapeLayer3)
+        meterContainer.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(meterContainer)
 
         statusLabel1 = createStatusLabel(text: "Purchased")
-        statusLabel1.textAlignment  = .center
+        statusLabel1.textAlignment = .center
         meterContainer.addSubview(statusLabel1)
         
         dateLabel1 = createStatusLabel(text: "")
+        dateLabel1.textAlignment = .center
         meterContainer.addSubview(dateLabel1)
         
         statusLabel2 = createStatusLabel(text: "Transferred")
+        statusLabel2.textAlignment = .center
         meterContainer.addSubview(statusLabel2)
         
         dateLabel2 = createStatusLabel(text: "")
+        dateLabel2.textAlignment = .center
         meterContainer.addSubview(dateLabel2)
         
         statusLabel3 = createStatusLabel(text: "Received")
+        statusLabel3.textAlignment = .center
         meterContainer.addSubview(statusLabel3)
         
         dateLabel3 = createStatusLabel(text: "")
+        dateLabel3.textAlignment = .center
         meterContainer.addSubview(dateLabel3)
-        
-        myConstraints += [
-            loadingIndicator.centerXAnchor.constraint(equalTo: thumbImageView.centerXAnchor),
-            loadingIndicator.centerYAnchor.constraint(equalTo: thumbImageView.centerYAnchor),
-            
-            titleLabel.heightAnchor.constraint(equalToConstant: 50),
-            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 10),
-            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
-            
-            thumbImageView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
-            thumbImageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 0),
-            thumbImageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: 0),
-            thumbImageView.heightAnchor.constraint(equalToConstant: 200),
-            
-            meterContainer.topAnchor.constraint(equalTo: thumbImageView.bottomAnchor, constant: 20),
+
+        var progressConstraints = [NSLayoutConstraint]()
+        if let images = post.images, images.count > 0 {
+            progressConstraints += [
+                meterContainer.topAnchor.constraint(equalTo: thumbImageView.bottomAnchor, constant: 10),
+            ]
+        } else {
+            progressConstraints += [
+                meterContainer.topAnchor.constraint(equalTo: descContainer.bottomAnchor, constant: 10),
+            ]            
+        }
+
+        progressConstraints += [
             meterContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 5),
             meterContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -5),
             meterContainer.heightAnchor.constraint(equalToConstant: 100),
             
             dateLabel1.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor, constant: 20),
-            dateLabel1.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: 0),
+            dateLabel1.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: 5),
             dateLabel1.heightAnchor.constraint(equalToConstant: 30),
             
             statusLabel1.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor, constant: 20),
             statusLabel1.bottomAnchor.constraint(equalTo: dateLabel1.topAnchor, constant: 0),
             
             dateLabel2.centerXAnchor.constraint(equalTo: meterContainer.centerXAnchor, constant: 20),
-            dateLabel2.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: 0),
+            dateLabel2.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: 5),
             dateLabel2.heightAnchor.constraint(equalToConstant: 30),
             
             statusLabel2.centerXAnchor.constraint(equalTo: meterContainer.centerXAnchor),
             statusLabel2.bottomAnchor.constraint(equalTo: dateLabel2.topAnchor, constant: -0),
             
             dateLabel3.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor, constant: 20),
-            dateLabel3.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: 0),
+            dateLabel3.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: 5),
             dateLabel3.heightAnchor.constraint(equalToConstant: 30),
             
             statusLabel3.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor, constant: -20),
             statusLabel3.bottomAnchor.constraint(equalTo: dateLabel3.topAnchor, constant: 0),
         ]
         
-        NSLayoutConstraint.activate(myConstraints)
+        NSLayoutConstraint.activate(progressConstraints)
         meterContainer.layoutIfNeeded()
         dateLabel1.layoutIfNeeded()
         statusLabel1.layoutIfNeeded()
@@ -170,7 +149,7 @@ class ProgressCell: ParentTableCell {
 }
 
 extension ProgressCell {
-    func createStatusLabel(text: String) -> UILabel {
+    final func createStatusLabel(text: String) -> UILabel {
         let statusLabel = UILabel()
         statusLabel.text = text
         statusLabel.textColor = .lightGray
@@ -180,16 +159,14 @@ extension ProgressCell {
         return statusLabel
     }
     
-    func processDate(date: Date) -> String {
+    final func processDate(date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         let formattedDate = formatter.string(from: date)
         return formattedDate
     }
     
-    func set(post: Post) {
-        titleLabel.text = post.title
-                
+    final func set(post: Post) {                
         switch post.status {
             case PostStatus.ready.rawValue:
                 circleShapeLayer.fillColor = UIColor.white.cgColor
@@ -251,7 +228,7 @@ extension ProgressCell {
     }
     
     // MARK: - updatePath
-    func updatePath() {
+    final func updatePath() {
         let offset: CGFloat = -20
         let path = UIBezierPath()
         path.move(to: CGPoint(x: meterContainer.bounds.minX + INSET, y: meterContainer.bounds.midY + offset))
@@ -276,7 +253,7 @@ extension ProgressCell {
     }
     
     override func prepareForReuse() {
-        thumbImageView.image = nil
+        super.prepareForReuse()
         circleShapeLayer.fillColor = UIColor.white.cgColor
         circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
         statusLabel1.textColor = .lightGray

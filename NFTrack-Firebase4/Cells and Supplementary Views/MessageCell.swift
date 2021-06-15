@@ -38,12 +38,13 @@ extension MessageCell {
         
         dateLabel = UILabelPadding()
         dateLabel.top = 0
+        dateLabel.textAlignment = .right
         dateLabel.textColor = .lightGray
         dateLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
         dateLabel.adjustsFontForContentSizeCategory = true
         
         stackView = UIStackView(arrangedSubviews: [contentLabel, dateLabel])
-        stackView.spacing = 0
+        stackView.spacing = 3
         stackView.axis = .vertical
         stackView.distribution = .fill
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -61,9 +62,7 @@ extension MessageCell {
     func set(with message: Message, senderId: String) {
         contentLabel.text = message.content
         dateLabel.text = message.sentAt
-        
-        print("senderId", senderId)
-        print("message.id", message.id)
+  
         if message.id != senderId {
             contentLabel?.backgroundColor = UIColor(red: 102/255, green: 140/255, blue: 255/255, alpha: 1)
             contentLabel?.textColor = .white

@@ -75,13 +75,11 @@ extension UIViewController {
         for document in querySnapshot!.documents {
 //            print("\(document.documentID) => \(document.data())")
             let data = document.data()
-            var buyerHash, postId, sellerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
+            var buyerHash, sellerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
-            var images: [String]?
+            var images, savedBy: [String]?
             data.forEach { (item) in
                 switch item.key {
-                    case "postId":
-                        postId = item.value as? String
                     case "sellerUserId":
                         sellerUserId = item.value as? String
                     case "senderAddress":
@@ -122,12 +120,14 @@ extension UIViewController {
                         confirmReceivedDate = timeStamp?.dateValue()
                     case "buyerHash":
                         buyerHash = item.value as? String
+                    case "savedBy":
+                        savedBy = item.value as? [String]
                     default:
                         break
                 }
             }
             
-            let post = Post(documentId: document.documentID, postId: postId, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate)
+            let post = Post(documentId: document.documentID, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy)
             postArr.append(post)
         }
         return postArr
@@ -357,6 +357,19 @@ extension UITableView {
         if (rows > 0){
             let indexPath = IndexPath(row: rows - 1, section: sections - 1)
             self.scrollToRow(at: indexPath, at: .bottom, animated: true)
+        }
+    }
+}
+
+// MARK: - UISearchController
+/// SearchResultsController
+extension UISearchController {
+    open override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let presentingVC = self.presentingViewController {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.view.frame = presentingVC.view.frame
+            }
         }
     }
 }

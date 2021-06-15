@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import FirebaseFirestore
 
 struct MainMenu {
     let image: UIImage
@@ -30,6 +31,7 @@ class MainViewController: UIViewController {
         super.viewDidLoad()
         
         configureNavigationBar(vc: self)
+        configureNavigationBar()
         configureSearchController()
         configureSearchBar()
         configureHierarchy()
@@ -38,6 +40,20 @@ class MainViewController: UIViewController {
 }
 
 extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
+    func configureNavigationBar() {
+        guard let starImage = UIImage(systemName: "star") else {
+            self.navigationController?.popViewController(animated: true)
+            return
+        }
+        let barButtonItem = UIBarButtonItem(image: starImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed))
+        self.navigationItem.rightBarButtonItem = barButtonItem
+    }
+    
+    @objc func buttonPressed() {
+        let savedVC = SavedViewController()
+        self.navigationController?.pushViewController(savedVC, animated: true)
+    }
+    
     // configure search controller
     func configureSearchController() {
         searchResultsController = SearchResultsController()
@@ -86,9 +102,8 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
     }
     
     func fetchData(category: String) {
-        print("category", category)
-        self.searchResultsController.data.removeAll()
-        FirebaseService.sharedInstance.db.collection("post")
+        self.searchResultsController.postArr.removeAll()
+        FirebaseService.shared.db.collection("post")
             .whereField("tags", arrayContainsAny: searchItems)
             .whereField("category", isEqualTo: category)
             .getDocuments { [weak self] (querySnapshot, err) in
@@ -98,7 +113,7 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
                 
                 if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                     DispatchQueue.main.async {
-                        self?.searchResultsController.data = data
+                        self?.searchResultsController.postArr = data
                         self?.searchResultsController.tableView.reloadData()
                     }
                 }

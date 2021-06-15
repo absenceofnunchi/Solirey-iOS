@@ -37,30 +37,7 @@ class ParentDetailViewController: UIViewController {
     var fetchedImage: UIImage!
     var userInfo: UserInfo! {
         didSet {
-            displayNameLabel.text = userInfo.displayName
-            
-            if let info = self.userInfo, info.photoURL != "NA" {
-                FirebaseService.sharedInstance.downloadImage(urlString: self.userInfo.photoURL!) { [weak self] (image, error) in
-                    guard let strongSelf = self else { return }
-                    if let error = error {
-                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
-                    }
-                    
-                    if let image = image {
-                        strongSelf.fetchedImage = image
-                        strongSelf.profileImageView.image = image
-                        strongSelf.profileImageView.layer.cornerRadius = strongSelf.profileImageView.bounds.height/2.0
-                        strongSelf.profileImageView.contentMode = .scaleToFill
-                        strongSelf.profileImageView.clipsToBounds = true
-                                                
-                        strongSelf.profileImageView.isUserInteractionEnabled = true
-                        strongSelf.displayNameLabel.isUserInteractionEnabled = true
-                    }
-                }
-            } else {
-                profileImageView.isUserInteractionEnabled = true
-                displayNameLabel.isUserInteractionEnabled = true
-            }
+            userInfoDidSet()
         }
     }
     
@@ -91,7 +68,7 @@ extension ParentDetailViewController {
     
     func fetchUserData(id: String) {
         DispatchQueue.global(qos: .background).async {
-            let docRef = FirebaseService.sharedInstance.db.collection("user").document(id)
+            let docRef = FirebaseService.shared.db.collection("user").document(id)
             docRef.getDocument { [weak self] (document, error) in
                 if let document = document, document.exists {
                     if let data = document.data() {
@@ -153,6 +130,32 @@ extension ParentDetailViewController {
             pv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             pv.heightAnchor.constraint(equalToConstant: 250),
         ])
+    }
+    
+    @objc func userInfoDidSet() {
+        displayNameLabel.text = userInfo.displayName
+        if let info = self.userInfo, info.photoURL != "NA" {
+            FirebaseService.shared.downloadImage(urlString: self.userInfo.photoURL!) { [weak self] (image, error) in
+                guard let strongSelf = self else { return }
+                if let error = error {
+                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
+                }
+                
+                if let image = image {
+                    strongSelf.fetchedImage = image
+                    strongSelf.profileImageView.image = image
+                    strongSelf.profileImageView.layer.cornerRadius = strongSelf.profileImageView.bounds.height/2.0
+                    strongSelf.profileImageView.contentMode = .scaleToFill
+                    strongSelf.profileImageView.clipsToBounds = true
+                    
+                    strongSelf.profileImageView.isUserInteractionEnabled = true
+                    strongSelf.displayNameLabel.isUserInteractionEnabled = true
+                }
+            }
+        } else {
+            profileImageView.isUserInteractionEnabled = true
+            displayNameLabel.isUserInteractionEnabled = true
+        }
     }
     
     // MARK: - configureUI
