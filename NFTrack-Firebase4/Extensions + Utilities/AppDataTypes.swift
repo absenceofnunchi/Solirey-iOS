@@ -203,10 +203,18 @@ struct UserDefaultKeys {
 struct ChatListModel {
     let docId: String
     let latestMessage: String
-    let date: String
+    let date: Date
     let buyerDisplayName: String
     let buyerPhotoURL: String
     let sellerDisplayName: String
     let sellerPhotoURL: String
     let sellerId: String
+}
+
+// MARK: - Message
+struct Message {
+    let id: String
+    let content: String
+    let displayName: String
+    let sentAt: String
 }

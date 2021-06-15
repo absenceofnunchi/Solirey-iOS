@@ -68,7 +68,7 @@
 		496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */; };
 		496D56C02659E75D00C3E7FD /* ParentPostViewController + Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56BF2659E75D00C3E7FD /* ParentPostViewController + Picker.swift */; };
 		496D56C52659FF2100C3E7FD /* MainDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56C42659FF2100C3E7FD /* MainDetailViewController.swift */; };
-		496D56CA265A0BD700C3E7FD /* MainDetailCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56C9265A0BD700C3E7FD /* MainDetailCell.swift */; };
+		496D56CA265A0BD700C3E7FD /* ChatListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56C9265A0BD700C3E7FD /* ChatListCell.swift */; };
 		496D56D0265AEDAB00C3E7FD /* ImageDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56CF265AEDAB00C3E7FD /* ImageDataStore.swift */; };
 		496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F6FF2264EA3D100E4056B /* FirebaseService.swift */; };
 		496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F6FF72651AD6300E4056B /* ListViewController.swift */; };
@@ -192,7 +192,7 @@
 		496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPickerViewController.swift; sourceTree = "<group>"; };
 		496D56BF2659E75D00C3E7FD /* ParentPostViewController + Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + Picker.swift"; sourceTree = "<group>"; };
 		496D56C42659FF2100C3E7FD /* MainDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainDetailViewController.swift; sourceTree = "<group>"; };
-		496D56C9265A0BD700C3E7FD /* MainDetailCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainDetailCell.swift; sourceTree = "<group>"; };
+		496D56C9265A0BD700C3E7FD /* ChatListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListCell.swift; sourceTree = "<group>"; };
 		496D56CF265AEDAB00C3E7FD /* ImageDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDataStore.swift; sourceTree = "<group>"; };
 		496F6FF2264EA3D100E4056B /* FirebaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseService.swift; sourceTree = "<group>"; };
 		496F6FF72651AD6300E4056B /* ListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewController.swift; sourceTree = "<group>"; };
@@ -443,7 +443,7 @@
 				499F9948266AB20700FC6CDE /* HistoryCell.swift */,
 				496F6FFC2651F15100E4056B /* ListCell.swift */,
 				496D56B02659654A00C3E7FD /* CategoryCell.swift */,
-				496D56C9265A0BD700C3E7FD /* MainDetailCell.swift */,
+				496D56C9265A0BD700C3E7FD /* ChatListCell.swift */,
 				499F9966266C195F00FC6CDE /* AccountCell.swift */,
 				499F998D266C8D9700FC6CDE /* ProgressCell.swift */,
 				499702AA2673F75E001DD80A /* MessageCell.swift */,
@@ -934,7 +934,7 @@
 				499702DD26745BC0001DD80A /* ChatCell.swift in Sources */,
 				493BF9D2264C4D3B00B9C9D2 /* SendViewController.swift in Sources */,
 				493BF9E9264C657200B9C9D2 /* ReceiveViewController.swift in Sources */,
-				496D56CA265A0BD700C3E7FD /* MainDetailCell.swift in Sources */,
+				496D56CA265A0BD700C3E7FD /* ChatListCell.swift in Sources */,
 				496D56B62659E6F900C3E7FD /* MyDoneButtonVC.swift in Sources */,
 				4964E56226496852005B3268 /* KeysService.swift in Sources */,
 				49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */,

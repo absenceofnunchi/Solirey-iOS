@@ -111,10 +111,16 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
                     self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self!)
                 }
                 
+                defer {
+                    DispatchQueue.main.async {
+                        self?.searchResultsController.tableView.reloadData()
+                    }
+                }
+                
                 if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                    print("inside")
                     DispatchQueue.main.async {
                         self?.searchResultsController.postArr = data
-                        self?.searchResultsController.tableView.reloadData()
                     }
                 }
             }

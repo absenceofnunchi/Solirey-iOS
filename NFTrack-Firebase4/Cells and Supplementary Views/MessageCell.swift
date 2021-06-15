@@ -31,8 +31,8 @@ extension MessageCell {
     func configure() {
         contentLabel = UILabelPadding()
         contentLabel.numberOfLines = 0
-        contentLabel.font = UIFont.systemFont(ofSize: 18)
-        contentLabel.layer.cornerRadius = 10
+        contentLabel.font = UIFont.systemFont(ofSize: 15)
+        contentLabel.layer.cornerRadius = 15
         contentLabel.clipsToBounds = true
         contentLabel.adjustsFontForContentSizeCategory = true
         
@@ -59,11 +59,13 @@ extension MessageCell {
         ])
     }
     
-    func set(with message: Message, senderId: String) {
+    func set(with message: Message, myId: String) {
         contentLabel.text = message.content
         dateLabel.text = message.sentAt
   
-        if message.id != senderId {
+        print("myId", myId)
+        print("message.id", message.id)
+        if message.id == myId {
             contentLabel?.backgroundColor = UIColor(red: 102/255, green: 140/255, blue: 255/255, alpha: 1)
             contentLabel?.textColor = .white
             stackView.alignment = .trailing

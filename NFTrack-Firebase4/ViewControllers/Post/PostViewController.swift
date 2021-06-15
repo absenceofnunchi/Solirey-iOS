@@ -15,10 +15,12 @@ class PostViewController: ParentPostViewController {
     /// 1. check for existing ID
     /// 2. deploy the escrow contract
     /// 3. mint
-    /// 4. upload the firestore
+    /// 4. upload to the firestore
     /// 5. get the token ID through the subscription to the google functions
     /// 6. update the token ID on firestore
-    /// 7. upload the images
+    /// 7. store the photos in the local storage and upload the images to the firebase storage
+    /// 8. update the firestore with the urls of the photos
+    /// 9. delete the photos from the local storage
     override func mint() {
         super.mint()
         if let userId = self.userDefaults.string(forKey: UserDefaultKeys.userId) {
@@ -139,6 +141,9 @@ class PostViewController: ParentPostViewController {
                                                                             }
                                                                         }
                                                                     } else {
+                                                                        /// no need for a socket if you don't have images to upload?
+                                                                        /// show the success alert here
+                                                                        /// apply the same for resell
                                                                         self?.socketDelegate = SocketDelegate(contractAddress: "0x656f9bf02fa8eff800f383e5678e699ce2788c5c", id: id)
                                                                         self?.socketDelegate.delegate = self
                                                                     }

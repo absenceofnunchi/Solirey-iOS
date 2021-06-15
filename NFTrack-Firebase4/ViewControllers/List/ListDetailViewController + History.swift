@@ -16,8 +16,7 @@ extension ListDetailViewController: TableViewConfigurable {
                 if let err = err {
                     self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self!)
                 } else {
-                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                        self?.historicData = data
+                    defer {
                         DispatchQueue.main.async {
                             self?.historyTableViewHeight = CGFloat(self!.historicData.count) * self!.CELL_HEIGHT
                             NSLayoutConstraint.activate([
@@ -25,6 +24,11 @@ extension ListDetailViewController: TableViewConfigurable {
                             ])
                             self?.historyTableView.reloadData()
                         }
+                    }
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        print("data", data)
+                        self?.historicData = data
                     }
                 }
             }

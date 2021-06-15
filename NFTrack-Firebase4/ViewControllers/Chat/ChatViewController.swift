@@ -8,27 +8,12 @@
 import UIKit
 import CryptoKit
 
-struct Message {
-    let id: String
-    let content: String
-    let displayName: String
-    let sentAt: String
-}
-
 class ChatViewController: UIViewController {
     var userInfo: UserInfo!
     final var itemId: String!
     final var messages = [Message]()
-//    final var messages = [
-//        Message(id: "dkfjl", content: "First", displayName: "Hello", sentAt: "10/2"),
-//        Message(id: "dkfjl", content: "alsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfalsalsdjflasjflajsdljfals;fjldjsflaksdjfl;adjsfldjslfjsdlfkajsdf", displayName: "Hello", sentAt: "10/2"),
-//        Message(id: "dkfjl", content: "First", displayName: "Hello", sentAt: "10/2"),
-//        Message(id: "dkfjl", content: "First", displayName: "Hello", sentAt: "10/2"),
-//        Message(id: "AWHlYSzRCQcYz3zZvVvkXMRrZa72", content: "asdfja;ljsfladjsflkajslfjasdiouaosdfjsdjl", displayName: "Hello", sentAt: "10/2"),
-//        Message(id: "AWHlYSzRCQcYz3zZvVvkXMRrZa72", content: "First", displayName: "Hello", sentAt: "10/2"),
-//    ]
     final var toolBarView: ToolBarView!
-    final var constraints = [NSLayoutConstraint]()
+    final var heightConstraint: NSLayoutConstraint!
     let alert = Alerts()
     final var docId: String! {
         didSet {
@@ -42,23 +27,23 @@ class ChatViewController: UIViewController {
     }
     final var displayName: String!
     final var lastCell: CGRect!
+    final var edgeRecognizer: UIScreenEdgePanGestureRecognizer!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationItem.largeTitleDisplayMode = .never
         
         getProfileInfo()
-        getDocId()
+        if docId == nil {
+            getDocId()
+        }
         configureUI()
         setConstraints()
-        
-//        tableView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         addKeyboardObserver()
-        tableView.scrollToBottom()
         self.tabBarController?.tabBar.isHidden = true
     }
     
@@ -85,40 +70,50 @@ extension ChatViewController {
         view.backgroundColor = .white
         title = userInfo.displayName
         
-        toolBarView = ToolBarView()
-        toolBarView.buttonAction = {
-            self.sendMessage()
-        }
-        toolBarView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(toolBarView)
-        
-        tableView = configureTableView(delegate: nil, dataSource: self, height: nil, cellType: MessageCell.self, identifier: MessageCell.identifier)
+        tableView = UITableView()
+        tableView.register(MessageCell.self, forCellReuseIdentifier: MessageCell.identifier)
+        tableView.dataSource = self
         tableView.separatorStyle = .none
         tableView.keyboardDismissMode = .onDrag
-        tableView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 0, right: 0)
+        tableView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
+        tableView.frame = CGRect(origin: .zero, size: view.bounds.size)
+//        tableView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(tableView)
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ChatViewController.dismissKeyboard))
         tap.cancelsTouchesInView = false
         tableView.addGestureRecognizer(tap)
         
-        let swipe: UISwipeGestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(ChatViewController.dismissKeyboard))
-        swipe.direction = .down
-        tableView.addGestureRecognizer(swipe)
-        view.addSubview(tableView)
+        toolBarView = ToolBarView()
+        toolBarView.buttonAction = {
+            self.sendMessage()
+        }
+        toolBarView.translatesAutoresizingMaskIntoConstraints = false
+//        toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: toolBarView.bounds.size.height + 60))
+        view.addSubview(toolBarView)
+        
+        edgeRecognizer = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(swiped))
+        edgeRecognizer.edges = .right
+        view.addGestureRecognizer(edgeRecognizer)
     }
     
     private func setConstraints() {
+        heightConstraint = toolBarView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         NSLayoutConstraint.activate([
             toolBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             toolBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            toolBarView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0),
             toolBarView.heightAnchor.constraint(greaterThanOrEqualToConstant: 60),
+            heightConstraint
             
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: toolBarView.topAnchor),
+//            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+//            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+//            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+//            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+    
+    @objc func swiped() {
+        print("swiped")
     }
 }
 
@@ -133,9 +128,11 @@ extension ChatViewController {
             return
         }
 
-        let combinedString = sellerUid + buyerUid + itemId
-        let hashedId = MD5(string: combinedString)
-        self.docId = hashedId
+        let combinedString = sellerUid + buyerUid
+        let inputData = Data(combinedString.utf8)
+        let hashedId = SHA256.hash(data: inputData)
+        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+        self.docId = hashString
     }
     
     private func fetchData(docId: String) {
@@ -147,6 +144,13 @@ extension ChatViewController {
                 
                 guard let documents = snapShot?.documents else {
                     return
+                }
+                
+                defer {
+                    DispatchQueue.main.async {
+                        self?.tableView.reloadData()
+                        self?.tableView.scrollToBottom()
+                    }
                 }
                 
                 self?.messages = documents.map { docSnapshot -> Message in
@@ -162,8 +166,6 @@ extension ChatViewController {
                     
                     return Message(id: docId, content: content, displayName: displayName, sentAt: formattedDate)
                 }
-                
-                self?.tableView.reloadData()
             }
     }
     
@@ -171,7 +173,7 @@ extension ChatViewController {
         guard let messageContent = toolBarView.textView.text, !messageContent.isEmpty else {
             return
         }
-  
+          
         let ref = FirebaseService.shared.db.collection("chatrooms").document(docId)
         if self.messages.count == 0 {
             /// docId is the hashedId that corresponds to the unique ID of the chat room
@@ -206,32 +208,7 @@ extension ChatViewController {
             "content": messageContent,
             "sender": userId!
         ])
-        
-        
-        
-//        FirebaseService.sharedInstance.db.collection("chatrooms").document(docId).collection("messages").addDocument(data: [
-//            "sentAt": Date(),
-//            "displayName": userInfo.email ?? "NA",
-//            "content": messageContent,
-//            "sender": userInfo.uid ?? "NA"
-//        ])
-        
-//        FirebaseService.sharedInstance.db.collection("messages").document(docId).setData([
-//            "sentAt": Date(),
-//            "displayName": userInfo.email ?? "NA",
-//            "content": messageContent,
-//            "sender": userInfo.uid ?? "NA"
-//        ])
-        
         toolBarView.textView.text.removeAll()
-    }
-    
-    private func MD5(string: String) -> String {
-        let digest = Insecure.MD5.hash(data: string.data(using: .utf8) ?? Data())
-        
-        return digest.map {
-            String(format: "%02hhx", $0)
-        }.joined()
     }
 }
 
@@ -258,39 +235,39 @@ extension ChatViewController {
             let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
             let keyboardViewEndFrame = view.convert(keyBoardFrame!, from: view.window)
             let keyboardHeight = keyboardViewEndFrame.height
+
+            let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! Double
+            let curve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! UInt
             
             if notification.name == UIResponder.keyboardWillHideNotification {
-                self.view.frame.origin.y = 0
+                self.tableView.frame.origin.y = .zero
+//                toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: 60))
+                
+                self.heightConstraint.constant = 0
+                view.setNeedsLayout()
+                let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
+                UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
+                    //                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
+                    self.view.layoutIfNeeded()
+                })
             } else {
-                self.view.frame.origin.y = -keyboardHeight
-//                tableView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width + 600)
+                self.heightConstraint.constant = -keyboardHeight
+                view.setNeedsLayout()
+                let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
+                UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
+//                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
+                    self.view.layoutIfNeeded()
+                })
+                
+                if let lastCell = view.viewWithTag(100) {
+                    let lastCellFrame = lastCell.convert(lastCell.frame, to: view.superview)
+                    if lastCellFrame.origin.y + lastCellFrame.size.height > keyboardViewEndFrame.origin.y {
+                        let overlap = lastCellFrame.origin.y + lastCellFrame.size.height - keyboardViewEndFrame.origin.y + toolBarView.bounds.size.height + 10
+                        self.tableView.frame.origin.y = -overlap
+                    }
+                }
             }
         }
-    }
-    
-    private func applyConstraints(isHidden: Bool = true, bottomDistance: CGFloat, duration: TimeInterval = 0, curve: UInt = 0) {
-        NSLayoutConstraint.deactivate(constraints)
-        constraints.removeAll()
-        
-        if isHidden {
-            constraints.append(contentsOf: [
-                toolBarView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: bottomDistance)
-            ])
-        } else {
-            constraints.append(contentsOf: [
-                toolBarView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: bottomDistance)
-            ])
-        }
-
-        let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
-        UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
-            DispatchQueue.main.async {
-                NSLayoutConstraint.activate(self.constraints)
-                self.toolBarView.layoutIfNeeded()
-            }
-        }, completion: { (isCompleted) in
-            return
-        })
     }
 }
 
@@ -302,15 +279,17 @@ extension ChatViewController: TableViewConfigurable, UITableViewDataSource {
     final func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: MessageCell.identifier, for: indexPath) as! MessageCell
         cell.selectionStyle = .none
+        cell.contentView.tag = 0
         let message = messages[indexPath.row]
-        cell.set(with: message, senderId: userInfo.uid!)
+        cell.set(with: message, myId: userId)
         
         let totalRows = tableView.numberOfRows(inSection: indexPath.section)
         //first get total rows in that section by current indexPath.
         if indexPath.row == totalRows - 1 {
             //this is the last row in section.
-
+            cell.contentView.tag = 100
         }
         return cell
     }
 }
+

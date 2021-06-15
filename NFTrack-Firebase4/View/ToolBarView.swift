@@ -37,6 +37,8 @@ class ToolBarView : UIView {
 
 extension ToolBarView: UITextViewDelegate {
     func configure() {
+        self.backgroundColor = .white
+        
         addSeparator()
         
         textView = UITextView(frame: CGRect(x: 4, y: 4, width: 0, height: 0))
