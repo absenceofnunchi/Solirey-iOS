@@ -10,9 +10,10 @@ import UIKit
 class MessageCell: UITableViewCell {
     static let identifier = "MessageCell"
     
-    var stackView: UIStackView!
-    var contentLabel: UILabelPadding!
-    var dateLabel: UILabelPadding!
+    final var stackView: UIStackView!
+    final var contentLabel: UILabelPadding!
+    final var dateLabel: UILabelPadding!
+    final var constraint = [NSLayoutConstraint]()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
@@ -62,24 +63,26 @@ extension MessageCell {
     func set(with message: Message, myId: String) {
         contentLabel.text = message.content
         dateLabel.text = message.sentAt
-  
-        print("myId", myId)
-        print("message.id", message.id)
+        
+        NSLayoutConstraint.deactivate(constraint)
+        constraint.removeAll()
         if message.id == myId {
             contentLabel?.backgroundColor = UIColor(red: 102/255, green: 140/255, blue: 255/255, alpha: 1)
             contentLabel?.textColor = .white
             stackView.alignment = .trailing
             
-            NSLayoutConstraint.activate([
+            constraint.append(contentsOf: [
                 stackView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             ])
         } else {
             contentLabel?.backgroundColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1)
+            contentLabel?.textColor = .black
             stackView.alignment = .leading
             
-            NSLayoutConstraint.activate([
+            constraint.append(contentsOf: [
                 stackView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             ])
         }
+        NSLayoutConstraint.activate(constraint)
     }
 }

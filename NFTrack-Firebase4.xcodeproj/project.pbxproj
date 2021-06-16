@@ -443,11 +443,11 @@
 				499F9948266AB20700FC6CDE /* HistoryCell.swift */,
 				496F6FFC2651F15100E4056B /* ListCell.swift */,
 				496D56B02659654A00C3E7FD /* CategoryCell.swift */,
-				496D56C9265A0BD700C3E7FD /* ChatListCell.swift */,
 				499F9966266C195F00FC6CDE /* AccountCell.swift */,
 				499F998D266C8D9700FC6CDE /* ProgressCell.swift */,
 				499702AA2673F75E001DD80A /* MessageCell.swift */,
 				499702AF2674533E001DD80A /* ParentCell.swift */,
+				496D56C9265A0BD700C3E7FD /* ChatListCell.swift */,
 				499702DC26745BC0001DD80A /* ChatCell.swift */,
 				4997030426769A36001DD80A /* CardCell.swift */,
 			);

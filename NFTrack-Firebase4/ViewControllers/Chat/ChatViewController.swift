@@ -8,13 +8,13 @@
 import UIKit
 import CryptoKit
 
-class ChatViewController: UIViewController {
+class ChatViewController: UIViewController, ImageUploadable {
     var userInfo: UserInfo!
     final var itemId: String!
     final var messages = [Message]()
     final var toolBarView: ToolBarView!
     final var heightConstraint: NSLayoutConstraint!
-    let alert = Alerts()
+    var alert: Alerts!
     final var docId: String! {
         didSet {
             fetchData(docId: docId)
@@ -27,7 +27,7 @@ class ChatViewController: UIViewController {
     }
     final var displayName: String!
     final var lastCell: CGRect!
-    final var edgeRecognizer: UIScreenEdgePanGestureRecognizer!
+    final var imageName: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -70,6 +70,8 @@ extension ChatViewController {
         view.backgroundColor = .white
         title = userInfo.displayName
         
+        alert = Alerts()
+        
         tableView = UITableView()
         tableView.register(MessageCell.self, forCellReuseIdentifier: MessageCell.identifier)
         tableView.dataSource = self
@@ -85,16 +87,24 @@ extension ChatViewController {
         tableView.addGestureRecognizer(tap)
         
         toolBarView = ToolBarView()
-        toolBarView.buttonAction = {
-            self.sendMessage()
+        toolBarView.buttonAction = { [weak self] tag in
+            switch tag {
+                case 1:
+                    let imagePickerController = UIImagePickerController()
+                    imagePickerController.allowsEditing = false
+                    imagePickerController.sourceType = .photoLibrary
+                    imagePickerController.delegate = self
+                    imagePickerController.modalPresentationStyle = .fullScreen
+                    self?.present(imagePickerController, animated: true, completion: nil)
+                case 2:
+                    self?.sendMessage()
+                default:
+                    break
+            }
         }
         toolBarView.translatesAutoresizingMaskIntoConstraints = false
 //        toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: toolBarView.bounds.size.height + 60))
         view.addSubview(toolBarView)
-        
-        edgeRecognizer = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(swiped))
-        edgeRecognizer.edges = .right
-        view.addGestureRecognizer(edgeRecognizer)
     }
     
     private func setConstraints() {
@@ -110,10 +120,6 @@ extension ChatViewController {
 //            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
 //            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-    }
-    
-    @objc func swiped() {
-        print("swiped")
     }
 }
 
@@ -136,37 +142,39 @@ extension ChatViewController {
     }
     
     private func fetchData(docId: String) {
-        FirebaseService.shared.db.collection("chatrooms").document(docId).collection("messages")
-            .order(by: "sentAt", descending: false).addSnapshotListener { [weak self] (snapShot, error) in
-                if let error = error {
-                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
-                }
-                
-                guard let documents = snapShot?.documents else {
-                    return
-                }
-                
-                defer {
-                    DispatchQueue.main.async {
-                        self?.tableView.reloadData()
-                        self?.tableView.scrollToBottom()
+        DispatchQueue.global(qos: .background).async {
+            FirebaseService.shared.db.collection("chatrooms").document(docId).collection("messages")
+                .order(by: "sentAt", descending: false).addSnapshotListener { [weak self] (snapShot, error) in
+                    if let error = error {
+                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                    }
+                    
+                    guard let documents = snapShot?.documents else {
+                        return
+                    }
+                    
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                            self?.tableView.scrollToBottom()
+                        }
+                    }
+                    
+                    self?.messages = documents.map { docSnapshot -> Message in
+                        let data = docSnapshot.data()
+                        let docId = data["sender"] as? String ?? ""
+                        let content = data["content"] as? String ?? ""
+                        let displayName = data["displayName"] as? String ?? ""
+                        let sentAt = data["sentAt"] as? Date ?? Date()
+                        
+                        let formatter = DateFormatter()
+                        formatter.dateFormat = "HH:mm"
+                        let formattedDate = formatter.string(from: sentAt)
+                        
+                        return Message(id: docId, content: content, displayName: displayName, sentAt: formattedDate)
                     }
                 }
-                
-                self?.messages = documents.map { docSnapshot -> Message in
-                    let data = docSnapshot.data()
-                    let docId = docSnapshot.documentID
-                    let content = data["content"] as? String ?? ""
-                    let displayName = data["displayName"] as? String ?? ""
-                    let sentAt = data["sentAt"] as? Date ?? Date()
-                    
-                    let formatter = DateFormatter()
-                    formatter.dateFormat = "HH:mm"
-                    let formattedDate = formatter.string(from: sentAt)
-                    
-                    return Message(id: docId, content: content, displayName: displayName, sentAt: formattedDate)
-                }
-            }
+        }
     }
     
     private func sendMessage() {
@@ -209,6 +217,56 @@ extension ChatViewController {
             "sender": userId!
         ])
         toolBarView.textView.text.removeAll()
+    }
+    
+    private func sendImage(url: URL) {
+        let ref = FirebaseService.shared.db.collection("chatrooms").document(docId)
+        if self.messages.count == 0 {
+            /// docId is the hashedId that corresponds to the unique ID of the chat room
+            guard let sellerId = userInfo.uid else {
+                self.alert.showDetail("Sorry", with: "Unable to retrieve the seller's info. Please try again", for: self) {
+                    self.navigationController?.popViewController(animated: true)
+                }
+                return
+            }
+            
+            defer {
+                deleteFile(fileName: imageName)
+            }
+            
+            ref.setData([
+                "members": [sellerId, userId],
+                "sellerId": sellerId,
+                "sellerDisplayName": userInfo.displayName,
+                "sellerPhotoURL": userInfo.photoURL ?? "NA",
+                "buyerId": userId!,
+                "buyerDisplayName": displayName!,
+                "buyerPhotoURL": photoURL ?? "NA",
+                "docId": docId!,
+                "latestMessage": "",
+                "sentAt": Date()
+            ])
+        } else {
+            ref.updateData([
+                "latestMessage": "",
+                "sentAt": Date()
+            ])
+        }
+        
+        let data: [String: Any] = [
+            "sentAt": Date(),
+            "imageURL": "\(url)",
+            "sender": userId!
+        ]
+        ref.collection("messages").addDocument(data: data) { [weak self] (error) in
+            if let error = error {
+                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+                    if let imageName = self?.imageName {
+                        self?.deleteFile(fileName: imageName)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -293,3 +351,24 @@ extension ChatViewController: TableViewConfigurable, UITableViewDataSource {
     }
 }
 
+// MARK: - Image picker
+extension ChatViewController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true)
+        
+        guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else {
+            print("No image found")
+            return
+        }
+        
+        imageName = UUID().uuidString
+        saveImage(imageName: imageName, image: image)
+        uploadImages(image: imageName, userId: userId) { [weak self] (url) in
+            self?.sendImage(url: url)
+        }
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        dismiss(animated: true, completion: nil)
+    }
+}

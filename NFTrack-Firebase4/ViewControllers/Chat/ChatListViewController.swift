@@ -91,49 +91,55 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
 
 extension ChatListViewController {
     func fetchChatList() {
-        let docRef = FirebaseService.shared.db.collection("chatrooms")
-        docRef.getDocuments { [weak self] (document, error) in
-            if let document = document,
-               !document.isEmpty {
-                
-                defer {
-                    DispatchQueue.main.async {
-                        self?.tableView.reloadData()
-                    }
+        DispatchQueue.global(qos: .background).async {
+            let docRef = FirebaseService.shared.db.collection("chatrooms")
+            docRef.getDocuments { [weak self] (document, error) in
+                if let error = error {
+                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
                 }
                 
-                for doc in document.documents {
-                    let data = doc.data()
-                    var buyerDisplayName, sellerDisplayName, docId, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerId: String!
-                    var date: Date!
-                    data.forEach { (item) in
-                        switch item.key {
-                            case "buyerDisplayName":
-                                buyerDisplayName = item.value as? String
-                            case "buyerPhotoURL":
-                                buyerPhotoURL = item.value as? String
-                            case "docId":
-                                docId = item.value as? String
-                            case "latestMessage":
-                                latestMessage = item.value as? String
-                            case "sellerDisplayName":
-                                sellerDisplayName = item.value as? String
-                            case "sellerPhotoURL":
-                                sellerPhotoURL = item.value as? String
-                            case "sentAt":
-                                let timeStamp = item.value as? Timestamp
-                                date = timeStamp?.dateValue()
-                            case "sellerId":
-                                sellerId = item.value as? String
-                            default:
-                                break
+                if let document = document,
+                   !document.isEmpty {
+                    
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
                         }
                     }
-                    let chatListModel = ChatListModel(docId: docId, latestMessage: latestMessage, date: date, buyerDisplayName: buyerDisplayName, buyerPhotoURL: buyerPhotoURL, sellerDisplayName: sellerDisplayName, sellerPhotoURL: sellerPhotoURL, sellerId: sellerId)
-                    self?.postArr.append(chatListModel)
+                    
+                    for doc in document.documents {
+                        let data = doc.data()
+                        var buyerDisplayName, sellerDisplayName, docId, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerId: String!
+                        var date: Date!
+                        data.forEach { (item) in
+                            switch item.key {
+                                case "buyerDisplayName":
+                                    buyerDisplayName = item.value as? String
+                                case "buyerPhotoURL":
+                                    buyerPhotoURL = item.value as? String
+                                case "docId":
+                                    docId = item.value as? String
+                                case "latestMessage":
+                                    latestMessage = item.value as? String
+                                case "sellerDisplayName":
+                                    sellerDisplayName = item.value as? String
+                                case "sellerPhotoURL":
+                                    sellerPhotoURL = item.value as? String
+                                case "sentAt":
+                                    let timeStamp = item.value as? Timestamp
+                                    date = timeStamp?.dateValue()
+                                case "sellerId":
+                                    sellerId = item.value as? String
+                                default:
+                                    break
+                            }
+                        }
+                        let chatListModel = ChatListModel(docId: docId, latestMessage: latestMessage, date: date, buyerDisplayName: buyerDisplayName, buyerPhotoURL: buyerPhotoURL, sellerDisplayName: sellerDisplayName, sellerPhotoURL: sellerPhotoURL, sellerId: sellerId)
+                        self?.postArr.append(chatListModel)
+                    }
+                } else {
+                    print("no data")
                 }
-            } else {
-                print("no data")
             }
         }
     }

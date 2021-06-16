@@ -12,7 +12,8 @@ class ToolBarView : UIView {
     var textView: UITextView!
     //    var textViewHeight: CGFloat = 50
     var sendButton: UIButton!
-    var buttonAction: (()->Void)?
+    var buttonAction: ((Int)->Void)?
+    var imageButton: UIButton!
     
     var internalHeight : CGFloat = 200 {
         didSet {
@@ -41,6 +42,13 @@ extension ToolBarView: UITextViewDelegate {
         
         addSeparator()
         
+        let photoImageConfig = UIImage.SymbolConfiguration(pointSize: 30, weight: .light, scale: .small)
+        let image = UIImage(systemName: "photo")!.withTintColor(.gray, renderingMode: .alwaysOriginal).withConfiguration(photoImageConfig)
+        imageButton = UIButton.systemButton(with: image, target: self, action: #selector(buttonHandler))
+        imageButton.tag = 1
+        imageButton.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(imageButton)
+        
         textView = UITextView(frame: CGRect(x: 4, y: 4, width: 0, height: 0))
         textView.delegate = self
         textView.text = "Enter your message"
@@ -66,8 +74,8 @@ extension ToolBarView: UITextViewDelegate {
         
         let configuration = UIImage.SymbolConfiguration(pointSize: 30, weight: .bold, scale: .medium)
         let configuredImage = sendImage.withConfiguration(configuration)
-        sendButton = UIButton.systemButton(with: configuredImage, target: self, action: #selector(sent))
-        sendButton.tag = 1
+        sendButton = UIButton.systemButton(with: configuredImage, target: self, action: #selector(buttonHandler))
+        sendButton.tag = 2
         sendButton.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(sendButton)
     }
@@ -78,16 +86,21 @@ extension ToolBarView: UITextViewDelegate {
             sendButton.heightAnchor.constraint(equalTo: self.heightAnchor),
             sendButton.trailingAnchor.constraint(equalTo: self.layoutMarginsGuide.trailingAnchor),
             
+            imageButton.widthAnchor.constraint(equalToConstant: 60),
+            imageButton.heightAnchor.constraint(equalToConstant: 60),
+            imageButton.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            imageButton.leadingAnchor.constraint(equalTo: self.layoutMarginsGuide.leadingAnchor),
+            
             textView.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -10),
-            textView.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 10),
+            textView.leadingAnchor.constraint(equalTo: imageButton.trailingAnchor, constant: 0),
             textView.heightAnchor.constraint(equalTo: self.heightAnchor, constant: -20),
-            textView.centerYAnchor.constraint(equalTo: self.centerYAnchor)
+            textView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
         ])
     }
     
-    @objc func sent(_ sender: UIButton!) {
+    @objc func buttonHandler(_ sender: UIButton!) {
         if let buttonAction = self.buttonAction {
-            buttonAction()
+            buttonAction(sender.tag)
         }
     }
     

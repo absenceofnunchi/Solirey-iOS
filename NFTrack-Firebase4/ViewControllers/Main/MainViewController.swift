@@ -102,28 +102,29 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
     }
     
     func fetchData(category: String) {
-        self.searchResultsController.postArr.removeAll()
-        FirebaseService.shared.db.collection("post")
-            .whereField("tags", arrayContainsAny: searchItems)
-            .whereField("category", isEqualTo: category)
-            .getDocuments { [weak self] (querySnapshot, err) in
-                if let err = err {
-                    self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self!)
-                }
-                
-                defer {
-                    DispatchQueue.main.async {
-                        self?.searchResultsController.tableView.reloadData()
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            self?.searchResultsController.postArr.removeAll()
+            FirebaseService.shared.db.collection("post")
+                .whereField("tags", arrayContainsAny: self!.searchItems)
+                .whereField("category", isEqualTo: category)
+                .getDocuments {(querySnapshot, err) in
+                    if let err = err {
+                        self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self!)
+                    }
+                    
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.searchResultsController.tableView.reloadData()
+                        }
+                    }
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        DispatchQueue.main.async {
+                            self?.searchResultsController.postArr = data
+                        }
                     }
                 }
-                
-                if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                    print("inside")
-                    DispatchQueue.main.async {
-                        self?.searchResultsController.postArr = data
-                    }
-                }
-            }
+        }
     }
     
     func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
