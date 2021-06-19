@@ -27,7 +27,7 @@ class ChatListCell: ParentTableCell<ChatListModel> {
     private var displayName: String!
     private var photoURL: String!
     
-    override func configure(_ post: ChatListModel?) {
+    final override func configure(_ post: ChatListModel?) {
         guard let post = post else { return }
         
         if post.sellerId != userId {

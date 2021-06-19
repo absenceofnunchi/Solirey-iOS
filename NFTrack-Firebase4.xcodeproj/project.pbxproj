@@ -101,6 +101,8 @@
 		49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759B72666BCCF0064BB34 /* ResellViewController.swift */; };
 		49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E75A02266A7C670064BB34 /* HistoryViewController.swift */; };
 		49E75A08266A7FD40064BB34 /* ListDetailViewController + History.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E75A07266A7FD40064BB34 /* ListDetailViewController + History.swift */; };
+		49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E7D64B267AA73F00E8815A /* ChatViewController1.swift */; };
+		49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E7D650267AA77000E8815A /* MeesageCells1.swift */; };
 		49F694BE265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */; };
 		5F2181656BA2F887A451E929 /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */; };
 		8BF7EDDB714370A039E12BAF /* Pods_NFTrack_Firebase4.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FF1612C9EA21D4904E1BD19 /* Pods_NFTrack_Firebase4.framework */; };
@@ -225,6 +227,9 @@
 		49E759B72666BCCF0064BB34 /* ResellViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellViewController.swift; sourceTree = "<group>"; };
 		49E75A02266A7C670064BB34 /* HistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewController.swift; sourceTree = "<group>"; };
 		49E75A07266A7FD40064BB34 /* ListDetailViewController + History.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListDetailViewController + History.swift"; sourceTree = "<group>"; };
+		49E7D64B267AA73F00E8815A /* ChatViewController1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController1.swift; sourceTree = "<group>"; };
+		49E7D650267AA77000E8815A /* MeesageCells1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeesageCells1.swift; sourceTree = "<group>"; };
+		49E7D67A267BE9CF00E8815A /* NFTrack-Firebase4.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "NFTrack-Firebase4.entitlements"; sourceTree = "<group>"; };
 		49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListDetailViewController + OptionsBar.swift"; sourceTree = "<group>"; };
 		5C42156D98AD4812550FF489 /* Pods-NFTrack-Firebase4Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4Tests.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4Tests/Pods-NFTrack-Firebase4Tests.release.xcconfig"; sourceTree = "<group>"; };
 		5D3028929C2B2E423CDD6DAF /* Pods-NFTrack-Firebase4.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4.debug.xcconfig"; sourceTree = "<group>"; };
@@ -280,6 +285,7 @@
 			isa = PBXGroup;
 			children = (
 				49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */,
+				49E7D64B267AA73F00E8815A /* ChatViewController1.swift */,
 				499702B4267459D8001DD80A /* ChatListViewController.swift */,
 			);
 			path = Chat;
@@ -338,6 +344,7 @@
 		4964E45A2641B001005B3268 /* NFTrack-Firebase4 */ = {
 			isa = PBXGroup;
 			children = (
+				49E7D67A267BE9CF00E8815A /* NFTrack-Firebase4.entitlements */,
 				497A9B192658085E00F09CAA /* GoogleService-Info.plist */,
 				4964E55A2649645F005B3268 /* KeyWallet+CoreDataClass.swift */,
 				4964E55B2649645F005B3268 /* KeyWallet+CoreDataProperties.swift */,
@@ -445,11 +452,12 @@
 				496D56B02659654A00C3E7FD /* CategoryCell.swift */,
 				499F9966266C195F00FC6CDE /* AccountCell.swift */,
 				499F998D266C8D9700FC6CDE /* ProgressCell.swift */,
-				499702AA2673F75E001DD80A /* MessageCell.swift */,
 				499702AF2674533E001DD80A /* ParentCell.swift */,
 				496D56C9265A0BD700C3E7FD /* ChatListCell.swift */,
 				499702DC26745BC0001DD80A /* ChatCell.swift */,
 				4997030426769A36001DD80A /* CardCell.swift */,
+				499702AA2673F75E001DD80A /* MessageCell.swift */,
+				49E7D650267AA77000E8815A /* MeesageCells1.swift */,
 			);
 			path = "Cells and Supplementary Views";
 			sourceTree = "<group>";
@@ -905,6 +913,7 @@
 				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
 				49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */,
 				49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */,
+				49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */,
 				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
 				496F6FFD2651F15200E4056B /* ListCell.swift in Sources */,
 				496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */,
@@ -951,6 +960,7 @@
 				4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */,
 				499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */,
 				499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */,
+				49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */,
 				4964E568264968A7005B3268 /* Errors.swift in Sources */,
 				4964E50F264767A6005B3268 /* ImagePreviewViewController.swift in Sources */,
 				4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */,
@@ -1133,6 +1143,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "NFTrack-Firebase4/NFTrack-Firebase4.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 2RH2V33K5A;
 				INFOPLIST_FILE = "NFTrack-Firebase4/Supporting Files/Info.plist";
@@ -1154,6 +1165,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "NFTrack-Firebase4/NFTrack-Firebase4.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 2RH2V33K5A;
 				INFOPLIST_FILE = "NFTrack-Firebase4/Supporting Files/Info.plist";

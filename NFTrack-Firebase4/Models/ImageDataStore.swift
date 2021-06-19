@@ -31,7 +31,7 @@ class ImageDataStore<T> {
 }
 
 class PostImageDataStore: ImageDataStore<Post> {
-    override func dataLoadBuffer(_ post: Post) -> DataLoadOperation? {
+    final override func dataLoadBuffer(_ post: Post) -> DataLoadOperation? {
         if let images = post.images, images.count > 0, let i = images.first {
             return DataLoadOperation(i)
         } else {
@@ -42,7 +42,7 @@ class PostImageDataStore: ImageDataStore<Post> {
 
 class ChatImageDataStore: ImageDataStore<ChatListModel> {
     final var userId: String!
-    override func dataLoadBuffer(_ post: ChatListModel) -> DataLoadOperation? {
+    final override func dataLoadBuffer(_ post: ChatListModel) -> DataLoadOperation? {
         if post.sellerId != userId {
             return DataLoadOperation(post.sellerPhotoURL)
         } else {
@@ -53,6 +53,16 @@ class ChatImageDataStore: ImageDataStore<ChatListModel> {
     init(posts:[ChatListModel], userId: String) {
         super.init(posts: posts)
         self.userId = userId
+    }
+}
+
+class MessageImageDataStore: ImageDataStore<Message> {
+    override func dataLoadBuffer(_ post: Message) -> DataLoadOperation? {
+        if let imageURL = post.imageURL {
+            return DataLoadOperation(imageURL)
+        } else {
+            return nil
+        }
     }
 }
 

@@ -10,16 +10,22 @@ import CryptoKit
 
 class ChatViewController: UIViewController, ImageUploadable {
     var userInfo: UserInfo!
-    final var itemId: String!
+    var post: ChatCoreModel! {
+        didSet {
+            self.docId = post.docId
+        }
+    }
+    final var docId: String! {
+        didSet {
+            if post == nil {
+                fetchData(docId: docId)
+            }
+        }
+    }
     final var messages = [Message]()
     final var toolBarView: ToolBarView!
     final var heightConstraint: NSLayoutConstraint!
     var alert: Alerts!
-    final var docId: String! {
-        didSet {
-            fetchData(docId: docId)
-        }
-    }
     final var tableView: UITableView!
     final var userId: String!
     final var photoURL: String! {
@@ -34,11 +40,16 @@ class ChatViewController: UIViewController, ImageUploadable {
         self.navigationItem.largeTitleDisplayMode = .never
         
         getProfileInfo()
-        if docId == nil {
-            getDocId()
-        }
         configureUI()
         setConstraints()
+        // if coming from ListVC, no post so no need to fetch
+        // post != nil means we're coming from ChatListVC, which already has docId
+        if post == nil {
+            getDocId()
+        } else {
+            fetchData(docId: post.docId)
+        }
+        self.tableView.scrollToBottom()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -79,7 +90,7 @@ extension ChatViewController {
         tableView.keyboardDismissMode = .onDrag
         tableView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
         tableView.frame = CGRect(origin: .zero, size: view.bounds.size)
-//        tableView.translatesAutoresizingMaskIntoConstraints = false
+        //        tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ChatViewController.dismissKeyboard))
@@ -103,7 +114,7 @@ extension ChatViewController {
             }
         }
         toolBarView.translatesAutoresizingMaskIntoConstraints = false
-//        toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: toolBarView.bounds.size.height + 60))
+        //        toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: toolBarView.bounds.size.height + 60))
         view.addSubview(toolBarView)
     }
     
@@ -115,25 +126,26 @@ extension ChatViewController {
             toolBarView.heightAnchor.constraint(greaterThanOrEqualToConstant: 60),
             heightConstraint
             
-//            tableView.topAnchor.constraint(equalTo: view.topAnchor),
-//            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-//            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-//            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            //            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            //            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            //            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            //            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 }
 
 extension ChatViewController {
+    // should only fun when the chat is run for the first time. i.e., from ListDetailVC
     private func getDocId() {
         let sellerUid = userInfo.uid!
-
+        
         guard let buyerUid = userId else {
             self.alert.showDetail("Sorry", with: "You're currently not logged in. Please log in and try again.", for: self) {
                 self.navigationController?.popViewController(animated: true)
             }
             return
         }
-
+        
         let combinedString = sellerUid + buyerUid
         let inputData = Data(combinedString.utf8)
         let hashedId = SHA256.hash(data: inputData)
@@ -156,32 +168,32 @@ extension ChatViewController {
                     defer {
                         DispatchQueue.main.async {
                             self?.tableView.reloadData()
-                            self?.tableView.scrollToBottom()
                         }
                     }
                     
                     self?.messages = documents.map { docSnapshot -> Message in
                         let data = docSnapshot.data()
-                        let docId = data["sender"] as? String ?? ""
+                        let senderId = data["sender"] as? String ?? ""
                         let content = data["content"] as? String ?? ""
                         let displayName = data["displayName"] as? String ?? ""
                         let sentAt = data["sentAt"] as? Date ?? Date()
+                        let imageURL = data["imageURL"] as? String
                         
                         let formatter = DateFormatter()
                         formatter.dateFormat = "HH:mm"
                         let formattedDate = formatter.string(from: sentAt)
                         
-                        return Message(id: docId, content: content, displayName: displayName, sentAt: formattedDate)
+                        return Message(id: senderId, content: content, displayName: displayName, sentAt: formattedDate, imageURL: imageURL)
                     }
                 }
         }
     }
     
     private func sendMessage() {
-        guard let messageContent = toolBarView.textView.text, !messageContent.isEmpty else {
+        guard let messageContent = toolBarView.textView.text, !messageContent.isEmpty, let userId = userId else {
             return
         }
-          
+
         let ref = FirebaseService.shared.db.collection("chatrooms").document(docId)
         if self.messages.count == 0 {
             /// docId is the hashedId that corresponds to the unique ID of the chat room
@@ -191,13 +203,15 @@ extension ChatViewController {
                 }
                 return
             }
-            
+
+            // only the buyer can initiate the conversation
+            // so the initial setting of the following data is true
             ref.setData([
                 "members": [sellerId, userId],
                 "sellerId": sellerId,
                 "sellerDisplayName": userInfo.displayName,
                 "sellerPhotoURL": userInfo.photoURL ?? "NA",
-                "buyerId": userId!,
+                "buyerId": userId,
                 "buyerDisplayName": displayName!,
                 "buyerPhotoURL": photoURL ?? "NA",
                 "docId": docId!,
@@ -210,11 +224,12 @@ extension ChatViewController {
                 "sentAt": Date()
             ])
         }
-        
+
         ref.collection("messages").addDocument(data: [
             "sentAt": Date(),
             "content": messageContent,
-            "sender": userId!
+            "sender": userId,
+            "recipient": userId == post.sellerId ? post.buyerId : post.sellerId,
         ])
         toolBarView.textView.text.removeAll()
     }
@@ -244,7 +259,7 @@ extension ChatViewController {
                 "buyerPhotoURL": photoURL ?? "NA",
                 "docId": docId!,
                 "latestMessage": "",
-                "sentAt": Date()
+                "sentAt": Date(),
             ])
         } else {
             ref.updateData([
@@ -293,13 +308,13 @@ extension ChatViewController {
             let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
             let keyboardViewEndFrame = view.convert(keyBoardFrame!, from: view.window)
             let keyboardHeight = keyboardViewEndFrame.height
-
+            
             let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! Double
             let curve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! UInt
             
             if notification.name == UIResponder.keyboardWillHideNotification {
                 self.tableView.frame.origin.y = .zero
-//                toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: 60))
+                //                toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: 60))
                 
                 self.heightConstraint.constant = 0
                 view.setNeedsLayout()
@@ -309,11 +324,12 @@ extension ChatViewController {
                     self.view.layoutIfNeeded()
                 })
             } else {
+                tableView.scrollToBottom()
                 self.heightConstraint.constant = -keyboardHeight
                 view.setNeedsLayout()
                 let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
                 UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
-//                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
+                    //                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
                     self.view.layoutIfNeeded()
                 })
                 

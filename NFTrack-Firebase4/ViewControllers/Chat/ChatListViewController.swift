@@ -7,6 +7,7 @@
 
 import UIKit
 import Firebase
+import FirebaseFirestore
 
 class ChatListViewController: ParentListViewController<ChatListModel> {
     override func viewDidLoad() {
@@ -83,7 +84,7 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
         let userInfo = UserInfo(email: nil, displayName: displayName, photoURL: nil, uid: userId)
         
         let chatVC = ChatViewController()
-        chatVC.docId = post.docId
+        chatVC.post = post
         chatVC.userInfo = userInfo
         self.navigationController?.pushViewController(chatVC, animated: true)
     }
@@ -91,55 +92,53 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
 
 extension ChatListViewController {
     func fetchChatList() {
-        DispatchQueue.global(qos: .background).async {
-            let docRef = FirebaseService.shared.db.collection("chatrooms")
-            docRef.getDocuments { [weak self] (document, error) in
-                if let error = error {
-                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+        let docRef = FirebaseService.shared.db.collection("chatrooms")
+        docRef.getDocuments { [weak self] (document, error) in
+            if let error = error {
+                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+            }
+            
+            if let document = document,
+               !document.isEmpty {
+                
+                defer {
+                    DispatchQueue.main.async {
+                        self?.tableView.reloadData()
+                    }
                 }
                 
-                if let document = document,
-                   !document.isEmpty {
-                    
-                    defer {
-                        DispatchQueue.main.async {
-                            self?.tableView.reloadData()
+                for doc in document.documents {
+                    let data = doc.data()
+                    var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerId, buyerId: String!
+                    var date: Date!
+                    data.forEach { (item) in
+                        switch item.key {
+                            case "buyerDisplayName":
+                                buyerDisplayName = item.value as? String
+                            case "buyerPhotoURL":
+                                buyerPhotoURL = item.value as? String
+                            case "buyerId":
+                                buyerId = item.value as? String
+                            case "latestMessage":
+                                latestMessage = item.value as? String
+                            case "sellerDisplayName":
+                                sellerDisplayName = item.value as? String
+                            case "sellerPhotoURL":
+                                sellerPhotoURL = item.value as? String
+                            case "sentAt":
+                                let timeStamp = item.value as? Timestamp
+                                date = timeStamp?.dateValue()
+                            case "sellerId":
+                                sellerId = item.value as? String
+                            default:
+                                break
                         }
                     }
-                    
-                    for doc in document.documents {
-                        let data = doc.data()
-                        var buyerDisplayName, sellerDisplayName, docId, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerId: String!
-                        var date: Date!
-                        data.forEach { (item) in
-                            switch item.key {
-                                case "buyerDisplayName":
-                                    buyerDisplayName = item.value as? String
-                                case "buyerPhotoURL":
-                                    buyerPhotoURL = item.value as? String
-                                case "docId":
-                                    docId = item.value as? String
-                                case "latestMessage":
-                                    latestMessage = item.value as? String
-                                case "sellerDisplayName":
-                                    sellerDisplayName = item.value as? String
-                                case "sellerPhotoURL":
-                                    sellerPhotoURL = item.value as? String
-                                case "sentAt":
-                                    let timeStamp = item.value as? Timestamp
-                                    date = timeStamp?.dateValue()
-                                case "sellerId":
-                                    sellerId = item.value as? String
-                                default:
-                                    break
-                            }
-                        }
-                        let chatListModel = ChatListModel(docId: docId, latestMessage: latestMessage, date: date, buyerDisplayName: buyerDisplayName, buyerPhotoURL: buyerPhotoURL, sellerDisplayName: sellerDisplayName, sellerPhotoURL: sellerPhotoURL, sellerId: sellerId)
-                        self?.postArr.append(chatListModel)
-                    }
-                } else {
-                    print("no data")
+                    let chatListModel = ChatListModel(docId: doc.documentID, latestMessage: latestMessage, date: date, buyerDisplayName: buyerDisplayName, buyerPhotoURL: buyerPhotoURL, buyerId: buyerId, sellerDisplayName: sellerDisplayName, sellerPhotoURL: sellerPhotoURL, sellerId: sellerId)
+                    self?.postArr.append(chatListModel)
                 }
+            } else {
+                print("no data")
             }
         }
     }

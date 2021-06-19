@@ -30,14 +30,10 @@ class ParentTableCell<T>: UITableViewCell {
         DispatchQueue.main.async { [unowned self] in
             switch status {
                 case .fetched(let image):
-                    DispatchQueue.main.async {
-                        self.thumbImageView.image = image
-                        loadingIndicator.stopAnimating()
-                    }
+                    self.thumbImageView.image = image
+                    loadingIndicator.stopAnimating()
                 case .pending(let post):
-                    DispatchQueue.main.async {
-                        self.configure(post)
-                    }
+                    self.configure(post)
             }
         }
     }

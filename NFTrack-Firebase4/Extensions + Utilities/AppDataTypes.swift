@@ -199,16 +199,36 @@ struct UserDefaultKeys {
     static let photoURL: String = "photoURL"
 }
 
+class ChatCoreModel {
+    var docId: String!
+    var buyerId: String!
+    var sellerId: String!
+    
+    init(docId: String, buyerId: String, sellerId: String) {
+        self.docId = docId
+        self.buyerId = buyerId
+        self.sellerId = sellerId
+    }
+}
+
 // MARK: - ChatListModel
-struct ChatListModel {
-    let docId: String
-    let latestMessage: String
-    let date: Date
-    let buyerDisplayName: String
-    let buyerPhotoURL: String
-    let sellerDisplayName: String
-    let sellerPhotoURL: String
-    let sellerId: String
+class ChatListModel: ChatCoreModel {
+    var latestMessage: String!
+    var date: Date!
+    var buyerDisplayName: String!
+    var buyerPhotoURL: String!
+    var sellerDisplayName: String!
+    var sellerPhotoURL: String!
+    
+    init(docId: String, latestMessage: String, date: Date, buyerDisplayName: String, buyerPhotoURL: String, buyerId: String, sellerDisplayName: String, sellerPhotoURL: String, sellerId: String) {
+        super.init(docId: docId, buyerId: buyerId, sellerId: sellerId)
+        self.latestMessage = latestMessage
+        self.date = date
+        self.buyerDisplayName = buyerDisplayName
+        self.buyerPhotoURL = buyerPhotoURL
+        self.sellerDisplayName = sellerDisplayName
+        self.sellerPhotoURL = sellerPhotoURL
+    }
 }
 
 // MARK: - Message
@@ -217,4 +237,5 @@ struct Message {
     let content: String
     let displayName: String
     let sentAt: String
+    let imageURL: String?
 }

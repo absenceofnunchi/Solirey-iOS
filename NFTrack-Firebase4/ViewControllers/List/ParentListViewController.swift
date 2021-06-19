@@ -17,7 +17,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     var loadingQueue = OperationQueue()
     var loadingOperations = [IndexPath : DataLoadOperation]()
     let refreshControl = UIRefreshControl()
-    let alert = Alerts()
+    var alert: Alerts!
     var postArr = [T]() {
         didSet {
             setDataStore(postArr: postArr)
@@ -39,6 +39,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     func configureUI() {
         view.backgroundColor = .white
         userId = UserDefaults.standard.string(forKey: "userId")
+        alert = Alerts()
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

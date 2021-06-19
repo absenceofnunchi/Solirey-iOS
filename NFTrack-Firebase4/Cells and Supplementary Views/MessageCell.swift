@@ -14,6 +14,7 @@ class MessageCell: UITableViewCell {
     final var contentLabel: UILabelPadding!
     final var dateLabel: UILabelPadding!
     final var constraint = [NSLayoutConstraint]()
+    final let thumbImageView = UIImageView()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
@@ -25,7 +26,7 @@ class MessageCell: UITableViewCell {
     required init?(coder: NSCoder) {
         fatalError("not implemented")
     }
-
+    
 }
 
 extension MessageCell {
@@ -44,10 +45,10 @@ extension MessageCell {
         dateLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
         dateLabel.adjustsFontForContentSizeCategory = true
         
-        stackView = UIStackView(arrangedSubviews: [contentLabel, dateLabel])
+        stackView = UIStackView(arrangedSubviews: [thumbImageView, contentLabel, dateLabel])
         stackView.spacing = 3
         stackView.axis = .vertical
-        stackView.distribution = .fill
+        stackView.distribution = .fillProportionally
         stackView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stackView)
     }
@@ -66,10 +67,27 @@ extension MessageCell {
         
         NSLayoutConstraint.deactivate(constraint)
         constraint.removeAll()
+        // message.id means the UID of the sender
         if message.id == myId {
-            contentLabel?.backgroundColor = UIColor(red: 102/255, green: 140/255, blue: 255/255, alpha: 1)
-            contentLabel?.textColor = .white
-            stackView.alignment = .trailing
+            if let imageURL = message.imageURL {
+//                let loadingIndicator = UIActivityIndicatorView()
+                thumbImageView.image = UIImage(named: "placeholder")
+                guard let url = URL(string: imageURL) else { return }
+                downloadImageFrom(url) { [weak self] (image) in
+                    DispatchQueue.main.async {
+//                        self?.thumbImageView.bounds = CGRect(origin: .zero, size: CGSize(width: 200, height: 200))
+                        self?.thumbImageView.image = image
+                    }
+                }
+                thumbImageView.layer.cornerRadius = 8
+                thumbImageView.translatesAutoresizingMaskIntoConstraints = false
+                constraint.append(thumbImageView.heightAnchor.constraint(equalToConstant: 200))
+
+            } else {
+                contentLabel?.backgroundColor = UIColor(red: 102/255, green: 140/255, blue: 255/255, alpha: 1)
+                contentLabel?.textColor = .white
+                stackView.alignment = .trailing
+            }
             
             constraint.append(contentsOf: [
                 stackView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
@@ -84,5 +102,10 @@ extension MessageCell {
             ])
         }
         NSLayoutConstraint.activate(constraint)
+        stackView.setNeedsLayout()
+    }
+    
+    override func prepareForReuse() {
+        thumbImageView.image = nil
     }
 }

@@ -12,23 +12,19 @@ class ListViewController: ParentListViewController<Post> {
     private let userDefaults = UserDefaults.standard
     private var segmentedControl: UISegmentedControl!
     
-    override func viewDidLoad() {
+    final override func viewDidLoad() {
         super.viewDidLoad()
         
         configureNavigationBar(vc: self)
         configureSwitch()
         configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
     }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-    }
-    
-    override func setDataStore(postArr: [Post]) {
+
+    final override func setDataStore(postArr: [Post]) {
         dataStore = PostImageDataStore(posts: postArr)
     }
     
-    override func configureUI() {
+    final override func configureUI() {
         super.configureUI()
         
         tableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
@@ -64,7 +60,7 @@ class ListViewController: ParentListViewController<Post> {
     }
     
     // MARK: - configureSwitch
-    func configureSwitch() {
+    final func configureSwitch() {
         // Segmented control as the custom title view.
         let segmentTextContent = Segment.getSegmentText()
         segmentedControl = UISegmentedControl(items: segmentTextContent)
@@ -76,7 +72,7 @@ class ListViewController: ParentListViewController<Post> {
     }
     
     // MARK: - segmentedControlSelectionDidChange
-    @objc func segmentedControlSelectionDidChange(_ sender: UISegmentedControl) {
+    @objc final func segmentedControlSelectionDidChange(_ sender: UISegmentedControl) {
         guard let segment = Segment(rawValue: sender.selectedSegmentIndex)
         else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
         
@@ -93,7 +89,7 @@ class ListViewController: ParentListViewController<Post> {
     }
     
     // MARK: - configureDataFetch
-    func configureDataFetch(isBuyer: Bool, status: [String]) {
+    final func configureDataFetch(isBuyer: Bool, status: [String]) {
         if let userId = userDefaults.string(forKey: UserDefaultKeys.userId) {
             FirebaseService.shared.db.collection("post")
                 .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
@@ -124,7 +120,7 @@ class ListViewController: ParentListViewController<Post> {
         }
     }
     
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: ProgressCell.identifier) as? ProgressCell else {
             fatalError("Sorry, could not load cell")
         }
@@ -134,7 +130,7 @@ class ListViewController: ParentListViewController<Post> {
         return cell
     }
     
-//    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+//    final override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
 //        guard let cell = cell as? ProgressCell else { return }
 //        
 //        // How should the operation update the cell once the data has been loaded?
@@ -164,7 +160,7 @@ class ListViewController: ParentListViewController<Post> {
 //        }
 //    }
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = post
@@ -173,7 +169,7 @@ class ListViewController: ParentListViewController<Post> {
     }
     
     // MARK: - didRefreshTableView
-    override func didRefreshTableView() {
+    final override func didRefreshTableView() {
         segmentedControl.selectedSegmentIndex = 1
         segmentedControl.sendActions(for: UIControl.Event.valueChanged)
         configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])

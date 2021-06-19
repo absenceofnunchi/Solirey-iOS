@@ -158,7 +158,9 @@ extension ListDetailViewController {
             case 6:
                 let chatVC = ChatViewController()
                 chatVC.userInfo = userInfo
-                chatVC.itemId = post.id
+                // to display the title on ChatList when multiple items under the same owner
+                // or maybe search for pre-existing chat room first and join the same one
+                // chatVC.itemName = title
                 self.navigationController?.pushViewController(chatVC, animated: true)
             case 7:
                 // saving the favourite post
