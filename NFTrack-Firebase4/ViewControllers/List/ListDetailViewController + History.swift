@@ -11,10 +11,10 @@ extension ListDetailViewController: TableViewConfigurable {
     // MARK: - getHistory
     func getHistory() {
         FirebaseService.shared.db.collection("post")
-            .whereField("itemIdentifier", isEqualTo: post.id)
+            .whereField("itemIdentifier", isEqualTo: post.id!)
             .getDocuments { [weak self] (querySnapshot, err) in
                 if let err = err {
-                    self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self!)
+                    self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
                 } else {
                     defer {
                         DispatchQueue.main.async {
@@ -79,11 +79,12 @@ extension ListDetailViewController: UITableViewDelegate, UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: HistoryCell.identifier, for: indexPath) as! HistoryCell
         cell.selectionStyle = .none
         let data = historicData[indexPath.row]
-        let date = data.date
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        let formattedDate = formatter.string(from: date)
-        cell.dateLabel.text = formattedDate
+        if let date = data.date {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .long
+            let formattedDate = formatter.string(from: date)
+            cell.dateLabel.text = formattedDate
+        }
         cell.hashLabel.text = data.sellerHash
 
         switch indexPath.row {
@@ -99,15 +100,17 @@ extension ListDetailViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let data = historicData[indexPath.row]
-        fetchUserData(id: data.sellerUserId) { [weak self] (userInfo) in
-            if let userInfo = userInfo {
-                let historyDetailVC = HistoryDetailViewController()
-                historyDetailVC.post = data
-                historyDetailVC.userInfo = userInfo
-                self?.navigationController?.pushViewController(historyDetailVC, animated: true)
-            } else {
-                self?.alert.showDetail("Sorry", with: "Unable to retrieve data. Please try again", for: self!)
-            }
-        }
+        let historyDetailVC = HistoryDetailViewController()
+        historyDetailVC.post = data
+        historyDetailVC.userInfo = userInfo
+        self.navigationController?.pushViewController(historyDetailVC, animated: true)
+        
+//        fetchUserData(id: data.sellerUserId) { [weak self] (userInfo) in
+//            if let userInfo = userInfo {
+//
+//            } else {
+//                self?.alert.showDetail("Sorry", with: "Unable to retrieve data. Please try again", for: self)
+//            }
+//        }
     }
 }

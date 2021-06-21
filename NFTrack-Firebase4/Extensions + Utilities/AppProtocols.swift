@@ -59,13 +59,13 @@ extension TableViewConfigurable where Self: UITableViewDataSource {
 // MARK: - ModalConfigurable
 protocol ModalConfigurable where Self: UIViewController {
     var closeButton: UIButton! { get set }
-    func configureCloseButton()
+    func configureCloseButton(tintColor: UIColor)
     func setButtonConstraints()
     func closeButtonPressed()
 }
 
 extension ModalConfigurable {
-    func configureCloseButton() {
+    func configureCloseButton(tintColor: UIColor = .black) {
         // close button
         guard let closeButtonImage = UIImage(systemName: "multiply") else {
             self.dismiss(animated: true, completion: nil)
@@ -78,7 +78,7 @@ extension ModalConfigurable {
         }
         closeButton.setImage(closeButtonImage, for: .normal)
         closeButton.tag = 10
-        closeButton.tintColor = .black
+        closeButton.tintColor = tintColor
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(closeButton)
     }
@@ -144,11 +144,11 @@ extension ImageUploadable {
             if let error = fileUploadError {
                 switch error {
                     case .fileManagerError(let msg):
-                        self?.alert.showDetail("Error", with: msg, for: self!)
+                        self?.alert.showDetail("Error", with: msg, for: self)
                     case .fileNotAvailable:
-                        self?.alert.showDetail("Error", with: "Image file not found.", for: self!)
+                        self?.alert.showDetail("Error", with: "Image file not found.", for: self)
                     case .userNotLoggedIn:
-                        self?.alert.showDetail("Error", with: "You need to be logged in!", for: self!)
+                        self?.alert.showDetail("Error", with: "You need to be logged in!", for: self)
                 }
             }
             
@@ -160,7 +160,7 @@ extension ImageUploadable {
                 
                 uploadTask.observe(.pause) { snapshot in
                     // Upload paused
-                    self?.alert.showDetail("Image Upload", with: "The image uploading process has been paused.", for: self!)
+                    self?.alert.showDetail("Image Upload", with: "The image uploading process has been paused.", for: self)
                 }
                 
                 uploadTask.observe(.progress) { snapshot in
@@ -222,7 +222,7 @@ extension ImageUploadable {
     func deleteFile(fileName: String) {
         // delete images from the system
         let fileManager = FileManager.default
-        let documentsDirectory =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documentsDirectory =  fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         let documentsPath = documentsDirectory.path
         do {
             
@@ -264,4 +264,11 @@ extension ImageUploadable {
 // MARK: - RefetchDataDelegate
 protocol RefetchDataDelegate: AnyObject {
     func didFetchData()
+}
+
+// MARK: - SegmentConfigurable
+protocol SegmentConfigurable {
+    associatedtype Segment: RawRepresentable
+    func configureSwitch()
+    func segmentedControlSelectionDidChange(_ sender: UISegmentedControl)
 }

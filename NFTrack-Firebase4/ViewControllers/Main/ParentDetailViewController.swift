@@ -34,6 +34,7 @@ class ParentDetailViewController: UIViewController {
     var descLabel: UILabelPadding!
     var idTitleLabel: UILabel!
     var idLabel: UILabelPadding!
+    var constraints = [NSLayoutConstraint]()
     var fetchedImage: UIImage!
     var userInfo: UserInfo! {
         didSet {
@@ -49,7 +50,7 @@ class ParentDetailViewController: UIViewController {
                 
         configureBackground()
         fetchUserData(id: post.sellerUserId)
-        configureData()
+        configureImageDisplay()
         configureUI()
         setConstraints()
     }
@@ -62,12 +63,12 @@ extension ParentDetailViewController {
         view.backgroundColor = .white
         scrollView = UIScrollView()
         scrollView.backgroundColor = .white
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
+        scrollView.fill()
     }
     
     func fetchUserData(id: String) {
-        DispatchQueue.global(qos: .background).async {
+        DispatchQueue.global(qos: .utility).async {
             let docRef = FirebaseService.shared.db.collection("user").document(id)
             docRef.getDocument { [weak self] (document, error) in
                 if let document = document, document.exists {
@@ -86,50 +87,26 @@ extension ParentDetailViewController {
         }
     }
     
-    // MARK: - configureData
-    func configureData() {
+    // MARK: - configureImageDisplay
+    func configureImageDisplay() {
         // image
         if let images = post.images, images.count > 0 {
             self.galleries.append(contentsOf: images)
-            configurePageVC(gallery: galleries[0])
+            let singlePageVC = ImagePageViewController(gallery: galleries[0])
+            pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+            pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+            pvc.dataSource = self
+            pvc.delegate = self
+            addChild(pvc)
+            scrollView.addSubview(pvc.view)
+            pvc.view.translatesAutoresizingMaskIntoConstraints = false
+            pvc.didMove(toParent: self)
             
-            guard let pv = pvc.view else { return }
-            NSLayoutConstraint.activate([
-                scrollView.topAnchor.constraint(equalTo: pv.bottomAnchor),
-                scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-            ])
-        } else {
-            scrollView.fill()
+            let pageControl = UIPageControl.appearance()
+            pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
+            pageControl.currentPageIndicatorTintColor = .gray
+            pageControl.backgroundColor = .white
         }
-    }
-    
-    // MARK: - configurePageVC
-    func configurePageVC(gallery: String) {
-        let singlePageVC = ImagePageViewController(gallery: gallery)
-        pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
-        pvc.dataSource = self
-        pvc.delegate = self
-        addChild(pvc)
-        view.addSubview(pvc.view)
-        pvc.didMove(toParent: self)
-        pvc.view.layer.zPosition = 100
-        pvc.view.translatesAutoresizingMaskIntoConstraints = false
-        
-        let pageControl = UIPageControl.appearance()
-        pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
-        pageControl.currentPageIndicatorTintColor = .gray
-        pageControl.backgroundColor = .white
-        
-        guard let pv = pvc.view else { return }
-        NSLayoutConstraint.activate([
-            pv.topAnchor.constraint(equalTo: view.topAnchor),
-            pv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            pv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            pv.heightAnchor.constraint(equalToConstant: 250),
-        ])
     }
     
     @objc func userInfoDidSet() {
@@ -194,8 +171,8 @@ extension ParentDetailViewController {
         
         priceTitleLabel = createTitleLabel(text: "Price")
         scrollView.addSubview(priceTitleLabel)
-        
-        priceLabel = createLabel(text: "\(post.price) ETH")
+
+        priceLabel = createLabel(text: "\(post.price!) ETH")
         scrollView.addSubview(priceLabel)
         
         descTitleLabel = createTitleLabel(text: "Description")
@@ -263,18 +240,34 @@ extension ParentDetailViewController {
 //
     // MARK: - setConstraints
     @objc func setConstraints() {
-        NSLayoutConstraint.activate([
-            dateLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50),
+        if let images = post.images, images.count > 0 {
+            guard let pv = pvc.view else { return }
+            constraints.append(contentsOf: [
+                pv.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 0),
+                pv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                pv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                pv.heightAnchor.constraint(equalToConstant: 250),
+                dateLabel.topAnchor.constraint(equalTo: pv.bottomAnchor, constant: 50),
+                profileImageView.topAnchor.constraint(equalTo: pv.bottomAnchor, constant: 50),
+                displayNameLabel.topAnchor.constraint(equalTo: pv.bottomAnchor, constant: 50)
+            ])
+        } else {
+            constraints.append(contentsOf: [
+                dateLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50),
+                profileImageView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50),
+                displayNameLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50)
+            ])
+        }
+        
+        constraints.append(contentsOf: [
             dateLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             dateLabel.heightAnchor.constraint(equalToConstant: 50),
             dateLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.4),
             
-            profileImageView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50),
             profileImageView.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             profileImageView.heightAnchor.constraint(equalToConstant: 40),
             profileImageView.widthAnchor.constraint(equalToConstant: 40),
             
-            displayNameLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50),
             displayNameLabel.leadingAnchor.constraint(equalTo: profileImageView.trailingAnchor, constant: 10),
             displayNameLabel.heightAnchor.constraint(equalToConstant: 50),
             displayNameLabel.widthAnchor.constraint(lessThanOrEqualTo: scrollView.widthAnchor, multiplier: 0.6),
@@ -312,6 +305,8 @@ extension ParentDetailViewController {
             idLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             idLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
         ])
+        
+        NSLayoutConstraint.activate(constraints)
     }
     
     @objc func tapped(_ sender: UITapGestureRecognizer!) {
@@ -380,11 +375,11 @@ extension ParentDetailViewController: UIPageViewControllerDataSource, UIPageView
 //                            if let error = error {
 //                                switch error {
 //                                    case .contractLoadingError:
-//                                        self?.alert.showDetail("Error", with: "Contract Loading Error", for: self!)
+//                                        self?.alert.showDetail("Error", with: "Contract Loading Error", for: self)
 //                                    case .createTransactionIssue:
-//                                        self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self!)
+//                                        self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self)
 //                                    default:
-//                                        self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self!)
+//                                        self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self)
 //                                }
 //                            }
 //
@@ -395,13 +390,13 @@ extension ParentDetailViewController: UIPageViewControllerDataSource, UIPageView
 //                                        print("result", self?.result as Any)
 //                                        //                                                self?.status = result["0"] as String
 //                                    } catch {
-//                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+//                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
 //                                    }
 //                                }
 //                            }
 //                        })
 //                    } catch {
-//                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+//                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
 //                    }
 //                }
 //            }

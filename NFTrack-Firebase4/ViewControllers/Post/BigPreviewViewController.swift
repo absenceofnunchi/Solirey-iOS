@@ -7,14 +7,24 @@
 
 import UIKit
 
-class BigPreviewViewController: UIViewController {
+class BigPreviewViewController: UIViewController, ModalConfigurable {
+    var closeButton: UIButton!
     let imageView = UIImageView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        imageView.contentMode = .scaleAspectFill
+        configureCloseButton(tintColor: .white)
+        setButtonConstraints()
+        imageView.contentMode = .scaleAspectFit
+        imageView.enableZoom()
         view.addSubview(imageView)
-        imageView.fill()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            imageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            imageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            imageView.widthAnchor.constraint(equalTo: view.widthAnchor),
+            imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor)
+        ])
     }
 }

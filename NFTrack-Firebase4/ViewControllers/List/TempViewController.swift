@@ -103,7 +103,7 @@
 //        FirebaseService.sharedInstance.db.collection("chatroom").document(docId).collection("messages")
 //            .order(by: "sentAt", descending: false).addSnapshotListener { [weak self] (snapShot, error) in
 //                if let error = error {
-//                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+//                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
 //                }
 //                
 //                guard let documents = snapShot?.documents else {

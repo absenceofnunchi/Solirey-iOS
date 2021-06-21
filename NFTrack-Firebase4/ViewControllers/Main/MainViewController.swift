@@ -109,7 +109,7 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
                 .whereField("category", isEqualTo: category)
                 .getDocuments {(querySnapshot, err) in
                     if let err = err {
-                        self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self!)
+                        self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
                     }
                     
                     defer {

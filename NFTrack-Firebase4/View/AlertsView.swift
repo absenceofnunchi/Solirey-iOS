@@ -31,16 +31,17 @@ class Alerts {
         //        }
     }
     
-    func showDetail(_ title: String, with message: String?, height: CGFloat = 250, for controller: UIViewController, completion: Action? = nil) {
+    func showDetail(_ title: String, with message: String?, height: CGFloat = 250, alignment: NSTextAlignment = .center, for controller: UIViewController?, completion: Action? = nil) {
         DispatchQueue.main.async {
-            controller.hideSpinner {
-                let detailVC = DetailViewController(height: height)
+            NotificationCenter.default.post(name: .willDismiss, object: nil, userInfo: nil)
+            controller?.hideSpinner {
+                let detailVC = DetailViewController(height: height, messageTextAlignment: alignment)
                 detailVC.titleString = title
                 detailVC.message = message
-                detailVC.buttonAction = { vc in
-                    controller.dismiss(animated: true, completion: completion)
+                detailVC.buttonAction = { _ in
+                    controller?.dismiss(animated: true, completion: completion)
                 }
-                controller.present(detailVC, animated: true, completion: nil)
+                controller?.present(detailVC, animated: true, completion: nil)
             }
         }
     }

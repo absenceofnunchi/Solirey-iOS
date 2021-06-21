@@ -29,7 +29,7 @@ class HistoryDetailViewController: ParentDetailViewController {
            let _ = post.confirmReceivedHash {
             scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: descLabel.bounds.size.height + 1400)
         } else {
-            scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: descLabel.bounds.size.height + 1000)
+            scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: descLabel.bounds.size.height + 1100)
         }
     }
 }

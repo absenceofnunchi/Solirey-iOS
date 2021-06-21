@@ -24,7 +24,9 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         }
     }
     var tableView: UITableView!
-    var userId: String!
+    var userId: String! {
+        return UserDefaults.standard.string(forKey: "userId")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -38,7 +40,6 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     // MARK: - configureUI
     func configureUI() {
         view.backgroundColor = .white
-        userId = UserDefaults.standard.string(forKey: "userId")
         alert = Alerts()
     }
     

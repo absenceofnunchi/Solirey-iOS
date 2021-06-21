@@ -60,7 +60,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             // Handle your app navigation accordingly and update the webservice as per information on the app.
             print("remoteNotification", remoteNotification)
         }
-        print("run")
         return true
     }
 
@@ -176,16 +175,16 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
         }
         
         if let rootViewController = sceneDelegate.window?.rootViewController {
-            // docId, sellerId, buyerId
-            // the sellerId/buyerId names are misnomers and have to be changed
+            // docId, sellerUserId, buyerUserId
+            // the sellerUserId/buyerUserId names are misnomers and have to be changed
             // they simply have to be two members of a chat room
-            // simply going with how the chat room currently has sellerId/buyerId labels
+            // simply going with how the chat room currently has sellerUserId/buyerUserId labels
             // ChatVC will compare them against UserId
             if let docId = userInfo["docId"] as? String,
-               let sellerId = userInfo["uid"] as? String,
-               let buyerId = UserDefaults.standard.string(forKey: "userId"),
+               let sellerUserId = userInfo["uid"] as? String,
+               let buyerUserId = UserDefaults.standard.string(forKey: "userId"),
                let displayName = userInfo["displayName"] as? String {
-                let chatModelCore = ChatCoreModel(docId: docId, buyerId: buyerId, sellerId: sellerId)
+                let chatModelCore = PostCoreModel(documentId: docId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
                 let userInfo = UserInfo(email: nil, displayName: displayName, photoURL: nil, uid: nil)
                 
                 if let tabBarController = rootViewController as? UITabBarController,

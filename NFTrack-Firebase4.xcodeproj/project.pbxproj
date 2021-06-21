@@ -7,12 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		490D275D267ECEA1003500C1 /* ProgressModalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */; };
+		490D2762267ECF5F003500C1 /* PartialPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D2761267ECF5F003500C1 /* PartialPresentationController.swift */; };
 		49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B6A266ECEE70031A756 /* ProfileViewController.swift */; };
 		49221B79266FE4CB0031A756 /* ProfileDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */; };
 		49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B7D2670FA190031A756 /* ParentListViewController.swift */; };
 		49221B892670FC2F0031A756 /* TempViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B882670FC2F0031A756 /* TempViewController.swift */; };
 		49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B90267112200031A756 /* ParentProfileViewController.swift */; };
 		49314F5F4CF8EC19FC270279 /* Pods_NFTrack_Firebase4Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */; };
+		4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933332C268033D900B8BFC2 /* ReviewViewController.swift */; };
+		493333322681116F00B8BFC2 /* ReviewPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493333312681116F00B8BFC2 /* ReviewPostViewController.swift */; };
 		493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */; };
 		493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */; };
 		493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */; };
@@ -128,11 +132,15 @@
 /* Begin PBXFileReference section */
 		185327341381F410AFB911BC /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; sourceTree = "<group>"; };
 		2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressModalViewController.swift; sourceTree = "<group>"; };
+		490D2761267ECF5F003500C1 /* PartialPresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartialPresentationController.swift; sourceTree = "<group>"; };
 		49221B6A266ECEE70031A756 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileDetailViewController.swift; sourceTree = "<group>"; };
 		49221B7D2670FA190031A756 /* ParentListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentListViewController.swift; sourceTree = "<group>"; };
 		49221B882670FC2F0031A756 /* TempViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempViewController.swift; sourceTree = "<group>"; };
 		49221B90267112200031A756 /* ParentProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentProfileViewController.swift; sourceTree = "<group>"; };
+		4933332C268033D900B8BFC2 /* ReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewController.swift; sourceTree = "<group>"; };
+		493333312681116F00B8BFC2 /* ReviewPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPostViewController.swift; sourceTree = "<group>"; };
 		493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletGenerationController.swift; sourceTree = "<group>"; };
 		493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDataTypes.swift; sourceTree = "<group>"; };
 		493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
@@ -295,7 +303,6 @@
 			isa = PBXGroup;
 			children = (
 				493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */,
-				493BF9F7264C6ECF00B9C9D2 /* PresentationController.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -465,6 +472,8 @@
 		4964E52A2648B055005B3268 /* Presentation Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				493BF9F7264C6ECF00B9C9D2 /* PresentationController.swift */,
+				490D2761267ECF5F003500C1 /* PartialPresentationController.swift */,
 				4964E52B2648B096005B3268 /* MyPresentationController.swift */,
 				49E759A726658DCC0064BB34 /* TransitioningDelegate.swift */,
 			);
@@ -528,6 +537,7 @@
 				4964E52026489564005B3268 /* BigPreviewViewController.swift */,
 				496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */,
 				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
+				490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -578,6 +588,8 @@
 				4964E5042644891B005B3268 /* AccountViewController.swift */,
 				49221B6A266ECEE70031A756 /* ProfileViewController.swift */,
 				49221B90267112200031A756 /* ParentProfileViewController.swift */,
+				4933332C268033D900B8BFC2 /* ReviewViewController.swift */,
+				493333312681116F00B8BFC2 /* ReviewPostViewController.swift */,
 			);
 			path = Account;
 			sourceTree = "<group>";
@@ -920,9 +932,11 @@
 				4964E52126489564005B3268 /* BigPreviewViewController.swift in Sources */,
 				493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */,
 				499F994E266ADA0E00FC6CDE /* HistoryDetailViewController.swift in Sources */,
+				490D2762267ECF5F003500C1 /* PartialPresentationController.swift in Sources */,
 				4964E5262648AB6A005B3268 /* ZoomAnimationController.swift in Sources */,
 				499702B02674533E001DD80A /* ParentCell.swift in Sources */,
 				4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */,
+				490D275D267ECEA1003500C1 /* ProgressModalViewController.swift in Sources */,
 				49E759AD26669ACB0064BB34 /* ParentPostViewController.swift in Sources */,
 				499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */,
 				497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */,
@@ -934,6 +948,7 @@
 				496D56C52659FF2100C3E7FD /* MainDetailViewController.swift in Sources */,
 				4964E57726499D74005B3268 /* RegisteredWalletViewController.swift in Sources */,
 				493BF9E4264C549D00B9C9D2 /* ScannerViewController.swift in Sources */,
+				4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */,
 				49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */,
 				4964E4CC26430BFB005B3268 /* SignUpViewController.swift in Sources */,
 				4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */,
@@ -962,6 +977,7 @@
 				499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */,
 				49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */,
 				4964E568264968A7005B3268 /* Errors.swift in Sources */,
+				493333322681116F00B8BFC2 /* ReviewPostViewController.swift in Sources */,
 				4964E50F264767A6005B3268 /* ImagePreviewViewController.swift in Sources */,
 				4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */,
 				496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */,

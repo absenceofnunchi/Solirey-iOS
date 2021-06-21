@@ -376,7 +376,7 @@ extension SignUpViewController {
                 // [START_EXCLUDE]
                 self?.hideSpinner {
                     guard let user = authResult?.user, error == nil else {
-                        self?.alert.showDetail("Sorry", with: error!.localizedDescription, for: self!)
+                        self?.alert.showDetail("Sorry", with: error!.localizedDescription, for: self)
                         return
                     }
                     
@@ -384,7 +384,7 @@ extension SignUpViewController {
                     createRequest.displayName = displayName
                     createRequest.commitChanges { (error) in
                         if let error = error {
-                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                         } else {
                             self?.navigationController?.popViewController(animated: true)
                         }

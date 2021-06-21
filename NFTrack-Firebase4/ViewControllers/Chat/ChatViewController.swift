@@ -10,16 +10,16 @@ import CryptoKit
 
 class ChatViewController: UIViewController, ImageUploadable {
     var userInfo: UserInfo!
-    var post: ChatCoreModel! {
+    var post: PostCoreModel! {
         didSet {
-            self.docId = post.docId
+            self.docId = post.documentId
         }
     }
     final var docId: String! {
         didSet {
-            if post == nil {
+//            if post == nil {
                 fetchData(docId: docId)
-            }
+//            }
         }
     }
     final var messages = [Message]()
@@ -47,9 +47,8 @@ class ChatViewController: UIViewController, ImageUploadable {
         if post == nil {
             getDocId()
         } else {
-            fetchData(docId: post.docId)
+//            fetchData(docId: post.docId)
         }
-        self.tableView.scrollToBottom()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -61,6 +60,11 @@ class ChatViewController: UIViewController, ImageUploadable {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        removeKeyboardObserver()
     }
 }
 
@@ -89,9 +93,11 @@ extension ChatViewController {
         tableView.separatorStyle = .none
         tableView.keyboardDismissMode = .onDrag
         tableView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
+        tableView.automaticallyAdjustsScrollIndicatorInsets = false
         tableView.frame = CGRect(origin: .zero, size: view.bounds.size)
-        //        tableView.translatesAutoresizingMaskIntoConstraints = false
+//        tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
+//        tableView.fill()
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ChatViewController.dismissKeyboard))
         tap.cancelsTouchesInView = false
@@ -158,7 +164,7 @@ extension ChatViewController {
             FirebaseService.shared.db.collection("chatrooms").document(docId).collection("messages")
                 .order(by: "sentAt", descending: false).addSnapshotListener { [weak self] (snapShot, error) in
                     if let error = error {
-                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                     }
                     
                     guard let documents = snapShot?.documents else {
@@ -168,6 +174,7 @@ extension ChatViewController {
                     defer {
                         DispatchQueue.main.async {
                             self?.tableView.reloadData()
+                            self?.tableView.scrollToBottom()
                         }
                     }
                     
@@ -197,7 +204,7 @@ extension ChatViewController {
         let ref = FirebaseService.shared.db.collection("chatrooms").document(docId)
         if self.messages.count == 0 {
             /// docId is the hashedId that corresponds to the unique ID of the chat room
-            guard let sellerId = userInfo.uid else {
+            guard let sellerUserId = userInfo.uid else {
                 self.alert.showDetail("Sorry", with: "Unable to retrieve the seller's info. Please try again", for: self) {
                     self.navigationController?.popViewController(animated: true)
                 }
@@ -207,38 +214,59 @@ extension ChatViewController {
             // only the buyer can initiate the conversation
             // so the initial setting of the following data is true
             ref.setData([
-                "members": [sellerId, userId],
-                "sellerId": sellerId,
+                "members": [sellerUserId, userId],
+                "sellerUserId": sellerUserId,
                 "sellerDisplayName": userInfo.displayName,
                 "sellerPhotoURL": userInfo.photoURL ?? "NA",
-                "buyerId": userId,
+                "buyerUserId": userId,
                 "buyerDisplayName": displayName!,
                 "buyerPhotoURL": photoURL ?? "NA",
                 "docId": docId!,
                 "latestMessage": messageContent,
                 "sentAt": Date()
-            ])
+            ]) { [weak self] (error) in
+                if let error = error {
+                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                } else {
+//                    if let tabBarVCs = self?.tabBarController?.viewControllers {
+//                        for case let vc as UINavigationController in tabBarVCs where vc.title == "Inbox" {
+//                            for case let chatListVC as ChatListViewController in vc.children {
+//                                chatListVC.fetchChatList()
+//                            }
+//                        }
+//                    }
+                }
+            }
         } else {
             ref.updateData([
                 "latestMessage": messageContent,
                 "sentAt": Date()
-            ])
+            ]) { [weak self] (error) in
+                if let error = error {
+                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                }
+            }
         }
 
         ref.collection("messages").addDocument(data: [
             "sentAt": Date(),
             "content": messageContent,
             "sender": userId,
-            "recipient": userId == post.sellerId ? post.buyerId : post.sellerId,
-        ])
-        toolBarView.textView.text.removeAll()
+            "recipient": userId == post.sellerUserId ? post.buyerUserId! as String : post.sellerUserId as String,
+        ]) { [weak self] (error) in
+            if let error = error {
+                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+            } else {
+                self?.toolBarView.textView.text.removeAll()
+            }
+        }
     }
     
     private func sendImage(url: URL) {
         let ref = FirebaseService.shared.db.collection("chatrooms").document(docId)
         if self.messages.count == 0 {
             /// docId is the hashedId that corresponds to the unique ID of the chat room
-            guard let sellerId = userInfo.uid else {
+            guard let sellerUserId = userInfo.uid else {
                 self.alert.showDetail("Sorry", with: "Unable to retrieve the seller's info. Please try again", for: self) {
                     self.navigationController?.popViewController(animated: true)
                 }
@@ -250,11 +278,11 @@ extension ChatViewController {
             }
             
             ref.setData([
-                "members": [sellerId, userId],
-                "sellerId": sellerId,
+                "members": [sellerUserId, userId],
+                "sellerUserId": sellerUserId,
                 "sellerDisplayName": userInfo.displayName,
                 "sellerPhotoURL": userInfo.photoURL ?? "NA",
-                "buyerId": userId!,
+                "buyerUserId": userId!,
                 "buyerDisplayName": displayName!,
                 "buyerPhotoURL": photoURL ?? "NA",
                 "docId": docId!,
@@ -275,7 +303,7 @@ extension ChatViewController {
         ]
         ref.collection("messages").addDocument(data: data) { [weak self] (error) in
             if let error = error {
-                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
                     if let imageName = self?.imageName {
                         self?.deleteFile(fileName: imageName)
                     }
@@ -288,61 +316,161 @@ extension ChatViewController {
 extension ChatViewController {
     // MARK: - addKeyboardObserver
     private func addKeyboardObserver() {
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
-                                               name: UIResponder.keyboardWillChangeFrameNotification,
-                                               object: nil)
+//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
+//                                               name: UIResponder.keyboardWillShowNotification,
+//                                               object: nil)
+//
+//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
+//                                               name: UIResponder.keyboardWillHideNotification,
+//                                               object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
-                                               name: UIResponder.keyboardWillHideNotification,
-                                               object: nil)
     }
     
     // MARK: - removeKeyboardObserver
     private func removeKeyboardObserver(){
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
     }
     
-    // MARK: - keyboardNotifications
-    @objc private func keyboardNotifications(notification: NSNotification) {
+    @objc private func keyboardWillShow(notification: NSNotification) {
         if let userInfo = notification.userInfo {
             let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
             let keyboardViewEndFrame = view.convert(keyBoardFrame!, from: view.window)
             let keyboardHeight = keyboardViewEndFrame.height
-            
+
             let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! Double
             let curve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! UInt
-            
-            if notification.name == UIResponder.keyboardWillHideNotification {
-                self.tableView.frame.origin.y = .zero
-                //                toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: 60))
+
+            print("show")
+
+            self.tableView.frame = CGRect(origin: .zero, size: CGSize(width: self.view.bounds.size.width, height: self.view.bounds.size.height - keyboardHeight - toolBarView.bounds.size
+                                                                        .height))
+//            let insets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
+//            self.tableView.contentInset = insets
+//            self.tableView.scrollIndicatorInsets = insets
+
+            self.heightConstraint.constant = -keyboardHeight
+            self.view.setNeedsLayout()
+            let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
+            UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
+                self.view.layoutIfNeeded()
+            })
+            tableView.scrollToBottom()
+
+//                guard let lastIndexPath = self.tableView.indexPathsForVisibleRows?.last else {
+//                    return
+//                }
+//                print("lastIndexPath", lastIndexPath)
+//                let rectOfCell = self.tableView.rectForRow(at: lastIndexPath)
+//                print("rectOfCell", rectOfCell)
+//                let lastCellFrame = self.view.convert(rectOfCell, to: self.view.window)
+//                print("lastCellFrame", lastCellFrame)
+//                print("lastCellFrame.size.height", lastCellFrame.size.height)
+//                print("lastCellFrame.origin.y", lastCellFrame.origin.y)
+                print("keyboardHeight", keyboardHeight)
                 
-                self.heightConstraint.constant = 0
-                view.setNeedsLayout()
-                let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
-                UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
-                    //                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
-                    self.view.layoutIfNeeded()
-                })
-            } else {
-                tableView.scrollToBottom()
-                self.heightConstraint.constant = -keyboardHeight
-                view.setNeedsLayout()
-                let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
-                UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
-                    //                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
-                    self.view.layoutIfNeeded()
-                })
-                
-                if let lastCell = view.viewWithTag(100) {
-                    let lastCellFrame = lastCell.convert(lastCell.frame, to: view.superview)
-                    if lastCellFrame.origin.y + lastCellFrame.size.height > keyboardViewEndFrame.origin.y {
-                        let overlap = lastCellFrame.origin.y + lastCellFrame.size.height - keyboardViewEndFrame.origin.y + toolBarView.bounds.size.height + 10
-                        self.tableView.frame.origin.y = -overlap
-                    }
-                }
-            }
+//                DispatchQueue.main.async {
+//                    self.tableView.frame = CGRect(origin: .zero, size: CGSize(width: self.view.bounds.size.width, height: self.view.bounds.size.height - keyboardHeight))
+//                    let insets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
+//                    self.tableView.contentInset = insets
+//                    self.tableView.scrollIndicatorInsets = insets
+//                }
+
+//                if let lastCell = self.view.viewWithTag(100) {
+//                    let lastCellFrame = lastCell.convert(lastCell.frame, to: self.view.superview)
+//                    if lastCellFrame.origin.y + lastCellFrame.size.height > keyboardViewEndFrame.origin.y {
+//                        let overlap = lastCellFrame.origin.y + lastCellFrame.size.height - keyboardViewEndFrame.origin.y + self.toolBarView.bounds.size.height + 10
+//
+////                        lastCellFrame.intersects(keyBoardFrame)
+//                        self.tableView.frame.origin.y = -overlap
+//                    }
+//                }
+//                self.delay(0.5) {
+//                    if self.lastCellFrame.origin.y + lastCellFrame.size.height > keyboardViewEndFrame.origin.y {
+//                        let overlap = lastCellFrame.origin.y + lastCellFrame.size.height - keyboardViewEndFrame.origin.y + self.toolBarView.bounds.size.height + 10
+//                        self.tableView.frame.origin.y = -overlap
+//                    }
+//                }
         }
     }
+    
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        print("hide")
+        let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! Double
+        let curve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! UInt
+
+        let insets: UIEdgeInsets = .zero
+        tableView.contentInset = insets
+        tableView.scrollIndicatorInsets = insets
+        tableView.frame = CGRect(origin: .zero, size: view.bounds.size)
+        
+//        self.tableView.frame.origin.y = .zero
+        self.heightConstraint.constant = 0
+        view.setNeedsLayout()
+        let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
+        UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
+            //                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
+            self.view.layoutIfNeeded()
+        })
+    }
+    
+    // MARK: - keyboardNotifications
+//    @objc private func keyboardNotifications(notification: NSNotification) {
+//        if let userInfo = notification.userInfo {
+//            let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+//            let keyboardViewEndFrame = view.convert(keyBoardFrame!, from: view.window)
+//            let keyboardHeight = keyboardViewEndFrame.height
+//
+//            let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! Double
+//            let curve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! UInt
+//
+//            if notification.name == UIResponder.keyboardWillHideNotification {
+//                self.tableView.frame.origin.y = .zero
+//                //                toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: 60))
+//
+//                self.heightConstraint.constant = 0
+//                view.setNeedsLayout()
+//                let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
+//                UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
+//                    //                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
+//                    self.view.layoutIfNeeded()
+//                })
+//            } else if notification.name == UIResponder.keyboardWillShowNotification {
+//                print("unhide")
+////                tableView.scrollToBottom() {
+//                    self.heightConstraint.constant = -keyboardHeight
+//                    self.view.setNeedsLayout()
+//                    let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
+//                    UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
+//                        //                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
+//                        self.view.layoutIfNeeded()
+//                    })
+//
+//                    //                if let lastCell = tableView.getTheLastCell() {
+//                    //
+//                    //                }
+//
+//                    if let lastCell = self.tableView.getTheLastCell() {
+//                        print("lastCell", lastCell)
+//                        let lastCellFrame = lastCell.convert(lastCell.frame, from: self.view.window)
+//                        print("lastCellFrame", lastCellFrame)
+//                        print("lastCellFrame.size.height", lastCellFrame.size.height)
+//                        print("lastCellFrame.origin.y", lastCellFrame.origin.y)
+//                        if lastCellFrame.origin.y + lastCellFrame.size.height > keyboardViewEndFrame.origin.y {
+//                            print("lastCellFrame.origin.y + lastCellFrame.size.height", lastCellFrame.origin.y + lastCellFrame.size.height)
+//                            print("eyboardViewEndFrame.origin.y", keyboardViewEndFrame.origin.y)
+//                            let overlap = lastCellFrame.origin.y + lastCellFrame.size.height - keyboardViewEndFrame.origin.y + self.toolBarView.bounds.size.height + 10
+//                            print("overlap", overlap)
+//                            self.tableView.frame.origin.y = -overlap
+//                            print("moved")
+//                        }
+//                    }
+////                }
+//            }
+//        }
+//    }
 }
 
 extension ChatViewController: TableViewConfigurable, UITableViewDataSource {

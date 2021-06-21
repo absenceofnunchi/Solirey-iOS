@@ -12,6 +12,7 @@ class SavedViewController: ParentListViewController<Post>, RefetchDataDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = "Favourite"
         fetchData()
     }
     

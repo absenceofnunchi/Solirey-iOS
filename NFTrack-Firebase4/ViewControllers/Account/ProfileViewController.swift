@@ -198,7 +198,7 @@ extension ProfileViewController: ImageUploadable {
                     changeRequest?.photoURL = url
                     changeRequest?.commitChanges { [weak self] (error) in
                         if let error = error {
-                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
                                 self?.deleteFile(fileName: self!.profileImageName)
                                 self?.dismiss(animated: true, completion: nil)
                             }
@@ -207,19 +207,19 @@ extension ProfileViewController: ImageUploadable {
                         if self?.userInfo.email != email {
                             Auth.auth().currentUser?.updateEmail(to: email) { (error) in
                                 if let error = error {
-                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
                                         self?.deleteFile(fileName: self!.profileImageName)
                                         self?.dismiss(animated: true, completion: nil)
                                     }
                                 } else {
                                     self?.updateUser(displayName: displayName, photoURL: "\(url)", completion: { (error) in
                                         if let error = error {
-                                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+                                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
                                                 self?.deleteFile(fileName: self!.profileImageName)
                                                 self?.dismiss(animated: true, completion: nil)
                                             }
                                         } else {
-                                            self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self!) {
+                                            self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self) {
                                                 self?.deleteFile(fileName: self!.profileImageName)
                                                 self?.dismiss(animated: true, completion: nil)
                                             }
@@ -230,12 +230,12 @@ extension ProfileViewController: ImageUploadable {
                         } else {
                             self?.updateUser(displayName: displayName, photoURL: "\(url)", completion: { (error) in
                                 if let error = error {
-                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
                                         self?.deleteFile(fileName: self!.profileImageName)
                                         self?.dismiss(animated: true, completion: nil)
                                     }
                                 } else {
-                                    self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self!) {
+                                    self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self) {
                                         self?.deleteFile(fileName: self!.profileImageName)
                                         self?.dismiss(animated: true, completion: nil)
                                     }
@@ -250,20 +250,20 @@ extension ProfileViewController: ImageUploadable {
                 changeRequest?.photoURL = nil
                 changeRequest?.commitChanges { [weak self] (error) in
                     if let error = error {
-                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                     }
                     
                     if self?.userInfo.email != email {
                         Auth.auth().currentUser?.updateEmail(to: email) { (error) in
                             if let error = error {
-                                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                             }
                             
                             self?.updateUser(displayName: displayName, photoURL: nil, completion: { (error) in
                                 if let error = error {
-                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                                 } else {
-                                    self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self!) {
+                                    self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self) {
                                         self?.dismiss(animated: true, completion: nil)
                                     }
                                 }
@@ -272,9 +272,9 @@ extension ProfileViewController: ImageUploadable {
                     } else {
                         self?.updateUser(displayName: displayName, photoURL: nil, completion: { (error) in
                             if let error = error {
-                                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                             } else {
-                                self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self!) {
+                                self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self) {
                                     self?.dismiss(animated: true, completion: nil)
                                 }
                             }

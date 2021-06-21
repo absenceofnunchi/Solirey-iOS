@@ -33,7 +33,34 @@ class ListViewController: ParentListViewController<Post> {
         tableView.fill()
     }
     
-    fileprivate enum Segment: Int, CaseIterable {
+    final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ProgressCell.identifier) as? ProgressCell else {
+            fatalError("Sorry, could not load cell")
+        }
+        cell.selectionStyle = .none
+        let post = postArr[indexPath.row]
+        cell.updateAppearanceFor(.pending(post))
+        return cell
+    }
+    
+    final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let post = postArr[indexPath.row]
+        let listDetailVC = ListDetailViewController()
+        listDetailVC.post = post
+        listDetailVC.tableViewRefreshDelegate = self
+        self.navigationController?.pushViewController(listDetailVC, animated: true)
+    }
+    
+    // MARK: - didRefreshTableView
+    final override func didRefreshTableView() {
+        segmentedControl.selectedSegmentIndex = 1
+        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+        configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
+    }
+}
+
+extension ListViewController: SegmentConfigurable {
+    enum Segment: Int, CaseIterable {
         case buying, selling, purchases, posts
         
         func asString() -> String {
@@ -96,7 +123,7 @@ class ListViewController: ParentListViewController<Post> {
                 .whereField("status", in: status)
                 .getDocuments() { [weak self] (querySnapshot, err) in
                     if let err = err {
-                        self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self!)
+                        self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
                     } else {
                         defer {
                             DispatchQueue.main.async {
@@ -116,62 +143,7 @@ class ListViewController: ParentListViewController<Post> {
                     }
                 }
         } else {
-            self.alert.showDetail("Oops!", with: "You have to be logged in!", for: self)
+            self.alert.showDetail("Oops!", with: "Please try re-logging back in!", for: self)
         }
-    }
-    
-    final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: ProgressCell.identifier) as? ProgressCell else {
-            fatalError("Sorry, could not load cell")
-        }
-        cell.selectionStyle = .none
-        let post = postArr[indexPath.row]
-        cell.updateAppearanceFor(.pending(post))
-        return cell
-    }
-    
-//    final override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-//        guard let cell = cell as? ProgressCell else { return }
-//        
-//        // How should the operation update the cell once the data has been loaded?
-//        let updateCellClosure: (UIImage?) -> () = { [unowned self] (image) in
-//            cell.updateAppearanceFor(.fetched(image))
-//            self.loadingOperations.removeValue(forKey: indexPath)
-//        }
-//        
-//        // Try to find an existing data loader
-//        if let dataLoader = loadingOperations[indexPath] {
-//            // Has the data already been loaded?
-//            if let image = dataLoader.image {
-//                cell.updateAppearanceFor(.fetched(image))
-//                loadingOperations.removeValue(forKey: indexPath)
-//            } else {
-//                // No data loaded yet, so add the completion closure to update the cell once the data arrives
-//                dataLoader.loadingCompleteHandler = updateCellClosure
-//            }
-//        } else {
-//            // Need to create a data loaded for this index path
-//            if let dataLoader = dataStore.loadImage(at: indexPath.row) {
-//                // Provide the completion closure, and kick off the loading operation
-//                dataLoader.loadingCompleteHandler = updateCellClosure
-//                loadingQueue.addOperation(dataLoader)
-//                loadingOperations[indexPath] = dataLoader
-//            }
-//        }
-//    }
-    
-    final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let post = postArr[indexPath.row]
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = post
-        listDetailVC.tableViewRefreshDelegate = self
-        self.navigationController?.pushViewController(listDetailVC, animated: true)
-    }
-    
-    // MARK: - didRefreshTableView
-    final override func didRefreshTableView() {
-        segmentedControl.selectedSegmentIndex = 1
-        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
-        configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
     }
 }

@@ -279,23 +279,23 @@ extension SendViewController: UITextFieldDelegate {
                     if let error = error {
                         switch error {
                             case .invalidDestinationAddress:
-                                self?.alert.show("Error", with: "Invalid destination address", for: self!)
+                                self?.alert.showDetail("Error", with: "Invalid destination address", for: self)
                             case .invalidAmountFormat:
-                                self?.alert.show("Error", with: "Invalid amount format", for: self!)
+                                self?.alert.showDetail("Error", with: "Invalid amount format", for: self)
                             case .emptyDestinationAddress:
-                                self?.alert.show("Error", with: "Destination address cannot be empty", for: self!)
+                                self?.alert.showDetail("Error", with: "Destination address cannot be empty", for: self)
                             case .emptyAmount:
-                                self?.alert.show("Error", with: "Amount cannot be empty", for: self!)
+                                self?.alert.showDetail("Error", with: "Amount cannot be empty", for: self)
                             case .zeroAmount:
-                                self?.alert.show("Error", with: "Amount cannot be zero or below", for: self!)
+                                self?.alert.showDetail("Error", with: "Amount cannot be zero or below", for: self)
                             case .contractLoadingError:
-                                self?.alert.show("Error", with: "There was an error loading a contract. Please try again.", for: self!)
+                                self?.alert.showDetail("Error", with: "There was an error loading a contract. Please try again.", for: self)
                             case .createTransactionIssue:
-                                self?.alert.show("Error", with: "There was an error creating your transaction. Please try again.", for: self!)
+                                self?.alert.showDetail("Error", with: "There was an error creating your transaction. Please try again.", for: self)
                             case .insufficientFund:
-                                self?.alert.show("Error", with: "Insufficient fund", for: self!)
+                                self?.alert.showDetail("Error", with: "Insufficient fund", for: self)
                             default:
-                                self?.alert.show("Error", with: "Please try again.", for: self!)
+                                self?.alert.showDetail("Error", with: "Please try again.", for: self)
                         }
                     }
                     
@@ -327,12 +327,12 @@ extension SendViewController: UITextFieldDelegate {
 //                                        let newIndex = desc.index(after: index)
 //                                        let newStr = desc[newIndex...]
 //                                        DispatchQueue.main.async {
-//                                            self?.alert.show("Alert", with: String(newStr), for: self!)
+//                                            self?.alert.show("Alert", with: String(newStr), for: self)
 //                                        }
 //                                    }
 //                                } catch {
 //                                    DispatchQueue.main.async {
-//                                        self?.alert.show("Error", with: "Sorry, there was an error sending your ether. Please try again.", for: self!)
+//                                        self?.alert.show("Error", with: "Sorry, there was an error sending your ether. Please try again.", for: self)
 //                                    }
 //                                }
 //                            }

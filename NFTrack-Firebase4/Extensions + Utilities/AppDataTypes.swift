@@ -40,29 +40,104 @@ struct BorderStyle {
 // MARK: - Post
 /// ListViewController
 /// txHash is either for minting for the very first time or transferring the ownership afterwards
-struct Post {
-    let documentId: String
-    let title: String
-    let description: String
-    let date: Date
-    let images: [String]?
-    let price: String
-    let mintHash: String
-    let escrowHash: String
-    let id: String
-    let status: String
-    let sellerUserId: String
-    let sellerHash: String
-    let buyerHash: String?
-    let confirmPurchaseHash: String?
-    let confirmPurchaseDate: Date?
-    let transferHash: String?
-    let transferDate: Date?
-    let confirmReceivedHash: String?
-    let confirmReceivedDate: Date?
-    let savedBy: [String]?
+//struct Post {
+//    let documentId: String
+//    let title: String
+//    let description: String
+//    let date: Date
+//    let images: [String]?
+//    let price: String
+//    let mintHash: String
+//    let escrowHash: String
+//    let id: String
+//    let status: String
+//    let sellerUserId: String
+//    let sellerHash: String
+//    let buyerHash: String?
+//    let confirmPurchaseHash: String?
+//    let confirmPurchaseDate: Date?
+//    let transferHash: String?
+//    let transferDate: Date?
+//    let confirmReceivedHash: String?
+//    let confirmReceivedDate: Date?
+//    let savedBy: [String]?
+//}
+
+class PostCoreModel {
+    var documentId: String!
+    var buyerUserId: String?
+    var sellerUserId: String!
+    
+    init(documentId: String, buyerUserId: String?, sellerUserId: String) {
+        self.documentId = documentId
+        self.buyerUserId = buyerUserId
+        self.sellerUserId = sellerUserId
+    }
 }
 
+class Post: PostCoreModel {
+    var title: String!
+    var description: String!
+    var date: Date!
+    var images: [String]?
+    var price: String!
+    var mintHash: String!
+    var escrowHash: String!
+    var id: String!
+    var status: String!
+    var sellerHash: String!
+    var buyerHash: String?
+    var confirmPurchaseHash: String?
+    var confirmPurchaseDate: Date?
+    var transferHash: String?
+    var transferDate: Date?
+    var confirmReceivedHash: String?
+    var confirmReceivedDate: Date?
+    var savedBy: [String]?
+    
+    init(documentId: String, title: String, description: String, date: Date, images: [String]?, price: String, mintHash: String, escrowHash: String, id: String, status: String, sellerUserId: String, sellerHash: String, buyerHash: String?, confirmPurchaseHash: String?, confirmPurchaseDate: Date?, transferHash: String?, transferDate: Date?, confirmReceivedHash: String?, confirmReceivedDate: Date?, savedBy: [String]?) {
+        super.init(documentId: documentId, buyerUserId: nil, sellerUserId: sellerUserId)
+        
+        self.title = title
+        self.description = description
+        self.date = date
+        self.images = images
+        self.price = price
+        self.mintHash = mintHash
+        self.escrowHash = escrowHash
+        self.id = id
+        self.status = status
+        self.sellerHash = sellerHash
+        self.buyerHash = buyerHash
+        self.confirmPurchaseHash = confirmPurchaseHash
+        self.confirmPurchaseDate = confirmPurchaseDate
+        self.transferHash = transferHash
+        self.transferDate = transferDate
+        self.confirmReceivedHash = confirmReceivedHash
+        self.confirmReceivedDate = confirmReceivedDate
+        self.savedBy = savedBy
+    }
+}
+
+// MARK: - ChatListModel
+class ChatListModel: PostCoreModel {
+    var latestMessage: String!
+    var date: Date!
+    var buyerDisplayName: String!
+    var buyerPhotoURL: String!
+    var sellerDisplayName: String!
+    var sellerPhotoURL: String!
+    
+    init(documentId: String, latestMessage: String, date: Date, buyerDisplayName: String, buyerPhotoURL: String, buyerUserId: String?, sellerDisplayName: String, sellerPhotoURL: String, sellerUserId: String) {
+        super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
+        self.latestMessage = latestMessage
+        self.date = date
+        self.buyerDisplayName = buyerDisplayName
+        self.buyerPhotoURL = buyerPhotoURL
+        self.sellerDisplayName = sellerDisplayName
+        self.sellerPhotoURL = sellerPhotoURL
+    }
+}
 // MARK: - UILabelPadding
 /// ListDetailVC
 class UILabelPadding: UILabel {
@@ -199,37 +274,6 @@ struct UserDefaultKeys {
     static let photoURL: String = "photoURL"
 }
 
-class ChatCoreModel {
-    var docId: String!
-    var buyerId: String!
-    var sellerId: String!
-    
-    init(docId: String, buyerId: String, sellerId: String) {
-        self.docId = docId
-        self.buyerId = buyerId
-        self.sellerId = sellerId
-    }
-}
-
-// MARK: - ChatListModel
-class ChatListModel: ChatCoreModel {
-    var latestMessage: String!
-    var date: Date!
-    var buyerDisplayName: String!
-    var buyerPhotoURL: String!
-    var sellerDisplayName: String!
-    var sellerPhotoURL: String!
-    
-    init(docId: String, latestMessage: String, date: Date, buyerDisplayName: String, buyerPhotoURL: String, buyerId: String, sellerDisplayName: String, sellerPhotoURL: String, sellerId: String) {
-        super.init(docId: docId, buyerId: buyerId, sellerId: sellerId)
-        self.latestMessage = latestMessage
-        self.date = date
-        self.buyerDisplayName = buyerDisplayName
-        self.buyerPhotoURL = buyerPhotoURL
-        self.sellerDisplayName = sellerDisplayName
-        self.sellerPhotoURL = sellerPhotoURL
-    }
-}
 
 // MARK: - Message
 struct Message {

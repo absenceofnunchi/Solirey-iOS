@@ -26,11 +26,12 @@ class ChatListCell: ParentTableCell<ChatListModel> {
     var userId: String!
     private var displayName: String!
     private var photoURL: String!
+    let IMAGE_HEIGHT: CGFloat = 70
     
     final override func configure(_ post: ChatListModel?) {
         guard let post = post else { return }
         
-        if post.sellerId != userId {
+        if post.sellerUserId != userId {
             displayName = post.sellerDisplayName
             photoURL = post.sellerPhotoURL
         } else {
@@ -46,7 +47,7 @@ class ChatListCell: ParentTableCell<ChatListModel> {
         thumbImageView.image = profileImage
         thumbImageView.contentMode = .scaleAspectFill
         thumbImageView.clipsToBounds = true
-        thumbImageView.layer.cornerRadius = 5
+        thumbImageView.layer.cornerRadius = IMAGE_HEIGHT / 2
         thumbImageView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(thumbImageView)
         
@@ -102,8 +103,8 @@ class ChatListCell: ParentTableCell<ChatListModel> {
         NSLayoutConstraint.activate([
             thumbImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             thumbImageView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            thumbImageView.widthAnchor.constraint(equalToConstant: 70),
-            thumbImageView.heightAnchor.constraint(equalToConstant: 70),
+            thumbImageView.widthAnchor.constraint(equalToConstant: IMAGE_HEIGHT),
+            thumbImageView.heightAnchor.constraint(equalToConstant: IMAGE_HEIGHT),
             
             titleLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
             titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
@@ -125,5 +126,12 @@ class ChatListCell: ParentTableCell<ChatListModel> {
             timeLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
             timeLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.3),
         ])
+    }
+    
+    override func prepareForReuse() {
+        titleLabel.text = nil
+        thumbImageView.image = nil
+        descLabel.text = nil
+        dateLabel.text = nil
     }
 }

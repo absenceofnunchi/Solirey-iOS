@@ -38,44 +38,12 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
         cell.updateAppearanceFor(.pending(post))
         return cell
     }
-    
-//    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-//        guard let cell = cell as? ChatListCell else { return }
-//        
-//        // How should the operation update the cell once the data has been loaded?
-//        let updateCellClosure: (UIImage?) -> () = { [unowned self] (image) in
-//            cell.updateAppearanceFor(.fetched(image))
-//            self.loadingOperations.removeValue(forKey: indexPath)
-//        }
-//        
-//        // Try to find an existing data loader
-//        if let dataLoader = loadingOperations[indexPath] {
-//            // Has the data already been loaded?
-//            if let image = dataLoader.image {
-//                cell.updateAppearanceFor(.fetched(image))
-//                loadingOperations.removeValue(forKey: indexPath)
-//            } else {
-//                // No data loaded yet, so add the completion closure to update the cell once the data arrives
-//                dataLoader.loadingCompleteHandler = updateCellClosure
-//            }
-//        } else {
-//            // Need to create a data loaded for this index path
-//            if let dataLoader = dataStore.loadImage(at: indexPath.row) {
-//                // Provide the completion closure, and kick off the loading operation
-//                dataLoader.loadingCompleteHandler = updateCellClosure
-//                loadingQueue.addOperation(dataLoader)
-//                loadingOperations[indexPath] = dataLoader
-//            } else {
-//                //                cell.updateAppearanceFor(.none(post))
-//            }
-//        }
-//    }
-    
+
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
         
         var displayName: String!
-        if post.sellerId != userId {
+        if post.sellerUserId != userId {
             displayName = post.sellerDisplayName
         } else {
             displayName = post.buyerDisplayName
@@ -92,24 +60,24 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
 
 extension ChatListViewController {
     func fetchChatList() {
-        let docRef = FirebaseService.shared.db.collection("chatrooms")
-        docRef.getDocuments { [weak self] (document, error) in
-            if let error = error {
-                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
-            }
-            
-            if let document = document,
-               !document.isEmpty {
-                
+        FirebaseService.shared.db.collection("chatrooms")
+            .whereField("members", arrayContains: userId as String)
+            .addSnapshotListener { [weak self] querySnapshot, error in
+                guard let documents = querySnapshot?.documents, !documents.isEmpty else {
+                    if let error = error {
+                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                    }
+                    return
+                }
                 defer {
                     DispatchQueue.main.async {
                         self?.tableView.reloadData()
                     }
                 }
                 
-                for doc in document.documents {
+                for doc in documents {
                     let data = doc.data()
-                    var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerId, buyerId: String!
+                    var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId: String!
                     var date: Date!
                     data.forEach { (item) in
                         switch item.key {
@@ -117,8 +85,8 @@ extension ChatListViewController {
                                 buyerDisplayName = item.value as? String
                             case "buyerPhotoURL":
                                 buyerPhotoURL = item.value as? String
-                            case "buyerId":
-                                buyerId = item.value as? String
+                            case "buyerUserId":
+                                buyerUserId = item.value as? String
                             case "latestMessage":
                                 latestMessage = item.value as? String
                             case "sellerDisplayName":
@@ -128,18 +96,64 @@ extension ChatListViewController {
                             case "sentAt":
                                 let timeStamp = item.value as? Timestamp
                                 date = timeStamp?.dateValue()
-                            case "sellerId":
-                                sellerId = item.value as? String
+                            case "sellerUserId":
+                                sellerUserId = item.value as? String
                             default:
                                 break
                         }
                     }
-                    let chatListModel = ChatListModel(docId: doc.documentID, latestMessage: latestMessage, date: date, buyerDisplayName: buyerDisplayName, buyerPhotoURL: buyerPhotoURL, buyerId: buyerId, sellerDisplayName: sellerDisplayName, sellerPhotoURL: sellerPhotoURL, sellerId: sellerId)
+                    let chatListModel = ChatListModel(documentId: doc.documentID, latestMessage: latestMessage, date: date, buyerDisplayName: buyerDisplayName, buyerPhotoURL: buyerPhotoURL, buyerUserId: buyerUserId, sellerDisplayName: sellerDisplayName, sellerPhotoURL: sellerPhotoURL, sellerUserId: sellerUserId)
+                    self?.postArr.removeAll()
                     self?.postArr.append(chatListModel)
                 }
-            } else {
-                print("no data")
             }
-        }
+//        docRef.getDocuments { [weak self] (document, error) in
+//            if let error = error {
+//                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+//            }
+//
+//            if let document = document,
+//               !document.isEmpty {
+//
+//                defer {
+//                    DispatchQueue.main.async {
+//                        self?.tableView.reloadData()
+//                    }
+//                }
+//
+//                for doc in document.documents {
+//                    let data = doc.data()
+//                    var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId: String!
+//                    var date: Date!
+//                    data.forEach { (item) in
+//                        switch item.key {
+//                            case "buyerDisplayName":
+//                                buyerDisplayName = item.value as? String
+//                            case "buyerPhotoURL":
+//                                buyerPhotoURL = item.value as? String
+//                            case "buyerUserId":
+//                                buyerUserId = item.value as? String
+//                            case "latestMessage":
+//                                latestMessage = item.value as? String
+//                            case "sellerDisplayName":
+//                                sellerDisplayName = item.value as? String
+//                            case "sellerPhotoURL":
+//                                sellerPhotoURL = item.value as? String
+//                            case "sentAt":
+//                                let timeStamp = item.value as? Timestamp
+//                                date = timeStamp?.dateValue()
+//                            case "sellerUserId":
+//                                sellerUserId = item.value as? String
+//                            default:
+//                                break
+//                        }
+//                    }
+//                    let chatListModel = ChatListModel(documentId: doc.documentID, latestMessage: latestMessage, date: date, buyerDisplayName: buyerDisplayName, buyerPhotoURL: buyerPhotoURL, buyerUserId: buyerUserId, sellerDisplayName: sellerDisplayName, sellerPhotoURL: sellerPhotoURL, sellerUserId: sellerUserId)
+//                    self?.postArr.append(chatListModel)
+//                }
+//            } else {
+//                print("no data")
+//            }
+//        }
     }
 }

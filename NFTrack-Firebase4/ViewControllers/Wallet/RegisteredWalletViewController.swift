@@ -253,7 +253,7 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
                     self?.dismiss(animated: true, completion: nil)
                     self?.localDatabase.deleteWallet { (error) in
                         if let error = error {
-                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                         }
                         self?.delegate?.didProcessWallet()
                     }

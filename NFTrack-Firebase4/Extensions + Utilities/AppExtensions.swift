@@ -134,10 +134,10 @@ extension UIViewController {
     }
     
     // MARK: - createTitleLabel
-    func createTitleLabel(text: String) -> UILabel {
+    func createTitleLabel(text: String, fontSize: CGFloat? = nil, weight: UIFont.Weight = .bold) -> UILabel {
         let label = UILabel()
         label.text = text
-        label.font = .rounded(ofSize: label.font.pointSize, weight: .bold)
+        label.font = .rounded(ofSize: (fontSize != nil ? fontSize: label.font.pointSize)!, weight: weight)
         label.textColor = .lightGray
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -337,12 +337,19 @@ protocol ScannerDelegate: AnyObject {
 
 // MARK: - UIImageView
 extension UIImageView {
-    func setImage(from urlAddress: String?) {
-        guard let urlAddress = urlAddress, let url = URL(string: urlAddress) else { return }
+    func setImage(from urlAddress: String?, completion: (() -> Void)? = nil) {
+        guard let urlAddress = urlAddress, let url = URL(string: urlAddress) else {
+            completion?()
+            return
+        }
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else { return }
+            guard let data = data, error == nil else {
+                completion?()
+                return
+            }
             DispatchQueue.main.async {
                 self.image = UIImage(data: data)
+                completion?()
             }
         }
         task.resume()
@@ -351,13 +358,19 @@ extension UIImageView {
 
 // MARK: - UITableView
 extension UITableView {
-    func scrollToBottom(animated: Bool = true) {
+    func scrollToBottom(animated: Bool = true, completion: ((IndexPath) -> Void)? = nil) {
         let sections = self.numberOfSections
         let rows = self.numberOfRows(inSection: sections - 1)
         if (rows > 0){
             let indexPath = IndexPath(row: rows - 1, section: sections - 1)
             self.scrollToRow(at: indexPath, at: .bottom, animated: true)
+            completion?(indexPath)
         }
+    }
+    
+    func getCell(at indexPath: IndexPath) -> UITableViewCell? {
+        let cell = self.cellForRow(at: indexPath)
+        return cell
     }
 }
 
@@ -371,5 +384,27 @@ extension UISearchController {
                 self.view.frame = presentingVC.view.frame
             }
         }
+    }
+}
+
+
+extension Notification.Name {
+    static let didUpdateProgress = Notification.Name("didUpdateProgress")
+    static let willDismiss = Notification.Name("willDismiss")
+}
+
+extension UIImageView {
+    func enableZoom() {
+        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(startZooming(_:)))
+        isUserInteractionEnabled = true
+        addGestureRecognizer(pinchGesture)
+    }
+    
+    @objc
+    private func startZooming(_ sender: UIPinchGestureRecognizer) {
+        let scaleResult = sender.view?.transform.scaledBy(x: sender.scale, y: sender.scale)
+        guard let scale = scaleResult, scale.a > 1, scale.d > 1 else { return }
+        sender.view?.transform = scale
+        sender.scale = 1
     }
 }

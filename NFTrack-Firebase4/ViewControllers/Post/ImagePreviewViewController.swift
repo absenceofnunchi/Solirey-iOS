@@ -143,7 +143,7 @@ extension ImagePreviewViewController {
     
     func deleteAllLocalFiles() {
         let fileManager = FileManager.default
-        let documentsUrl =  FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first! as NSURL
+        let documentsUrl =  fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first! as NSURL
         let documentsPath = documentsUrl.path
         
         do {

@@ -62,6 +62,7 @@ class ParentPostViewController: UIViewController {
         configureUI()
         configureImagePreview()
         setConstraints()
+        deleteAllFiles()
     }
  
     override func viewDidAppear(_ animated: Bool) {
@@ -322,6 +323,8 @@ extension ParentPostViewController {
                         let token = createSearchToken(text: text, index: tagTextField.tokens.count)
                         tagTextField.insertToken(token, at: tagTextField.tokens.count > 0 ? tagTextField.tokens.count : 0)
                     }
+                case 5:
+                    configureProgress()
                 default:
                     break
             }
@@ -429,7 +432,26 @@ extension ParentPostViewController {
     }
     
     @objc func mint() {
-
+    }
+    
+    @objc func configureProgress() {
+        
+    }
+    
+    func deleteAllFiles() {
+        let documentsUrl =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        
+        do {
+            let fileURLs = try FileManager.default.contentsOfDirectory(at: documentsUrl,
+                                                                       includingPropertiesForKeys: nil,
+                                                                       options: .skipsHiddenFiles)
+            for fileURL in fileURLs {
+                print("fileURL", fileURL)
+                try FileManager.default.removeItem(at: fileURL)
+            }
+        } catch  {
+            print(error)
+        }
     }
 }
 
@@ -475,23 +497,22 @@ extension ParentPostViewController {
         //        let tokenId = ABI.Element.InOut(name: "tokenId", type: .uint(bits: 256))
         //        let abiElement = ABI.Element.Function(name: "Transfer", inputs: [from, to, tokenId], outputs: [], constant: false, payable: false)
         //        print("abiElement", abiElement)
-        
-        
-                let from = ABI.Element.Event.Input(name: "from", type: .address, indexed: true)
-                let to = ABI.Element.Event.Input(name: "to", type: .address, indexed: true)
-                let tokenId = ABI.Element.Event.Input(name: "tokenId", type: .uint(bits: 256), indexed: true)
-                let abiEvent = ABI.Element.Event(name: "Transfer", inputs: [from, to, tokenId], anonymous: false)
-                print("abiEvent", abiEvent)
-        
-                let eventLogData = Data(base64Encoded: "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef")
-                let eventLogTopics = [
-                    Data(base64Encoded: "0x0000000000000000000000000000000000000000000000000000000000000000")!,
-                    Data(base64Encoded: "0x0000000000000000000000006879f0a123056b5bb56c7e787cf64a67f3a16a71")!,
-                    Data(base64Encoded: "0x0000000000000000000000000000000000000000000000000000000000000030")!
-                ]
-        
-                let decodedLog = ABIDecoder.decodeLog(event: abiEvent, eventLogTopics: eventLogTopics, eventLogData: eventLogData!)
-                print("decodedLog", decodedLog as Any)
+    
+//                let from = ABI.Element.Event.Input(name: "from", type: .address, indexed: true)
+//                let to = ABI.Element.Event.Input(name: "to", type: .address, indexed: true)
+//                let tokenId = ABI.Element.Event.Input(name: "tokenId", type: .uint(bits: 256), indexed: true)
+//                let abiEvent = ABI.Element.Event(name: "Transfer", inputs: [from, to, tokenId], anonymous: false)
+//                print("abiEvent", abiEvent)
+//
+//                let eventLogData = Data(base64Encoded: "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef")
+//                let eventLogTopics = [
+//                    Data(base64Encoded: "0x0000000000000000000000000000000000000000000000000000000000000000")!,
+//                    Data(base64Encoded: "0x0000000000000000000000006879f0a123056b5bb56c7e787cf64a67f3a16a71")!,
+//                    Data(base64Encoded: "0x0000000000000000000000000000000000000000000000000000000000000030")!
+//                ]
+//
+//                let decodedLog = ABIDecoder.decodeLog(event: abiEvent, eventLogTopics: eventLogTopics, eventLogData: eventLogData!)
+//                print("decodedLog", decodedLog as Any)
     }
 }
 
@@ -501,7 +522,7 @@ extension ParentPostViewController: MessageDelegate, ImageUploadable {
         // get the token ID to be uploaded to Firestore
         getTokenId(topics: topics) { [weak self](tokenId, error) in
             if let error = error {
-                self?.alert.showDetail("Token ID Fetch Error", with: error.localizedDescription, for: self!)
+                self?.alert.showDetail("Token ID Fetch Error", with: error.localizedDescription, for: self)
             }
             
             if let tokenId = tokenId {
@@ -509,19 +530,26 @@ extension ParentPostViewController: MessageDelegate, ImageUploadable {
                     "tokenId": tokenId
                 ]) { (error) in
                     if let error = error {
-                        self?.alert.showDetail("Error Loading TokenID", with: error.localizedDescription, for: self!)
+                        self?.alert.showDetail("Error Loading TokenID", with: error.localizedDescription, for: self)
                     } else {
-                        
                         defer {
-                            print("final")
-                            self?.alert.showDetail("Success", with: "You have successfully minted a token", for: self!) {
-                                self?.titleTextField.text?.removeAll()
-                                self?.priceTextField.text?.removeAll()
-                                self?.descTextView.text?.removeAll()
-                                self?.idTextField.text?.removeAll()
-                                self?.pickerLabel.text?.removeAll()
-                                self?.tagTextField.tokens.removeAll()
-                            }
+                            let update: [String: PostProgress] = ["update": .images]
+                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                            self?.titleTextField.text?.removeAll()
+                            self?.priceTextField.text?.removeAll()
+                            self?.descTextView.text?.removeAll()
+                            self?.idTextField.text?.removeAll()
+                            self?.pickerLabel.text?.removeAll()
+                            self?.tagTextField.tokens.removeAll()
+                            
+//                            self?.alert.showDetail("Success", with: "You have successfully minted a token", for: self) {
+//                                self?.titleTextField.text?.removeAll()
+//                                self?.priceTextField.text?.removeAll()
+//                                self?.descTextView.text?.removeAll()
+//                                self?.idTextField.text?.removeAll()
+//                                self?.pickerLabel.text?.removeAll()
+//                                self?.tagTextField.tokens.removeAll()
+//                            }
                         }
                         // disconnect socket
                         self?.socketDelegate.disconnectSocket()
@@ -529,7 +557,8 @@ extension ParentPostViewController: MessageDelegate, ImageUploadable {
                         // upload images and delete them afterwards
                         if self!.imageNameArr.count > 0, let imageNameArr = self?.imageNameArr {
                             defer {
-                                print("inside")
+                                let update: [String: PostProgress] = ["update": .images]
+                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                             }
                             for image in imageNameArr {
                                 self?.uploadImages(image: image, userId: self!.userId) {(url) in
@@ -545,16 +574,18 @@ extension ParentPostViewController: MessageDelegate, ImageUploadable {
                                             print("after update data")
                                         }
                                         if let error = error {
-                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                         }
                                     })
                                 }
                                 imageCount += 1
-                                print("imageCount", imageCount)
                                 if imageCount == imageNameArr.count, let ipvc = self?.imagePreviewVC {
                                     self?.imageNameArr.removeAll()
                                     ipvc.data.removeAll()
                                     ipvc.collectionView.reloadData()
+                                    for imageName in imageNameArr {
+                                        self?.deleteFile(fileName: imageName)
+                                    }
                                 }
                             }
                         }

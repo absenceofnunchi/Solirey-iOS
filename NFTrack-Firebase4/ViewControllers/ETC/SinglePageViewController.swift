@@ -436,14 +436,14 @@ extension SinglePageViewController {
 
         keyService.addNewWalletWithPrivateKey(key: privateKey, password: password) { [weak self](wallet, error) in
             if let _ = error {
-                self?.alert.showDetail("Sorry", with: "There was an error importing your wallet", for: self!)
+                self?.alert.showDetail("Sorry", with: "There was an error importing your wallet", for: self)
                 return
             }
 
             guard let wallet = wallet else { return }
             self?.localDatabase.saveWallet(isRegistered: true, wallet: wallet) { (error) in
                 if let _ = error {
-                    self?.alert.showDetail("Sorry", with: "There was an error saving your imported wallet", for: self!)
+                    self?.alert.showDetail("Sorry", with: "There was an error saving your imported wallet", for: self)
                     return
                 }
 

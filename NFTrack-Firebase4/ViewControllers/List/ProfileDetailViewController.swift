@@ -86,7 +86,7 @@ extension ProfileDetailViewController: TableViewConfigurable {
             .whereField("status", isEqualTo: "ready")
             .getDocuments { [weak self] (querySnapshot, err) in
                 if let err = err {
-                    self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self!)
+                    self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
                 } else {
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                         self?.postArr = data

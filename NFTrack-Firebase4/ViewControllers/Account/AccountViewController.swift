@@ -20,11 +20,12 @@ class AccountViewController: UIViewController {
     
     var tableView: UITableView!
     var data: [AccountMenu] = [
-        AccountMenu(imageTitle: "person.circle", imageColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), titleString: "Update Profile"),
-        AccountMenu(imageTitle: "lock.circle", imageColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), titleString: "Reset Password"),
-        AccountMenu(imageTitle: "arrowshape.turn.up.right.circle", imageColor: UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1), titleString: "Logout"),
-        AccountMenu(imageTitle: "envelope.circle", imageColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), titleString: "Feedback"),
-        AccountMenu(imageTitle: "trash.circle", imageColor: UIColor(red: 49/255, green: 11/255, blue: 11/255, alpha: 1), titleString: "Delete Account")
+        AccountMenu(imageTitle: "person.circle", imageColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), titleString: NSLocalizedString("Update Profile", comment: "")),
+        AccountMenu(imageTitle: "lock.circle", imageColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), titleString: NSLocalizedString("Reset Password", comment: "")),
+        AccountMenu(imageTitle: "arrowshape.turn.up.right.circle", imageColor: UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1), titleString: NSLocalizedString("Logout", comment: "")),
+        AccountMenu(imageTitle: "pencil.circle", imageColor: .blue, titleString: NSLocalizedString("Pending Reviews", comment: "")),
+        AccountMenu(imageTitle: "envelope.circle", imageColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), titleString: NSLocalizedString("Feedback", comment: "")),
+        AccountMenu(imageTitle: "trash.circle", imageColor: UIColor(red: 49/255, green: 11/255, blue: 11/255, alpha: 1), titleString: NSLocalizedString("Delete Account", comment: ""))
     ]
     
     var logoutButton: UIButton!
@@ -47,7 +48,7 @@ class AccountViewController: UIViewController {
 
 extension AccountViewController: TableViewConfigurable {
     func configureUI() {
-        tableView = configureTableView(delegate: self, dataSource: self, height: 80, cellType: AccountCell.self, identifier: AccountCell.identifier)
+        tableView = configureTableView(delegate: self, dataSource: self, height: 70, cellType: AccountCell.self, identifier: AccountCell.identifier)
         tableView.isScrollEnabled = false
         tableView.separatorStyle = .none
         view.addSubview(tableView)
@@ -89,8 +90,10 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
             case 3:
                 didLogout()
             case 4:
-                print("feedback")
+                review()
             case 5:
+                print("feedback")
+            case 6:
                 didDeleteUser()
             default:
                 break
@@ -111,10 +114,10 @@ extension AccountViewController {
                             // [START_EXCLUDE]
                             self?.hideSpinner {
                                 if let error = error {
-                                    self?.alert.showDetail("Error resetting the password", with: error.localizedDescription, for: self!)
+                                    self?.alert.showDetail("Error resetting the password", with: error.localizedDescription, for: self)
                                     return
                                 }
-                                self?.alert.showDetail("Success!", with: "An email has been sent to reset the password", for: self!)
+                                self?.alert.showDetail("Success!", with: "An email has been sent to reset the password", for: self)
                             }
                             // [END_EXCLUDE]
                         }
@@ -135,20 +138,20 @@ extension AccountViewController {
             self?.showSpinner({
                 self?.localDatabase.deleteWallet { (error) in
                     if let error = error {
-                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                     } else {
                         let firebaseAuth = Auth.auth()
                         do {
                             try firebaseAuth.signOut()
                         } catch let signOutError as NSError {
-                            self?.alert.showDetail("Error", with: "Error signing out: \(signOutError)", for: self!)
+                            self?.alert.showDetail("Error", with: "Error signing out: \(signOutError)", for: self)
                         }
                     }
                 }
             })
         }
-        self.present(detailVC, animated: true, completion: {
-            self.hideSpinner {}
+        self.present(detailVC, animated: true, completion: { [weak self] in
+            self?.hideSpinner {}
         })
     }
     
@@ -162,22 +165,22 @@ extension AccountViewController {
             self?.showSpinner({
                 self?.localDatabase.deleteWallet { (error) in
                     if let error = error {
-                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                     } else {
                         let user = Auth.auth().currentUser
                         user?.delete { error in
                             if let error = error {
-                                self?.alert.showDetail("Error resetting the user", with: error.localizedDescription, for: self!)
+                                self?.alert.showDetail("Error resetting the user", with: error.localizedDescription, for: self)
                             } else {
-                                self?.alert.showDetail("Success!", with: "You account has been successfully deleted.", for: self!)
+                                self?.alert.showDetail("Success!", with: "You account has been successfully deleted.", for: self)
                             }
                         }
                     }
                 }
             })
         }
-        self.present(detailVC, animated: true, completion: {
-            self.hideSpinner {}
+        self.present(detailVC, animated: true, completion: { [weak self] in
+            self?.hideSpinner {}
         })
     }
     
@@ -186,5 +189,10 @@ extension AccountViewController {
         let profileVC = ProfileViewController()
         profileVC.modalPresentationStyle = .fullScreen
         present(profileVC, animated: true, completion: nil)
+    }
+    
+    func review() {
+        let reviewVC = ReviewViewController()
+        self.navigationController?.pushViewController(reviewVC, animated: true)
     }
 }

@@ -43,7 +43,7 @@ class PostImageDataStore: ImageDataStore<Post> {
 class ChatImageDataStore: ImageDataStore<ChatListModel> {
     final var userId: String!
     final override func dataLoadBuffer(_ post: ChatListModel) -> DataLoadOperation? {
-        if post.sellerId != userId {
+        if post.sellerUserId != userId {
             return DataLoadOperation(post.sellerPhotoURL)
         } else {
             return DataLoadOperation(post.buyerPhotoURL)

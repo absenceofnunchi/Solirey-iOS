@@ -167,7 +167,7 @@
 //        FirebaseService.shared.db.collection("chatrooms").document(docId).collection("messages")
 //            .order(by: "sentAt", descending: false).addSnapshotListener { [weak self] (snapShot, error) in
 //                if let error = error {
-//                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!)
+//                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
 //                }
 //                
 //                guard let documents = snapShot?.documents else {
@@ -280,7 +280,7 @@
 //        ]
 //        ref.collection("messages").addDocument(data: data) { [weak self] (error) in
 //            if let error = error {
-//                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self!) {
+//                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
 //                    if let imageName = self?.imageName {
 //                        self?.deleteFile(fileName: imageName)
 //                    }

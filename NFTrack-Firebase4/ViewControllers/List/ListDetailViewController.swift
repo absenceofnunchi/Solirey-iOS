@@ -50,7 +50,14 @@ class ListDetailViewController: ParentDetailViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: descLabel.bounds.size.height + 800 + historyTableViewHeight)
+        var contentHeight: CGFloat!
+        if let images = post.images, images.count > 0 {
+            contentHeight = descLabel.bounds.size.height + 800 + historyTableViewHeight + 250
+        } else {
+            contentHeight = descLabel.bounds.size.height + 800 + historyTableViewHeight
+        }
+        
+        scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: contentHeight)
     }
 }
 
@@ -158,6 +165,7 @@ extension ListDetailViewController {
             case 6:
                 let chatVC = ChatViewController()
                 chatVC.userInfo = userInfo
+                chatVC.post = post
                 // to display the title on ChatList when multiple items under the same owner
                 // or maybe search for pre-existing chat room first and join the same one
                 // chatVC.itemName = title
@@ -315,17 +323,17 @@ extension ListDetailViewController {
             if let error = error {
                 switch error {
                     case .invalidAmountFormat:
-                        self?.alert.showDetail("Error", with: "The ETH amount is not in a correct format!", for: self!)
+                        self?.alert.showDetail("Error", with: "The ETH amount is not in a correct format!", for: self)
                     case .zeroAmount:
-                        self?.alert.showDetail("Error", with: "The ETH amount cannot be negative", for: self!)
+                        self?.alert.showDetail("Error", with: "The ETH amount cannot be negative", for: self)
                     case .insufficientFund:
-                        self?.alert.showDetail("Error", with: "There is an insufficient amount of ETH in the wallet.", for: self!)
+                        self?.alert.showDetail("Error", with: "There is an insufficient amount of ETH in the wallet.", for: self)
                     case .contractLoadingError:
-                        self?.alert.showDetail("Error", with: "There was an error loading your contract.", for: self!)
+                        self?.alert.showDetail("Error", with: "There was an error loading your contract.", for: self)
                     case .createTransactionIssue:
-                        self?.alert.showDetail("Error", with: "There was an error creating the transaction.", for: self!)
+                        self?.alert.showDetail("Error", with: "There was an error creating the transaction.", for: self)
                     default:
-                        self?.alert.showDetail("Sorry", with: "There was an error. Please try again.", for: self!)
+                        self?.alert.showDetail("Sorry", with: "There was an error. Please try again.", for: self)
                 }
             }
             
@@ -356,9 +364,9 @@ extension ListDetailViewController {
                                                         "\(method)Date": Date()
                                                     ], completion: { (error) in
                                                         if let error = error {
-                                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                         } else {
-                                                            self?.alert.showDetail("Success!", with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.", for: self!) {
+                                                            self?.alert.showDetail("Success!", with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.", for: self) {
                                                                 self?.getStatus()
                                                                 self?.navigationController?.popViewController(animated: true)
                                                             }
@@ -373,9 +381,9 @@ extension ListDetailViewController {
                                                         "\(method)Date": Date()
                                                     ], completion: { (error) in
                                                         if let error = error {
-                                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                         } else {
-                                                            self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", for: self!) {
+                                                            self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", for: self) {
                                                                 self?.tableViewRefreshDelegate?.didRefreshTableView()
                                                                 self?.navigationController?.popViewController(animated: true)
                                                             }
@@ -384,9 +392,9 @@ extension ListDetailViewController {
                                                 case .aborted:
                                                     FirebaseService.shared.db.collection("post").document(self!.post.documentId).delete() { err in
                                                         if let err = err {
-                                                            self?.alert.showDetail("Error", with: err.localizedDescription, for: self!)
+                                                            self?.alert.showDetail("Error", with: err.localizedDescription, for: self)
                                                         } else {
-                                                            self?.alert.showDetail("Success!", with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.", for: self!) {
+                                                            self?.alert.showDetail("Success!", with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.", for: self) {
                                                                 self?.navigationController?.popViewController(animated: true)
                                                             }
                                                         }
@@ -399,14 +407,14 @@ extension ListDetailViewController {
                                         if let index = desc.firstIndex(of: ":") {
                                             let newIndex = desc.index(after: index)
                                             let newStr = desc[newIndex...]
-                                            self?.alert.showDetail("Alert", with: String(newStr), for: self!)
+                                            self?.alert.showDetail("Alert", with: String(newStr), for: self)
                                         }
                                     } catch {
                                         if let index = error.localizedDescription.firstIndex(of: "(") {
                                             let newStr = error.localizedDescription.prefix(upTo: index)
-                                            self?.alert.showDetail("Alert", with: String(newStr), for: self!)
+                                            self?.alert.showDetail("Alert", with: String(newStr), for: self)
                                         }
-                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                     }
                                 }
                             }
@@ -441,12 +449,12 @@ extension ListDetailViewController {
                 }
                 
                 guard let bh = buyerHash else {
-                    self?.alert.showDetail("Error", with: "The item has not been purchased by a buyer yet.", for: self!)
+                    self?.alert.showDetail("Error", with: "The item has not been purchased by a buyer yet.", for: self)
                     return
                 }
                 
                 guard let ti = tokenId else {
-                    self?.alert.showDetail("Error", with: "The item does not have token ID registered.", for: self!)
+                    self?.alert.showDetail("Error", with: "The item does not have token ID registered.", for: self)
                     return
                 }
                 
@@ -457,17 +465,17 @@ extension ListDetailViewController {
                     if let error = error {
                         switch error {
                             case .invalidAmountFormat:
-                                self?.alert.showDetail("Error", with: "The ETH amount is not in a correct format!", for: self!)
+                                self?.alert.showDetail("Error", with: "The ETH amount is not in a correct format!", for: self)
                             case .zeroAmount:
-                                self?.alert.showDetail("Error", with: "The ETH amount cannot be negative", for: self!)
+                                self?.alert.showDetail("Error", with: "The ETH amount cannot be negative", for: self)
                             case .insufficientFund:
-                                self?.alert.showDetail("Error", with: "There is an insufficient amount of ETH in the wallet.", for: self!)
+                                self?.alert.showDetail("Error", with: "There is an insufficient amount of ETH in the wallet.", for: self)
                             case .contractLoadingError:
-                                self?.alert.showDetail("Error", with: "There was an error loading your contract.", for: self!)
+                                self?.alert.showDetail("Error", with: "There was an error loading your contract.", for: self)
                             case .createTransactionIssue:
-                                self?.alert.showDetail("Error", with: "There was an error creating the transaction.", for: self!)
+                                self?.alert.showDetail("Error", with: "There was an error creating the transaction.", for: self)
                             default:
-                                self?.alert.showDetail("Sorry", with: "There was an error. Please try again.", for: self!)
+                                self?.alert.showDetail("Sorry", with: "There was an error. Please try again.", for: self)
                         }
                     }
                     
@@ -487,9 +495,9 @@ extension ListDetailViewController {
                                                     "status": PostStatus.transferred.rawValue
                                                 ], completion: { (error) in
                                                     if let error = error {
-                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                     } else {
-                                                        self?.alert.showDetail("Success!", with: "The token has been successfully transferred.", for: self!) {
+                                                        self?.alert.showDetail("Success!", with: "The token has been successfully transferred.", for: self) {
                                                             
                                                         }
                                                     }
@@ -498,10 +506,10 @@ extension ListDetailViewController {
                                                 if let index = desc.firstIndex(of: ":") {
                                                     let newIndex = desc.index(after: index)
                                                     let newStr = desc[newIndex...]
-                                                    self?.alert.showDetail("Alert", with: String(newStr), for: self!)
+                                                    self?.alert.showDetail("Alert", with: String(newStr), for: self)
                                                 }
                                             } catch {
-                                                self?.alert.showDetail("Error", with: "There was an error with the transfer transaction.", for: self!)
+                                                self?.alert.showDetail("Error", with: "There was an error with the transfer transaction.", for: self)
                                             }
                                         }
                                     })
@@ -512,7 +520,7 @@ extension ListDetailViewController {
                     }
                 })
             } else {
-                self?.alert.showDetail("Sorry", with: "Unable to find the token to transfer.", for: self!)
+                self?.alert.showDetail("Sorry", with: "Unable to find the token to transfer.", for: self)
             }
         }
     }

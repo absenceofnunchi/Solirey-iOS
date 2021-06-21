@@ -105,11 +105,11 @@ extension ResellViewController {
                 if let error = error {
                     switch error {
                         case .contractLoadingError:
-                            self?.alert.showDetail("Error", with: "Contract Loading Error", for: self!)
+                            self?.alert.showDetail("Error", with: "Contract Loading Error", for: self)
                         case .createTransactionIssue:
-                            self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self!)
+                            self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self)
                         default:
-                            self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self!)
+                            self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self)
                     }
                 }
                 
@@ -129,11 +129,11 @@ extension ResellViewController {
                                                 if let error = mintError {
                                                     switch error {
                                                         case .contractLoadingError:
-                                                            self?.alert.showDetail("Error", with: "Contract Loading Error", for: self!)
+                                                            self?.alert.showDetail("Error", with: "Contract Loading Error", for: self)
                                                         case .createTransactionIssue:
-                                                            self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self!)
+                                                            self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self)
                                                         default:
-                                                            self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self!)
+                                                            self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self)
                                                     }
                                                 }
                                                 
@@ -166,9 +166,10 @@ extension ResellViewController {
                                                             "status": PostStatus.ready.rawValue,
                                                             "tags": Array(tokensArr),
                                                             "itemIdentifier": convertedId,
+                                                            "isReviewed": false
                                                         ]) { (error) in
                                                             if let error = error {
-                                                                self?.alert.showDetail("Error", with: error.localizedDescription, for: self!) {
+                                                                self?.alert.showDetail("Error", with: error.localizedDescription, for: self) {
                                                                     for image in self!.imageNameArr {
                                                                         self?.deleteFile(fileName: image)
                                                                     }
@@ -182,7 +183,7 @@ extension ResellViewController {
                                                                     "status": PostStatus.resold.rawValue,
                                                                 ]) { (error) in
                                                                     if let error = error {
-                                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self!)
+                                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                                     }
                                                                 }
                                                             }
@@ -191,10 +192,10 @@ extension ResellViewController {
                                                         if let index = desc.firstIndex(of: ":") {
                                                             let newIndex = desc.index(after: index)
                                                             let newStr = desc[newIndex...]
-                                                            self?.alert.showDetail("Alert", with: String(newStr), for: self!)
+                                                            self?.alert.showDetail("Alert", with: String(newStr), for: self)
                                                         }
                                                     } catch {
-                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self!) {
+                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self) {
                                                             for image in self!.imageNameArr {
                                                                 self?.deleteFile(fileName: image)
                                                             }
@@ -207,11 +208,11 @@ extension ResellViewController {
                                                 let newIndex = desc.index(after: index)
                                                 let newStr = desc[newIndex...]
                                                 DispatchQueue.main.async {
-                                                    self?.alert.showDetail("Alert", with: String(newStr), for: self!)
+                                                    self?.alert.showDetail("Alert", with: String(newStr), for: self)
                                                 }
                                             }
                                         } catch {
-                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self!) {
+                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self) {
                                                 for image in self!.imageNameArr {
                                                     self?.deleteFile(fileName: image)
                                                 }
