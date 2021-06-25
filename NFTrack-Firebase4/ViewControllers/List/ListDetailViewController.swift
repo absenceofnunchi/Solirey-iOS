@@ -23,12 +23,13 @@ class ListDetailViewController: ParentDetailViewController {
     private var statusLabel: UILabelPadding!
     final var updateStatusButton = UIButton()
     private var userId: String! {
-        return UserDefaults.standard.string(forKey: "userId")
+        return UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
     }
     
     // history table view below the status update button
     final var historyTableViewHeight: CGFloat! = 0
-    final var historyTableView: UITableView!
+//    final var historyTableView: UITableView!
+    final lazy var historyTableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: HistoryCell.self, identifier: HistoryCell.identifier)
     final var historicData = [Post]()
     final let CELL_HEIGHT: CGFloat = 100
     final var isSaved: Bool! = false {
@@ -101,7 +102,8 @@ extension ListDetailViewController {
     
     override func configureUI() {
         super.configureUI()
-
+        title = post.title
+        
         statusTitleLabel = UILabel()
         statusTitleLabel.text = "Status"
         statusTitleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -277,7 +279,7 @@ extension ListDetailViewController {
                                             self.configureStatusButton(buttonTitle: sellerButtonTitle, tag: sellerTag)
                                         }
                                     } else {
-                                        self.alert.showDetail("Authorization", with: "You need to be logged in!", for: self) {
+                                        self.alert.showDetail("Authorization Error", with: "You need to be logged in!", for: self) {
                                             self.navigationController?.popViewController(animated: true)
                                         }
                                     }
@@ -366,7 +368,7 @@ extension ListDetailViewController {
                                                         if let error = error {
                                                             self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                         } else {
-                                                            self?.alert.showDetail("Success!", with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.", for: self) {
+                                                            self?.alert.showDetail("Success!", with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.", alignment: .left, for: self) {
                                                                 self?.getStatus()
                                                                 self?.navigationController?.popViewController(animated: true)
                                                             }
@@ -383,8 +385,8 @@ extension ListDetailViewController {
                                                         if let error = error {
                                                             self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                         } else {
-                                                            self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", for: self) {
-                                                                self?.tableViewRefreshDelegate?.didRefreshTableView()
+                                                            self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", alignment: .left, for: self) {
+                                                                self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
                                                                 self?.navigationController?.popViewController(animated: true)
                                                             }
                                                         }
@@ -395,6 +397,7 @@ extension ListDetailViewController {
                                                             self?.alert.showDetail("Error", with: err.localizedDescription, for: self)
                                                         } else {
                                                             self?.alert.showDetail("Success!", with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.", for: self) {
+                                                                self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
                                                                 self?.navigationController?.popViewController(animated: true)
                                                             }
                                                         }
@@ -407,7 +410,29 @@ extension ListDetailViewController {
                                         if let index = desc.firstIndex(of: ":") {
                                             let newIndex = desc.index(after: index)
                                             let newStr = desc[newIndex...]
-                                            self?.alert.showDetail("Alert", with: String(newStr), for: self)
+                                            DispatchQueue.main.async {
+                                                self?.alert.showDetail("Alert", with: String(newStr), for: self)
+                                            }
+                                        }
+                                    } catch Web3Error.transactionSerializationError {
+                                        DispatchQueue.main.async {
+                                            self?.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
+                                        }
+                                    } catch Web3Error.connectionError {
+                                        DispatchQueue.main.async {
+                                            self?.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
+                                        }
+                                    } catch Web3Error.dataError {
+                                        DispatchQueue.main.async {
+                                            self?.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
+                                        }
+                                    } catch Web3Error.inputError(_) {
+                                        DispatchQueue.main.async {
+                                            self?.alert.showDetail("Alert", with: "Failed to sign the transaction. You may be using an incorrect password. \n\nOtherwise, please try logging out of your wallet (not the NFTrack account) and logging back in. Ensure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
+                                        }
+                                    } catch Web3Error.processingError(let desc) {
+                                        DispatchQueue.main.async {
+                                            self?.alert.showDetail("Alert", with: desc, height: 320, for: self)
                                         }
                                     } catch {
                                         if let index = error.localizedDescription.firstIndex(of: "(") {
@@ -498,7 +523,8 @@ extension ListDetailViewController {
                                                         self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                     } else {
                                                         self?.alert.showDetail("Success!", with: "The token has been successfully transferred.", for: self) {
-                                                            
+                                                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
+                                                            self?.navigationController?.popViewController(animated: true)
                                                         }
                                                     }
                                                 })
@@ -507,6 +533,26 @@ extension ListDetailViewController {
                                                     let newIndex = desc.index(after: index)
                                                     let newStr = desc[newIndex...]
                                                     self?.alert.showDetail("Alert", with: String(newStr), for: self)
+                                                }
+                                            } catch Web3Error.transactionSerializationError {
+                                                DispatchQueue.main.async {
+                                                    self?.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
+                                                }
+                                            } catch Web3Error.connectionError {
+                                                DispatchQueue.main.async {
+                                                    self?.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
+                                                }
+                                            } catch Web3Error.dataError {
+                                                DispatchQueue.main.async {
+                                                    self?.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
+                                                }
+                                            } catch Web3Error.inputError(_) {
+                                                DispatchQueue.main.async {
+                                                    self?.alert.showDetail("Alert", with: "Failed to sign the transaction. You may be using an incorrect password. \n\nOtherwise, please try logging out of your wallet (not the NFTrack account) and logging back in. Ensure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
+                                                }
+                                            } catch Web3Error.processingError(let desc) {
+                                                DispatchQueue.main.async {
+                                                    self?.alert.showDetail("Alert", with: "\(desc). Ensure that you're using the same address used in the original transaction.", height: 320, alignment: .left, for: self)
                                                 }
                                             } catch {
                                                 self?.alert.showDetail("Error", with: "There was an error with the transfer transaction.", for: self)

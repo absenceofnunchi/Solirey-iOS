@@ -38,7 +38,7 @@ class SavedViewController: ParentListViewController<Post>, RefetchDataDelegate {
     }
     
     // MARK: - didRefreshTableView
-    override func didRefreshTableView() {
+    override func didRefreshTableView(index: Int = 0) {
         
     }
     

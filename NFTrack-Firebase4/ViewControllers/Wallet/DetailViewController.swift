@@ -26,10 +26,13 @@ class DetailViewController: UIViewController {
 
     private lazy var customTransitioningDelegate = TransitioningDelegate(height: height)
     
-    init(height: CGFloat = 300, buttonTitle: String = "OK", messageTextAlignment: NSTextAlignment = .center, detailVCStyle: DetailVCStyle = .regular) {
+    init(height: CGFloat = 300, buttonTitle: String = "OK", titleAlignment: NSTextAlignment = .center, messageTextAlignment: NSTextAlignment = .center, detailVCStyle: DetailVCStyle = .regular) {
         super.init(nibName: nil, bundle: nil)
 
         self.height = height
+        
+        self.titleLabel = UILabel()
+        self.titleLabel.textAlignment = titleAlignment
         
         self.messageLabel = UILabel()
         self.messageLabel.textAlignment = messageTextAlignment
@@ -66,11 +69,10 @@ private extension DetailViewController {
         view.layer.cornerRadius = 10
         view.clipsToBounds = true
         
-        titleLabel = UILabel()
         titleLabel.textColor = .lightGray
         titleLabel.text = titleString
+        titleLabel.numberOfLines = 0
         titleLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 20, weight: .bold)
-        titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(titleLabel)
         
@@ -155,7 +157,8 @@ private extension DetailViewController {
         constraints.append(contentsOf: [
             titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            titleLabel.heightAnchor.constraint(equalToConstant: 50),
+            titleLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            titleLabel.heightAnchor.constraint(lessThanOrEqualTo: view.heightAnchor, multiplier: 0.3)
         ])
         
         switch detailVCStyle {

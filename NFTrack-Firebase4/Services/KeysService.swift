@@ -12,8 +12,9 @@ struct KeyWalletModel {
     let address: String
     let data: Data?
     
-    static func fromCoreData(crModel: KeyWallet) -> KeyWalletModel {
-        let model = KeyWalletModel(address: crModel.address!, data: crModel.data!)
+    static func fromCoreData(crModel: KeyWallet) -> KeyWalletModel? {
+        guard let address = crModel.address, let data = crModel.data else { return nil }
+        let model = KeyWalletModel(address: address, data: data)
         return model
     }
 }

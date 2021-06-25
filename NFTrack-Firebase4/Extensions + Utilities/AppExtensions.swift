@@ -75,7 +75,7 @@ extension UIViewController {
         for document in querySnapshot!.documents {
 //            print("\(document.documentID) => \(document.data())")
             let data = document.data()
-            var buyerHash, sellerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
+            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
             var images, savedBy: [String]?
             data.forEach { (item) in
@@ -122,12 +122,14 @@ extension UIViewController {
                         buyerHash = item.value as? String
                     case "savedBy":
                         savedBy = item.value as? [String]
+                    case "buyerUserId":
+                        buyerUserId = item.value as? String
                     default:
                         break
                 }
             }
             
-            let post = Post(documentId: document.documentID, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy)
+            let post = Post(documentId: document.documentID, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy)
             postArr.append(post)
         }
         return postArr

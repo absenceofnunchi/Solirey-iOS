@@ -37,6 +37,7 @@ class HistoryDetailViewController: ParentDetailViewController {
 extension HistoryDetailViewController {
     override func configureUI() {
         super.configureUI()
+        title = post.title
         
         ownerTitleHash = createTitleLabel(text: "Owner Address")
         scrollView.addSubview(ownerTitleHash)

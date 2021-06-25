@@ -7,6 +7,11 @@
 
 import UIKit
 
+struct PreviewData {
+    let header: String
+    let title: String
+}
+
 class ImagePreviewViewController: UIViewController {
     var data: [String]! {
         didSet {
@@ -106,6 +111,13 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // handle tap events
         print("You selected cell #\(indexPath.item)!")
+    }
+    
+    private func collectionView(collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, atIndexPath indexPath: NSIndexPath) -> UICollectionReusableView {
+        let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "Header", for: indexPath as IndexPath)
+        
+        headerView.backgroundColor = UIColor.blue
+        return headerView
     }
 }
 

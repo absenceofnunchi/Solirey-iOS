@@ -30,6 +30,7 @@ class ImageDataStore<T> {
     }
 }
 
+/// DataLeadOperation needs to take in a certain parameter, but the input data takes many different forms
 class PostImageDataStore: ImageDataStore<Post> {
     final override func dataLoadBuffer(_ post: Post) -> DataLoadOperation? {
         if let images = post.images, images.count > 0, let i = images.first {
@@ -66,6 +67,16 @@ class MessageImageDataStore: ImageDataStore<Message> {
     }
 }
 
+class ReviewImageDataStore: ImageDataStore<Review> {
+    final override func dataLoadBuffer(_ post: Review) -> DataLoadOperation? {
+        if post.reviewerPhotoURL != "NA" {
+            return DataLoadOperation(post.reviewerPhotoURL)
+        } else {
+            return .none
+        }
+    }
+}
+
 class DataLoadOperation: Operation {
     final var image: UIImage?
     final var loadingCompleteHandler: ((UIImage?) -> ())?
@@ -86,6 +97,7 @@ class DataLoadOperation: Operation {
                 guard let `self` = self else { return }
                 if self.isCancelled { return }
                 self.image = image
+                print("download image", image)
                 self.loadingCompleteHandler?(self.image)
             }
         }

@@ -28,7 +28,7 @@ protocol MessageDelegate: AnyObject {
 
 // MARK: - TableViewRefreshDelegate
 protocol TableViewRefreshDelegate: AnyObject {
-    func didRefreshTableView()
+    func didRefreshTableView(index: Int)
 }
 
 // MARK: - TableViewConfigurable

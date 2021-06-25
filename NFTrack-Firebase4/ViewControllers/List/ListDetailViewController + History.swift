@@ -34,7 +34,7 @@ extension ListDetailViewController: TableViewConfigurable {
     }
     
     func setHistoryVC() {
-        historyTableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: HistoryCell.self, identifier: HistoryCell.identifier)
+//        historyTableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: HistoryCell.self, identifier: HistoryCell.identifier)
         historyTableView.separatorStyle = .none
         historyTableView.isScrollEnabled = false
         scrollView.addSubview(historyTableView)

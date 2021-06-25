@@ -29,7 +29,7 @@ class ChatViewController: UIViewController, ImageUploadable {
     final var tableView: UITableView!
     final var userId: String!
     final var photoURL: String! {
-        return UserDefaults.standard.string(forKey: "photoURL")
+        return UserDefaults.standard.string(forKey: UserDefaultKeys.photoURL)
     }
     final var displayName: String!
     final var lastCell: CGRect!
@@ -70,8 +70,8 @@ class ChatViewController: UIViewController, ImageUploadable {
 
 extension ChatViewController {
     private func getProfileInfo() {
-        if let uid = UserDefaults.standard.string(forKey: "userId"),
-           let displayName = UserDefaults.standard.string(forKey: "displayName") {
+        if let uid = UserDefaults.standard.string(forKey: UserDefaultKeys.userId),
+           let displayName = UserDefaults.standard.string(forKey: UserDefaultKeys.displayName) {
             self.userId = uid
             self.displayName = displayName
         } else {
@@ -316,13 +316,6 @@ extension ChatViewController {
 extension ChatViewController {
     // MARK: - addKeyboardObserver
     private func addKeyboardObserver() {
-//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
-//                                               name: UIResponder.keyboardWillShowNotification,
-//                                               object: nil)
-//
-//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
-//                                               name: UIResponder.keyboardWillHideNotification,
-//                                               object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
         

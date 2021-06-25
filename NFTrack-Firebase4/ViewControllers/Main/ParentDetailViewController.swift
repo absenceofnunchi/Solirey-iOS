@@ -59,7 +59,6 @@ class ParentDetailViewController: UIViewController {
 extension ParentDetailViewController {
     // MARK: - configureBackground
     func configureBackground() {
-        title = post.title
         view.backgroundColor = .white
         scrollView = UIScrollView()
         scrollView.backgroundColor = .white
@@ -150,7 +149,7 @@ extension ParentDetailViewController {
             self.dismiss(animated: true, completion: nil)
             return
         }
-        let profileImage = image.withTintColor(.black, renderingMode: .alwaysOriginal)
+        let profileImage = image.withTintColor(.orange, renderingMode: .alwaysOriginal)
         profileImageView.image = profileImage
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         profileImageView.addGestureRecognizer(tap)

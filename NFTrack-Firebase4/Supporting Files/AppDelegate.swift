@@ -182,7 +182,7 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
             // ChatVC will compare them against UserId
             if let docId = userInfo["docId"] as? String,
                let sellerUserId = userInfo["uid"] as? String,
-               let buyerUserId = UserDefaults.standard.string(forKey: "userId"),
+               let buyerUserId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId),
                let displayName = userInfo["displayName"] as? String {
                 let chatModelCore = PostCoreModel(documentId: docId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
                 let userInfo = UserInfo(email: nil, displayName: displayName, photoURL: nil, uid: nil)

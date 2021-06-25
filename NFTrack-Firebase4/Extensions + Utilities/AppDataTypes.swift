@@ -95,8 +95,8 @@ class Post: PostCoreModel {
     var confirmReceivedDate: Date?
     var savedBy: [String]?
     
-    init(documentId: String, title: String, description: String, date: Date, images: [String]?, price: String, mintHash: String, escrowHash: String, id: String, status: String, sellerUserId: String, sellerHash: String, buyerHash: String?, confirmPurchaseHash: String?, confirmPurchaseDate: Date?, transferHash: String?, transferDate: Date?, confirmReceivedHash: String?, confirmReceivedDate: Date?, savedBy: [String]?) {
-        super.init(documentId: documentId, buyerUserId: nil, sellerUserId: sellerUserId)
+    init(documentId: String, title: String, description: String, date: Date, images: [String]?, price: String, mintHash: String, escrowHash: String, id: String, status: String, sellerUserId: String, buyerUserId: String?,sellerHash: String, buyerHash: String?, confirmPurchaseHash: String?, confirmPurchaseDate: Date?, transferHash: String?, transferDate: Date?, confirmReceivedHash: String?, confirmReceivedDate: Date?, savedBy: [String]?) {
+        super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
         self.title = title
         self.description = description
@@ -282,4 +282,51 @@ struct Message {
     let displayName: String
     let sentAt: String
     let imageURL: String?
+}
+
+// MARK: - Review
+struct Review {
+    let revieweeUserId: String
+    let reviewerDisplayName: String
+    let reviewerPhotoURL: String
+    let reviewerUserId: String
+    let starRating: Int
+    let review: String
+    let images: [String]?
+    let confirmReceivedHash: String
+    let finalizedDate: Date
+}
+
+// MARK: - ProfileDetailMenu
+private enum ProfileDetailMenu: Int, CaseIterable {
+    case postings, reviews
+    
+    func asString() -> String {
+        switch self {
+            case .postings:
+                return "Postings"
+            case .reviews:
+                return "Reviews"
+        }
+    }
+    
+    static func getSegmentText() -> [String] {
+        let segmentArr = ProfileDetailMenu.allCases
+        var segmentTextArr = [String]()
+        for segment in segmentArr {
+            segmentTextArr.append(NSLocalizedString(segment.asString(), comment: ""))
+        }
+        return segmentTextArr
+    }
+    
+    func viewController() -> UIViewController {
+        switch self {
+            case .postings:
+                let profilePostingsVC = ProfilePostingsViewController()
+                return profilePostingsVC
+            case .reviews:
+                let profileReviewVC = ProfileReviewListViewController()
+                return profileReviewVC
+        }
+    }
 }

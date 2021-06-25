@@ -12,8 +12,9 @@ import FirebaseFirestore
 import FirebaseStorage
 import Firebase
 import web3swift
+import QuickLook
 
-class ParentPostViewController: UIViewController {
+class ParentPostViewController: UIViewController, DocumentDelegate, QLPreviewControllerDataSource {
     var scrollView: UIScrollView!
     var titleLabel: UILabel!
     var titleTextField: UITextField!
@@ -29,10 +30,28 @@ class ParentPostViewController: UIViewController {
     var tagTitleLabel: UILabel!
     var tagTextField: UISearchTextField!
     var addTagButton: UIButton!
-    var buttonPanel: UIView!
+    var buttonPanel: UIStackView!
     var cameraButton: UIButton!
     var imagePickerButton: UIButton!
-    var imageNameArr = [String]()
+    var documentPickerButton: UIButton!
+    var imageNameArr = [String]() {
+        didSet {
+            if imageNameArr.count > 0 {
+                imagePreviewVC.view.isHidden = false
+                imagePreviewConstraintHeight.constant = 170
+                UIView.animate(withDuration: 1) { [weak self] in
+                    self?.view.layoutIfNeeded()
+                }
+            } else {
+                imagePreviewVC.view.isHidden = true
+                imagePreviewConstraintHeight.constant = 0
+                UIView.animate(withDuration: 1) { [weak self] in
+                    self?.view.layoutIfNeeded()
+                }
+                
+            }
+        }
+    }
     var imagePreviewVC: ImagePreviewViewController!
     var postButton: UIButton!
     let transactionService = TransactionService()
@@ -43,7 +62,11 @@ class ParentPostViewController: UIViewController {
     var userId: String!
     var documentId: String!
     var socketDelegate: SocketDelegate!
-
+    var documentPicker: DocumentPicker!
+    var url: URL!
+    var imagePreviewConstraintHeight: NSLayoutConstraint!
+    var documentArr: [Document]!
+    
     let pvc = MyPickerVC()
     /// MyDoneButtonVC
     let mdbvc = MyDoneButtonVC()
@@ -69,6 +92,10 @@ class ParentPostViewController: UIViewController {
         super.viewDidAppear(animated)
         
         imagePreviewVC.data = imageNameArr
+        
+        if observation != nil {
+            observation?.invalidate()
+        }
     }
 }
 
@@ -168,25 +195,43 @@ extension ParentPostViewController {
         addTagButton.translatesAutoresizingMaskIntoConstraints = false
         tagContainerView.addSubview(addTagButton)
         
-        buttonPanel = UIView()
+        buttonPanel = UIStackView()
+        buttonPanel.axis = .horizontal
+        buttonPanel.distribution = .fillEqually
         buttonPanel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(buttonPanel)
         
-        let cameraImage = UIImage(systemName: "camera")!.withTintColor(.white, renderingMode: .alwaysOriginal)
+        let configuration = UIImage.SymbolConfiguration(pointSize: 50, weight: .light, scale: .medium)
+        let cameraImage = UIImage(systemName: "camera.circle")!
+            .withTintColor(UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), renderingMode: .alwaysOriginal)
+            .withConfiguration(configuration)
         cameraButton = UIButton.systemButton(with: cameraImage, target: self, action: #selector(buttonPressed))
         cameraButton.tag = 1
-        cameraButton.layer.cornerRadius = 5
-        cameraButton.backgroundColor = .black
         cameraButton.translatesAutoresizingMaskIntoConstraints = false
-        buttonPanel.addSubview(cameraButton)
+        buttonPanel.addArrangedSubview(cameraButton)
         
-        let pickerImage = UIImage(systemName: "photo")!.withTintColor(.white, renderingMode: .alwaysOriginal)
+        var imageName: String!
+        if #available(iOS 14.0, *) {
+            imageName = "rectangle.fill.on.rectangle.fill.circle"
+        } else {
+            imageName = "person.crop.circle.fill.badge.plus"
+        }
+        
+        let pickerImage = UIImage(systemName: imageName)!
+            .withTintColor(UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), renderingMode: .alwaysOriginal)
+            .withConfiguration(configuration)
         imagePickerButton = UIButton.systemButton(with: pickerImage, target: self, action: #selector(buttonPressed(_:)))
         imagePickerButton.tag = 2
-        imagePickerButton.layer.cornerRadius = 5
-        imagePickerButton.backgroundColor = .black
         imagePickerButton.translatesAutoresizingMaskIntoConstraints = false
-        buttonPanel.addSubview(imagePickerButton)
+        buttonPanel.addArrangedSubview(imagePickerButton)
+        
+        let documentPickerImage = UIImage(systemName: "doc.circle")!
+            .withTintColor(UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), renderingMode: .alwaysOriginal)
+            .withConfiguration(configuration)
+        documentPickerButton = UIButton.systemButton(with: documentPickerImage, target: self, action: #selector(buttonPressed(_:)))
+        documentPickerButton.tag = 6
+        documentPickerButton.translatesAutoresizingMaskIntoConstraints = false
+        buttonPanel.addArrangedSubview(documentPickerButton)
         
         postButton = UIButton()
         postButton.setTitle("Post", for: .normal)
@@ -200,63 +245,65 @@ extension ParentPostViewController {
     
     // MARK: - setConstraints
     @objc func setConstraints() {
+        imagePreviewConstraintHeight = imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 0)
+        
         NSLayoutConstraint.activate([
-            titleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            titleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             titleLabel.heightAnchor.constraint(equalToConstant: 50),
             titleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             titleLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 20),
             
-            titleTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            titleTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             titleTextField.heightAnchor.constraint(equalToConstant: 50),
             titleTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             titleTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 0),
             
-            priceLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            priceLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             priceLabel.heightAnchor.constraint(equalToConstant: 50),
             priceLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             priceLabel.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 20),
             
-            priceTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            priceTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             priceTextField.heightAnchor.constraint(equalToConstant: 50),
             priceTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             priceTextField.topAnchor.constraint(equalTo: priceLabel.bottomAnchor, constant: 0),
             
-            descLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            descLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             descLabel.heightAnchor.constraint(equalToConstant: 50),
             descLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             descLabel.topAnchor.constraint(equalTo: priceTextField.bottomAnchor, constant: 20),
             
-            descTextView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            descTextView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             descTextView.heightAnchor.constraint(equalToConstant: 100),
             descTextView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             descTextView.topAnchor.constraint(equalTo: descLabel.bottomAnchor, constant: 0),
             
-            idTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            idTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             idTitleLabel.heightAnchor.constraint(equalToConstant: 50),
             idTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             idTitleLabel.topAnchor.constraint(equalTo: descTextView.bottomAnchor, constant: 20),
             
-            idTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            idTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             idTextField.heightAnchor.constraint(equalToConstant: 50),
             idTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             idTextField.topAnchor.constraint(equalTo: idTitleLabel.bottomAnchor, constant: 0),
             
-            pickerTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            pickerTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             pickerTitleLabel.heightAnchor.constraint(equalToConstant: 50),
             pickerTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             pickerTitleLabel.topAnchor.constraint(equalTo: idTextField.bottomAnchor, constant: 20),
             
-            pickerLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            pickerLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             pickerLabel.heightAnchor.constraint(equalToConstant: 50),
             pickerLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             pickerLabel.topAnchor.constraint(equalTo: pickerTitleLabel.bottomAnchor, constant: 0),
             
-            tagTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            tagTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             tagTitleLabel.heightAnchor.constraint(equalToConstant: 50),
             tagTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             tagTitleLabel.topAnchor.constraint(equalTo: pickerLabel.bottomAnchor, constant: 20),
             
-            tagContainerView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
+            tagContainerView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             tagContainerView.heightAnchor.constraint(equalToConstant: 50),
             tagContainerView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             tagContainerView.topAnchor.constraint(equalTo: tagTitleLabel.bottomAnchor, constant: 0),
@@ -271,35 +318,45 @@ extension ParentPostViewController {
             addTagButton.trailingAnchor.constraint(equalTo: tagContainerView.trailingAnchor),
             addTagButton.topAnchor.constraint(equalTo: tagContainerView.topAnchor),
             
-            buttonPanel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.8),
-            buttonPanel.heightAnchor.constraint(equalToConstant: 50),
+            buttonPanel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            buttonPanel.heightAnchor.constraint(equalToConstant: 80),
             buttonPanel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             buttonPanel.topAnchor.constraint(equalTo: tagContainerView.bottomAnchor, constant: 40),
+//
+//            cameraButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+//            cameraButton.heightAnchor.constraint(equalToConstant: 80),
+//            cameraButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
+//
+//            imagePickerButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+//            imagePickerButton.heightAnchor.constraint(equalToConstant: 80),
+//            imagePickerButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
             
-            cameraButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+            cameraButton.widthAnchor.constraint(equalToConstant: 80),
             cameraButton.heightAnchor.constraint(equalToConstant: 80),
-            cameraButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
-            
-            imagePickerButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+
+            imagePickerButton.widthAnchor.constraint(equalToConstant: 80),
             imagePickerButton.heightAnchor.constraint(equalToConstant: 80),
-            imagePickerButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
             
-            postButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            documentPickerButton.widthAnchor.constraint(equalToConstant: 80),
+            documentPickerButton.heightAnchor.constraint(equalToConstant: 80),
+
+            imagePreviewVC.view.topAnchor.constraint(equalTo: buttonPanel.bottomAnchor, constant: 20),
+            imagePreviewVC.view.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            imagePreviewVC.view.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            imagePreviewConstraintHeight,
+            
+            postButton.topAnchor.constraint(equalTo: imagePreviewVC.view.bottomAnchor, constant: 40),
+            postButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
             postButton.heightAnchor.constraint(equalToConstant: 50),
             postButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            postButton.topAnchor.constraint(equalTo: imagePickerButton.bottomAnchor, constant: 20),
-            
-            imagePreviewVC.view.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-            imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 170),
-            imagePreviewVC.view.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            imagePreviewVC.view.topAnchor.constraint(equalTo: postButton.bottomAnchor, constant: 20),
         ])
     }
     
-
-    
     // MARK: - buttonPressed
     @objc func buttonPressed(_ sender: UIButton) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         if imageNameArr.count < 7 {
             switch sender.tag {
                 case 1:
@@ -325,6 +382,9 @@ extension ParentPostViewController {
                     }
                 case 5:
                     configureProgress()
+                case 6:
+                    documentPicker = DocumentPicker(presentationController: self, delegate: self)
+                    documentPicker.displayPicker()
                 default:
                     break
             }
@@ -336,6 +396,51 @@ extension ParentPostViewController {
                 self?.dismiss(animated: true, completion: nil)
             }
             present(detailVC, animated: true, completion: nil)
+        }
+    }
+    
+    
+    func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
+        return 1
+    }
+    
+    func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+        return self.url as QLPreviewItem
+//        let previewItem = CustomPreviewItem(url: <Your URL>, title: <Title>)
+//        return previewItem as QLPreviewItem
+    }
+    
+    // MARK: - didPickDocument
+    func didPickDocument(document: Document?) {
+        if let pickedDoc = document {
+            let fileURL = pickedDoc.fileURL
+            url = fileURL
+            
+            var retrievedData: Data!
+            do {
+                retrievedData = try Data(contentsOf: fileURL)
+            } catch {
+                alert.show(error, for: self)
+            }
+            
+            let preview = PreviewPDFViewController()
+            preview.dataSource = self
+//            preview.buttonAction = { [weak self] in
+//                self?.dismiss(animated: true, completion: nil)
+
+//                if let data = retrievedData {
+//                    print("document data", data)
+//                    
+//                    self?.alert.withTextField(delegate: self!, controller: self!, data: data, completion: { (title, password) in
+//                        //                        self?.uploadFile(fileData: data, title: title, password: password)
+//
+//                        self?.presendAnimation(completion: {
+//                            self?.uploadData(data: data, title: title, password: password)
+//                        })
+//                    })
+//                }
+//            }
+            present(preview, animated: true, completion: nil)
         }
     }
     
@@ -651,5 +756,65 @@ extension ParentPostViewController: MessageDelegate, ImageUploadable {
         }
         
         task.resume()
+    }
+}
+
+extension ParentPostViewController {
+    func saveFile(fileName: String) {
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        let fileURL = documentsDirectory.appendingPathComponent(fileName)
+        
+        //Checks if file exists, removes it if so.
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            do {
+                try FileManager.default.removeItem(atPath: fileURL.path)
+            } catch let removeError {
+                print("couldn't remove file at path", removeError)
+            }
+        }
+        
+        do {
+            let data = try Data(contentsOf: fileURL)
+            try data.write(to: fileURL)
+        } catch let error {
+            print("error saving file with error", error)
+        }
+    }
+}
+
+// MARK: - QLPreviewItem
+class CustomPreviewItem: NSObject, QLPreviewItem {
+    var previewItemURL: URL?
+    var previewItemTitle: String?
+    
+    init(url: URL, title: String?) {
+        previewItemURL = url
+        previewItemTitle = title
+    }
+}
+
+// MARK: - QuickLookThumbnailing
+extension CustomPreviewItem {
+    func generateThumbnail(completion: @escaping (UIImage) -> Void) {
+        // 1
+        let size = CGSize(width: 128, height: 102)
+        let scale = UIScreen.main.scale
+        // 2
+        let request = QLThumbnailGenerator.Request(
+            fileAt: previewItemURL!,
+            size: size,
+            scale: scale,
+            representationTypes: .all)
+        
+        // 3
+        let generator = QLThumbnailGenerator.shared
+        generator.generateBestRepresentation(for: request) { thumbnail, error in
+            if let thumbnail = thumbnail {
+                completion(thumbnail.uiImage)
+            } else if let error = error {
+                // Handle error
+                print(error)
+            }
+        }
     }
 }

@@ -24,9 +24,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 if let user = user {
                     UserDefaults.standard.set(user.uid, forKey: UserDefaultKeys.userId)
                     UserDefaults.standard.set(user.displayName, forKey: UserDefaultKeys.displayName)
-                    UserDefaults.standard.set(user.photoURL, forKey: UserDefaultKeys.photoURL)
+                    
+                    if let photoURL = user.photoURL {
+                        let photoURL = "\(String(describing: photoURL))"
+                        UserDefaults.standard.set(photoURL, forKey: UserDefaultKeys.photoURL)
+                    } else {
+                        UserDefaults.standard.set("NA", forKey: UserDefaultKeys.photoURL)
+                    }
                     
                     var urlString: String!
+                    
                     if user.photoURL != nil {
                         urlString = "\(user.photoURL!)"
                     } else {

@@ -251,7 +251,7 @@ extension TransactionService {
         let web3 = Web3swiftService.web3instance
         guard let myAddress = Web3swiftService.currentAddress else { return }
         var balance: BigUInt!
-        DispatchQueue.global().async {
+        DispatchQueue.global(qos: .background).async {
             balance = try? web3.eth.getBalance(address: myAddress)
             
             guard !amountString.isEmpty else {

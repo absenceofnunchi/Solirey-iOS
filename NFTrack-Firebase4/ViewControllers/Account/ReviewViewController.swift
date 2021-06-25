@@ -23,7 +23,7 @@ class ReviewViewController: ParentListViewController<Post> {
         super.configureUI()
         title = "Pending Reviews"
         
-        tableView = configureTableView(delegate: self, dataSource: self, height: 300, cellType: ListCell.self, identifier: ListCell.identifier)
+        tableView = configureTableView(delegate: self, dataSource: self, height: 150, cellType: ListCell.self, identifier: ListCell.identifier)
         tableView.prefetchDataSource = self
         view.addSubview(tableView)
         tableView.fill()
@@ -36,7 +36,7 @@ class ReviewViewController: ParentListViewController<Post> {
             return
         }
         guard let fromDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) else {return}
-        print("fromDate", fromDate)
+        postArr.removeAll()
         FirebaseService.shared.db.collection("post")
             .whereField(userIdField, isEqualTo: userId)
             .whereField("isReviewed", isEqualTo: false)
@@ -59,9 +59,7 @@ class ReviewViewController: ParentListViewController<Post> {
                     }
                     
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                        self?.postArr.removeAll()
                         self?.postArr = data
-                        print("data", data)
                     }
                 }
             }
@@ -72,6 +70,7 @@ class ReviewViewController: ParentListViewController<Post> {
             fatalError("Sorry, could not load cell")
         }
         cell.selectionStyle = .none
+        cell.accessoryType = .disclosureIndicator
         let post = postArr[indexPath.row]
         cell.updateAppearanceFor(.pending(post))
         return cell
@@ -81,7 +80,23 @@ class ReviewViewController: ParentListViewController<Post> {
         let post = postArr[indexPath.row]
         let reviewPostVC = ReviewPostViewController()
         reviewPostVC.post = post
+        reviewPostVC.delegate = self
         self.navigationController?.pushViewController(reviewPostVC, animated: true)
+    }
+    
+    // MARK: - didRefreshTableView
+    final override func didRefreshTableView(index: Int = 0) {
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+        switch index {
+            case 0:
+                configureDataFetch(userIdField: "buyerUserId")
+            case 1:
+                configureDataFetch(userIdField: "sellerUserId")
+            default:
+                break
+        }
+        
     }
 }
 

@@ -5,26 +5,31 @@
 //  Created by J C on 2021-06-08.
 //
 
+/*
+ Abstract: ParentVC for ProfilePostVC and ProfileReviewListVC
+ */
+
 import UIKit
+import FirebaseFirestore
 
 class ProfileDetailViewController: ParentProfileViewController {
-    var postArr = [Post]()
     var profileImage: UIImage!
     private var itemsTitleLabel: UILabel!
     private var tableView: UITableView!
     private let CELL_HEIGHT: CGFloat = 100
-    private var tableViewHeight: CGFloat = 0 {
-        didSet {
-            self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.tableViewHeight + 500)
-        }
-    }
+    private var tableViewHeight: CGFloat = 0
+    private var customSegmentedControl: CustomSegmentedControl!
+    private var profilePostingsVC: ProfilePostingsViewController!
+    private var profileReviewVC: ProfileReviewListViewController!
+    private let db = FirebaseService.shared
+    private var lastSnapshot: QueryDocumentSnapshot!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        if let uid = userInfo.uid {
-            getCurrentPosts(uid: uid)
-        }
+
+        db.lastSnapshotDelegate = self
+        profilePostingsVC = addBaseViewController(ProfilePostingsViewController.self)
+//        getCurrentPosts()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -48,39 +53,37 @@ class ProfileDetailViewController: ParentProfileViewController {
             }
         }
     }
+    
+    override func preferredContentSizeDidChange(forChildContentContainer container: UIContentContainer) {
+        super.preferredContentSizeDidChange(forChildContentContainer: container)
+        self.scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: container.preferredContentSize.height)
+    }
 }
 
-extension ProfileDetailViewController: TableViewConfigurable {
+extension ProfileDetailViewController {
     override func configureUI() {
         super.configureUI()
         view.backgroundColor = .white
         
         displayNameTextField.isUserInteractionEnabled = false
-        
-        itemsTitleLabel = createTitleLabel(text: "Details")
-        scrollView.addSubview(itemsTitleLabel)
-        
-        tableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: ListCell.self, identifier: ListCell.identifier)
-        tableView.isScrollEnabled = false
-        scrollView.addSubview(tableView)
-    }
-    
-    override func setConstraints() {
-        super.setConstraints()
-        
+
+        customSegmentedControl = CustomSegmentedControl()
+        customSegmentedControl.addTarget(self, action: #selector(segmentedControlSelectionDidChange(_:)), for: .valueChanged)
+        customSegmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(customSegmentedControl)
+
         NSLayoutConstraint.activate([
-            itemsTitleLabel.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 50),
-            itemsTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-            itemsTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-            itemsTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-            
-            tableView.topAnchor.constraint(equalTo: itemsTitleLabel.bottomAnchor),
-            tableView.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 0),
-            tableView.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: 0),
+            customSegmentedControl.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 10),
+            customSegmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            customSegmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            customSegmentedControl.heightAnchor.constraint(equalToConstant: 50),
         ])
+        customSegmentedControl.layoutIfNeeded()
+        customSegmentedControl.buttonTitles = ["Postings", "Reviews"]
     }
-    
-    func getCurrentPosts(uid: String) {
+
+    private func getCurrentPosts() {
+        guard let uid = userInfo.uid else { return }
         FirebaseService.shared.db.collection("post")
             .whereField("sellerUserId", isEqualTo: uid)
             .whereField("status", isEqualTo: "ready")
@@ -88,43 +91,76 @@ extension ProfileDetailViewController: TableViewConfigurable {
                 if let err = err {
                     self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
                 } else {
-                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                        self?.postArr = data
-                        DispatchQueue.main.async {
-                            self?.tableViewHeight = CGFloat(self!.postArr.count) * self!.CELL_HEIGHT
-                            print("self?.tableViewHeight", self?.tableViewHeight)
-                            NSLayoutConstraint.activate([
-                                self!.tableView.heightAnchor.constraint(equalToConstant: self!.tableViewHeight),
-                            ])
-                            self?.tableView.reloadData()
-                        }
+                    if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        self?.profilePostingsVC.postArr = postArr
                     }
                 }
             }
     }
+ 
+    
+    // MARK: - segmentedControlSelectionDidChange
+    @objc private func segmentedControlSelectionDidChange(_ sender: CustomSegmentedControl) {
+        guard let segment = sender.selectedSegmentIndex
+        else { fatalError("No item at \(String(describing: sender.selectedSegmentIndex))) exists.") }
+        switch segment {
+            case 0:
+                removeBaseViewController(profileReviewVC)
+                profilePostingsVC = addBaseViewController(ProfilePostingsViewController.self)
+                getCurrentPosts()
+            case 1:
+                removeBaseViewController(profilePostingsVC)
+                profileReviewVC = addBaseViewController(ProfileReviewListViewController.self)
+                guard let uid = userInfo.uid else { return }
+                db.getReviews(uid: uid)
+            default:
+                break
+        }
+    }
+    
+    // MARK: - Switching Between View Controllers
+    
+    /// Adds a child view controller to the container.
+    private func addBaseViewController<T: UIViewController>(_ viewController: T.Type) -> T {
+        let vc = viewController.init()
+        addChild(vc)
+        vc.view.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(vc.view)
+        
+        NSLayoutConstraint.activate([
+            vc.view.topAnchor.constraint(equalTo: customSegmentedControl.bottomAnchor, constant: 15),
+            vc.view.heightAnchor.constraint(equalToConstant: 400),
+            vc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            vc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+        ])
+        vc.didMove(toParent: self)
+        return vc
+    }
+    
+    /// Removes a child view controller from the container.
+    private func removeBaseViewController(_ viewController: UIViewController) {
+        viewController.willMove(toParent: nil)
+        viewController.view.removeFromSuperview()
+        viewController.removeFromParent()
+    }
 }
 
-extension ProfileDetailViewController: UITableViewDataSource, UITableViewDelegate {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return postArr.count
+extension ProfileDetailViewController: PaginateFetchDelegate {
+    func didGetLastSnapshot(_ lastSnapshot: QueryDocumentSnapshot) {
+        self.lastSnapshot = lastSnapshot
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: ListCell.identifier, for: indexPath) as! ListCell
-        cell.selectionStyle = .none
-        
-        let post = postArr[indexPath.row]
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        let formattedDate = formatter.string(from: post.date)
-        cell.set(title: post.title, date: formattedDate)
-        
-        return cell
-    }
-    
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = postArr[indexPath.row]
-        self.navigationController?.pushViewController(listDetailVC, animated: true)
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        let offset = scrollView.contentOffset
+        let bounds = scrollView.bounds
+        let size = scrollView.contentSize
+        let inset = scrollView.contentInset
+        let y = offset.y + bounds.size.height - inset.bottom
+        let h = size.height
+        let reload_distance:CGFloat = 10.0
+        if y > (h + reload_distance) {
+            guard let uid = userInfo.uid else { return }
+            db.refetchReviews(uid: uid, lastSnapshot: self.lastSnapshot)
+        }
     }
 }

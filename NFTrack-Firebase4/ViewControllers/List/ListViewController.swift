@@ -52,10 +52,25 @@ class ListViewController: ParentListViewController<Post> {
     }
     
     // MARK: - didRefreshTableView
-    final override func didRefreshTableView() {
-        segmentedControl.selectedSegmentIndex = 1
-        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
-        configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
+    final override func didRefreshTableView(index: Int = 0) {
+        segmentedControl.selectedSegmentIndex = index
+        segmentedControl.sendActions(for: UIControl.Event.valueChanged)        
+        switch index {
+            case 0:
+                // buying
+                configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+            case 1:
+                // selling
+                configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+            case 2:
+                // purchases
+                configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
+            case 3:
+                // posts
+                configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
+            default:
+                break
+        }
     }
 }
 
@@ -72,7 +87,7 @@ extension ListViewController: SegmentConfigurable {
                 case .purchases:
                     return "Purchases"
                 case .posts:
-                    return "Posts"
+                    return "Postings"
             }
         }
         

@@ -17,6 +17,10 @@
 		49314F5F4CF8EC19FC270279 /* Pods_NFTrack_Firebase4Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */; };
 		4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933332C268033D900B8BFC2 /* ReviewViewController.swift */; };
 		493333322681116F00B8BFC2 /* ReviewPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493333312681116F00B8BFC2 /* ReviewPostViewController.swift */; };
+		4933335C26825D6700B8BFC2 /* CustomSegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */; };
+		49333361268281B800B8BFC2 /* ProfilePostingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49333360268281B800B8BFC2 /* ProfilePostingsViewController.swift */; };
+		493333662682860000B8BFC2 /* ReviewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493333652682860000B8BFC2 /* ReviewCell.swift */; };
+		4933336B26828E4600B8BFC2 /* ProfileReviewListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933336A26828E4600B8BFC2 /* ProfileReviewListViewController.swift */; };
 		493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */; };
 		493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */; };
 		493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */; };
@@ -100,6 +104,10 @@
 		499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F998D266C8D9700FC6CDE /* ProgressCell.swift */; };
 		49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */; };
 		49D59C762663326500107F79 /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D59C752663326500107F79 /* SocketDelegate.swift */; };
+		49DEFF5526841C54004C2DD0 /* ReviewDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */; };
+		49DEFF5B268649A3004C2DD0 /* DocumentPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF5A268649A2004C2DD0 /* DocumentPicker.swift */; };
+		49DEFF6026864CA4004C2DD0 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF5F26864CA4004C2DD0 /* Document.swift */; };
+		49DEFF652686552E004C2DD0 /* PreviewPDFViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF642686552E004C2DD0 /* PreviewPDFViewController.swift */; };
 		49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759A726658DCC0064BB34 /* TransitioningDelegate.swift */; };
 		49E759AD26669ACB0064BB34 /* ParentPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */; };
 		49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759B72666BCCF0064BB34 /* ResellViewController.swift */; };
@@ -141,6 +149,10 @@
 		49221B90267112200031A756 /* ParentProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentProfileViewController.swift; sourceTree = "<group>"; };
 		4933332C268033D900B8BFC2 /* ReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewController.swift; sourceTree = "<group>"; };
 		493333312681116F00B8BFC2 /* ReviewPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPostViewController.swift; sourceTree = "<group>"; };
+		4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSegmentedControl.swift; sourceTree = "<group>"; };
+		49333360268281B800B8BFC2 /* ProfilePostingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePostingsViewController.swift; sourceTree = "<group>"; };
+		493333652682860000B8BFC2 /* ReviewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewCell.swift; sourceTree = "<group>"; };
+		4933336A26828E4600B8BFC2 /* ProfileReviewListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileReviewListViewController.swift; sourceTree = "<group>"; };
 		493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletGenerationController.swift; sourceTree = "<group>"; };
 		493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDataTypes.swift; sourceTree = "<group>"; };
 		493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
@@ -230,6 +242,10 @@
 		499F998D266C8D9700FC6CDE /* ProgressCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCell.swift; sourceTree = "<group>"; };
 		49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		49D59C752663326500107F79 /* SocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
+		49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewDetailViewController.swift; sourceTree = "<group>"; };
+		49DEFF5A268649A2004C2DD0 /* DocumentPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPicker.swift; sourceTree = "<group>"; };
+		49DEFF5F26864CA4004C2DD0 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
+		49DEFF642686552E004C2DD0 /* PreviewPDFViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewPDFViewController.swift; sourceTree = "<group>"; };
 		49E759A726658DCC0064BB34 /* TransitioningDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitioningDelegate.swift; sourceTree = "<group>"; };
 		49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentPostViewController.swift; sourceTree = "<group>"; };
 		49E759B72666BCCF0064BB34 /* ResellViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellViewController.swift; sourceTree = "<group>"; };
@@ -411,6 +427,7 @@
 				493BF9CC264C493200B9C9D2 /* WalletButtonView.swift */,
 				493BF9C7264C166000B9C9D2 /* CreditCardView.swift */,
 				499702A52672E0BA001DD80A /* ToolBarView.swift */,
+				4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -465,6 +482,7 @@
 				4997030426769A36001DD80A /* CardCell.swift */,
 				499702AA2673F75E001DD80A /* MessageCell.swift */,
 				49E7D650267AA77000E8815A /* MeesageCells1.swift */,
+				493333652682860000B8BFC2 /* ReviewCell.swift */,
 			);
 			path = "Cells and Supplementary Views";
 			sourceTree = "<group>";
@@ -498,6 +516,8 @@
 				4964E567264968A7005B3268 /* Errors.swift */,
 				496D56CF265AEDAB00C3E7FD /* ImageDataStore.swift */,
 				49D59C752663326500107F79 /* SocketDelegate.swift */,
+				49DEFF5A268649A2004C2DD0 /* DocumentPicker.swift */,
+				49DEFF5F26864CA4004C2DD0 /* Document.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -538,6 +558,7 @@
 				496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */,
 				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
 				490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */,
+				49DEFF642686552E004C2DD0 /* PreviewPDFViewController.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -554,6 +575,9 @@
 				496F7006265207A700E4056B /* ImagePageViewController.swift */,
 				496F700B265421E200E4056B /* TxDetailViewController.swift */,
 				49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */,
+				49333360268281B800B8BFC2 /* ProfilePostingsViewController.swift */,
+				4933336A26828E4600B8BFC2 /* ProfileReviewListViewController.swift */,
+				49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */,
 			);
 			path = List;
 			sourceTree = "<group>";
@@ -901,6 +925,7 @@
 				4964E50026445EDB005B3268 /* DetailViewController.swift in Sources */,
 				499F995D266BF85100FC6CDE /* PendingViewController.swift in Sources */,
 				4964E4C12641E12A005B3268 /* BlurEffectContainerView.swift in Sources */,
+				49333361268281B800B8BFC2 /* ProfilePostingsViewController.swift in Sources */,
 				49409A75265946870060193C /* SearchResultsViewController.swift in Sources */,
 				4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */,
 				496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */,
@@ -914,7 +939,9 @@
 				4964E4602641B001005B3268 /* SignInViewController.swift in Sources */,
 				493BF9F3264C6B4B00B9C9D2 /* PasswordResetViewController.swift in Sources */,
 				49221B892670FC2F0031A756 /* TempViewController.swift in Sources */,
+				4933336B26828E4600B8BFC2 /* ProfileReviewListViewController.swift in Sources */,
 				4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */,
+				49DEFF5B268649A3004C2DD0 /* DocumentPicker.swift in Sources */,
 				493BF9CD264C493200B9C9D2 /* WalletButtonView.swift in Sources */,
 				493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */,
 				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
@@ -947,6 +974,7 @@
 				493BF9EE264C65FA00B9C9D2 /* BackgroundView3.swift in Sources */,
 				496D56C52659FF2100C3E7FD /* MainDetailViewController.swift in Sources */,
 				4964E57726499D74005B3268 /* RegisteredWalletViewController.swift in Sources */,
+				4933335C26825D6700B8BFC2 /* CustomSegmentedControl.swift in Sources */,
 				493BF9E4264C549D00B9C9D2 /* ScannerViewController.swift in Sources */,
 				4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */,
 				49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */,
@@ -955,6 +983,7 @@
 				4964E5812649A047005B3268 /* AppProtocols.swift in Sources */,
 				4964E5052644891B005B3268 /* AccountViewController.swift in Sources */,
 				496D56C02659E75D00C3E7FD /* ParentPostViewController + Picker.swift in Sources */,
+				49DEFF5526841C54004C2DD0 /* ReviewDetailViewController.swift in Sources */,
 				499702DD26745BC0001DD80A /* ChatCell.swift in Sources */,
 				493BF9D2264C4D3B00B9C9D2 /* SendViewController.swift in Sources */,
 				493BF9E9264C657200B9C9D2 /* ReceiveViewController.swift in Sources */,
@@ -970,8 +999,11 @@
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
 				499F9953266AED0E00FC6CDE /* ParentDetailViewController.swift in Sources */,
+				49DEFF652686552E004C2DD0 /* PreviewPDFViewController.swift in Sources */,
 				499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */,
+				49DEFF6026864CA4004C2DD0 /* Document.swift in Sources */,
 				497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */,
+				493333662682860000B8BFC2 /* ReviewCell.swift in Sources */,
 				4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */,
 				499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */,
 				499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */,

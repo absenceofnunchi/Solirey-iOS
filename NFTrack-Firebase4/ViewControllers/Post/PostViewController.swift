@@ -185,11 +185,7 @@ class PostViewController: ParentPostViewController {
                                                                 ]) { (error) in
                                                                     if let error = error {
                                                                         print("error4")
-                                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self) {
-                                                                            for image in self!.imageNameArr {
-                                                                                self?.deleteFile(fileName: image)
-                                                                            }
-                                                                        }
+                                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                                     } else {
                                                                         /// no need for a socket if you don't have images to upload?
                                                                         /// show the success alert here

@@ -51,3 +51,9 @@ enum FileError: Error {
     case fileNotFound(name: String)
     case fileDecodingFailed(name: String, Swift.Error)
 }
+
+enum FileUploadError: Error {
+    case fileNotAvailable
+    case userNotLoggedIn
+    case fileManagerError(String)
+}

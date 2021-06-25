@@ -12,6 +12,11 @@
 import UIKit
 import FirebaseFirestore
 
+protocol DataStoreDelegate: AnyObject {
+    associatedtype T
+    func setDataStore(postArr: [T])
+}
+
 class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITableViewDataSource, UITableViewDelegate, UITableViewDataSourcePrefetching, TableViewRefreshDelegate {
     var dataStore: ImageDataStore<T>!
     var loadingQueue = OperationQueue()
@@ -25,7 +30,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     }
     var tableView: UITableView!
     var userId: String! {
-        return UserDefaults.standard.string(forKey: "userId")
+        return UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
     }
     
     override func viewDidLoad() {
@@ -61,9 +66,10 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         guard let cell = cell as? ParentTableCell<T> else { return }
         
         // How should the operation update the cell once the data has been loaded?
-        let updateCellClosure: (UIImage?) -> () = { [unowned self] (image) in
+        let updateCellClosure: (UIImage?) -> () = { [weak self] (image) in
             cell.updateAppearanceFor(.fetched(image))
-            self.loadingOperations.removeValue(forKey: indexPath)
+            guard let strongSelf = self else { return }
+            strongSelf.loadingOperations.removeValue(forKey: indexPath)
         }
         
         // Try to find an existing data loader
@@ -83,8 +89,6 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
                 dataLoader.loadingCompleteHandler = updateCellClosure
                 loadingQueue.addOperation(dataLoader)
                 loadingOperations[indexPath] = dataLoader
-            } else {
-                //                cell.updateAppearanceFor(.none(post))
             }
         }
     }
@@ -123,7 +127,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     }
     
     // MARK: - didRefreshTableView
-    @objc func didRefreshTableView() {
+    @objc func didRefreshTableView(index: Int = 0) {
         
     }
 }

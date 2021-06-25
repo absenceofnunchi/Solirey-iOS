@@ -27,6 +27,7 @@ class MainDetailViewController: ParentListViewController<Post> {
                         
                         if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                             self?.postArr = data
+                            self?.dataStore = PostImageDataStore(posts: data)
                         }
                     }
                 }
@@ -38,7 +39,7 @@ class MainDetailViewController: ParentListViewController<Post> {
     }
     
     // MARK: - didRefreshTableView
-    override func didRefreshTableView() {
+    override func didRefreshTableView(index: Int) {
         
     }
     
