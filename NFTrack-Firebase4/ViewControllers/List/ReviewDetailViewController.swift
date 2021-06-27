@@ -9,6 +9,11 @@ import UIKit
 
 class ReviewDetailViewController: UIViewController {
     var post: Review!
+    
+    override func viewDidLoad() {   
+        super.viewDidLoad()
+        configureUI()
+    }
 }
 
 extension ReviewDetailViewController {

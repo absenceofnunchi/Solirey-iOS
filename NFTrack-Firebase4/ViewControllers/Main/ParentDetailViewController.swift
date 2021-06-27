@@ -17,16 +17,17 @@ import BigInt
 
 class ParentDetailViewController: UIViewController {
     // MARK: - Properties
-    let alert = Alerts()
+    var alert: Alerts!
     let transactionService = TransactionService()
     var scrollView: UIScrollView!
     var contractAddress: EthereumAddress!
     var post: Post!
     var pvc: UIPageViewController!
     var galleries = [String]()
+    var usernameContainer: UIView!
     var dateLabel: UILabel!
-    let profileImageView = UIImageView()
-    var displayNameLabel = UILabel()
+    var profileImageView: UIImageView!
+    var displayNameLabel: UILabel!
     var underLineView: UnderlineView!
     var priceTitleLabel: UILabel!
     var priceLabel: UILabelPadding!
@@ -34,14 +35,13 @@ class ParentDetailViewController: UIViewController {
     var descLabel: UILabelPadding!
     var idTitleLabel: UILabel!
     var idLabel: UILabelPadding!
-    var constraints = [NSLayoutConstraint]()
+    var constraints: [NSLayoutConstraint]!
     var fetchedImage: UIImage!
     var userInfo: UserInfo! {
         didSet {
             userInfoDidSet()
         }
     }
-    
     // to refresh after update
     weak var tableViewRefreshDelegate: TableViewRefreshDelegate?
     
@@ -54,9 +54,13 @@ class ParentDetailViewController: UIViewController {
         configureUI()
         setConstraints()
     }
+    
+    func userInfoDidSet() {
+        processProfileImage()
+    }
 }
 
-extension ParentDetailViewController {
+extension ParentDetailViewController: UsernameBannerConfigurable {
     // MARK: - configureBackground
     func configureBackground() {
         view.backgroundColor = .white
@@ -64,26 +68,9 @@ extension ParentDetailViewController {
         scrollView.backgroundColor = .white
         view.addSubview(scrollView)
         scrollView.fill()
-    }
-    
-    func fetchUserData(id: String) {
-        DispatchQueue.global(qos: .utility).async {
-            let docRef = FirebaseService.shared.db.collection("user").document(id)
-            docRef.getDocument { [weak self] (document, error) in
-                if let document = document, document.exists {
-                    if let data = document.data() {
-                        let displayName = data[UserDefaultKeys.displayName] as? String
-                        let photoURL = data[UserDefaultKeys.photoURL] as? String
-                        let userInfo = UserInfo(email: nil, displayName: displayName!, photoURL: photoURL, uid: id)
-                        self?.userInfo = userInfo
-                    }
-                } else {
-                    self?.hideSpinner {
-                        return
-                    }
-                }
-            }
-        }
+        
+        alert = Alerts()
+        constraints = [NSLayoutConstraint]()
     }
     
     // MARK: - configureImageDisplay
@@ -108,65 +95,10 @@ extension ParentDetailViewController {
         }
     }
     
-    @objc func userInfoDidSet() {
-        displayNameLabel.text = userInfo.displayName
-        if let info = self.userInfo, info.photoURL != "NA" {
-            FirebaseService.shared.downloadImage(urlString: self.userInfo.photoURL!) { [weak self] (image, error) in
-                guard let strongSelf = self else { return }
-                if let error = error {
-                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
-                }
-                
-                if let image = image {
-                    strongSelf.fetchedImage = image
-                    strongSelf.profileImageView.image = image
-                    strongSelf.profileImageView.layer.cornerRadius = strongSelf.profileImageView.bounds.height/2.0
-                    strongSelf.profileImageView.contentMode = .scaleToFill
-                    strongSelf.profileImageView.clipsToBounds = true
-                    
-                    strongSelf.profileImageView.isUserInteractionEnabled = true
-                    strongSelf.displayNameLabel.isUserInteractionEnabled = true
-                }
-            }
-        } else {
-            profileImageView.isUserInteractionEnabled = true
-            displayNameLabel.isUserInteractionEnabled = true
-        }
-    }
-    
     // MARK: - configureUI
     @objc func configureUI() {
-        dateLabel = UILabel()
-        dateLabel.textAlignment = .right
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        let formattedDate = formatter.string(from: post.date)
-        dateLabel.text = formattedDate
-        dateLabel.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(dateLabel)
-
-        guard let image = UIImage(systemName: "person.crop.circle.fill") else {
-            self.dismiss(animated: true, completion: nil)
-            return
-        }
-        let profileImage = image.withTintColor(.orange, renderingMode: .alwaysOriginal)
-        profileImageView.image = profileImage
-        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
-        profileImageView.addGestureRecognizer(tap)
-        profileImageView.tag = 1
-        profileImageView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(profileImageView)
-        
-        displayNameLabel.addGestureRecognizer(tap)
-        displayNameLabel.tag = 1
-        displayNameLabel.text = userInfo?.displayName
-        displayNameLabel.lineBreakMode = .byTruncatingTail
-        displayNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(displayNameLabel)
-        
-        underLineView = UnderlineView()
-        underLineView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(underLineView)
+        /// UsernameBannerConfigurable
+        configureNameDisplay(post: post)
         
         priceTitleLabel = createTitleLabel(text: "Price")
         scrollView.addSubview(priceTitleLabel)
@@ -246,37 +178,14 @@ extension ParentDetailViewController {
                 pv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                 pv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
                 pv.heightAnchor.constraint(equalToConstant: 250),
-                dateLabel.topAnchor.constraint(equalTo: pv.bottomAnchor, constant: 50),
-                profileImageView.topAnchor.constraint(equalTo: pv.bottomAnchor, constant: 50),
-                displayNameLabel.topAnchor.constraint(equalTo: pv.bottomAnchor, constant: 50)
             ])
+            setNameDisplayConstraints(topView: pv)
         } else {
-            constraints.append(contentsOf: [
-                dateLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50),
-                profileImageView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50),
-                displayNameLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50)
-            ])
+            setNameDisplayConstraints(topView: scrollView)
         }
         
         constraints.append(contentsOf: [
-            dateLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
-            dateLabel.heightAnchor.constraint(equalToConstant: 50),
-            dateLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.4),
-            
-            profileImageView.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
-            profileImageView.heightAnchor.constraint(equalToConstant: 40),
-            profileImageView.widthAnchor.constraint(equalToConstant: 40),
-            
-            displayNameLabel.leadingAnchor.constraint(equalTo: profileImageView.trailingAnchor, constant: 10),
-            displayNameLabel.heightAnchor.constraint(equalToConstant: 50),
-            displayNameLabel.widthAnchor.constraint(lessThanOrEqualTo: scrollView.widthAnchor, multiplier: 0.6),
-            
-            underLineView.topAnchor.constraint(equalTo: dateLabel.bottomAnchor),
-            underLineView.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
-            underLineView.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
-            underLineView.heightAnchor.constraint(equalToConstant: 0.5),
-            
-            priceTitleLabel.topAnchor.constraint(equalTo: underLineView.bottomAnchor, constant: 40),
+            priceTitleLabel.topAnchor.constraint(equalTo: usernameContainer.bottomAnchor, constant: 40),
             priceTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             priceTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             priceTitleLabel.heightAnchor.constraint(equalToConstant: 50),

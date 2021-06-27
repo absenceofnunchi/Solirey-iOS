@@ -6,8 +6,6 @@
 //
 
 import UIKit
-
-import UIKit
 import FirebaseFirestore
 import FirebaseStorage
 import Firebase
@@ -43,7 +41,7 @@ class ParentPostViewController: UIViewController {
                 DispatchQueue.main.async { [weak self] in
                     self?.imagePreviewVC.view.isHidden = false
                     self?.imagePreviewConstraintHeight.constant = 180
-                    UIView.animate(withDuration: 1) {
+                    UIView.animate(withDuration: 0.5) {
                         self?.view.layoutIfNeeded()
                     }
                 }
@@ -51,7 +49,7 @@ class ParentPostViewController: UIViewController {
                 DispatchQueue.main.async { [weak self] in
                     self?.imagePreviewVC.view.isHidden = true
                     self?.imagePreviewConstraintHeight.constant = 0
-                    UIView.animate(withDuration: 1) {
+                    UIView.animate(withDuration: 0.5) {
                         self?.view.layoutIfNeeded()
                     }
                 }
@@ -95,7 +93,7 @@ class ParentPostViewController: UIViewController {
  
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+        /// whenever the image picker is dismissed, the collection view has to be updated
         imagePreviewVC.data = previewDataArr
         
         if observation != nil {
@@ -528,8 +526,6 @@ extension ParentPostViewController: UITextFieldDelegate, UITextViewDelegate {
 }
 
 extension ParentPostViewController {
-
-    
     func mint(_ hash: Data) {
 
     }
@@ -694,6 +690,10 @@ extension ParentPostViewController: DocumentDelegate, QLPreviewControllerDataSou
     func didPickDocument(document: Document?) {
         if let pickedDoc = document {
             let fileURL = pickedDoc.fileURL
+            guard fileURL.pathExtension == "pdf" else {
+                self.alert.showDetail("Sorry", with: "The document has to be a PDF file", for: self)
+                return
+            }
             url = fileURL
             let previewData = PreviewData(header: .document, filePath: fileURL)
             previewDataArr.append(previewData)
@@ -727,7 +727,3 @@ extension ParentPostViewController: ScannerDelegate {
 // the token gets sent to firestore directly
 // the image and file binaries get sent to storage
 // the storage trigger updates the firestore
-
-
-
-

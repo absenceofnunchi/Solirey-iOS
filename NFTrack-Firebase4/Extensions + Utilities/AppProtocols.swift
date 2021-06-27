@@ -174,9 +174,9 @@ extension FileUploadable {
                 
                 uploadTask.observe(.success) { snapshot in
                     // Upload completed successfully
-                    snapshot.reference.downloadURL { (url, error) in
+                    snapshot.reference.downloadURL {(url, error) in
                         if let error = error {
-                            print("downloadURL error", error)
+                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                         }
                         
                         if let url = url {
@@ -372,4 +372,213 @@ protocol SegmentConfigurable {
     associatedtype Segment: RawRepresentable
     func configureSwitch()
     func segmentedControlSelectionDidChange(_ sender: UISegmentedControl)
+}
+
+protocol UsernameBannerConfigurable where Self: UIViewController {
+    var userInfo: UserInfo! { get set }
+    var scrollView: UIScrollView! { get set }
+    var usernameContainer: UIView! { get set }
+    var dateLabel: UILabel! { get set }
+    var displayNameLabel: UILabel! { get set }
+    var underLineView: UnderlineView! { get set }
+    var alert: Alerts! { get }
+    var fetchedImage: UIImage! { get set }
+    var profileImageView: UIImageView! { get set }
+    var constraints: [NSLayoutConstraint]! { get set }
+    func processProfileImage()
+    func tapped(_ sender: UITapGestureRecognizer!)
+}
+
+extension UsernameBannerConfigurable {
+    func fetchUserData(id: String) {
+        DispatchQueue.global(qos: .utility).async {
+            let docRef = FirebaseService.shared.db.collection("user").document(id)
+            docRef.getDocument { [weak self] (document, error) in
+                if let document = document, document.exists {
+                    if let data = document.data() {
+                        let displayName = data[UserDefaultKeys.displayName] as? String
+                        let photoURL = data[UserDefaultKeys.photoURL] as? String
+                        let userInfo = UserInfo(email: nil, displayName: displayName!, photoURL: photoURL, uid: id)
+                        self?.userInfo = userInfo
+                    }
+                } else {
+                    self?.hideSpinner {
+                        return
+                    }
+                }
+            }
+        }
+    }
+    
+    func processProfileImage() {
+        displayNameLabel.text = userInfo.displayName
+        if let info = self.userInfo, info.photoURL != "NA" {
+            FirebaseService.shared.downloadImage(urlString: self.userInfo.photoURL!) { [weak self] (image, error) in
+                guard let strongSelf = self else { return }
+                if let error = error {
+                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
+                }
+                
+                if let image = image {
+                    strongSelf.fetchedImage = image
+                    strongSelf.profileImageView.image = image
+                    strongSelf.profileImageView.layer.cornerRadius = strongSelf.profileImageView.bounds.height/2.0
+                    strongSelf.profileImageView.contentMode = .scaleToFill
+                    strongSelf.profileImageView.clipsToBounds = true
+                    
+                    strongSelf.profileImageView.isUserInteractionEnabled = true
+                    strongSelf.displayNameLabel.isUserInteractionEnabled = true
+                }
+            }
+        } else {
+            profileImageView.isUserInteractionEnabled = true
+            displayNameLabel.isUserInteractionEnabled = true
+        }
+    }
+    
+    func configureNameDisplay(post: Post) {
+        usernameContainer = UIView()
+        usernameContainer.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(usernameContainer)
+        
+        dateLabel = UILabel()
+        dateLabel.textAlignment = .right
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        let formattedDate = formatter.string(from: post.date)
+        dateLabel.text = formattedDate
+        dateLabel.translatesAutoresizingMaskIntoConstraints = false
+        usernameContainer.addSubview(dateLabel)
+        
+        guard let image = UIImage(systemName: "person.crop.circle.fill") else {
+            self.dismiss(animated: true, completion: nil)
+            return
+        }
+        profileImageView = UIImageView()
+        let profileImage = image.withTintColor(.orange, renderingMode: .alwaysOriginal)
+        profileImageView.image = profileImage
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+        profileImageView.addGestureRecognizer(tap)
+        profileImageView.tag = 1
+        profileImageView.translatesAutoresizingMaskIntoConstraints = false
+        usernameContainer.addSubview(profileImageView)
+        
+        displayNameLabel = UILabel()
+        displayNameLabel.addGestureRecognizer(tap)
+        displayNameLabel.tag = 1
+        displayNameLabel.text = userInfo?.displayName
+        displayNameLabel.lineBreakMode = .byTruncatingTail
+        displayNameLabel.translatesAutoresizingMaskIntoConstraints = false
+        usernameContainer.addSubview(displayNameLabel)
+        
+        underLineView = UnderlineView()
+        underLineView.translatesAutoresizingMaskIntoConstraints = false
+        usernameContainer.addSubview(underLineView)
+    }
+    
+    func setNameDisplayConstraints(topView: UIView) {
+        constraints.append(contentsOf: [
+            usernameContainer.topAnchor.constraint(equalTo: topView.bottomAnchor, constant: 50),
+            usernameContainer.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            usernameContainer.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            usernameContainer.heightAnchor.constraint(equalToConstant: 51),
+            
+            dateLabel.trailingAnchor.constraint(equalTo: usernameContainer.trailingAnchor),
+            dateLabel.heightAnchor.constraint(equalTo: usernameContainer.heightAnchor),
+            dateLabel.widthAnchor.constraint(equalTo: usernameContainer.widthAnchor, multiplier: 0.4),
+            
+            profileImageView.leadingAnchor.constraint(equalTo: usernameContainer.leadingAnchor),
+            profileImageView.centerYAnchor.constraint(equalTo: usernameContainer.centerYAnchor),
+            profileImageView.heightAnchor.constraint(equalToConstant: 40),
+            profileImageView.widthAnchor.constraint(equalToConstant: 40),
+            
+            displayNameLabel.leadingAnchor.constraint(equalTo: profileImageView.trailingAnchor, constant: 10),
+            displayNameLabel.heightAnchor.constraint(equalTo: usernameContainer.heightAnchor),
+            displayNameLabel.widthAnchor.constraint(lessThanOrEqualTo: usernameContainer.widthAnchor, multiplier: 0.6),
+            
+            underLineView.topAnchor.constraint(equalTo: dateLabel.bottomAnchor),
+            underLineView.leadingAnchor.constraint(equalTo: usernameContainer.leadingAnchor),
+            underLineView.trailingAnchor.constraint(equalTo: usernameContainer.trailingAnchor),
+            underLineView.heightAnchor.constraint(equalToConstant: 0.2)
+        ])
+    }
+}
+
+fileprivate extension UIViewController {
+    @objc func tapped(_ sender: UITapGestureRecognizer!) {
+    }
+}
+
+protocol PageVCConfigurable: UIPageViewControllerDataSource, UIPageViewControllerDelegate where Self: UIViewController {
+    var pvc: UIPageViewController! { get set }
+    var galleries: [String]! { get set }
+    var constraints: [NSLayoutConstraint]! { get set }
+    func configureImageDisplay<T: Post, U: UIView>(post: T, v: U)
+    func setImageDisplayConstraints<T: UIView>(v: T)
+}
+
+extension PageVCConfigurable {
+    func configureImageDisplay<T: Post, U: UIView>(post: T, v: U) {
+        if let files = post.files, files.count > 0 {
+            self.galleries.append(contentsOf: files)
+            let singlePageVC = ImagePageViewController(gallery: galleries[0])
+            pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+            pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+            pvc.dataSource = self
+            pvc.delegate = self
+            addChild(pvc)
+            v.addSubview(pvc.view)
+            pvc.view.translatesAutoresizingMaskIntoConstraints = false
+            pvc.didMove(toParent: self)
+            
+            let pageControl = UIPageControl.appearance()
+            pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
+            pageControl.currentPageIndicatorTintColor = .gray
+            pageControl.backgroundColor = .white
+        }
+    }
+    
+    func setImageDisplayConstraints<T: UIView>(v: T) {
+        guard let pv = pvc.view else { return }
+        constraints.append(contentsOf: [
+            pv.topAnchor.constraint(equalTo: v.topAnchor, constant: 0),
+            pv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            pv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            pv.heightAnchor.constraint(equalToConstant: 250),
+        ])
+    }
+    
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+        guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
+        index -= 1
+        if index < 0 {
+            return nil
+        }
+        
+        return ImagePageViewController(gallery: galleries[index])
+    }
+    
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+        guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
+        index += 1
+        if index >= galleries.count {
+            return nil
+        }
+        
+        return ImagePageViewController(gallery: galleries[index])
+    }
+    
+    func presentationCount(for pageViewController: UIPageViewController) -> Int {
+        return self.galleries.count
+    }
+    
+    func presentationIndex(for pageViewController: UIPageViewController) -> Int {
+        let page = pageViewController.viewControllers![0] as! ImagePageViewController
+        
+        if let gallery = page.gallery {
+            return self.galleries.firstIndex(of: gallery)!
+        } else {
+            return 0
+        }
+    }
 }

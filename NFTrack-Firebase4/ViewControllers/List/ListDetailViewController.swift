@@ -60,6 +60,14 @@ class ListDetailViewController: ParentDetailViewController {
         
         scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: contentHeight)
     }
+    
+    override func userInfoDidSet() {
+        super.userInfoDidSet()
+        if userInfo.uid != userId {
+            configureNavigationBar()
+            fetchSavedPostData()
+        }
+    }
 }
 
 extension ListDetailViewController {
@@ -68,14 +76,6 @@ extension ListDetailViewController {
             isSaved = true
         } else {
             isSaved = false
-        }
-    }
-    
-    override func userInfoDidSet() {
-        super.userInfoDidSet()
-        if userInfo.uid != userId {
-            configureNavigationBar()
-            fetchSavedPostData()
         }
     }
     
@@ -571,4 +571,3 @@ extension ListDetailViewController {
         }
     }
 }
-
