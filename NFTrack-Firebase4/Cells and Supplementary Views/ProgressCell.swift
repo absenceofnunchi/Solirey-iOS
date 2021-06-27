@@ -102,7 +102,7 @@ class ProgressCell: CardCell {
         meterContainer.addSubview(dateLabel3)
 
         var progressConstraints = [NSLayoutConstraint]()
-        if let images = post.images, images.count > 0 {
+        if let files = post.files, files.count > 0 {
             progressConstraints += [
                 meterContainer.topAnchor.constraint(equalTo: thumbImageView.bottomAnchor, constant: 10),
             ]

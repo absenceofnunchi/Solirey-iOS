@@ -15,6 +15,8 @@ class ProgressModalViewController: UIViewController {
     private var stackView: UIStackView!
     private var completionCount: Int = 0
     private var doneButton: UIButton!
+    var progressView: UIProgressView!
+    var progressLabel: UILabel!
     
     init(height: CGFloat = 350) {
         super.init(nibName: nil, bundle: nil)
@@ -132,6 +134,17 @@ private extension ProgressModalViewController {
         doneButton.isEnabled = false
         doneButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(doneButton)
+        
+        progressView = UIProgressView()
+        progressView.isHidden = true
+        progressView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(progressView)
+        
+        progressLabel = UILabel()
+        progressView.isHidden = true
+        progressLabel.textAlignment = .right
+        progressLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(progressLabel)
     }
     
     private func setConstraints() {
@@ -148,7 +161,17 @@ private extension ProgressModalViewController {
             doneButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
             doneButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
             doneButton.heightAnchor.constraint(equalToConstant: 40),
-            doneButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            doneButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            progressView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
+            progressView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            progressView.heightAnchor.constraint(equalToConstant: 10),
+            progressView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            progressLabel.topAnchor.constraint(equalTo: progressView.bottomAnchor),
+            progressLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            progressLabel.heightAnchor.constraint(equalToConstant: 20),
+            progressLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         ])
     }
     

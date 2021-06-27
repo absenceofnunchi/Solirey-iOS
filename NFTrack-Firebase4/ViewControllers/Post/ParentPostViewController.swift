@@ -14,7 +14,8 @@ import Firebase
 import web3swift
 import QuickLook
 
-class ParentPostViewController: UIViewController, DocumentDelegate, QLPreviewControllerDataSource {
+class ParentPostViewController: UIViewController {
+    let db = FirebaseService.shared.db!
     var scrollView: UIScrollView!
     var titleLabel: UILabel!
     var titleTextField: UITextField!
@@ -23,7 +24,9 @@ class ParentPostViewController: UIViewController, DocumentDelegate, QLPreviewCon
     var descLabel: UILabel!
     var descTextView: UITextView!
     var idTitleLabel: UILabel!
+    var idContainerView: UIView!
     var idTextField: UITextField!
+    var scanButton: UIButton!
     var pickerTitleLabel: UILabel!
     var pickerLabel: UILabelPadding!
     var tagContainerView: UIView!
@@ -34,21 +37,24 @@ class ParentPostViewController: UIViewController, DocumentDelegate, QLPreviewCon
     var cameraButton: UIButton!
     var imagePickerButton: UIButton!
     var documentPickerButton: UIButton!
-    var imageNameArr = [String]() {
+    var previewDataArr = [PreviewData]() {
         didSet {
-            if imageNameArr.count > 0 {
-                imagePreviewVC.view.isHidden = false
-                imagePreviewConstraintHeight.constant = 170
-                UIView.animate(withDuration: 1) { [weak self] in
-                    self?.view.layoutIfNeeded()
+            if previewDataArr.count > 0 {
+                DispatchQueue.main.async { [weak self] in
+                    self?.imagePreviewVC.view.isHidden = false
+                    self?.imagePreviewConstraintHeight.constant = 180
+                    UIView.animate(withDuration: 1) {
+                        self?.view.layoutIfNeeded()
+                    }
                 }
             } else {
-                imagePreviewVC.view.isHidden = true
-                imagePreviewConstraintHeight.constant = 0
-                UIView.animate(withDuration: 1) { [weak self] in
-                    self?.view.layoutIfNeeded()
+                DispatchQueue.main.async { [weak self] in
+                    self?.imagePreviewVC.view.isHidden = true
+                    self?.imagePreviewConstraintHeight.constant = 0
+                    UIView.animate(withDuration: 1) {
+                        self?.view.layoutIfNeeded()
+                    }
                 }
-                
             }
         }
     }
@@ -65,7 +71,7 @@ class ParentPostViewController: UIViewController, DocumentDelegate, QLPreviewCon
     var documentPicker: DocumentPicker!
     var url: URL!
     var imagePreviewConstraintHeight: NSLayoutConstraint!
-    var documentArr: [Document]!
+    var progressModal: ProgressModalViewController!
     
     let pvc = MyPickerVC()
     /// MyDoneButtonVC
@@ -85,13 +91,12 @@ class ParentPostViewController: UIViewController, DocumentDelegate, QLPreviewCon
         configureUI()
         configureImagePreview()
         setConstraints()
-        deleteAllFiles()
     }
  
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        imagePreviewVC.data = imageNameArr
+        imagePreviewVC.data = previewDataArr
         
         if observation != nil {
             observation?.invalidate()
@@ -100,7 +105,6 @@ class ParentPostViewController: UIViewController, DocumentDelegate, QLPreviewCon
 }
 
 extension ParentPostViewController {
-    
     @objc func configureUI() {
         title = "Post"
         self.hideKeyboardWhenTappedAround()
@@ -145,10 +149,23 @@ extension ParentPostViewController {
         idTitleLabel = createTitleLabel(text: "Unique Identifier")
         scrollView.addSubview(idTitleLabel)
         
+        idContainerView = UIView()
+        idContainerView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(idContainerView)
+        
         idTextField = createTextField(delegate: self)
         idTextField.autocapitalizationType = .none
         idTextField.placeholder = "Case insensitive, i.e. VIN, IMEI..."
-        scrollView.addSubview(idTextField)
+        idContainerView.addSubview(idTextField)
+        
+        guard let scanImage = UIImage(systemName: "qrcode.viewfinder") else { return }
+        scanButton = UIButton.systemButton(with: scanImage.withTintColor(.black, renderingMode: .alwaysOriginal), target: self, action: #selector(buttonPressed))
+        scanButton.layer.cornerRadius = 5
+        scanButton.layer.borderWidth = 0.7
+        scanButton.layer.borderColor = UIColor.lightGray.cgColor
+        scanButton.tag = 7
+        scanButton.translatesAutoresizingMaskIntoConstraints = false
+        idContainerView.addSubview(scanButton)
         
         pickerTitleLabel = createTitleLabel(text: "Category")
         scrollView.addSubview(pickerTitleLabel)
@@ -282,21 +299,29 @@ extension ParentPostViewController {
             idTitleLabel.heightAnchor.constraint(equalToConstant: 50),
             idTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             idTitleLabel.topAnchor.constraint(equalTo: descTextView.bottomAnchor, constant: 20),
+
+            idContainerView.topAnchor.constraint(equalTo: idTitleLabel.bottomAnchor, constant: 0),
+            idContainerView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            idContainerView.heightAnchor.constraint(equalToConstant: 50),
+            idContainerView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             
-            idTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            idTextField.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: 0.75),
             idTextField.heightAnchor.constraint(equalToConstant: 50),
-            idTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            idTextField.topAnchor.constraint(equalTo: idTitleLabel.bottomAnchor, constant: 0),
+            idTextField.leadingAnchor.constraint(equalTo: idContainerView.leadingAnchor),
             
+            scanButton.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: 0.2),
+            scanButton.heightAnchor.constraint(equalToConstant: 50),
+            scanButton.trailingAnchor.constraint(equalTo: tagContainerView.trailingAnchor),
+
+            pickerTitleLabel.topAnchor.constraint(equalTo: idContainerView.bottomAnchor, constant: 20),
             pickerTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             pickerTitleLabel.heightAnchor.constraint(equalToConstant: 50),
             pickerTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            pickerTitleLabel.topAnchor.constraint(equalTo: idTextField.bottomAnchor, constant: 20),
-            
+
+            pickerLabel.topAnchor.constraint(equalTo: pickerTitleLabel.bottomAnchor, constant: 0),
             pickerLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             pickerLabel.heightAnchor.constraint(equalToConstant: 50),
             pickerLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            pickerLabel.topAnchor.constraint(equalTo: pickerTitleLabel.bottomAnchor, constant: 0),
             
             tagTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             tagTitleLabel.heightAnchor.constraint(equalToConstant: 50),
@@ -308,7 +333,7 @@ extension ParentPostViewController {
             tagContainerView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             tagContainerView.topAnchor.constraint(equalTo: tagTitleLabel.bottomAnchor, constant: 0),
             
-            tagTextField.widthAnchor.constraint(equalTo: tagContainerView.widthAnchor, multiplier: 0.7),
+            tagTextField.widthAnchor.constraint(equalTo: tagContainerView.widthAnchor, multiplier: 0.75),
             tagTextField.heightAnchor.constraint(equalToConstant: 50),
             tagTextField.leadingAnchor.constraint(equalTo: tagContainerView.leadingAnchor),
             tagTextField.topAnchor.constraint(equalTo: tagContainerView.topAnchor),
@@ -322,26 +347,13 @@ extension ParentPostViewController {
             buttonPanel.heightAnchor.constraint(equalToConstant: 80),
             buttonPanel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             buttonPanel.topAnchor.constraint(equalTo: tagContainerView.bottomAnchor, constant: 40),
-//
-//            cameraButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
-//            cameraButton.heightAnchor.constraint(equalToConstant: 80),
-//            cameraButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
-//
-//            imagePickerButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
-//            imagePickerButton.heightAnchor.constraint(equalToConstant: 80),
-//            imagePickerButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
-            
-            cameraButton.widthAnchor.constraint(equalToConstant: 80),
-            cameraButton.heightAnchor.constraint(equalToConstant: 80),
 
-            imagePickerButton.widthAnchor.constraint(equalToConstant: 80),
+            cameraButton.heightAnchor.constraint(equalToConstant: 80),
             imagePickerButton.heightAnchor.constraint(equalToConstant: 80),
-            
-            documentPickerButton.widthAnchor.constraint(equalToConstant: 80),
             documentPickerButton.heightAnchor.constraint(equalToConstant: 80),
 
             imagePreviewVC.view.topAnchor.constraint(equalTo: buttonPanel.bottomAnchor, constant: 20),
-            imagePreviewVC.view.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            imagePreviewVC.view.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
             imagePreviewVC.view.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             imagePreviewConstraintHeight,
             
@@ -357,7 +369,7 @@ extension ParentPostViewController {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
-        if imageNameArr.count < 7 {
+        if previewDataArr.count < 6 {
             switch sender.tag {
                 case 1:
                     let vc = UIImagePickerController()
@@ -385,62 +397,22 @@ extension ParentPostViewController {
                 case 6:
                     documentPicker = DocumentPicker(presentationController: self, delegate: self)
                     documentPicker.displayPicker()
+                case 7:
+                    let scannerVC = ScannerViewController()
+                    scannerVC.delegate = self
+                    scannerVC.modalPresentationStyle = .fullScreen
+                    self.present(scannerVC, animated: true, completion: nil)
                 default:
                     break
             }
         } else {
             let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Image Upload Limit"
-            detailVC.message = "There is a limit of 6 images per post."
+            detailVC.titleString = "Upload Limit"
+            detailVC.message = "There is a limit of 6 files per post."
             detailVC.buttonAction = { [weak self]vc in
                 self?.dismiss(animated: true, completion: nil)
             }
             present(detailVC, animated: true, completion: nil)
-        }
-    }
-    
-    
-    func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
-        return 1
-    }
-    
-    func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
-        return self.url as QLPreviewItem
-//        let previewItem = CustomPreviewItem(url: <Your URL>, title: <Title>)
-//        return previewItem as QLPreviewItem
-    }
-    
-    // MARK: - didPickDocument
-    func didPickDocument(document: Document?) {
-        if let pickedDoc = document {
-            let fileURL = pickedDoc.fileURL
-            url = fileURL
-            
-            var retrievedData: Data!
-            do {
-                retrievedData = try Data(contentsOf: fileURL)
-            } catch {
-                alert.show(error, for: self)
-            }
-            
-            let preview = PreviewPDFViewController()
-            preview.dataSource = self
-//            preview.buttonAction = { [weak self] in
-//                self?.dismiss(animated: true, completion: nil)
-
-//                if let data = retrievedData {
-//                    print("document data", data)
-//                    
-//                    self?.alert.withTextField(delegate: self!, controller: self!, data: data, completion: { (title, password) in
-//                        //                        self?.uploadFile(fileData: data, title: title, password: password)
-//
-//                        self?.presendAnimation(completion: {
-//                            self?.uploadData(data: data, title: title, password: password)
-//                        })
-//                    })
-//                }
-//            }
-            present(preview, animated: true, completion: nil)
         }
     }
     
@@ -480,7 +452,6 @@ extension ParentPostViewController {
         
         return suggestedColor
     }
-    
 }
 
 // MARK: - Image picker
@@ -488,14 +459,14 @@ extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigati
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
         
-        guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else {
+        guard let _ = info[UIImagePickerController.InfoKey.originalImage] as? UIImage,
+              let filePath = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
             print("No image found")
             return
         }
         
-        let imageName = UUID().uuidString
-        imageNameArr.append(imageName)
-        saveImage(imageName: imageName, image: image)
+        let previewData = PreviewData(header: .image, filePath: filePath)
+        previewDataArr.append(previewData)
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
@@ -507,7 +478,7 @@ extension ParentPostViewController: PreviewDelegate {
     // MARK: - configureImagePreview
     func configureImagePreview() {
         imagePreviewVC = ImagePreviewViewController()
-        imagePreviewVC.data = imageNameArr
+        imagePreviewVC.data = previewDataArr
         imagePreviewVC.delegate = self
         imagePreviewVC.view.translatesAutoresizingMaskIntoConstraints = false
         addChild(imagePreviewVC)
@@ -517,15 +488,15 @@ extension ParentPostViewController: PreviewDelegate {
     }
     
     // MARK: - didDeleteImage
-    func didDeleteImage(imageName: String) {
-        imageNameArr = imageNameArr.filter { $0 != imageName }
+    func didDeleteFileFromPreview(filePath: URL) {
+        previewDataArr = previewDataArr.filter { $0.filePath != filePath }
     }
 }
 
 extension ParentPostViewController {
     // MARK: - checkExistingId
     func checkExistingId(id: String, completion: @escaping (Bool) -> Void) {
-        FirebaseService.shared.db.collection("post")
+        db.collection("post")
             .whereField("itemIdentifier", isEqualTo: id)
             .getDocuments() { (querySnapshot, err) in
                 if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
@@ -542,22 +513,6 @@ extension ParentPostViewController {
     @objc func configureProgress() {
         
     }
-    
-    func deleteAllFiles() {
-        let documentsUrl =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        
-        do {
-            let fileURLs = try FileManager.default.contentsOfDirectory(at: documentsUrl,
-                                                                       includingPropertiesForKeys: nil,
-                                                                       options: .skipsHiddenFiles)
-            for fileURL in fileURLs {
-                print("fileURL", fileURL)
-                try FileManager.default.removeItem(at: fileURL)
-            }
-        } catch  {
-            print(error)
-        }
-    }
 }
 
 extension ParentPostViewController: UITextFieldDelegate, UITextViewDelegate {
@@ -573,139 +528,103 @@ extension ParentPostViewController: UITextFieldDelegate, UITextViewDelegate {
 }
 
 extension ParentPostViewController {
-    //    let eventABI = [
-    //        {
-    //            "indexed": true,
-    //            "internalType": "address",
-    //            "name": "from",
-    //            "type": "address"
-    //        },
-    //        {
-    //            "indexed": true,
-    //            "internalType": "address",
-    //            "name": "to",
-    //            "type": "address"
-    //        },
-    //        {
-    //            "indexed": true,
-    //            "internalType": "uint256",
-    //            "name": "tokenId",
-    //            "type": "uint256"
-    //        }
-    //    ]
+
     
     func mint(_ hash: Data) {
-        
-        
-        //        let from = ABI.Element.InOut(name: "from", type: .address)
-        //        let to = ABI.Element.InOut(name: "to", type: .address)
-        //        let tokenId = ABI.Element.InOut(name: "tokenId", type: .uint(bits: 256))
-        //        let abiElement = ABI.Element.Function(name: "Transfer", inputs: [from, to, tokenId], outputs: [], constant: false, payable: false)
-        //        print("abiElement", abiElement)
-    
-//                let from = ABI.Element.Event.Input(name: "from", type: .address, indexed: true)
-//                let to = ABI.Element.Event.Input(name: "to", type: .address, indexed: true)
-//                let tokenId = ABI.Element.Event.Input(name: "tokenId", type: .uint(bits: 256), indexed: true)
-//                let abiEvent = ABI.Element.Event(name: "Transfer", inputs: [from, to, tokenId], anonymous: false)
-//                print("abiEvent", abiEvent)
-//
-//                let eventLogData = Data(base64Encoded: "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef")
-//                let eventLogTopics = [
-//                    Data(base64Encoded: "0x0000000000000000000000000000000000000000000000000000000000000000")!,
-//                    Data(base64Encoded: "0x0000000000000000000000006879f0a123056b5bb56c7e787cf64a67f3a16a71")!,
-//                    Data(base64Encoded: "0x0000000000000000000000000000000000000000000000000000000000000030")!
-//                ]
-//
-//                let decodedLog = ABIDecoder.decodeLog(event: abiEvent, eventLogTopics: eventLogTopics, eventLogData: eventLogData!)
-//                print("decodedLog", decodedLog as Any)
+
     }
 }
 
-extension ParentPostViewController: MessageDelegate, ImageUploadable {
+extension ParentPostViewController: MessageDelegate, FileUploadable {
     // MARK: - didReceiveMessage
     @objc func didReceiveMessage(topics: [String]) {
+        defer {
+            // disconnect socket
+            self.socketDelegate.disconnectSocket()
+        }
+        
         // get the token ID to be uploaded to Firestore
-        getTokenId(topics: topics) { [weak self](tokenId, error) in
-            if let error = error {
-                self?.alert.showDetail("Token ID Fetch Error", with: error.localizedDescription, for: self)
-            }
-            
-            if let tokenId = tokenId {
-                FirebaseService.shared.db.collection("post").document(self!.documentId).updateData([
-                    "tokenId": tokenId
-                ]) { (error) in
-                    if let error = error {
-                        self?.alert.showDetail("Error Loading TokenID", with: error.localizedDescription, for: self)
-                    } else {
-                        defer {
-                            let update: [String: PostProgress] = ["update": .images]
+        getTokenId(topics: topics) { [weak self](res) in
+            if let res = res {
+                if res is HTTPStatusCode {
+                    switch res as! HTTPStatusCode {
+                        case .badRequest:
+                            self?.alert.showDetail("Error", with: "Bad request. Please contact the support.", for: self)
+                        case .unauthorized:
+                            self?.alert.showDetail("Error", with: "Unauthorized request. Please contact the support.", for: self)
+                        case .internalServerError:
+                            self?.alert.showDetail("Error", with: "Internal Server Error. Please contact the support.", for: self)
+                        case .serviceUnavailable:
+                            self?.alert.showDetail("Error", with: "Service Unavailable. Please contact the support.", for: self)
+                        case .ok, .created, .accepted:
+                            let update: [String: PostProgress] = ["update": .minting]
                             NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                            self?.titleTextField.text?.removeAll()
-                            self?.priceTextField.text?.removeAll()
-                            self?.descTextView.text?.removeAll()
-                            self?.idTextField.text?.removeAll()
-                            self?.pickerLabel.text?.removeAll()
-                            self?.tagTextField.tokens.removeAll()
                             
-//                            self?.alert.showDetail("Success", with: "You have successfully minted a token", for: self) {
-//                                self?.titleTextField.text?.removeAll()
-//                                self?.priceTextField.text?.removeAll()
-//                                self?.descTextView.text?.removeAll()
-//                                self?.idTextField.text?.removeAll()
-//                                self?.pickerLabel.text?.removeAll()
-//                                self?.tagTextField.tokens.removeAll()
-//                            }
-                        }
-                        // disconnect socket
-                        self?.socketDelegate.disconnectSocket()
-                        var imageCount: Int = 0
-                        // upload images and delete them afterwards
-                        if self!.imageNameArr.count > 0, let imageNameArr = self?.imageNameArr {
-                            defer {
-                                let update: [String: PostProgress] = ["update": .images]
-                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                            self?.uploadFiles()
+                            
+                            DispatchQueue.main.async {
+                                self?.titleTextField.text?.removeAll()
+                                self?.priceTextField.text?.removeAll()
+                                self?.descTextView.text?.removeAll()
+                                self?.idTextField.text?.removeAll()
+                                self?.pickerLabel.text?.removeAll()
+                                self?.tagTextField.tokens.removeAll()
                             }
-                            for image in imageNameArr {
-                                self?.uploadImages(image: image, userId: self!.userId) {(url) in
-                                    defer {
-                                        print("after getting url")
-                                    }
-                                    FirebaseService.shared.db.collection("post").document(self!.documentId).updateData([
-                                        "images": FieldValue.arrayUnion(["\(url)"])
-                                    ], completion: { (error) in
-                                        defer {
-                                            /// this runs last. place the success alert here. use the same image counter to check if all the images have been fulfilled
-                                            /// there has to be a success alert for if you don't have images to upload
-                                            print("after update data")
-                                        }
-                                        if let error = error {
-                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
-                                        }
-                                    })
-                                }
-                                imageCount += 1
-                                if imageCount == imageNameArr.count, let ipvc = self?.imagePreviewVC {
-                                    self?.imageNameArr.removeAll()
-                                    ipvc.data.removeAll()
-                                    ipvc.collectionView.reloadData()
-                                    for imageName in imageNameArr {
-                                        self?.deleteFile(fileName: imageName)
-                                    }
-                                }
-                            }
-                        }
+                        default:
+                            self?.alert.showDetail("Error", with: "Unknown Network Error. Please contact the admin.", for: self)
                     }
+                } else {
+                    self?.alert.showDetail("Error in Minting", with: res.localizedDescription, for: self)
                 }
             }
         }
     }
     
+    func uploadFiles() {
+        var fileCount: Int = 0
+        if self.previewDataArr.count > 0 {
+            for previewData in previewDataArr {
+                self.uploadFile(fileURL: previewData.filePath, userId: self.userId) {[weak self] (url) in
+                    guard let strongSelf = self else { return }
+                    strongSelf.db.collection("post").document(strongSelf.documentId).updateData([
+                        "files": FieldValue.arrayUnion(["\(url)"])
+                    ], completion: { (error) in
+                        defer {
+                            /// this runs last. place the success alert here. use the same image counter to check if all the images have been fulfilled
+                            /// there has to be a success alert for if you don't have images to upload
+                            print("after update data")
+                        }
+                        if let error = error {
+                            strongSelf.alert.showDetail("Error", with: error.localizedDescription, for: self)
+                        }
+                    })
+                }
+                fileCount += 1
+                if fileCount == previewDataArr.count {
+                    self.previewDataArr.removeAll()
+                    self.imagePreviewVC.data.removeAll()
+                    DispatchQueue.main.async { [weak self] in
+                        self?.imagePreviewVC.collectionView.reloadData()
+                    }
+                    let update: [String: PostProgress] = ["update": .images]
+                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                }
+            }
+        } else {
+            let update: [String: PostProgress] = ["update": .images]
+            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+        }
+    }
+    
     // MARK: - getTokenId
-    func getTokenId(topics: [String], completion: @escaping (String?, Error?) -> Void) {
+    func getTokenId(topics: [String], completion: @escaping (Error?) -> Void) {
         // build request URL
         guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/decodeLog") else {
             return
         }
+//        guard let requestURL = URL(string: "http://localhost:5001/nftrack-69488/us-central1/decodeLog") else {
+//            return
+//        }
         
         // prepare request
         var request = URLRequest(url: requestURL)
@@ -718,40 +637,40 @@ extension ParentPostViewController: MessageDelegate, ImageUploadable {
                 topics[1],
                 topics[2],
                 topics[3]
-            ]
+            ],
+            "documentID": self.documentId!
         ]
         
         let paramData = try? JSONSerialization.data(withJSONObject: parameter, options: [])
         request.httpBody = paramData
         
-        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
+        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (_, response, error) -> Void in
             if let error = error {
-                completion(nil, error)
+                completion(error)
             }
             
-            
-            if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
-                // handle HTTP server-side error
-                completion(nil, error)
-            }
-            
-            if let data = data {
-                do {
-                    if let responseObj = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions(rawValue:0)) as? [String:Any],
-                       let tokenId = responseObj["tokenId"] as? String {
-                        completion(tokenId, nil)
-                    }
-                } catch {
-                    completion(nil, error)
-                }
+            if let response = response as? HTTPURLResponse {
+                print("response", response)
+                
+                let httpStatusCode = HTTPStatusCode(rawValue: response.statusCode)
+                completion(httpStatusCode)
+                
+//                if !(200...299).contains(response.statusCode) {
+//                    print("start1")
+//                    // handle HTTP server-side error
+//                }
             }
         })
         
-        observation = task.progress.observe(\.fractionCompleted) { (progress, _) in
+        observation = task.progress.observe(\.fractionCompleted) { [weak self] (progress, _) in
             print("progress", progress)
             DispatchQueue.main.async {
-                //                self?.progressView.progress = Float(progress.fractionCompleted)
-                //                self?.progressLabel.text = String(Int(progress.fractionCompleted * 100)) + "%"
+                self?.progressModal.progressView.isHidden = false
+                self?.progressModal.progressLabel.isHidden = false
+                self?.progressModal.progressView.progress = Float(progress.fractionCompleted)
+                self?.progressModal.progressLabel.text = String(Int(progress.fractionCompleted * 100)) + "%"
+                self?.progressModal.progressView.isHidden = true
+                self?.progressModal.progressLabel.isHidden = true
             }
         }
         
@@ -759,62 +678,56 @@ extension ParentPostViewController: MessageDelegate, ImageUploadable {
     }
 }
 
-extension ParentPostViewController {
-    func saveFile(fileName: String) {
-        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        let fileURL = documentsDirectory.appendingPathComponent(fileName)
-        
-        //Checks if file exists, removes it if so.
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            do {
-                try FileManager.default.removeItem(atPath: fileURL.path)
-            } catch let removeError {
-                print("couldn't remove file at path", removeError)
-            }
-        }
-        
-        do {
-            let data = try Data(contentsOf: fileURL)
-            try data.write(to: fileURL)
-        } catch let error {
-            print("error saving file with error", error)
-        }
+extension ParentPostViewController: DocumentDelegate, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
+    func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
+        return 1
     }
-}
-
-// MARK: - QLPreviewItem
-class CustomPreviewItem: NSObject, QLPreviewItem {
-    var previewItemURL: URL?
-    var previewItemTitle: String?
     
-    init(url: URL, title: String?) {
-        previewItemURL = url
-        previewItemTitle = title
+    func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+        //        return self.url as QLPreviewItem
+        let  docTitle = UUID().uuidString
+        let previewItem = CustomPreviewItem(url: url, title: docTitle)
+        return previewItem as QLPreviewItem
     }
-}
+    
+    // MARK: - didPickDocument
+    func didPickDocument(document: Document?) {
+        if let pickedDoc = document {
+            let fileURL = pickedDoc.fileURL
+            url = fileURL
+            let previewData = PreviewData(header: .document, filePath: fileURL)
+            previewDataArr.append(previewData)
 
-// MARK: - QuickLookThumbnailing
-extension CustomPreviewItem {
-    func generateThumbnail(completion: @escaping (UIImage) -> Void) {
-        // 1
-        let size = CGSize(width: 128, height: 102)
-        let scale = UIScreen.main.scale
-        // 2
-        let request = QLThumbnailGenerator.Request(
-            fileAt: previewItemURL!,
-            size: size,
-            scale: scale,
-            representationTypes: .all)
-        
-        // 3
-        let generator = QLThumbnailGenerator.shared
-        generator.generateBestRepresentation(for: request) { thumbnail, error in
-            if let thumbnail = thumbnail {
-                completion(thumbnail.uiImage)
-            } else if let error = error {
-                // Handle error
-                print(error)
-            }
+            let preview = PreviewPDFViewController()
+            preview.delegate = self
+            preview.dataSource = self
+            present(preview, animated: true, completion: nil)
         }
     }
 }
+
+extension ParentPostViewController: ScannerDelegate {
+    // MARK: - scannerDidOutput
+    func scannerDidOutput(code: String) {
+        idTextField.text = code
+    }
+}
+
+
+/// hash image
+/// https://stackoverflow.com/questions/55868751/sha256-hash-of-camera-image-differs-after-it-was-saved-to-photo-album
+//let imageData = UIImage(named: "Example")!.pngData()!
+//print(imageData.base64EncodedString())
+//// 'iVBORw0KGgoAAAANSUhEUgAAAG8AAACACAQAAACv3v+8AAAM82lD [...] gAAAABJRU5ErkJggg=='
+//let imageHash = getImageHash(data: imageData)
+//print(imageHash)
+//// '145036245c9f675963cc8de2147887f9feded5813b0539d2320d201d9ce63397'
+
+// when you send the receipt, send the image and file binaries as well
+// the token gets sent to firestore directly
+// the image and file binaries get sent to storage
+// the storage trigger updates the firestore
+
+
+
+

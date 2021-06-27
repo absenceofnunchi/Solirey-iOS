@@ -11,6 +11,7 @@ import FirebaseFirestore
 class ListViewController: ParentListViewController<Post> {
     private let userDefaults = UserDefaults.standard
     private var segmentedControl: UISegmentedControl!
+    private var currentIndex: Int! = 0
     
     final override func viewDidLoad() {
         super.viewDidLoad()
@@ -18,6 +19,35 @@ class ListViewController: ParentListViewController<Post> {
         configureNavigationBar(vc: self)
         configureSwitch()
         configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+        
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
+        swipeLeft.direction = .left
+        view.addGestureRecognizer(swipeLeft)
+        
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
+        swipeRight.direction = .right
+        view.addGestureRecognizer(swipeRight)
+    }
+    
+    @objc func swiped(_ sender: UISwipeGestureRecognizer) {
+        switch sender.direction {
+            case .right:
+                if currentIndex - 1 >= 0 {
+                    currentIndex -= 1
+                } else {
+                    return
+                }
+            case .left:
+                if currentIndex + 1 < Segment.allCases.count {
+                    currentIndex += 1
+                } else {
+                    return
+                }
+            default:
+                break
+        }
+        segmentedControl.selectedSegmentIndex = currentIndex
+        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
     }
 
     final override func setDataStore(postArr: [Post]) {
@@ -54,7 +84,8 @@ class ListViewController: ParentListViewController<Post> {
     // MARK: - didRefreshTableView
     final override func didRefreshTableView(index: Int = 0) {
         segmentedControl.selectedSegmentIndex = index
-        segmentedControl.sendActions(for: UIControl.Event.valueChanged)        
+        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+        currentIndex = index
         switch index {
             case 0:
                 // buying
@@ -117,7 +148,7 @@ extension ListViewController: SegmentConfigurable {
     @objc final func segmentedControlSelectionDidChange(_ sender: UISegmentedControl) {
         guard let segment = Segment(rawValue: sender.selectedSegmentIndex)
         else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
-        
+        currentIndex = sender.selectedSegmentIndex
         switch segment {
             case .buying:
                 configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])

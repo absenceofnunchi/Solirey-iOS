@@ -194,7 +194,7 @@ extension ProfileViewController: UIImagePickerControllerDelegate & UINavigationC
     }
 }
 
-extension ProfileViewController: ImageUploadable {
+extension ProfileViewController: FileUploadable {
     // MARK: - updateProfile
     func updateProfile() {
         guard let email = self.emailTextField.text,
@@ -207,7 +207,7 @@ extension ProfileViewController: ImageUploadable {
         
         showSpinner {
             if self.profileImageName != nil {
-                self.uploadImages(image: self.profileImageName, userId: self.userInfo.uid!) { (url) in
+                self.uploadFile(fileName: self.profileImageName, userId: self.userInfo.uid!) { (url) in
                     //                            UserDefaults.standard.set(url, forKey: UserDefaultKeys.photoURL)
                     let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
                     changeRequest?.displayName = displayName

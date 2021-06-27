@@ -52,7 +52,7 @@ class ListDetailViewController: ParentDetailViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         var contentHeight: CGFloat!
-        if let images = post.images, images.count > 0 {
+        if let files = post.files, files.count > 0 {
             contentHeight = descLabel.bounds.size.height + 800 + historyTableViewHeight + 250
         } else {
             contentHeight = descLabel.bounds.size.height + 800 + historyTableViewHeight

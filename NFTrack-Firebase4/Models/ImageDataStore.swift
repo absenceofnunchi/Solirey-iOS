@@ -33,8 +33,16 @@ class ImageDataStore<T> {
 /// DataLeadOperation needs to take in a certain parameter, but the input data takes many different forms
 class PostImageDataStore: ImageDataStore<Post> {
     final override func dataLoadBuffer(_ post: Post) -> DataLoadOperation? {
-        if let images = post.images, images.count > 0, let i = images.first {
+        if let files = post.files, files.count > 0, let i = files.first {
             return DataLoadOperation(i)
+//            var imageString: String!
+//            for file in files {
+//                if let url = URL(string: file), url.pathExtension != "pdf" {
+//                    imageString = file
+//                    break
+//                }
+//            }
+//            return imageString != nil ? DataLoadOperation(imageString) : .none
         } else {
             return .none
         }
@@ -92,13 +100,24 @@ class DataLoadOperation: Operation {
             return
         }
         
-        downloadImageFrom(url) { (image) in
-            DispatchQueue.main.async() { [weak self] in
+        if url.pathExtension == "pdf" {
+            guard let _image = UIImage(systemName: "doc.circle") else { return }
+            let configuration = UIImage.SymbolConfiguration(pointSize: 20, weight: .light, scale: .small)
+            let configuredImage = _image.withTintColor(.lightGray, renderingMode: .alwaysOriginal).withConfiguration(configuration)
+            DispatchQueue.main.async { [weak self] in
                 guard let `self` = self else { return }
                 if self.isCancelled { return }
-                self.image = image
-                print("download image", image)
+                self.image = configuredImage
                 self.loadingCompleteHandler?(self.image)
+            }
+        } else {
+            downloadImageFrom(url) { (image) in
+                DispatchQueue.main.async() { [weak self] in
+                    guard let `self` = self else { return }
+                    if self.isCancelled { return }
+                    self.image = image
+                    self.loadingCompleteHandler?(self.image)
+                }
             }
         }
     }

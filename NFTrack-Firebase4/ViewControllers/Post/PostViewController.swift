@@ -128,9 +128,9 @@ class PostViewController: ParentPostViewController {
                             detailVC.buttonAction = { vc in
                                 if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
                                     self?.dismiss(animated: true, completion: {
-                                        let progressModal = ProgressModalViewController()
-                                        progressModal.titleString = "Posting In Progress"
-                                        self?.present(progressModal, animated: true, completion: {
+                                        self?.progressModal = ProgressModalViewController()
+                                        self?.progressModal.titleString = "Posting In Progress"
+                                        self?.present(self!.progressModal, animated: true, completion: {
                                             DispatchQueue.global().async {
                                                 do {
                                                     // create new contract
@@ -156,19 +156,17 @@ class PostViewController: ParentPostViewController {
                                                             do {
                                                                 let mintResult = try mintTransaction.send(password: password,transactionOptions: nil)
                                                                 print("mintResult", mintResult)
-                                                                let update: [String: PostProgress] = ["update": .minting]
-                                                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                                                 
                                                                 // firebase
                                                                 let senderAddress = result.transaction.sender!.address
-                                                                let ref = FirebaseService.shared.db.collection("post")
+                                                                let ref = self!.db.collection("post")
                                                                 let id = ref.document().documentID
                                                                 
                                                                 // for deleting photos afterwards
                                                                 self?.documentId = id
                                                                 
                                                                 // txHash is either minting or transferring the ownership
-                                                                FirebaseService.shared.db.collection("post").document(id).setData([
+                                                                self?.db.collection("post").document(id).setData([
                                                                     "sellerUserId": userId,
                                                                     "senderAddress": senderAddress,
                                                                     "escrowHash": result.hash,
@@ -184,7 +182,6 @@ class PostViewController: ParentPostViewController {
                                                                     "isReviewed": false
                                                                 ]) { (error) in
                                                                     if let error = error {
-                                                                        print("error4")
                                                                         self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                                     } else {
                                                                         /// no need for a socket if you don't have images to upload?

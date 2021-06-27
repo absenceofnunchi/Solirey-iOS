@@ -188,7 +188,7 @@ extension TransactionService {
     
     // MARK: - prepareTransactionForMinting
     func prepareTransactionForMinting(completion: @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
-        DispatchQueue.global().async {
+        DispatchQueue.global(qos: .background).async {
             guard let address = Web3swiftService.currentAddress else { return }
             var options = TransactionOptions.defaultOptions
             options.from = address
@@ -211,9 +211,10 @@ extension TransactionService {
                 return
             }
             
-            DispatchQueue.main.async {
-                completion(transaction, nil)
-            }
+            completion(transaction, nil)
+//            DispatchQueue.main.async {
+//                completion(transaction, nil)
+//            }
         }
     }
     

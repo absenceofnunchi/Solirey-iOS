@@ -79,7 +79,7 @@ class Post: PostCoreModel {
     var title: String!
     var description: String!
     var date: Date!
-    var images: [String]?
+    var files: [String]?
     var price: String!
     var mintHash: String!
     var escrowHash: String!
@@ -95,13 +95,13 @@ class Post: PostCoreModel {
     var confirmReceivedDate: Date?
     var savedBy: [String]?
     
-    init(documentId: String, title: String, description: String, date: Date, images: [String]?, price: String, mintHash: String, escrowHash: String, id: String, status: String, sellerUserId: String, buyerUserId: String?,sellerHash: String, buyerHash: String?, confirmPurchaseHash: String?, confirmPurchaseDate: Date?, transferHash: String?, transferDate: Date?, confirmReceivedHash: String?, confirmReceivedDate: Date?, savedBy: [String]?) {
+    init(documentId: String, title: String, description: String, date: Date, files: [String]?, price: String, mintHash: String, escrowHash: String, id: String, status: String, sellerUserId: String, buyerUserId: String?,sellerHash: String, buyerHash: String?, confirmPurchaseHash: String?, confirmPurchaseDate: Date?, transferHash: String?, transferDate: Date?, confirmReceivedHash: String?, confirmReceivedDate: Date?, savedBy: [String]?) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
         self.title = title
         self.description = description
         self.date = date
-        self.images = images
+        self.files = files
         self.price = price
         self.mintHash = mintHash
         self.escrowHash = escrowHash

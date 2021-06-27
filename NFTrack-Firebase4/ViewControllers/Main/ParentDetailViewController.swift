@@ -89,8 +89,8 @@ extension ParentDetailViewController {
     // MARK: - configureImageDisplay
     func configureImageDisplay() {
         // image
-        if let images = post.images, images.count > 0 {
-            self.galleries.append(contentsOf: images)
+        if let files = post.files, files.count > 0 {
+            self.galleries.append(contentsOf: files)
             let singlePageVC = ImagePageViewController(gallery: galleries[0])
             pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
             pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
@@ -239,7 +239,7 @@ extension ParentDetailViewController {
 //
     // MARK: - setConstraints
     @objc func setConstraints() {
-        if let images = post.images, images.count > 0 {
+        if let files = post.files, files.count > 0 {
             guard let pv = pvc.view else { return }
             constraints.append(contentsOf: [
                 pv.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 0),

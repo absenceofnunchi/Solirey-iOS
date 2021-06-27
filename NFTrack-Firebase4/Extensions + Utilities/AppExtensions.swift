@@ -77,7 +77,7 @@ extension UIViewController {
             let data = document.data()
             var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
-            var images, savedBy: [String]?
+            var files, savedBy: [String]?
             data.forEach { (item) in
                 switch item.key {
                     case "sellerUserId":
@@ -91,8 +91,8 @@ extension UIViewController {
                     case "date":
                         let timeStamp = item.value as? Timestamp
                         date = timeStamp?.dateValue()
-                    case "images":
-                        images = item.value as? [String]
+                    case "files":
+                        files = item.value as? [String]
                     case "price":
                         price = item.value as? String
                     case "mintHash":
@@ -129,7 +129,7 @@ extension UIViewController {
                 }
             }
             
-            let post = Post(documentId: document.documentID, title: title, description: description, date: date, images: images, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy)
+            let post = Post(documentId: document.documentID, title: title, description: description, date: date, files: files, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy)
             postArr.append(post)
         }
         return postArr
@@ -352,6 +352,27 @@ extension UIImageView {
             DispatchQueue.main.async {
                 self.image = UIImage(data: data)
                 completion?()
+            }
+        }
+        task.resume()
+    }
+}
+
+import PDFKit
+
+extension PDFView {
+    func setPDF(from url: URL?, completion: ((PDFDocument?) -> Void)? = nil) {
+        guard let url = url else { return }
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data, error == nil else {
+                completion?(nil)
+                return
+            }
+            if let doc = PDFDocument(data: data) {
+                DispatchQueue.main.async {
+                    self.document = doc
+                    completion?(doc)
+                }
             }
         }
         task.resume()

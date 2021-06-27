@@ -41,7 +41,7 @@ class CardCell: ParentTableCell<Post> {
         
         priceLabel.font = .rounded(ofSize: titleLabel.font.pointSize, weight: .medium)
         priceLabel.textColor = .gray
-        priceLabel.text = "Price: \(post.price) ETH"
+        priceLabel.text = "Price: \(post.price!) ETH"
         priceLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(priceLabel)
         
@@ -71,7 +71,7 @@ class CardCell: ParentTableCell<Post> {
             dateLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
         ]
         
-        if let images = post.images, images.count > 0 {
+        if let files = post.files, files.count > 0 {
             thumbImageView.image = UIImage(named: "placeholder")
             thumbImageView.contentMode = .scaleAspectFill
             thumbImageView.clipsToBounds = true

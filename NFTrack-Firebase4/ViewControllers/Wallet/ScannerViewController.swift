@@ -8,7 +8,8 @@
 import AVFoundation
 import UIKit
 
-class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
+class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate, ModalConfigurable {
+    var closeButton: UIButton!
     var captureSession: AVCaptureSession!
     var previewLayer: AVCaptureVideoPreviewLayer!
     weak var delegate: ScannerDelegate?
@@ -41,7 +42,7 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
             captureSession.addOutput(metadataOutput)
             
             metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
-            metadataOutput.metadataObjectTypes = [.qr]
+            metadataOutput.metadataObjectTypes = [.qr, .upce, .ean13, .code128]
         } else {
             failed()
             return
@@ -53,6 +54,13 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
         view.layer.addSublayer(previewLayer)
         
         captureSession.startRunning()
+        
+        configureCloseButton(tintColor: .white)
+        setButtonConstraints()
+        
+        let swipe = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
+        swipe.direction = .down
+        view.addGestureRecognizer(swipe)
     }
     
     func failed() {
@@ -97,5 +105,9 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         return .portrait
+    }
+    
+    @objc func swiped() {
+        self.dismiss(animated: true, completion: nil)
     }
 }

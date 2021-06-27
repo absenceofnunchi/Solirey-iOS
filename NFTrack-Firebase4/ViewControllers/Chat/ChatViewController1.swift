@@ -362,7 +362,7 @@
 //        
 //        imageName = UUID().uuidString
 //        saveImage(imageName: imageName, image: image)
-//        uploadImages(image: imageName, userId: userId) { [weak self] (url) in
+//        uploadFile(image: imageName, userId: userId) { [weak self] (url) in
 //            self?.sendImage(url: url)
 //        }
 //    }

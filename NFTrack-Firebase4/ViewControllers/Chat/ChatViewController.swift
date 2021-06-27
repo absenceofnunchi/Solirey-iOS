@@ -8,7 +8,7 @@
 import UIKit
 import CryptoKit
 
-class ChatViewController: UIViewController, ImageUploadable {
+class ChatViewController: UIViewController, FileUploadable {
     var userInfo: UserInfo!
     var post: PostCoreModel! {
         didSet {
@@ -500,7 +500,7 @@ extension ChatViewController: UIImagePickerControllerDelegate & UINavigationCont
         
         imageName = UUID().uuidString
         saveImage(imageName: imageName, image: image)
-        uploadImages(image: imageName, userId: userId) { [weak self] (url) in
+        uploadFile(fileName: imageName, userId: userId) { [weak self] (url) in
             self?.sendImage(url: url)
         }
     }

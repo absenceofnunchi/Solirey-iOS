@@ -6,17 +6,30 @@
 //
 
 import UIKit
+import QuickLook
+
+enum Header: Int, CaseIterable {
+    case image, document
+    func asString() -> String {
+        switch self {
+            case .image:
+                return NSLocalizedString("Images", comment: "")
+            case .document:
+                return NSLocalizedString("Documents", comment: "")
+        }
+    }
+}
 
 struct PreviewData {
-    let header: String
-    let title: String
+    let header: Header
+    let filePath: URL
 }
 
 class ImagePreviewViewController: UIViewController {
-    var data: [String]! {
+    var data: [PreviewData]! {
         didSet {
             if data.count > 0 {
-                data = NSOrderedSet(array: data).array as? [String]
+                data = NSOrderedSet(array: data).array as? [PreviewData]
                 collectionView.reloadData()
             }
         }
@@ -24,7 +37,6 @@ class ImagePreviewViewController: UIViewController {
     
     weak var delegate: PreviewDelegate?
     var collectionView: UICollectionView! = nil
-    private let reuseIdentifier = "image-cell-reuse-identifier"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,14 +56,18 @@ extension ImagePreviewViewController {
                                               heightDimension: .fractionalHeight(1.0))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                               heightDimension: .absolute(60))
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.9),
+                                               heightDimension: .absolute(80))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 3)
         let spacing = CGFloat(0)
         group.interItemSpacing = .fixed(spacing)
         
+//        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(44))
+//        let headerElement = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize, elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
+        
         let section = NSCollectionLayoutSection(group: group)
         section.interGroupSpacing = spacing
+//        section.boundarySupplementaryItems = [headerElement]
         
         let layout = UICollectionViewCompositionalLayout(section: section)
         return layout
@@ -62,11 +78,12 @@ extension ImagePreviewViewController: UICollectionViewDelegate {
     func configureHierarchy() {
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout())
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+//        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         collectionView.backgroundColor = .systemBackground
         collectionView.delegate = self
         collectionView.dataSource = self
-        collectionView.register(ImageCell.self, forCellWithReuseIdentifier: reuseIdentifier)
+        collectionView.register(ImageCell.self, forCellWithReuseIdentifier: ImageCell.reuseIdentifier)
+//        collectionView.register(ImagePreviewHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: ImagePreviewHeaderView.identifier)
         collectionView.isScrollEnabled = false
         collectionView.contentInset = UIEdgeInsets(top: 10, left: 0, bottom: 0, right: 0)
         view.addSubview(collectionView)
@@ -74,7 +91,7 @@ extension ImagePreviewViewController: UICollectionViewDelegate {
     
     func setConstraints() {
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
+            collectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
@@ -84,6 +101,7 @@ extension ImagePreviewViewController: UICollectionViewDelegate {
 
 extension ImagePreviewViewController: UICollectionViewDataSource {
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
+//        return Header.allCases.count
         return 1
     }
     
@@ -93,11 +111,21 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
     
     // make a cell for each cell index path
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath as IndexPath) as! ImageCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageCell.reuseIdentifier, for: indexPath as IndexPath) as! ImageCell
         
-        let imageName = data[indexPath.row]
-        if let retrievedImage = loadImageFromDiskWith(fileName: imageName) {
-            cell.imageView.image = retrievedImage
+        let header = data[indexPath.row].header
+        let filePath = data[indexPath.row].filePath
+        switch header {
+            case .image:
+                if let image = UIImage(contentsOfFile: "\(filePath.path)") {
+                    cell.imageView.image = image
+                }
+            case .document:
+                generateThumbnail(fileAt: filePath) { (image) in
+                    DispatchQueue.main.async {
+                        cell.imageView.image = image
+                    }
+                }
         }
         
         cell.buttonAction = { _ in
@@ -113,12 +141,17 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
         print("You selected cell #\(indexPath.item)!")
     }
     
-    private func collectionView(collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, atIndexPath indexPath: NSIndexPath) -> UICollectionReusableView {
-        let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "Header", for: indexPath as IndexPath)
-        
-        headerView.backgroundColor = UIColor.blue
-        return headerView
-    }
+//    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+//        guard let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: ImagePreviewHeaderView.identifier, for: indexPath) as? ImagePreviewHeaderView else {
+//            fatalError("Header view error")
+//        }
+//
+//        let header = Header.allCases[indexPath.section]
+//        print("header.asString()", header.asString())
+//        headerView.titleLabel.text = header.asString()
+//
+//        return headerView
+//    }
 }
 
 extension ImagePreviewViewController {
@@ -138,10 +171,10 @@ extension ImagePreviewViewController {
     }
     
     // MARK: - delete file
-    func deleteLocalFile(fileName : String) -> Bool{
-        let fileManager = FileManager.default
-        let docDir = try! fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-        let filePath = docDir.appendingPathComponent(fileName)
+    func deleteLocalFile(filePath : URL) -> Bool{
+//        let fileManager = FileManager.default
+//        let docDir = try! fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+//        let filePath = docDir.appendingPathComponent(fileName)
         do {
             try FileManager.default.removeItem(at: filePath)
             print("File deleted")
@@ -151,6 +184,29 @@ extension ImagePreviewViewController {
             print("Error")
         }
         return false
+    }
+    
+    func generateThumbnail(fileAt: URL, completion: @escaping (UIImage) -> Void) {
+        // 1
+        let size = CGSize(width: 128, height: 102)
+        let scale = UIScreen.main.scale
+        // 2
+        let request = QLThumbnailGenerator.Request(
+            fileAt: fileAt,
+            size: size,
+            scale: scale,
+            representationTypes: .all)
+        
+        // 3
+        let generator = QLThumbnailGenerator.shared
+        generator.generateBestRepresentation(for: request) { thumbnail, error in
+            if let thumbnail = thumbnail {
+                completion(thumbnail.uiImage)
+            } else if let error = error {
+                // Handle error
+                print(error)
+            }
+        }
     }
     
     func deleteAllLocalFiles() {
@@ -182,11 +238,11 @@ extension ImagePreviewViewController {
     }
     
     func deletePreviewImage(indexPath: IndexPath) {
-        let imageName = data[indexPath.row]
+        let filePath = data[indexPath.row].filePath
         self.collectionView.deleteItems(at: [indexPath])
         self.data.remove(at: indexPath.row)
-        let _ = self.deleteLocalFile(fileName: imageName)
-        self.delegate?.didDeleteImage(imageName: imageName)
+        let _ = self.deleteLocalFile(filePath: filePath)
+        self.delegate?.didDeleteFileFromPreview(filePath: filePath)
     }
 }
 
@@ -196,11 +252,10 @@ extension ImagePreviewViewController: UIContextMenuInteractionDelegate {
     }
     
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-        
         func getPreviewVC(indexPath: IndexPath) -> UIViewController? {
             let bigVC = BigPreviewViewController()
-            let imageName = data[indexPath.row]
-            let image = loadImageFromDiskWith(fileName: imageName)
+            let filePath = data[indexPath.row].filePath
+            let image = UIImage(contentsOfFile: "\(filePath.path)")
             bigVC.imageView.image = image
             return bigVC
         }

@@ -6,8 +6,6 @@
 //
 
 import UIKit
-
-import UIKit
 import QuickLook
 
 class PreviewPDFViewController: QLPreviewController {
@@ -23,6 +21,7 @@ class PreviewPDFViewController: QLPreviewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
     }
     
 //    @objc func buttonTapped(_ sender: UIButton) {
