@@ -107,6 +107,7 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
             FirebaseService.shared.db.collection("post")
                 .whereField("tags", arrayContainsAny: self!.searchItems)
                 .whereField("category", isEqualTo: category)
+                .order(by: "date", descending: true)
                 .getDocuments {(querySnapshot, err) in
                     if let err = err {
                         self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)

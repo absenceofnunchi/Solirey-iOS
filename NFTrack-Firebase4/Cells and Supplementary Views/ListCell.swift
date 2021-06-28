@@ -6,7 +6,7 @@
 //
 /*
  Abstract:
- used in ReviewPost
+ used in ReviewPost, pending reviews
  */
 
 import UIKit
@@ -15,12 +15,11 @@ class ListCell: ParentTableCell<Post> {
     override class var identifier: String {
         return "ListCell"
     }
-    private var titleLabel: UILabel!
-    private var itemNameLabel: UILabel!
-    private var dateTitleLabel: UILabel!
-    private var dateLabel: UILabel!
-    private var mas: NSMutableAttributedString!
-    private var stackView: UIStackView!
+    var titleLabel: UILabel!
+    var itemNameLabel: UILabel!
+    var dateTitleLabel: UILabel!
+    var dateLabel: UILabel!
+    var mas: NSMutableAttributedString!
 
     override func configure(_ post: Post?) {
         guard let post = post else { return }
@@ -71,12 +70,6 @@ class ListCell: ParentTableCell<Post> {
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(dateLabel)
         
-//        stackView = UIStackView(arrangedSubviews: [titleLabel, itemNameLabel, dateTitleLabel, dateLabel])
-//        stackView.axis = .vertical
-//        stackView.distribution = .equalSpacing
-//        stackView.translatesAutoresizingMaskIntoConstraints = false
-//        self.contentView.addSubview(stackView)
-        
         setConstraints()
     }
     
@@ -86,11 +79,6 @@ class ListCell: ParentTableCell<Post> {
             thumbImageView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             thumbImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.4),
             thumbImageView.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
-            
-//            stackView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-//            stackView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-//            stackView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.4),
-//            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             
             titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
             titleLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),

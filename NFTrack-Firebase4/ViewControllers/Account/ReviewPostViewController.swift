@@ -18,9 +18,7 @@ class ReviewPostViewController: ParentProfileViewController {
     private var reviewTitleLabel: UILabel!
     private var reviewTextView: UITextView!
     private var ratingTitleLabel: UILabel!
-    private var stackView: UIStackView!
     private var submitButton: UIButton!
-    private let starTintColor: UIColor = .orange
     private var revieweeUserId: String? {
         /// reviewee is the ID that's not the current user's
         if let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) {
@@ -41,6 +39,7 @@ class ReviewPostViewController: ParentProfileViewController {
     }()
     private var numOfStars: Int! {
         didSet {
+            /// corrected since num starts from 0
             numOfStars += 1
         }
     }
@@ -76,6 +75,7 @@ class ReviewPostViewController: ParentProfileViewController {
     private var documentPickerButton: UIButton!
     private var documentID: String!
     private let db = FirebaseService.shared.db!
+    private var starRatingView: StarRatingView!
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -161,18 +161,14 @@ extension ReviewPostViewController {
             self.ratingTitleLabel.translatesAutoresizingMaskIntoConstraints = false
             self.scrollView.addSubview(self.ratingTitleLabel)
             
-            var starArr = [UIButton]()
-            for i in 0..<5 {
-                guard let image = UIImage(systemName: "star") else { return }
-                let button = UIButton.systemButton(with: image.withTintColor(self.starTintColor, renderingMode: .alwaysOriginal), target: self, action: #selector(self.buttonPressed(_:)))
-                button.tag = i
-                starArr.append(button)
+            self.starRatingView = StarRatingView()
+            self.starRatingView.isEnabled = true
+            self.starRatingView.starHeight = 40
+            self.starRatingView.numOfStars = { [weak self] num in
+                self?.numOfStars = num
             }
-            self.stackView = UIStackView(arrangedSubviews: starArr)
-            self.stackView.axis = .horizontal
-            self.stackView.distribution = .fillEqually
-            self.stackView.translatesAutoresizingMaskIntoConstraints = false
-            self.scrollView.addSubview(self.stackView)
+            self.starRatingView.translatesAutoresizingMaskIntoConstraints = false
+            self.scrollView.addSubview(self.starRatingView)
             
             self.buttonPanel = UIStackView()
             self.buttonPanel.axis = .horizontal
@@ -230,12 +226,12 @@ extension ReviewPostViewController {
                 self.ratingTitleLabel.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
                 self.ratingTitleLabel.heightAnchor.constraint(equalToConstant: 50),
                 
-                self.stackView.topAnchor.constraint(equalTo: self.ratingTitleLabel.bottomAnchor, constant: 0),
-                self.stackView.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-                self.stackView.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-                self.stackView.heightAnchor.constraint(equalToConstant: 50),
+                self.starRatingView.topAnchor.constraint(equalTo: self.ratingTitleLabel.bottomAnchor, constant: 0),
+                self.starRatingView.widthAnchor.constraint(equalTo: self.scrollView.widthAnchor, multiplier: 0.8),
+                self.starRatingView.centerXAnchor.constraint(equalTo: self.scrollView.centerXAnchor),
+                self.starRatingView.heightAnchor.constraint(equalToConstant: 40),
                 
-                self.reviewTitleLabel.topAnchor.constraint(equalTo: self.stackView.bottomAnchor, constant: 40),
+                self.reviewTitleLabel.topAnchor.constraint(equalTo: self.starRatingView.bottomAnchor, constant: 40),
                 self.reviewTitleLabel.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
                 self.reviewTitleLabel.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
                 self.reviewTitleLabel.heightAnchor.constraint(equalToConstant: 50),
@@ -283,43 +279,54 @@ extension ReviewPostViewController {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
-        switch sender.tag {
-            case 0..<5:
-                numOfStars = sender.tag
-                for case let av as UIButton in stackView.arrangedSubviews {
-                    if av.tag <= sender.tag {
-                        guard let image = UIImage(systemName: "star.fill") else { return }
-                        av.setImage(image.withTintColor(starTintColor, renderingMode: .alwaysOriginal), for: .normal)
-                    } else {
-                        guard let image = UIImage(systemName: "star") else { return }
-                        av.setImage(image.withTintColor(starTintColor, renderingMode: .alwaysOriginal), for: .normal)
-                    }
-                }
-            case 6:
-                didSubmit()
-            case 7:
-                let historyDetailVC = HistoryDetailViewController()
-                historyDetailVC.post = post
-                historyDetailVC.userInfo = userInfo
-                self.navigationController?.pushViewController(historyDetailVC, animated: true)
-            case 8:
-                let vc = UIImagePickerController()
-                vc.sourceType = .camera
-                vc.allowsEditing = true
-                vc.delegate = self
-                present(vc, animated: true)
-            case 9:
-                let imagePickerController = UIImagePickerController()
-                imagePickerController.allowsEditing = false
-                imagePickerController.sourceType = .photoLibrary
-                imagePickerController.delegate = self
-                imagePickerController.modalPresentationStyle = .fullScreen
-                present(imagePickerController, animated: true, completion: nil)
-            case 10:
-                documentPicker = DocumentPicker(presentationController: self, delegate: self)
-                documentPicker.displayPicker()
-            default:
-                break
+        if previewDataArr.count < 3 {
+            switch sender.tag {
+                case 0..<5:
+                    break
+//                    numOfStars = sender.tag
+//                    for case let av as UIButton in stackView.arrangedSubviews {
+//                        if av.tag <= sender.tag {
+//                            guard let image = UIImage(systemName: "star.fill") else { return }
+//                            av.setImage(image.withTintColor(starTintColor, renderingMode: .alwaysOriginal), for: .normal)
+//                        } else {
+//                            guard let image = UIImage(systemName: "star") else { return }
+//                            av.setImage(image.withTintColor(starTintColor, renderingMode: .alwaysOriginal), for: .normal)
+//                        }
+//                    }
+                case 6:
+                    didSubmit()
+                case 7:
+                    let historyDetailVC = HistoryDetailViewController()
+                    historyDetailVC.post = post
+                    historyDetailVC.userInfo = userInfo
+                    self.navigationController?.pushViewController(historyDetailVC, animated: true)
+                case 8:
+                    let vc = UIImagePickerController()
+                    vc.sourceType = .camera
+                    vc.allowsEditing = true
+                    vc.delegate = self
+                    present(vc, animated: true)
+                case 9:
+                    let imagePickerController = UIImagePickerController()
+                    imagePickerController.allowsEditing = false
+                    imagePickerController.sourceType = .photoLibrary
+                    imagePickerController.delegate = self
+                    imagePickerController.modalPresentationStyle = .fullScreen
+                    present(imagePickerController, animated: true, completion: nil)
+                case 10:
+                    documentPicker = DocumentPicker(presentationController: self, delegate: self)
+                    documentPicker.displayPicker()
+                default:
+                    break
+            }
+        } else {
+            let detailVC = DetailViewController(height: 250)
+            detailVC.titleString = "Upload Limit"
+            detailVC.message = "There is a limit of 6 files per post."
+            detailVC.buttonAction = { [weak self]vc in
+                self?.dismiss(animated: true, completion: nil)
+            }
+            present(detailVC, animated: true, completion: nil)
         }
     }
     
@@ -350,7 +357,8 @@ extension ReviewPostViewController {
             "starRating": numOfStars,
             "review": reviewText,
             "confirmReceivedHash": self.post.confirmReceivedHash! as String,
-            "finalizedDate": (self.post.confirmReceivedDate ?? Date()) as Date,
+            /// finalized date
+            "date": (self.post.confirmReceivedDate ?? Date()) as Date,
         ], forDocument: reviewDetailRef)
         
         batch.commit() { err in

@@ -75,7 +75,7 @@ class PostCoreModel {
     }
 }
 
-class Post: PostCoreModel {
+class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var title: String!
     var description: String!
     var date: Date!
@@ -142,6 +142,11 @@ class ChatListModel: PostCoreModel {
 /// ListDetailVC
 class UILabelPadding: UILabel {
     var top: CGFloat = 10
+    var extraInternalHeight: CGFloat = 0 {
+        didSet {
+            self.invalidateIntrinsicContentSize()
+        }
+    }
     lazy var padding = UIEdgeInsets(top: top, left: 10, bottom: 10, right: 10)
     override func drawText(in rect: CGRect) {
         super.drawText(in: rect.inset(by: padding))
@@ -150,8 +155,8 @@ class UILabelPadding: UILabel {
     override var intrinsicContentSize : CGSize {
         let superContentSize = super.intrinsicContentSize
         let width = superContentSize.width + padding.left + padding.right
-        let heigth = superContentSize.height + padding.top + padding.bottom
-        return CGSize(width: width, height: heigth)
+        let height = superContentSize.height + padding.top + padding.bottom + extraInternalHeight
+        return CGSize(width: width, height: height)
     }
 }
 
@@ -186,7 +191,6 @@ class UnderlineView: UIView {
         aPath.stroke()
     }
 }
-
 
 // MARK: - PurchaseMethods
 enum PurchaseMethods: String {
@@ -285,20 +289,21 @@ struct Message {
 }
 
 // MARK: - Review
-struct Review {
+struct Review: MediaConfigurable, DateConfigurable {
     let revieweeUserId: String
     let reviewerDisplayName: String
     let reviewerPhotoURL: String
     let reviewerUserId: String
     let starRating: Int
     let review: String
-    let images: [String]?
+    var files: [String]?
     let confirmReceivedHash: String
-    let finalizedDate: Date
+    /// receivedDate
+    var date: Date!
 }
 
 // MARK: - ProfileDetailMenu
-private enum ProfileDetailMenu: Int, CaseIterable {
+enum ProfileDetailMenu: Int, CaseIterable {
     case postings, reviews
     
     func asString() -> String {
@@ -319,14 +324,29 @@ private enum ProfileDetailMenu: Int, CaseIterable {
         return segmentTextArr
     }
     
-    func viewController() -> UIViewController {
+    func viewController() -> UIViewController.Type {
         switch self {
             case .postings:
-                let profilePostingsVC = ProfilePostingsViewController()
-                return profilePostingsVC
+                return ProfilePostingsViewController.self
             case .reviews:
-                let profileReviewVC = ProfileReviewListViewController()
-                return profileReviewVC
+                return ProfileReviewListViewController.self
+        }
+    }
+}
+
+enum PostProgress: Int, CaseIterable {
+    case deployingEscrow
+    case minting
+    case images
+    
+    func asString() -> String {
+        switch self {
+            case .deployingEscrow:
+                return "Deploying the escrow contract"
+            case .minting:
+                return "Minting your item on the blockchain"
+            case .images:
+                return "Checking for images to upload"
         }
     }
 }

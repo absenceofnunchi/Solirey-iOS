@@ -22,11 +22,12 @@ class FirebaseService {
     let storage = Storage.storage()
     lazy var storageRef = storage.reference()
     var imageRef: StorageReference!
-    weak var delegate: PaginateFetchDelegate?
-    weak var lastSnapshotDelegate: PaginateFetchDelegate?
+    weak var profileReviewDelegate: ProfileReviewListViewController?
+    weak var profilePostDelegate: ProfilePostingsViewController?
+    weak var lastSnapshotDelegate: ProfileDetailViewController?
 }
 
-extension FirebaseService {
+extension FirebaseService: PostParseDelegate {
     func uploadFile(fileName: String, userId: String, completion: @escaping (StorageUploadTask?, FileUploadError?) -> Void) {
         do {
             let documentDirectory = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
@@ -97,11 +98,11 @@ extension FirebaseService {
     
     func getReviews(uid: String) {
         let first = db?.collection("review").document(uid).collection("details")
-            .order(by: "finalizedDate")
+            .order(by: "date", descending: true)
             .limit(to: 8)
         
-        first?.getDocuments(completion: { [weak self] (snapshot, error) in
-            self?.delegate?.didFetchPaginate(reviewArr: nil, error: error)
+        first?.getDocuments(completion: { [weak self] (snapshot: QuerySnapshot?, error: Error?) in
+            self?.profileReviewDelegate?.didFetchPaginate(reviewArr: nil, error: error)
             
             guard let snapshot = snapshot else {
                 print("snapshot error")
@@ -113,9 +114,10 @@ extension FirebaseService {
             documents.forEach { (querySnapshot) in
                 let data = querySnapshot.data()
                 var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash: String!
-                var finalizedDate: Date!
+                /// finalized date, confirmRecievedDate
+                var date: Date!
                 var starRating: Int!
-                var images: [String]?
+                var files: [String]?
                 data.forEach({ (item) in
                     switch item.key {
                         case "revieweeUserId":
@@ -130,96 +132,50 @@ extension FirebaseService {
                             starRating = item.value as? Int
                         case "review":
                             review = item.value as? String
-                        case "images":
-                            images = item.value as? [String]
+                        case "files":
+                            files = item.value as? [String]
                         case "confirmReceivedHash":
                             confirmReceivedHash = item.value as? String
-                        case "finalizedDate":
+                        case "date":
                             let timeStamp = item.value as? Timestamp
-                            finalizedDate = timeStamp?.dateValue()
+                            date = timeStamp?.dateValue()
                         default:
                             break
                     }
                 })
-                let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, images: images, confirmReceivedHash: confirmReceivedHash, finalizedDate: finalizedDate)
+                let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, files: files, confirmReceivedHash: confirmReceivedHash, date: date)
                 reviewArr.append(reviewModel)
             }
                         
             if let lastSnapshot = snapshot.documents.last {
                 self?.lastSnapshotDelegate?.didGetLastSnapshot(lastSnapshot)
-                self?.delegate?.didFetchPaginate(reviewArr: reviewArr, error: nil)
+                self?.profileReviewDelegate?.didFetchPaginate(reviewArr: reviewArr, error: nil)
             }
         })
     }
-    //        guard let uid = userInfo.uid else { return }
-    //        FirebaseService.shared.db.collection("review")
-    //            .whereField("revieweeUserId", isEqualTo: uid)
-    //            .getDocuments { [weak self] (querySnapshot, err) in
-    //                if let err = err {
-    //                    self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
-    //                } else {
-    //                    var reviewArr = [Review]()
-    //                    for document in querySnapshot!.documents {
-    //                        let data = document.data()
-    //                        var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash: String!
-    //                        var finalizedDate: Date!
-    //                        var starRating: Int!
-    //                        var images: [String]?
-    //                        data.forEach({ (item) in
-    //                            switch item.key {
-    //                                case "revieweeUserId":
-    //                                    revieweeUserId = item.value as? String
-    //                                case "reviewerDisplayName":
-    //                                    reviewerDisplayName = item.value as? String
-    //                                case "reviewerPhotoURL":
-    //                                    reviewerPhotoURL = item.value as? String
-    //                                case "reviewerUserId":
-    //                                    reviewerUserId = item.value as? String
-    //                                case "starRating":
-    //                                    starRating = item.value as? Int
-    //                                case "review":
-    //                                    review = item.value as? String
-    //                                case "images":
-    //                                    images = item.value as? [String]
-    //                                case "confirmReceivedHash":
-    //                                    confirmReceivedHash = item.value as? String
-    //                                case "finalizedDate":
-    //                                    let timeStamp = item.value as? Timestamp
-    //                                    finalizedDate = timeStamp?.dateValue()
-    //                                default:
-    //                                    break
-    //                            }
-    //                        })
-    //                        let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, images: images, confirmReceivedHash: confirmReceivedHash, finalizedDate: finalizedDate)
-    //                        reviewArr.append(reviewModel)
-    //                    }
-    //                    self?.profileReviewVC.postArr = reviewArr
-    //            }
-    //        }
     
     func refetchReviews(uid: String, lastSnapshot: QueryDocumentSnapshot) {
         let next = db?.collection("review").document(uid).collection("details")
-            .order(by: "finalizedDate")
+            .order(by: "date", descending: true)
             .limit(to: 8)
             .start(afterDocument: lastSnapshot)
         
         next?.getDocuments(completion: { [weak self] (snapshot, error) in
-            self?.delegate?.didFetchPaginate(reviewArr: nil, error: error)
+            self?.profileReviewDelegate?.didFetchPaginate(reviewArr: nil, error: error)
 
             guard let snapshot = snapshot else {
                 print("snapshot error")
                 return
             }
             
-            var num: Int! = 0
             let documents = snapshot.documents
             var reviewArr = [Review]()
             documents.forEach { (querySnapshot) in
                 let data = querySnapshot.data()
                 var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash: String!
-                var finalizedDate: Date!
+                var date: Date!
                 var starRating: Int!
-                var images: [String]?
+                var files: [String]?
                 data.forEach({ (item) in
                     switch item.key {
                         case "revieweeUserId":
@@ -233,48 +189,68 @@ extension FirebaseService {
                         case "starRating":
                             starRating = item.value as? Int
                         case "review":
-                            //                            review = item.value as? String
-                            review = "\(String(describing: num))"
-                        case "images":
-                            images = item.value as? [String]
+                            review = item.value as? String
+                        case "files":
+                            files = item.value as? [String]
                         case "confirmReceivedHash":
                             confirmReceivedHash = item.value as? String
-                        case "finalizedDate":
+                        case "date":
                             let timeStamp = item.value as? Timestamp
-                            finalizedDate = timeStamp?.dateValue()
+                            date = timeStamp?.dateValue()
                         default:
                             break
                     }
-                    num += 1
                 })
                 
-                let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, images: images, confirmReceivedHash: confirmReceivedHash, finalizedDate: finalizedDate)
+                let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, files: files, confirmReceivedHash: confirmReceivedHash, date: date)
                 reviewArr.append(reviewModel)
             }
 
             if let lastSnapshot = snapshot.documents.last {
                 self?.lastSnapshotDelegate?.didGetLastSnapshot(lastSnapshot)
-                self?.delegate?.didFetchPaginate(reviewArr: reviewArr, error: nil)
+                self?.profileReviewDelegate?.didFetchPaginate(reviewArr: reviewArr, error: nil)
             }
         })
     }
-}
-
-protocol PaginateFetchDelegate: AnyObject {
-    func didFetchPaginate(reviewArr: [Review]?, error: Error?)
-    func didGetLastSnapshot(_ lastSnapshot: QueryDocumentSnapshot)
-}
-
-extension PaginateFetchDelegate {
-    func didFetchPaginate(reviewArr: [Review]?, error: Error?) {
-        print("fetch")
+    
+    func getCurrentPosts(uid: String) {
+        let first = db?.collection("post")
+            .whereField("sellerUserId", isEqualTo: uid)
+            .whereField("status", isEqualTo: "ready")
+            .order(by: "date", descending: true)
+            .limit(to: 8)
+            
+        first?.getDocuments { [weak self] (querySnapshot, err) in
+                if let err = err {
+                    print("err", err)
+                    self?.profilePostDelegate?.didFetchPaginate(postArr: nil, error: err)
+                } else {
+                    if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        self?.profilePostDelegate?.didFetchPaginate(postArr: postArr, error: nil)
+                    }
+                }
+            }
     }
-
-    func didGetLastSnapshot(_ lastSnapshot: QueryDocumentSnapshot) {
+    
+    func refetchPosts(uid: String, lastSnapshot: QueryDocumentSnapshot) {
+        let next = db?.collection("post")
+            .whereField("sellerUserId", isEqualTo: uid)
+            .whereField("status", isEqualTo: "ready")
+            .order(by: "date", descending: true)
+            .limit(to: 8)
+            .start(afterDocument: lastSnapshot)
         
+        next?.getDocuments { [weak self] (querySnapshot, err) in
+            if let err = err {
+                self?.profilePostDelegate?.didFetchPaginate(postArr: nil, error: err)
+            } else {
+                if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
+                    self?.profilePostDelegate?.didFetchPaginate(postArr: postArr, error: nil)
+                }
+            }
+        }
     }
 }
-
 
 //func getReviews(uid: String) {
 //    let first = db?.collection("review").document(uid).collection("details")
@@ -439,3 +415,4 @@ extension PaginateFetchDelegate {
 //        }
 //    })
 //}
+

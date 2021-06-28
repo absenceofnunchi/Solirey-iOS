@@ -23,7 +23,7 @@ class ParentDetailViewController: UIViewController {
     var contractAddress: EthereumAddress!
     var post: Post!
     var pvc: UIPageViewController!
-    var galleries = [String]()
+    var galleries: [String]!
     var usernameContainer: UIView!
     var dateLabel: UILabel!
     var profileImageView: UIImageView!
@@ -49,8 +49,10 @@ class ParentDetailViewController: UIViewController {
         super.viewDidLoad()
                 
         configureBackground()
+        /// UsernameBannerConfigurable
+        configureNameDisplay(post: post, v: scrollView)
         fetchUserData(id: post.sellerUserId)
-        configureImageDisplay()
+        configureImageDisplay(post: post, v: scrollView)
         configureUI()
         setConstraints()
     }
@@ -60,9 +62,11 @@ class ParentDetailViewController: UIViewController {
     }
 }
 
-extension ParentDetailViewController: UsernameBannerConfigurable {
+extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigurable {
     // MARK: - configureBackground
     func configureBackground() {
+        galleries = [String]()
+        
         view.backgroundColor = .white
         scrollView = UIScrollView()
         scrollView.backgroundColor = .white
@@ -73,33 +77,8 @@ extension ParentDetailViewController: UsernameBannerConfigurable {
         constraints = [NSLayoutConstraint]()
     }
     
-    // MARK: - configureImageDisplay
-    func configureImageDisplay() {
-        // image
-        if let files = post.files, files.count > 0 {
-            self.galleries.append(contentsOf: files)
-            let singlePageVC = ImagePageViewController(gallery: galleries[0])
-            pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-            pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
-            pvc.dataSource = self
-            pvc.delegate = self
-            addChild(pvc)
-            scrollView.addSubview(pvc.view)
-            pvc.view.translatesAutoresizingMaskIntoConstraints = false
-            pvc.didMove(toParent: self)
-            
-            let pageControl = UIPageControl.appearance()
-            pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
-            pageControl.currentPageIndicatorTintColor = .gray
-            pageControl.backgroundColor = .white
-        }
-    }
-    
     // MARK: - configureUI
     @objc func configureUI() {
-        /// UsernameBannerConfigurable
-        configureNameDisplay(post: post)
-        
         priceTitleLabel = createTitleLabel(text: "Price")
         scrollView.addSubview(priceTitleLabel)
 
@@ -173,12 +152,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable {
     @objc func setConstraints() {
         if let files = post.files, files.count > 0 {
             guard let pv = pvc.view else { return }
-            constraints.append(contentsOf: [
-                pv.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 0),
-                pv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                pv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                pv.heightAnchor.constraint(equalToConstant: 250),
-            ])
+            setImageDisplayConstraints(v: scrollView)
             setNameDisplayConstraints(topView: pv)
         } else {
             setNameDisplayConstraints(topView: scrollView)
@@ -231,7 +205,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable {
     }
 }
 
-extension ParentDetailViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
+extension ParentDetailViewController {
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
         guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
         index -= 1
@@ -266,50 +240,6 @@ extension ParentDetailViewController: UIPageViewControllerDataSource, UIPageView
         }
     }
 }
-
-//FirebaseService.sharedInstance.db.collection("escrow").whereField("postId", isEqualTo: post.postId)
-//    .getDocuments() { [weak self](querySnapshot, err) in
-//        if let err = err {
-//            print("Error getting documents: \(err)")
-//        } else {
-//            for document in querySnapshot!.documents {
-//                let data = document.data()
-//                guard let txHash = data["transactionHash"] as? String else { return }
-//                DispatchQueue.global().async {
-//                    do {
-//                        let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(txHash)
-//                        self?.contractAddress = receipt.contractAddress
-//                        self?.transactionService.prepareTransactionForReading(method: "state", contractAddress: receipt.contractAddress!, completion: { (transaction, error) in
-//                            if let error = error {
-//                                switch error {
-//                                    case .contractLoadingError:
-//                                        self?.alert.showDetail("Error", with: "Contract Loading Error", for: self)
-//                                    case .createTransactionIssue:
-//                                        self?.alert.showDetail("Error", with: "Contract Transaction Issue", for: self)
-//                                    default:
-//                                        self?.alert.showDetail("Error", with: "There was an error minting your token.", for: self)
-//                                }
-//                            }
-//
-//                            if let transaction = transaction {
-//                                DispatchQueue.global().async {
-//                                    do {
-//                                        self?.result = try transaction.call()
-//                                        print("result", self?.result as Any)
-//                                        //                                                self?.status = result["0"] as String
-//                                    } catch {
-//                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
-//                                    }
-//                                }
-//                            }
-//                        })
-//                    } catch {
-//                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
-//                    }
-//                }
-//            }
-//        }
-//    }
 
 // 20.8769
 

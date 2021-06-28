@@ -20,7 +20,7 @@
 		4933335C26825D6700B8BFC2 /* CustomSegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */; };
 		49333361268281B800B8BFC2 /* ProfilePostingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49333360268281B800B8BFC2 /* ProfilePostingsViewController.swift */; };
 		493333662682860000B8BFC2 /* ReviewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493333652682860000B8BFC2 /* ReviewCell.swift */; };
-		4933336B26828E4600B8BFC2 /* ProfileReviewListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933336A26828E4600B8BFC2 /* ProfileReviewListViewController.swift */; };
+		4933336B26828E4600B8BFC2 /* ProfileListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933336A26828E4600B8BFC2 /* ProfileListViewController.swift */; };
 		493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */; };
 		493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */; };
 		493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */; };
@@ -39,6 +39,9 @@
 		49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */; };
 		495FD2CE2687B33600F1D81D /* CustomPreviewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2CD2687B33600F1D81D /* CustomPreviewItem.swift */; };
 		495FD2D32688043000F1D81D /* PDFPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */; };
+		495FD2D826892FDC00F1D81D /* StarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2D726892FDB00F1D81D /* StarRatingView.swift */; };
+		495FD2E026895B3300F1D81D /* ProfileReviewListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2DF26895B3300F1D81D /* ProfileReviewListViewController.swift */; };
+		495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD311268A3D2000F1D81D /* ProfilePostCell.swift */; };
 		4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45B2641B001005B3268 /* AppDelegate.swift */; };
 		4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45D2641B001005B3268 /* SceneDelegate.swift */; };
 		4964E4602641B001005B3268 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45F2641B001005B3268 /* SignInViewController.swift */; };
@@ -155,7 +158,7 @@
 		4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSegmentedControl.swift; sourceTree = "<group>"; };
 		49333360268281B800B8BFC2 /* ProfilePostingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePostingsViewController.swift; sourceTree = "<group>"; };
 		493333652682860000B8BFC2 /* ReviewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewCell.swift; sourceTree = "<group>"; };
-		4933336A26828E4600B8BFC2 /* ProfileReviewListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileReviewListViewController.swift; sourceTree = "<group>"; };
+		4933336A26828E4600B8BFC2 /* ProfileListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileListViewController.swift; sourceTree = "<group>"; };
 		493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletGenerationController.swift; sourceTree = "<group>"; };
 		493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDataTypes.swift; sourceTree = "<group>"; };
 		493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
@@ -174,6 +177,9 @@
 		49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + ResultsUpdate.swift"; sourceTree = "<group>"; };
 		495FD2CD2687B33600F1D81D /* CustomPreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomPreviewItem.swift; sourceTree = "<group>"; };
 		495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPreviewViewController.swift; sourceTree = "<group>"; };
+		495FD2D726892FDB00F1D81D /* StarRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRatingView.swift; sourceTree = "<group>"; };
+		495FD2DF26895B3300F1D81D /* ProfileReviewListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileReviewListViewController.swift; sourceTree = "<group>"; };
+		495FD311268A3D2000F1D81D /* ProfilePostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePostCell.swift; sourceTree = "<group>"; };
 		4964E4582641B001005B3268 /* NFTrack-Firebase4.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NFTrack-Firebase4.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4964E45B2641B001005B3268 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4964E45D2641B001005B3268 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -434,6 +440,7 @@
 				493BF9C7264C166000B9C9D2 /* CreditCardView.swift */,
 				499702A52672E0BA001DD80A /* ToolBarView.swift */,
 				4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */,
+				495FD2D726892FDB00F1D81D /* StarRatingView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -490,6 +497,7 @@
 				49E7D650267AA77000E8815A /* MeesageCells1.swift */,
 				493333652682860000B8BFC2 /* ReviewCell.swift */,
 				49DEFF6926868065004C2DD0 /* ImagePreviewHeaderView.swift */,
+				495FD311268A3D2000F1D81D /* ProfilePostCell.swift */,
 			);
 			path = "Cells and Supplementary Views";
 			sourceTree = "<group>";
@@ -584,8 +592,9 @@
 				496F700B265421E200E4056B /* TxDetailViewController.swift */,
 				49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */,
 				49333360268281B800B8BFC2 /* ProfilePostingsViewController.swift */,
-				4933336A26828E4600B8BFC2 /* ProfileReviewListViewController.swift */,
+				4933336A26828E4600B8BFC2 /* ProfileListViewController.swift */,
 				49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */,
+				495FD2DF26895B3300F1D81D /* ProfileReviewListViewController.swift */,
 				495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */,
 			);
 			path = List;
@@ -926,6 +935,7 @@
 				4964E57226498541005B3268 /* Web3swiftService.swift in Sources */,
 				4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */,
 				49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */,
+				495FD2E026895B3300F1D81D /* ProfileReviewListViewController.swift in Sources */,
 				496D56D0265AEDAB00C3E7FD /* ImageDataStore.swift in Sources */,
 				499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */,
 				496D56B12659654A00C3E7FD /* CategoryCell.swift in Sources */,
@@ -940,15 +950,17 @@
 				496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */,
 				493BF9D7264C4DE100B9C9D2 /* BackgroundView2.swift in Sources */,
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
+				495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */,
 				493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */,
 				49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */,
 				496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */,
+				495FD2D826892FDC00F1D81D /* StarRatingView.swift in Sources */,
 				499F9958266B2ADB00FC6CDE /* WebViewController.swift in Sources */,
 				496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */,
 				4964E4602641B001005B3268 /* SignInViewController.swift in Sources */,
 				493BF9F3264C6B4B00B9C9D2 /* PasswordResetViewController.swift in Sources */,
 				49221B892670FC2F0031A756 /* TempViewController.swift in Sources */,
-				4933336B26828E4600B8BFC2 /* ProfileReviewListViewController.swift in Sources */,
+				4933336B26828E4600B8BFC2 /* ProfileListViewController.swift in Sources */,
 				4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */,
 				49DEFF5B268649A3004C2DD0 /* DocumentPicker.swift in Sources */,
 				493BF9CD264C493200B9C9D2 /* WalletButtonView.swift in Sources */,

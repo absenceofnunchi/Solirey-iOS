@@ -81,25 +81,6 @@ extension ParentProfileViewController {
         ])
     }
     
-//    @objc func setConstraints() {
-//        NSLayoutConstraint.activate([
-//            profileImageButton.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 100),
-//            profileImageButton.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-//            profileImageButton.heightAnchor.constraint(equalToConstant: 100),
-//            profileImageButton.widthAnchor.constraint(equalToConstant: 100),
-//
-//            displayNameTitleLabel.topAnchor.constraint(equalTo: profileImageButton.bottomAnchor, constant: 50),
-//            displayNameTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-//            displayNameTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-//            displayNameTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-//
-//            displayNameTextField.topAnchor.constraint(equalTo: displayNameTitleLabel.bottomAnchor, constant: 10),
-//            displayNameTextField.heightAnchor.constraint(equalToConstant: 50),
-//            displayNameTextField.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-//            displayNameTextField.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-//        ])
-//    }
-    
     @objc func configureCustomProfileImage(from url: String) {
         
     }

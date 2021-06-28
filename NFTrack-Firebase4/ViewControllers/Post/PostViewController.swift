@@ -9,47 +9,10 @@ import UIKit
 import web3swift
 import FirebaseFirestore
 
-enum PostProgress: Int, CaseIterable {
-    case deployingEscrow
-    case minting
-    case images
-    
-    func asString() -> String {
-        switch self {
-            case .deployingEscrow:
-                return "Deploying the escrow contract"
-            case .minting:
-                return "Minting your item on the blockchain"
-            case .images:
-                return "Checking for images to upload"
-        }
-    }
-}
-
 class PostViewController: ParentPostViewController {
-    func mint1() {
-        super.mint()
-        let progressModal = ProgressModalViewController()
-        progressModal.titleString = "Posting In Progress"
-        self.present(progressModal, animated: true, completion: {
-            self.alert.showDetail("Test", with: "yesss", for: self)
-        })
+    override func mint() {
         
-//
-//        delay(2) {
-//            let update: [String: PostProgress] = ["update": .deployingEscrow]
-//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//        }
-//
-//        delay(4) {
-//            let update: [String: PostProgress] = ["update": .minting]
-//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//        }
-//
-//        delay(6) {
-//            let update: [String: PostProgress] = ["update": .images]
-//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//        }
+
     }
     
     // MARK: - mint
@@ -62,7 +25,7 @@ class PostViewController: ParentPostViewController {
     /// 7. store the photos in the local storage and upload the images to the firebase storage
     /// 8. update the firestore with the urls of the photos
     /// 9. delete the photos from the local storage
-     override func mint() {
+    func mint1() {
         if let userId = self.userDefaults.string(forKey: UserDefaultKeys.userId) {
             self.userId = userId
             // create purchase contract

@@ -42,9 +42,10 @@ class ReviewViewController: ParentListViewController<Post> {
             .whereField("isReviewed", isEqualTo: false)
             .whereField("status", isEqualTo: "complete")
             .whereField("confirmReceivedDate", isGreaterThan: fromDate)
+            .order(by: "confirmReceivedDate", descending: true)
             .getDocuments() { [weak self] (querySnapshot, err) in
                 if let err = err {
-                    print(err.localizedDescription)
+                    print(err)
                     self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
                 } else {
                     defer {

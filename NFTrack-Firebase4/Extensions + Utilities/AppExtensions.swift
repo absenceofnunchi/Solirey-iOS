@@ -70,10 +70,10 @@ extension UIViewController {
         SaveAlertHandle.clear()
     }
     
-    func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post] {
+    func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post]? {
         var postArr = [Post]()
-        for document in querySnapshot!.documents {
-//            print("\(document.documentID) => \(document.data())")
+        guard let querySnapshot = querySnapshot else { return nil }
+        for document in querySnapshot.documents {
             let data = document.data()
             var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
@@ -146,7 +146,7 @@ extension UIViewController {
     }
     
     // MARK: - createLabel
-    func createLabel(text: String, hashType: HashType? = nil, target: UIViewController? = nil, action: Selector? = nil) -> UILabelPadding {
+    func createLabel(text: String, hashType: HashType? = nil, cornerRadius: CGFloat = 5, target: UIViewController? = nil, action: Selector? = nil) -> UILabelPadding {
         let label = UILabelPadding()
         if let hashType = hashType {
             label.tag = hashType.rawValue
@@ -155,6 +155,7 @@ extension UIViewController {
             label.addGestureRecognizer(tap)
         }
         label.text = text
+        label.layer.cornerRadius = cornerRadius
         label.layer.borderColor = UIColor.lightGray.cgColor
         label.layer.borderWidth = 0.5
         label.translatesAutoresizingMaskIntoConstraints = false

@@ -23,13 +23,12 @@ class ProfileDetailViewController: ParentProfileViewController {
     private var profileReviewVC: ProfileReviewListViewController!
     private let db = FirebaseService.shared
     private var lastSnapshot: QueryDocumentSnapshot!
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         db.lastSnapshotDelegate = self
         profilePostingsVC = addBaseViewController(ProfilePostingsViewController.self)
-//        getCurrentPosts()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -79,42 +78,26 @@ extension ProfileDetailViewController {
             customSegmentedControl.heightAnchor.constraint(equalToConstant: 50),
         ])
         customSegmentedControl.layoutIfNeeded()
-        customSegmentedControl.buttonTitles = ["Postings", "Reviews"]
+        customSegmentedControl.buttonTitles = ProfileDetailMenu.getSegmentText()
+        customSegmentedControl.selectedSegmentIndex = 0
+        customSegmentedControl.sendActions(for: UIControl.Event.valueChanged)
     }
-
-    private func getCurrentPosts() {
-        guard let uid = userInfo.uid else { return }
-        FirebaseService.shared.db.collection("post")
-            .whereField("sellerUserId", isEqualTo: uid)
-            .whereField("status", isEqualTo: "ready")
-            .getDocuments { [weak self] (querySnapshot, err) in
-                if let err = err {
-                    self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
-                } else {
-                    if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
-                        self?.profilePostingsVC.postArr = postArr
-                    }
-                }
-            }
-    }
- 
     
     // MARK: - segmentedControlSelectionDidChange
     @objc private func segmentedControlSelectionDidChange(_ sender: CustomSegmentedControl) {
-        guard let segment = sender.selectedSegmentIndex
+        guard let segment = ProfileDetailMenu(rawValue: sender.selectedSegmentIndex)
         else { fatalError("No item at \(String(describing: sender.selectedSegmentIndex))) exists.") }
+        guard let uid = userInfo.uid else { return }
+
         switch segment {
-            case 0:
+            case .postings:
                 removeBaseViewController(profileReviewVC)
                 profilePostingsVC = addBaseViewController(ProfilePostingsViewController.self)
-                getCurrentPosts()
-            case 1:
+                db.getCurrentPosts(uid: uid)
+            case .reviews:
                 removeBaseViewController(profilePostingsVC)
                 profileReviewVC = addBaseViewController(ProfileReviewListViewController.self)
-                guard let uid = userInfo.uid else { return }
                 db.getReviews(uid: uid)
-            default:
-                break
         }
     }
     
@@ -138,7 +121,8 @@ extension ProfileDetailViewController {
     }
     
     /// Removes a child view controller from the container.
-    private func removeBaseViewController(_ viewController: UIViewController) {
+    private func removeBaseViewController(_ viewController: UIViewController?) {
+        guard let viewController = viewController else { return }
         viewController.willMove(toParent: nil)
         viewController.view.removeFromSuperview()
         viewController.removeFromParent()
@@ -146,6 +130,8 @@ extension ProfileDetailViewController {
 }
 
 extension ProfileDetailViewController: PaginateFetchDelegate {
+    typealias FetchResult = MediaConfigurable
+    
     func didGetLastSnapshot(_ lastSnapshot: QueryDocumentSnapshot) {
         self.lastSnapshot = lastSnapshot
     }

@@ -21,7 +21,7 @@ class HistoryDetailViewController: ParentDetailViewController {
     private var confirmReceivedHashTitleLabel: UILabel!
     private var confirmReceivedHashLabel: UILabelPadding!
     
-    override func viewDidLayoutSubviews() {
+    final override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
         if post.status != "ready",
@@ -35,7 +35,7 @@ class HistoryDetailViewController: ParentDetailViewController {
 }
 
 extension HistoryDetailViewController {
-    override func configureUI() {
+    final override func configureUI() {
         super.configureUI()
         title = post.title
         
@@ -98,7 +98,7 @@ extension HistoryDetailViewController {
         }
     }
     
-    override func setConstraints() {
+    final override func setConstraints() {
         super.setConstraints()
         
         NSLayoutConstraint.activate([

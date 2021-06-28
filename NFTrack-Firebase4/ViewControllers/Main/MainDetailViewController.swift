@@ -15,9 +15,10 @@ class MainDetailViewController: ParentListViewController<Post> {
             FirebaseService.shared.db.collection("post")
                 .whereField("category", isEqualTo: category! as String)
                 .whereField("status", isEqualTo: "ready")
+                .order(by: "date", descending: true)
                 .getDocuments() { [weak self](querySnapshot, err) in
                     if let err = err {
-                        print("Error getting documents: \(err)")
+                        self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
                     } else {
                         defer {
                             DispatchQueue.main.async {

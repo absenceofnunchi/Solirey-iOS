@@ -7,30 +7,23 @@
 
 import UIKit
 
-class ProfilePostingsViewController: ParentListViewController<Post> {
-    let CELL_HEIGHT: CGFloat = 150
-    private var tableViewHeight: CGFloat = 0
-    override var postArr: [Post] {
-        didSet {
-            tableViewHeight = CGFloat(postArr.count) * CELL_HEIGHT
-            NSLayoutConstraint.activate([
-                tableView.topAnchor.constraint(equalTo: view.topAnchor),
-                tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                tableView.heightAnchor.constraint(equalToConstant: tableViewHeight),
-            ])
-            tableView.reloadData()
-            preferredContentSize = CGSize(width: view.bounds.size.width, height: tableViewHeight + 700)
-        }
-    }
+class ProfilePostingsViewController: ProfileListViewController<Post>, PaginateFetchDelegate {
+    typealias FetchResult = Post
     
     override func setDataStore(postArr: [Post]) {
         dataStore = PostImageDataStore(posts: postArr)
     }
     
-    override func configureUI() {
+    final override func viewDidLoad() {
+        super.viewDidLoad()
+        // for PaginateFetchDelegate
+        // returns the fetched arr, last snapshot, or error
+        db.profilePostDelegate = self
+    }
+    
+    final override func configureUI() {
         super.configureUI()
-        tableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: ListCell.self, identifier: ListCell.identifier)
+        tableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: ProfilePostCell.self, identifier: ProfilePostCell.identifier)
         tableView.prefetchDataSource = self
         tableView.isScrollEnabled = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -38,7 +31,7 @@ class ProfilePostingsViewController: ParentListViewController<Post> {
     }
     
     final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: ListCell.identifier) as? ListCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: ProfilePostCell.identifier) as? ProfilePostCell else {
             fatalError("Sorry, could not load cell")
         }
         cell.selectionStyle = .none
@@ -54,5 +47,15 @@ class ProfilePostingsViewController: ParentListViewController<Post> {
         listDetailVC.post = post
         listDetailVC.tableViewRefreshDelegate = self
         self.navigationController?.pushViewController(listDetailVC, animated: true)
+    }
+    
+    final func didFetchPaginate(postArr: [Post]?,  error: Error?) {
+        if let error = error {
+            self.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+        }
+        
+        if let postArr = postArr {
+            self.postArr.append(contentsOf:postArr)
+        }
     }
 }

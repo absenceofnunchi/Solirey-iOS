@@ -102,7 +102,7 @@ extension ListDetailViewController: UITableViewDelegate, UITableViewDataSource {
         let data = historicData[indexPath.row]
         let historyDetailVC = HistoryDetailViewController()
         historyDetailVC.post = data
-        historyDetailVC.userInfo = userInfo
+//        historyDetailVC.userInfo = userInfo
         self.navigationController?.pushViewController(historyDetailVC, animated: true)
         
 //        fetchUserData(id: data.sellerUserId) { [weak self] (userInfo) in

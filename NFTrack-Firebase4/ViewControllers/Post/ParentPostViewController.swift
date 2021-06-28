@@ -406,7 +406,7 @@ extension ParentPostViewController {
         } else {
             let detailVC = DetailViewController(height: 250)
             detailVC.titleString = "Upload Limit"
-            detailVC.message = "There is a limit of 6 files per post."
+            detailVC.message = "There is a limit of 3 files per review."
             detailVC.buttonAction = { [weak self]vc in
                 self?.dismiss(animated: true, completion: nil)
             }
@@ -457,14 +457,16 @@ extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigati
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
         
-        guard let _ = info[UIImagePickerController.InfoKey.originalImage] as? UIImage,
+        guard let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage,
               let filePath = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
             print("No image found")
             return
         }
         
-        let previewData = PreviewData(header: .image, filePath: filePath)
-        previewDataArr.append(previewData)
+        
+        
+//        let previewData = PreviewData(header: .image, filePath: filePath)
+//        previewDataArr.append(previewData)
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {

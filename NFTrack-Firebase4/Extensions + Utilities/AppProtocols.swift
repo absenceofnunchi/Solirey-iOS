@@ -376,7 +376,6 @@ protocol SegmentConfigurable {
 
 protocol UsernameBannerConfigurable where Self: UIViewController {
     var userInfo: UserInfo! { get set }
-    var scrollView: UIScrollView! { get set }
     var usernameContainer: UIView! { get set }
     var dateLabel: UILabel! { get set }
     var displayNameLabel: UILabel! { get set }
@@ -387,6 +386,7 @@ protocol UsernameBannerConfigurable where Self: UIViewController {
     var constraints: [NSLayoutConstraint]! { get set }
     func processProfileImage()
     func tapped(_ sender: UITapGestureRecognizer!)
+    func configureNameDisplay<T: Post, U: UIView>(post: T, v: U)
 }
 
 extension UsernameBannerConfigurable {
@@ -436,10 +436,10 @@ extension UsernameBannerConfigurable {
         }
     }
     
-    func configureNameDisplay(post: Post) {
+    func configureNameDisplay<T: DateConfigurable, U: UIView>(post: T, v: U) {
         usernameContainer = UIView()
         usernameContainer.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(usernameContainer)
+        v.addSubview(usernameContainer)
         
         dateLabel = UILabel()
         dateLabel.textAlignment = .right
@@ -513,12 +513,12 @@ protocol PageVCConfigurable: UIPageViewControllerDataSource, UIPageViewControlle
     var pvc: UIPageViewController! { get set }
     var galleries: [String]! { get set }
     var constraints: [NSLayoutConstraint]! { get set }
-    func configureImageDisplay<T: Post, U: UIView>(post: T, v: U)
+    func configureImageDisplay<T: MediaConfigurable, U: UIView>(post: T, v: U)
     func setImageDisplayConstraints<T: UIView>(v: T)
 }
 
 extension PageVCConfigurable {
-    func configureImageDisplay<T: Post, U: UIView>(post: T, v: U) {
+    func configureImageDisplay<T: MediaConfigurable, U: UIView>(post: T, v: U) {
         if let files = post.files, files.count > 0 {
             self.galleries.append(contentsOf: files)
             let singlePageVC = ImagePageViewController(gallery: galleries[0])
@@ -547,38 +547,117 @@ extension PageVCConfigurable {
             pv.heightAnchor.constraint(equalToConstant: 250),
         ])
     }
-    
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
-        index -= 1
-        if index < 0 {
-            return nil
-        }
-        
-        return ImagePageViewController(gallery: galleries[index])
+}
+
+protocol MediaConfigurable {
+    var files: [String]? { get set }
+}
+
+protocol DateConfigurable {
+    var date: Date! { get set }
+}
+
+
+//protocol PaginateFetchDelegate: AnyObject {
+//    func didFetchPaginate<T>(reviewArr: [T]?, error: Error?)
+//    func didGetLastSnapshot(_ lastSnapshot: QueryDocumentSnapshot)
+//}
+//
+//extension PaginateFetchDelegate {
+//    func didFetchPaginate<T>(reviewArr: [T]?, error: Error?) {
+//        print("fetch")
+//    }
+//
+//    func didGetLastSnapshot(_ lastSnapshot: QueryDocumentSnapshot) {
+//
+//    }
+//}
+
+protocol PaginateFetchDelegate {
+    associatedtype FetchResult
+    func didFetchPaginate(reviewArr: [FetchResult]?, error: Error?)
+    func didGetLastSnapshot(_ lastSnapshot: QueryDocumentSnapshot)
+}
+
+extension PaginateFetchDelegate {
+    func didFetchPaginate(reviewArr: [FetchResult]?, error: Error?) {
+        print("fetch")
     }
-    
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
-        index += 1
-        if index >= galleries.count {
-            return nil
-        }
-        
-        return ImagePageViewController(gallery: galleries[index])
-    }
-    
-    func presentationCount(for pageViewController: UIPageViewController) -> Int {
-        return self.galleries.count
-    }
-    
-    func presentationIndex(for pageViewController: UIPageViewController) -> Int {
-        let page = pageViewController.viewControllers![0] as! ImagePageViewController
-        
-        if let gallery = page.gallery {
-            return self.galleries.firstIndex(of: gallery)!
-        } else {
-            return 0
-        }
+
+    func didGetLastSnapshot(_ lastSnapshot: QueryDocumentSnapshot) {
+
     }
 }
+
+protocol PostParseDelegate {
+    func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post]
+}
+
+extension PostParseDelegate {
+    func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post] {
+        var postArr = [Post]()
+        for document in querySnapshot!.documents {
+            //            print("\(document.documentID) => \(document.data())")
+            let data = document.data()
+            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
+            var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
+            var files, savedBy: [String]?
+            data.forEach { (item) in
+                switch item.key {
+                    case "sellerUserId":
+                        sellerUserId = item.value as? String
+                    case "senderAddress":
+                        sellerHash = item.value as? String
+                    case "title":
+                        title = item.value as? String
+                    case "description":
+                        description = item.value as? String
+                    case "date":
+                        let timeStamp = item.value as? Timestamp
+                        date = timeStamp?.dateValue()
+                    case "files":
+                        files = item.value as? [String]
+                    case "price":
+                        price = item.value as? String
+                    case "mintHash":
+                        mintHash = item.value as? String
+                    case "escrowHash":
+                        escrowHash = item.value as? String
+                    case "itemIdentifier":
+                        id = item.value as? String
+                    case "transferHash":
+                        transferHash = item.value as? String
+                    case "status":
+                        status = item.value as? String
+                    case "confirmPurchaseHash":
+                        confirmPurchaseHash = item.value as? String
+                    case "confirmReceivedHash":
+                        confirmReceivedHash = item.value as? String
+                    case "confirmPurchaseDate":
+                        let timeStamp = item.value as? Timestamp
+                        confirmPurchaseDate = timeStamp?.dateValue()
+                    case "transferDate":
+                        let timeStamp = item.value as? Timestamp
+                        transferDate = timeStamp?.dateValue()
+                    case "confirmReceivedDate":
+                        let timeStamp = item.value as? Timestamp
+                        confirmReceivedDate = timeStamp?.dateValue()
+                    case "buyerHash":
+                        buyerHash = item.value as? String
+                    case "savedBy":
+                        savedBy = item.value as? [String]
+                    case "buyerUserId":
+                        buyerUserId = item.value as? String
+                    default:
+                        break
+                }
+            }
+            
+            let post = Post(documentId: document.documentID, title: title, description: description, date: date, files: files, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy)
+            postArr.append(post)
+        }
+        return postArr
+    }
+}
+
+
