@@ -12,6 +12,10 @@ import Firebase
 import web3swift
 import QuickLook
 
+
+import CryptoKit
+import Photos
+
 class ParentPostViewController: UIViewController {
     let db = FirebaseService.shared.db!
     var scrollView: UIScrollView!
@@ -457,16 +461,18 @@ extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigati
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
         
-        guard let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage,
+        guard let _ = info[UIImagePickerController.InfoKey.originalImage] as? UIImage,
               let filePath = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
             print("No image found")
             return
         }
         
-        
-        
-//        let previewData = PreviewData(header: .image, filePath: filePath)
-//        previewDataArr.append(previewData)
+//        if let imageData = originalImage.pngData() {
+//            let hashedImage = SHA256.hash(data: imageData)
+//            print("hashedImage", hashedImage)
+//        }
+        let previewData = PreviewData(header: .image, filePath: filePath)
+        previewDataArr.append(previewData)
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
