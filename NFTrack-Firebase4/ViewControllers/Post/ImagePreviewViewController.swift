@@ -37,6 +37,16 @@ class ImagePreviewViewController: UIViewController {
     
     weak var delegate: PreviewDelegate?
     var collectionView: UICollectionView! = nil
+    var postType: PostType!
+    
+    init(postType: PostType) {
+        super.init(nibName: nil, bundle: nil)
+        self.postType = postType
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,23 +61,29 @@ class ImagePreviewViewController: UIViewController {
 
 extension ImagePreviewViewController {
     /// - Tag: TwoColumn
-    private func createLayout() -> UICollectionViewLayout {
+    private func createLayout(postType: PostType) -> UICollectionViewLayout {
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
                                               heightDimension: .fractionalHeight(1.0))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.9),
-                                               heightDimension: .absolute(80))
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 3)
+        var group: NSCollectionLayoutGroup!
+        switch postType {
+            case .tangible:
+                let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.9),
+                                                       heightDimension: .absolute(80))
+                group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 3)
+            case .digital:
+                let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.95),
+                                                       heightDimension: .absolute(170))
+                group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 1)
+                group.edgeSpacing = NSCollectionLayoutEdgeSpacing(leading: NSCollectionLayoutSpacing.fixed(5), top: .none, trailing: .none, bottom: .none)
+        }
+        
         let spacing = CGFloat(0)
         group.interItemSpacing = .fixed(spacing)
         
-//        let headerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .estimated(44))
-//        let headerElement = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: headerSize, elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)
-        
         let section = NSCollectionLayoutSection(group: group)
         section.interGroupSpacing = spacing
-//        section.boundarySupplementaryItems = [headerElement]
         
         let layout = UICollectionViewCompositionalLayout(section: section)
         return layout
@@ -76,7 +92,7 @@ extension ImagePreviewViewController {
 
 extension ImagePreviewViewController: UICollectionViewDelegate {
     func configureHierarchy() {
-        collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout())
+        collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout(postType: postType))
         collectionView.translatesAutoresizingMaskIntoConstraints = false
 //        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         collectionView.backgroundColor = .systemBackground

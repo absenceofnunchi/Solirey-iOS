@@ -94,8 +94,9 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var confirmReceivedHash: String?
     var confirmReceivedDate: Date?
     var savedBy: [String]?
+    var type: String!
     
-    init(documentId: String, title: String, description: String, date: Date, files: [String]?, price: String, mintHash: String, escrowHash: String, id: String, status: String, sellerUserId: String, buyerUserId: String?,sellerHash: String, buyerHash: String?, confirmPurchaseHash: String?, confirmPurchaseDate: Date?, transferHash: String?, transferDate: Date?, confirmReceivedHash: String?, confirmReceivedDate: Date?, savedBy: [String]?) {
+    init(documentId: String, title: String, description: String, date: Date, files: [String]?, price: String, mintHash: String, escrowHash: String, id: String, status: String, sellerUserId: String, buyerUserId: String?,sellerHash: String, buyerHash: String?, confirmPurchaseHash: String?, confirmPurchaseDate: Date?, transferHash: String?, transferDate: Date?, confirmReceivedHash: String?, confirmReceivedDate: Date?, savedBy: [String]?, type: String) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
         self.title = title
@@ -116,6 +117,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.confirmReceivedHash = confirmReceivedHash
         self.confirmReceivedDate = confirmReceivedDate
         self.savedBy = savedBy
+        self.type = type
     }
 }
 
@@ -334,19 +336,32 @@ enum ProfileDetailMenu: Int, CaseIterable {
     }
 }
 
-enum PostProgress: Int, CaseIterable {
-    case deployingEscrow
-    case minting
-    case images
+/// for creating button panels i.e., Media button panel
+struct PanelButton {
+    let imageName: String
+    let imageConfig: UIImage.Configuration
+    let tintColor: UIColor
+    let tag: Int
+}
+
+enum PostType: Int, CaseIterable {
+    case tangible, digital
     
     func asString() -> String {
         switch self {
-            case .deployingEscrow:
-                return "Deploying the escrow contract"
-            case .minting:
-                return "Minting your item on the blockchain"
-            case .images:
-                return "Checking for images to upload"
+            case .tangible:
+                return NSLocalizedString("Tangible", comment: "")
+            case .digital:
+                return NSLocalizedString("Digital", comment: "")
         }
+    }
+    
+    static func getSegmentText() -> [String] {
+        let segmentArr = PostType.allCases
+        var segmentTextArr = [String]()
+        for segment in segmentArr {
+            segmentTextArr.append(NSLocalizedString(segment.asString(), comment: ""))
+        }
+        return segmentTextArr
     }
 }

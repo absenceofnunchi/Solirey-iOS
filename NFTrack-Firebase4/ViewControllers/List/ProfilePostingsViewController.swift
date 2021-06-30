@@ -26,7 +26,6 @@ class ProfilePostingsViewController: ProfileListViewController<Post>, PaginateFe
         tableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: ProfilePostCell.self, identifier: ProfilePostCell.identifier)
         tableView.prefetchDataSource = self
         tableView.isScrollEnabled = false
-        tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
     }
     

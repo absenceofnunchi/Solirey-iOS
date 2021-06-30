@@ -25,7 +25,6 @@ class ProfileReviewListViewController: ProfileListViewController<Review>, Pagina
         tableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: ReviewCell.self, identifier: ReviewCell.identifier)
         tableView.prefetchDataSource = self
         tableView.isScrollEnabled = false
-        tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
     }
     

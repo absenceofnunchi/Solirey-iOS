@@ -11,15 +11,15 @@
 import UIKit
 
 class ReviewViewController: ParentListViewController<Post> {
-    private var segmentedControl: UISegmentedControl!
-    override func viewDidLoad() {
+    internal var segmentedControl: UISegmentedControl!
+    final override func viewDidLoad() {
         super.viewDidLoad()
         
         configureSwitch()
         configureDataFetch(userIdField: "buyerUserId")
     }
     
-    override func configureUI() {
+    final override func configureUI() {
         super.configureUI()
         title = "Pending Reviews"
         
@@ -30,7 +30,7 @@ class ReviewViewController: ParentListViewController<Post> {
     }
     
 
-    func configureDataFetch(userIdField: String) {
+    final func configureDataFetch(userIdField: String) {
         guard let userId = userId else {
             self.alert.showDetail("Sorry", with: "Please try re-logging back in.", for: self)
             return

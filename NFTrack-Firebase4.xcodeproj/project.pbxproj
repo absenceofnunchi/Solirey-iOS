@@ -42,7 +42,9 @@
 		495FD2D826892FDC00F1D81D /* StarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2D726892FDB00F1D81D /* StarRatingView.swift */; };
 		495FD2E026895B3300F1D81D /* ProfileReviewListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2DF26895B3300F1D81D /* ProfileReviewListViewController.swift */; };
 		495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD311268A3D2000F1D81D /* ProfilePostCell.swift */; };
-		495FD317268AAB3100F1D81D /* TangibleAssetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD316268AAB3100F1D81D /* TangibleAssetViewController.swift */; };
+		495FD317268AAB3100F1D81D /* DigitalAssetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD316268AAB3100F1D81D /* DigitalAssetViewController.swift */; };
+		495FD31C268B9DCA00F1D81D /* NewPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */; };
+		495FD324268C034000F1D81D /* QuickUICheckViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD323268C034000F1D81D /* QuickUICheckViewController.swift */; };
 		4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45B2641B001005B3268 /* AppDelegate.swift */; };
 		4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45D2641B001005B3268 /* SceneDelegate.swift */; };
 		4964E4602641B001005B3268 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45F2641B001005B3268 /* SignInViewController.swift */; };
@@ -181,7 +183,9 @@
 		495FD2D726892FDB00F1D81D /* StarRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRatingView.swift; sourceTree = "<group>"; };
 		495FD2DF26895B3300F1D81D /* ProfileReviewListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileReviewListViewController.swift; sourceTree = "<group>"; };
 		495FD311268A3D2000F1D81D /* ProfilePostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePostCell.swift; sourceTree = "<group>"; };
-		495FD316268AAB3100F1D81D /* TangibleAssetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TangibleAssetViewController.swift; sourceTree = "<group>"; };
+		495FD316268AAB3100F1D81D /* DigitalAssetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitalAssetViewController.swift; sourceTree = "<group>"; };
+		495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostViewController.swift; sourceTree = "<group>"; };
+		495FD323268C034000F1D81D /* QuickUICheckViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickUICheckViewController.swift; sourceTree = "<group>"; };
 		4964E4582641B001005B3268 /* NFTrack-Firebase4.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NFTrack-Firebase4.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4964E45B2641B001005B3268 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4964E45D2641B001005B3268 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -570,6 +574,7 @@
 				49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */,
 				496D56BF2659E75D00C3E7FD /* ParentPostViewController + Picker.swift */,
 				4964E5092644B07D005B3268 /* PostViewController.swift */,
+				495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */,
 				49E759B72666BCCF0064BB34 /* ResellViewController.swift */,
 				4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */,
 				4964E52026489564005B3268 /* BigPreviewViewController.swift */,
@@ -577,7 +582,7 @@
 				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
 				490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */,
 				49DEFF642686552E004C2DD0 /* PreviewPDFViewController.swift */,
-				495FD316268AAB3100F1D81D /* TangibleAssetViewController.swift */,
+				495FD316268AAB3100F1D81D /* DigitalAssetViewController.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -615,6 +620,7 @@
 				499F9952266AED0E00FC6CDE /* ParentDetailViewController.swift */,
 				499F9957266B2ADB00FC6CDE /* WebViewController.swift */,
 				499703092676CBFF001DD80A /* SavedViewController.swift */,
+				495FD323268C034000F1D81D /* QuickUICheckViewController.swift */,
 			);
 			path = Main;
 			sourceTree = "<group>";
@@ -944,7 +950,7 @@
 				496D56B12659654A00C3E7FD /* CategoryCell.swift in Sources */,
 				496F7007265207A700E4056B /* ImagePageViewController.swift in Sources */,
 				493BF9F8264C6ECF00B9C9D2 /* PresentationController.swift in Sources */,
-				495FD317268AAB3100F1D81D /* TangibleAssetViewController.swift in Sources */,
+				495FD317268AAB3100F1D81D /* DigitalAssetViewController.swift in Sources */,
 				4964E50026445EDB005B3268 /* DetailViewController.swift in Sources */,
 				499F995D266BF85100FC6CDE /* PendingViewController.swift in Sources */,
 				4964E4C12641E12A005B3268 /* BlurEffectContainerView.swift in Sources */,
@@ -1033,6 +1039,7 @@
 				493333662682860000B8BFC2 /* ReviewCell.swift in Sources */,
 				4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */,
 				499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */,
+				495FD31C268B9DCA00F1D81D /* NewPostViewController.swift in Sources */,
 				499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */,
 				49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */,
 				4964E568264968A7005B3268 /* Errors.swift in Sources */,
@@ -1042,6 +1049,7 @@
 				496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */,
 				4964E52C2648B096005B3268 /* MyPresentationController.swift in Sources */,
 				495FD2CE2687B33600F1D81D /* CustomPreviewItem.swift in Sources */,
+				495FD324268C034000F1D81D /* QuickUICheckViewController.swift in Sources */,
 				4997030526769A36001DD80A /* CardCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

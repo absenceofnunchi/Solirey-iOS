@@ -10,6 +10,61 @@ import web3swift
 import FirebaseFirestore
 
 class PostViewController: ParentPostViewController {
+    override var panelButtons: [PanelButton] {
+        let buttonPanels = [
+            PanelButton(imageName: "camera.circle", imageConfig: configuration, tintColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), tag: 8),
+            PanelButton(imageName: pickerImageName, imageConfig: configuration, tintColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), tag: 9),
+            PanelButton(imageName: "doc.circle", imageConfig: configuration, tintColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), tag: 10)
+        ]
+        return buttonPanels
+    }
+    
+    override func createIDField() {
+        idContainerView = UIView()
+        idContainerView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(idContainerView)
+        
+        idTextField = createTextField(delegate: self)
+        idTextField.autocapitalizationType = .none
+        idTextField.placeholder = "Case insensitive, i.e. VIN, IMEI..."
+        idContainerView.addSubview(idTextField)
+        
+        guard let scanImage = UIImage(systemName: "qrcode.viewfinder") else { return }
+        scanButton = UIButton.systemButton(with: scanImage.withTintColor(.black, renderingMode: .alwaysOriginal), target: self, action: #selector(buttonPressed))
+        scanButton.layer.cornerRadius = 5
+        scanButton.layer.borderWidth = 0.7
+        scanButton.layer.borderColor = UIColor.lightGray.cgColor
+        scanButton.tag = 7
+        scanButton.translatesAutoresizingMaskIntoConstraints = false
+        idContainerView.addSubview(scanButton)
+    }
+    
+    override func setIDFieldConstraints() {
+        constraints.append(contentsOf: [
+            idTitleLabel.topAnchor.constraint(equalTo: tagContainerView.bottomAnchor, constant: 20),
+            idTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            idTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+            idTitleLabel.heightAnchor.constraint(equalToConstant: 50),
+            
+            idContainerView.topAnchor.constraint(equalTo: idTitleLabel.bottomAnchor, constant: 0),
+            idContainerView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            idContainerView.heightAnchor.constraint(equalToConstant: 50),
+            idContainerView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+            
+            idTextField.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: 0.75),
+            idTextField.heightAnchor.constraint(equalToConstant: 50),
+            idTextField.leadingAnchor.constraint(equalTo: idContainerView.leadingAnchor),
+            
+            scanButton.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: 0.2),
+            scanButton.heightAnchor.constraint(equalToConstant: 50),
+            scanButton.trailingAnchor.constraint(equalTo: idContainerView.trailingAnchor),
+        ])
+    }
+    
+    override func configureImagePreview() {
+        configureImagePreview(postType: .tangible)
+    }
+    
     override func mint() {
         
 
@@ -91,7 +146,7 @@ class PostViewController: ParentPostViewController {
                             detailVC.buttonAction = { vc in
                                 if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
                                     self?.dismiss(animated: true, completion: {
-                                        self?.progressModal = ProgressModalViewController()
+                                        self?.progressModal = ProgressModalViewController(postType: .tangible)
                                         self?.progressModal.titleString = "Posting In Progress"
                                         self?.present(self!.progressModal, animated: true, completion: {
                                             DispatchQueue.global().async {
@@ -142,7 +197,8 @@ class PostViewController: ParentPostViewController {
                                                                     "status": PostStatus.ready.rawValue,
                                                                     "tags": Array(tokensArr),
                                                                     "itemIdentifier": convertedId,
-                                                                    "isReviewed": false
+                                                                    "isReviewed": false,
+                                                                    "type": "tangible"
                                                                 ]) { (error) in
                                                                     if let error = error {
                                                                         self?.alert.showDetail("Error", with: error.localizedDescription, for: self)

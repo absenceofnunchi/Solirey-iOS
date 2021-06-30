@@ -12,7 +12,7 @@ class SavedViewController: ParentListViewController<Post>, RefetchDataDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Favourite"
+        title = "Saved Items"
         fetchData()
     }
     
@@ -62,38 +62,6 @@ class SavedViewController: ParentListViewController<Post>, RefetchDataDelegate {
         return cell
     }
     
-//    override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-//        guard let cell = cell as? CardCell else { return }
-//        
-//        // How should the operation update the cell once the data has been loaded?
-//        let updateCellClosure: (UIImage?) -> () = { [unowned self] (image) in
-//            cell.updateAppearanceFor(.fetched(image))
-//            self.loadingOperations.removeValue(forKey: indexPath)
-//        }
-//        
-//        // Try to find an existing data loader
-//        if let dataLoader = loadingOperations[indexPath] {
-//            // Has the data already been loaded?
-//            if let image = dataLoader.image {
-//                cell.updateAppearanceFor(.fetched(image))
-//                loadingOperations.removeValue(forKey: indexPath)
-//            } else {
-//                // No data loaded yet, so add the completion closure to update the cell once the data arrives
-//                dataLoader.loadingCompleteHandler = updateCellClosure
-//            }
-//        } else {
-//            // Need to create a data loaded for this index path
-//            if let dataLoader = dataStore.loadImage(at: indexPath.row) {
-//                // Provide the completion closure, and kick off the loading operation
-//                dataLoader.loadingCompleteHandler = updateCellClosure
-//                loadingQueue.addOperation(dataLoader)
-//                loadingOperations[indexPath] = dataLoader
-//            } else {
-//                //                cell.updateAppearanceFor(.none(post))
-//            }
-//        }
-//    }
-    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
         let listDetailVC = ListDetailViewController()
@@ -104,6 +72,7 @@ class SavedViewController: ParentListViewController<Post>, RefetchDataDelegate {
         
     }
     
+    /// when the save button is toggled
     func didFetchData() {
         fetchData()
     }

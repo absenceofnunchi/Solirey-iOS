@@ -26,34 +26,21 @@ class MainViewController: UIViewController {
     private let alert = Alerts()
     private var category: String! = "Electronics"
     private var searchItems = [String]()
+    private var optionsBarItem: UIBarButtonItem!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         configureNavigationBar(vc: self)
-        configureNavigationBar()
         configureSearchController()
         configureSearchBar()
         configureHierarchy()
         setConstraints()
+        configureOptionsBar()
     }
 }
 
 extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
-    func configureNavigationBar() {
-        guard let starImage = UIImage(systemName: "star") else {
-            self.navigationController?.popViewController(animated: true)
-            return
-        }
-        let barButtonItem = UIBarButtonItem(image: starImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed))
-        self.navigationItem.rightBarButtonItem = barButtonItem
-    }
-    
-    @objc func buttonPressed() {
-        let savedVC = SavedViewController()
-        self.navigationController?.pushViewController(savedVC, animated: true)
-    }
-    
     // configure search controller
     func configureSearchController() {
         searchResultsController = SearchResultsController()
@@ -75,7 +62,22 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
         searchBar.autocapitalizationType = .none
         searchBar.tintColor = .black
         searchBar.searchBarStyle = .minimal
-        searchBar.scopeButtonTitles = [Category.electronics.rawValue, Category.vehicle.rawValue, Category.realEstate.rawValue, Category.other.rawValue]
+//        searchBar.scopeButtonTitles = [Category.electronics.rawValue, Category.vehicle.rawValue, Category.realEstate.rawValue, Category.other.rawValue, Category.other.rawValue]
+        
+        
+        
+        searchController.automaticallyShowsScopeBar = true
+        let segmentedControl = UISegmentedControl(items: ["Electronics, Real Estate"])
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.autoresizingMask = .flexibleWidth
+        segmentedControl.frame = CGRect(x: 0, y: 0, width: 300, height: 30)
+//        segmentedControl.addTarget(self, action: #selector(segmentedControlSelectionDidChange(_:)), for: .valueChanged)
+        searchController.navigationItem.titleView = segmentedControl
+        
+        
+        
+        
+        
         
         // search text field attributes
         let searchTextField = searchBar.searchTextField
@@ -97,7 +99,6 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
         searchItems = strippedString.components(separatedBy: " ") as [String]
         
         fetchData(category: category)
-        
         searchBar.resignFirstResponder()
     }
     
@@ -213,5 +214,36 @@ extension MainViewController: UICollectionViewDataSource {
         let mainDetailVC = MainDetailViewController()
         mainDetailVC.category = mainMenu.title
         self.navigationController?.pushViewController(mainDetailVC, animated: true)
+    }
+}
+
+extension MainViewController {
+    func configureOptionsBar() {
+        let barButtonMenu = UIMenu(title: "", children: [
+            UIAction(title: NSLocalizedString("Saved Items", comment: ""), image: UIImage(systemName: "square.grid.2x2"), handler: menuHandler),
+            UIAction(title: NSLocalizedString("Quick UI Check", comment: ""), image: UIImage(systemName: "c.circle"), handler: menuHandler),
+        ])
+        
+        let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
+        if #available(iOS 14.0, *) {
+            optionsBarItem = UIBarButtonItem(title: nil, image: image, primaryAction: nil, menu: barButtonMenu)
+            navigationItem.rightBarButtonItem = optionsBarItem
+        } else {
+            optionsBarItem = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(menuHandler(action:)))
+            navigationItem.rightBarButtonItem = optionsBarItem
+        }
+    }
+    
+    @objc func menuHandler(action: UIAction) {
+        switch action.title {
+            case "Saved Items":
+                let savedVC = SavedViewController()
+                self.navigationController?.pushViewController(savedVC, animated: true)
+            case "Quick UI Check":
+                let checkVC = QuickUICheckViewController()
+                self.navigationController?.pushViewController(checkVC, animated: true)
+            default:
+                break
+        }
     }
 }

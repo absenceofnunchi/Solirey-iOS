@@ -76,6 +76,4 @@ class SearchResultsController: ParentListViewController<Post> {
         listDetailVC.post = postArr[indexPath.row]
         self.navigationController?.pushViewController(listDetailVC, animated: true)
     }
-    
-
 }

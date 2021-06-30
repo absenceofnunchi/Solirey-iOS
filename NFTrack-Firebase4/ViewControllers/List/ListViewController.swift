@@ -10,7 +10,7 @@ import FirebaseFirestore
 
 class ListViewController: ParentListViewController<Post> {
     private let userDefaults = UserDefaults.standard
-    private var segmentedControl: UISegmentedControl!
+    internal var segmentedControl: UISegmentedControl!
     private var currentIndex: Int! = 0
     
     final override func viewDidLoad() {
@@ -112,13 +112,13 @@ extension ListViewController: SegmentConfigurable {
         func asString() -> String {
             switch self {
                 case .buying:
-                    return "Buying"
+                    return NSLocalizedString("Buying", comment: "")
                 case .selling:
-                    return "Selling"
+                    return NSLocalizedString("Selling", comment: "")
                 case .purchases:
-                    return "Purchases"
+                    return NSLocalizedString("Purchases", comment: "")
                 case .posts:
-                    return "Postings"
+                    return NSLocalizedString("Postings", comment: "")
             }
         }
         

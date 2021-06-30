@@ -12,11 +12,7 @@ import Firebase
 import web3swift
 import QuickLook
 
-
-import CryptoKit
-import Photos
-
-class ParentPostViewController: UIViewController {
+class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
     let db = FirebaseService.shared.db!
     var scrollView: UIScrollView!
     var titleLabel: UILabel!
@@ -36,10 +32,7 @@ class ParentPostViewController: UIViewController {
     var tagTextField: UISearchTextField!
     var addTagButton: UIButton!
     var buttonPanel: UIStackView!
-    var cameraButton: UIButton!
-    var imagePickerButton: UIButton!
-    var documentPickerButton: UIButton!
-    var previewDataArr = [PreviewData]() {
+    var previewDataArr: [PreviewData]! {
         didSet {
             if previewDataArr.count > 0 {
                 DispatchQueue.main.async { [weak self] in
@@ -74,11 +67,26 @@ class ParentPostViewController: UIViewController {
     var url: URL!
     var imagePreviewConstraintHeight: NSLayoutConstraint!
     var progressModal: ProgressModalViewController!
+    var constraints: [NSLayoutConstraint]!
+    var panelButtons: [PanelButton] {
+        return []
+    }
     
     let pvc = MyPickerVC()
     /// MyDoneButtonVC
     let mdbvc = MyDoneButtonVC()
     var showKeyboard = false
+    
+    let configuration = UIImage.SymbolConfiguration(pointSize: 50, weight: .light, scale: .medium)
+    var pickerImageName: String! {
+        var imageName: String!
+        if #available(iOS 14.0, *) {
+            imageName = "rectangle.fill.on.rectangle.fill.circle"
+        } else {
+            imageName = "tv.circle"
+        }
+        return imageName
+    }
     
     deinit {
         if observation != nil {
@@ -104,13 +112,26 @@ class ParentPostViewController: UIViewController {
             observation?.invalidate()
         }
     }
+    
+    /// Tangible asset: user registers
+    /// Digital asset: image is hashed
+    func createIDField() {}
+    
+    /// no scanner for digital asset
+    func setIDFieldConstraints() {}
+    
+    /// where the subclasses override the ImagePreview post type.
+    /// This has to be done before setConstraints
+    func configureImagePreview() {}
 }
 
 extension ParentPostViewController {
     @objc func configureUI() {
         title = "Post"
+        previewDataArr = [PreviewData]()
         self.hideKeyboardWhenTappedAround()
         alert = Alerts()
+        constraints = [NSLayoutConstraint]()
         
         scrollView = UIScrollView()
         scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: 1200)
@@ -151,23 +172,7 @@ extension ParentPostViewController {
         idTitleLabel = createTitleLabel(text: "Unique Identifier")
         scrollView.addSubview(idTitleLabel)
         
-        idContainerView = UIView()
-        idContainerView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(idContainerView)
-        
-        idTextField = createTextField(delegate: self)
-        idTextField.autocapitalizationType = .none
-        idTextField.placeholder = "Case insensitive, i.e. VIN, IMEI..."
-        idContainerView.addSubview(idTextField)
-        
-        guard let scanImage = UIImage(systemName: "qrcode.viewfinder") else { return }
-        scanButton = UIButton.systemButton(with: scanImage.withTintColor(.black, renderingMode: .alwaysOriginal), target: self, action: #selector(buttonPressed))
-        scanButton.layer.cornerRadius = 5
-        scanButton.layer.borderWidth = 0.7
-        scanButton.layer.borderColor = UIColor.lightGray.cgColor
-        scanButton.tag = 7
-        scanButton.translatesAutoresizingMaskIntoConstraints = false
-        idContainerView.addSubview(scanButton)
+        createIDField()
         
         pickerTitleLabel = createTitleLabel(text: "Category")
         scrollView.addSubview(pickerTitleLabel)
@@ -213,44 +218,12 @@ extension ParentPostViewController {
         addTagButton.tag = 4
         addTagButton.translatesAutoresizingMaskIntoConstraints = false
         tagContainerView.addSubview(addTagButton)
-        
-        buttonPanel = UIStackView()
-        buttonPanel.axis = .horizontal
-        buttonPanel.distribution = .fillEqually
-        buttonPanel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(buttonPanel)
-        
-        let configuration = UIImage.SymbolConfiguration(pointSize: 50, weight: .light, scale: .medium)
-        let cameraImage = UIImage(systemName: "camera.circle")!
-            .withTintColor(UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), renderingMode: .alwaysOriginal)
-            .withConfiguration(configuration)
-        cameraButton = UIButton.systemButton(with: cameraImage, target: self, action: #selector(buttonPressed))
-        cameraButton.tag = 1
-        cameraButton.translatesAutoresizingMaskIntoConstraints = false
-        buttonPanel.addArrangedSubview(cameraButton)
-        
-        var imageName: String!
-        if #available(iOS 14.0, *) {
-            imageName = "rectangle.fill.on.rectangle.fill.circle"
-        } else {
-            imageName = "person.crop.circle.fill.badge.plus"
+
+        createButtonPanel(panelButtons: panelButtons) { (buttonsArr) in
+            buttonsArr.forEach { (button) in
+                button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+            }
         }
-        
-        let pickerImage = UIImage(systemName: imageName)!
-            .withTintColor(UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), renderingMode: .alwaysOriginal)
-            .withConfiguration(configuration)
-        imagePickerButton = UIButton.systemButton(with: pickerImage, target: self, action: #selector(buttonPressed(_:)))
-        imagePickerButton.tag = 2
-        imagePickerButton.translatesAutoresizingMaskIntoConstraints = false
-        buttonPanel.addArrangedSubview(imagePickerButton)
-        
-        let documentPickerImage = UIImage(systemName: "doc.circle")!
-            .withTintColor(UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), renderingMode: .alwaysOriginal)
-            .withConfiguration(configuration)
-        documentPickerButton = UIButton.systemButton(with: documentPickerImage, target: self, action: #selector(buttonPressed(_:)))
-        documentPickerButton.tag = 6
-        documentPickerButton.translatesAutoresizingMaskIntoConstraints = false
-        buttonPanel.addArrangedSubview(documentPickerButton)
         
         postButton = UIButton()
         postButton.setTitle("Post", for: .normal)
@@ -265,8 +238,7 @@ extension ParentPostViewController {
     // MARK: - setConstraints
     @objc func setConstraints() {
         imagePreviewConstraintHeight = imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 0)
-        
-        NSLayoutConstraint.activate([
+        constraints.append(contentsOf: [
             titleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             titleLabel.heightAnchor.constraint(equalToConstant: 50),
             titleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
@@ -297,29 +269,11 @@ extension ParentPostViewController {
             descTextView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             descTextView.topAnchor.constraint(equalTo: descLabel.bottomAnchor, constant: 0),
             
-            idTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            idTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-            idTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            idTitleLabel.topAnchor.constraint(equalTo: descTextView.bottomAnchor, constant: 20),
-
-            idContainerView.topAnchor.constraint(equalTo: idTitleLabel.bottomAnchor, constant: 0),
-            idContainerView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            idContainerView.heightAnchor.constraint(equalToConstant: 50),
-            idContainerView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            
-            idTextField.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: 0.75),
-            idTextField.heightAnchor.constraint(equalToConstant: 50),
-            idTextField.leadingAnchor.constraint(equalTo: idContainerView.leadingAnchor),
-            
-            scanButton.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: 0.2),
-            scanButton.heightAnchor.constraint(equalToConstant: 50),
-            scanButton.trailingAnchor.constraint(equalTo: tagContainerView.trailingAnchor),
-
-            pickerTitleLabel.topAnchor.constraint(equalTo: idContainerView.bottomAnchor, constant: 20),
+            pickerTitleLabel.topAnchor.constraint(equalTo: descTextView.bottomAnchor, constant: 20),
             pickerTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             pickerTitleLabel.heightAnchor.constraint(equalToConstant: 50),
             pickerTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-
+            
             pickerLabel.topAnchor.constraint(equalTo: pickerTitleLabel.bottomAnchor, constant: 0),
             pickerLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             pickerLabel.heightAnchor.constraint(equalToConstant: 50),
@@ -344,16 +298,12 @@ extension ParentPostViewController {
             addTagButton.heightAnchor.constraint(equalToConstant: 50),
             addTagButton.trailingAnchor.constraint(equalTo: tagContainerView.trailingAnchor),
             addTagButton.topAnchor.constraint(equalTo: tagContainerView.topAnchor),
-            
-            buttonPanel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            buttonPanel.heightAnchor.constraint(equalToConstant: 80),
-            buttonPanel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            buttonPanel.topAnchor.constraint(equalTo: tagContainerView.bottomAnchor, constant: 40),
-
-            cameraButton.heightAnchor.constraint(equalToConstant: 80),
-            imagePickerButton.heightAnchor.constraint(equalToConstant: 80),
-            documentPickerButton.heightAnchor.constraint(equalToConstant: 80),
-
+        ])
+        
+        setIDFieldConstraints()
+        setButtonPanelConstraints(topView: idContainerView)
+        
+        constraints.append(contentsOf: [
             imagePreviewVC.view.topAnchor.constraint(equalTo: buttonPanel.bottomAnchor, constant: 20),
             imagePreviewVC.view.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
             imagePreviewVC.view.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -364,6 +314,8 @@ extension ParentPostViewController {
             postButton.heightAnchor.constraint(equalToConstant: 50),
             postButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         ])
+        
+        NSLayoutConstraint.activate(constraints)
     }
     
     // MARK: - buttonPressed
@@ -373,19 +325,6 @@ extension ParentPostViewController {
         
         if previewDataArr.count < 6 {
             switch sender.tag {
-                case 1:
-                    let vc = UIImagePickerController()
-                    vc.sourceType = .camera
-                    vc.allowsEditing = true
-                    vc.delegate = self
-                    present(vc, animated: true)
-                case 2:
-                    let imagePickerController = UIImagePickerController()
-                    imagePickerController.allowsEditing = false
-                    imagePickerController.sourceType = .photoLibrary
-                    imagePickerController.delegate = self
-                    imagePickerController.modalPresentationStyle = .fullScreen
-                    present(imagePickerController, animated: true, completion: nil)
                 case 3:
                     mint()
                 case 4:
@@ -396,14 +335,27 @@ extension ParentPostViewController {
                     }
                 case 5:
                     configureProgress()
-                case 6:
-                    documentPicker = DocumentPicker(presentationController: self, delegate: self)
-                    documentPicker.displayPicker()
                 case 7:
                     let scannerVC = ScannerViewController()
                     scannerVC.delegate = self
                     scannerVC.modalPresentationStyle = .fullScreen
                     self.present(scannerVC, animated: true, completion: nil)
+                case 8:
+                    let vc = UIImagePickerController()
+                    vc.sourceType = .camera
+                    vc.allowsEditing = true
+                    vc.delegate = self
+                    present(vc, animated: true)
+                case 9:
+                    let imagePickerController = UIImagePickerController()
+                    imagePickerController.allowsEditing = false
+                    imagePickerController.sourceType = .photoLibrary
+                    imagePickerController.delegate = self
+                    imagePickerController.modalPresentationStyle = .fullScreen
+                    present(imagePickerController, animated: true, completion: nil)
+                case 10:
+                    documentPicker = DocumentPicker(presentationController: self, delegate: self)
+                    documentPicker.displayPicker()
                 default:
                     break
             }
@@ -461,16 +413,11 @@ extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigati
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
         
-        guard let _ = info[UIImagePickerController.InfoKey.originalImage] as? UIImage,
-              let filePath = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
+        guard let filePath = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
             print("No image found")
             return
         }
         
-//        if let imageData = originalImage.pngData() {
-//            let hashedImage = SHA256.hash(data: imageData)
-//            print("hashedImage", hashedImage)
-//        }
         let previewData = PreviewData(header: .image, filePath: filePath)
         previewDataArr.append(previewData)
     }
@@ -482,8 +429,8 @@ extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigati
 
 extension ParentPostViewController: PreviewDelegate {
     // MARK: - configureImagePreview
-    func configureImagePreview() {
-        imagePreviewVC = ImagePreviewViewController()
+    func configureImagePreview(postType: PostType) {
+        imagePreviewVC = ImagePreviewViewController(postType: postType)
         imagePreviewVC.data = previewDataArr
         imagePreviewVC.delegate = self
         imagePreviewVC.view.translatesAutoresizingMaskIntoConstraints = false

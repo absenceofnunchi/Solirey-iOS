@@ -369,7 +369,7 @@ protocol RefetchDataDelegate: AnyObject {
 
 // MARK: - SegmentConfigurable
 protocol SegmentConfigurable {
-    associatedtype Segment: RawRepresentable
+    var segmentedControl: UISegmentedControl! { get set }
     func configureSwitch()
     func segmentedControlSelectionDidChange(_ sender: UISegmentedControl)
 }
@@ -599,7 +599,7 @@ extension PostParseDelegate {
         for document in querySnapshot!.documents {
             //            print("\(document.documentID) => \(document.data())")
             let data = document.data()
-            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash: String!
+            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
             var files, savedBy: [String]?
             data.forEach { (item) in
@@ -648,16 +648,61 @@ extension PostParseDelegate {
                         savedBy = item.value as? [String]
                     case "buyerUserId":
                         buyerUserId = item.value as? String
+                    case "type":
+                        type = item.value as? String
                     default:
                         break
                 }
             }
             
-            let post = Post(documentId: document.documentID, title: title, description: description, date: date, files: files, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy)
+            let post = Post(documentId: document.documentID, title: title, description: description, date: date, files: files, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy, type: type)
             postArr.append(post)
         }
         return postArr
     }
 }
 
+protocol ButtonPanelConfigurable where Self: UIViewController {
+    var buttonPanel: UIStackView! { get set }
+    var constraints: [NSLayoutConstraint]! { get set }
+    func createButtonPanel(panelButtons: [PanelButton], completion: (_ buttonsArr: [UIButton]) -> Void)
+    func setButtonPanelConstraints(topView: UIView)
+}
 
+extension ButtonPanelConfigurable {
+    func createButtonPanel(panelButtons: [PanelButton], completion: (_ buttonsArr: [UIButton]) -> Void) {
+        buttonPanel = UIStackView()
+        buttonPanel.axis = .horizontal
+        buttonPanel.distribution = .fillEqually
+        buttonPanel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(buttonPanel)
+        
+        var buttonsArr = [UIButton]()
+        for i in 0..<panelButtons.count {
+            let button = createPanelButton(panelButton: panelButtons[i])
+            buttonPanel.addArrangedSubview(button)
+            buttonsArr.append(button)
+        }
+        
+        completion(buttonsArr)
+    }
+
+    func createPanelButton(panelButton: PanelButton) -> UIButton {
+        let image = UIImage(systemName: panelButton.imageName)!
+            .withTintColor(panelButton.tintColor, renderingMode: .alwaysOriginal)
+            .withConfiguration(panelButton.imageConfig)
+        let button = UIButton.systemButton(with: image, target: self, action: nil)
+        button.tag = panelButton.tag
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }
+    
+    func setButtonPanelConstraints(topView: UIView) {
+        constraints.append(contentsOf: [
+            buttonPanel.topAnchor.constraint(equalTo: topView.bottomAnchor, constant: 40),
+            buttonPanel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            buttonPanel.heightAnchor.constraint(equalToConstant: 80),
+            buttonPanel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+        ])
+    }
+}

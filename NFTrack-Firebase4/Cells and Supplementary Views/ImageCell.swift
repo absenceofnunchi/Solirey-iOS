@@ -26,7 +26,7 @@ class ImageCell: UICollectionViewCell {
 
 extension ImageCell {
     func configure() {
-        imageView.contentMode = .scaleToFill
+        imageView.contentMode = .scaleAspectFit
         imageView.layer.cornerRadius = 5
         imageView.clipsToBounds = true
         self.addSubview(imageView)

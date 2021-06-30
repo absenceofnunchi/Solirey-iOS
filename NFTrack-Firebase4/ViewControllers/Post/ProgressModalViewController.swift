@@ -7,6 +7,40 @@
 
 import UIKit
 
+enum PostProgress: Int, CaseIterable {
+    case deployingEscrow
+    case minting
+    case images
+    
+    func asString() -> String {
+        switch self {
+            case .deployingEscrow:
+                return "Deploying the escrow contract"
+            case .minting:
+                return "Minting your item on the blockchain"
+            case .images:
+                return "Checking for images to upload"
+        }
+    }
+}
+
+struct PostProgressData {
+    var phases: [PostProgress]
+    
+    init(postType: PostType) {
+        switch postType {
+            case .tangible:
+                phases = PostProgress.allCases
+            case .digital:
+                phases = [.minting, .images]
+        }
+    }
+    
+    func asString(i: Int) -> String {
+        return phases[i].asString()
+    }
+}
+
 class ProgressModalViewController: UIViewController {
     private var titleLabel: UILabel!
     var titleString: String?
@@ -17,11 +51,12 @@ class ProgressModalViewController: UIViewController {
     private var doneButton: UIButton!
     var progressView: UIProgressView!
     var progressLabel: UILabel!
+    var postProgressData: PostProgressData!
     
-    init(height: CGFloat = 350) {
+    init(height: CGFloat = 350, postType: PostType) {
         super.init(nibName: nil, bundle: nil)
         self.height = height
-
+        self.postProgressData = PostProgressData(postType: postType)
         self.modalPresentationStyle = .custom
         self.transitioningDelegate = customTransitioningDelegate
         self.modalTransitionStyle = .crossDissolve
@@ -45,11 +80,34 @@ class ProgressModalViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(onWillDismiss), name: .willDismiss, object: nil)
     }
 
+//    @objc func onDidUpdateProgress(_ notification: Notification) {
+//        if let update = notification.userInfo?["update"] as? PostProgress,
+//           let postProgress = PostProgress(rawValue: update.rawValue) {
+//            DispatchQueue.main.async { [weak self] in
+//                if let sv = self?.stackView.arrangedSubviews[postProgress.rawValue],
+//                   let containerView = sv.viewWithTag(100) {
+//                    for case let imageView as UIImageView in containerView.subviews {
+//                        guard let checkImage = UIImage(systemName: "checkmark") else { return }
+//                        let configuration = UIImage.SymbolConfiguration(pointSize: 9, weight: .bold, scale: .small)
+//                        let finalImage = checkImage.withConfiguration(configuration).withTintColor(UIColor(red: 0/255, green: 128/255, blue: 0/255, alpha: 1), renderingMode: .alwaysOriginal)
+//                        imageView.image = finalImage
+//
+//                        self?.completionCount += 1
+//                        if self?.completionCount == PostProgress.allCases.count {
+//                            self?.doneButton.isHidden = false
+//                            self?.doneButton.isEnabled = true
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+    
     @objc func onDidUpdateProgress(_ notification: Notification) {
         if let update = notification.userInfo?["update"] as? PostProgress,
-           let postProgress = PostProgress(rawValue: update.rawValue) {
+           let postProgressIndex = postProgressData.phases.firstIndex(of: update) {
             DispatchQueue.main.async { [weak self] in
-                if let sv = self?.stackView.arrangedSubviews[postProgress.rawValue],
+                if let sv = self?.stackView.arrangedSubviews[postProgressIndex],
                    let containerView = sv.viewWithTag(100) {
                     for case let imageView as UIImageView in containerView.subviews {
                         guard let checkImage = UIImage(systemName: "checkmark") else { return }
@@ -58,7 +116,7 @@ class ProgressModalViewController: UIViewController {
                         imageView.image = finalImage
                         
                         self?.completionCount += 1
-                        if self?.completionCount == PostProgress.allCases.count {
+                        if self?.completionCount == self?.postProgressData.phases.count {
                             self?.doneButton.isHidden = false
                             self?.doneButton.isEnabled = true
                         }
@@ -97,7 +155,7 @@ private extension ProgressModalViewController {
         stackView.axis = .vertical
         stackView.distribution = .fillEqually
         stackView.translatesAutoresizingMaskIntoConstraints = false
-        for i in 0..<PostProgress.allCases.count {
+        for i in 0..<postProgressData.phases.count {
             let containerView = UIView()
             containerView.tag = 100
             let dotsImageView = UIImageView()
@@ -108,7 +166,7 @@ private extension ProgressModalViewController {
             dotsImageView.translatesAutoresizingMaskIntoConstraints = false
             containerView.addSubview(dotsImageView)
             
-            let progressLabel = createTitleLabel(text: PostProgress.allCases[i].asString(), fontSize: 13, weight: .medium)
+            let progressLabel = createTitleLabel(text: postProgressData.asString(i: i), fontSize: 13, weight: .medium)
             containerView.addSubview(progressLabel)
             
             NSLayoutConstraint.activate([

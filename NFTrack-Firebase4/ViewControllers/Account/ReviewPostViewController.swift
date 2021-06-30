@@ -68,14 +68,33 @@ class ReviewPostViewController: ParentProfileViewController {
     }
     private var imagePreviewVC: ImagePreviewViewController!
     private var url: URL!
-    private var buttonPanel: UIStackView!
-    private var cameraButton: UIButton!
-    private var imagePickerButton: UIButton!
+    internal var buttonPanel: UIStackView!
     private var documentPicker: DocumentPicker!
-    private var documentPickerButton: UIButton!
     private var documentID: String!
     private let db = FirebaseService.shared.db!
     private var starRatingView: StarRatingView!
+    internal var constraints: [NSLayoutConstraint]!
+    private var pickerImageName: String! {
+        var imageName: String!
+        if #available(iOS 14.0, *) {
+            imageName = "rectangle.fill.on.rectangle.fill.circle"
+        } else {
+            imageName = "tv.circle"
+        }
+        return imageName
+    }
+    let configuration = UIImage.SymbolConfiguration(pointSize: 50, weight: .light, scale: .medium)
+    lazy var panelButtons: [PanelButton] = [
+        PanelButton(imageName: "camera.circle", imageConfig: configuration, tintColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), tag: 8),
+        PanelButton(imageName: pickerImageName, imageConfig: configuration, tintColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), tag: 9),
+        PanelButton(imageName: "doc.circle", imageConfig: configuration, tintColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), tag: 10)
+    ]
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        constraints = [NSLayoutConstraint]()
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -102,7 +121,7 @@ class ReviewPostViewController: ParentProfileViewController {
     }
 }
 
-extension ReviewPostViewController {
+extension ReviewPostViewController: ButtonPanelConfigurable {
     func fetchUserInfo(_ completion: (() -> Void)? = nil) {
         guard let revieweeUserId = revieweeUserId else {
             self.alert.showDetail("Sorry", with: "Unable to get the user ID.", for: self)
@@ -170,45 +189,13 @@ extension ReviewPostViewController {
             self.starRatingView.translatesAutoresizingMaskIntoConstraints = false
             self.scrollView.addSubview(self.starRatingView)
             
-            self.buttonPanel = UIStackView()
-            self.buttonPanel.axis = .horizontal
-            self.buttonPanel.distribution = .fillEqually
-            self.buttonPanel.translatesAutoresizingMaskIntoConstraints = false
-            self.scrollView.addSubview(self.buttonPanel)
-            
-            let configuration = UIImage.SymbolConfiguration(pointSize: 50, weight: .light, scale: .medium)
-            let cameraImage = UIImage(systemName: "camera.circle")!
-                .withTintColor(UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), renderingMode: .alwaysOriginal)
-                .withConfiguration(configuration)
-            self.cameraButton = UIButton.systemButton(with: cameraImage, target: self, action: #selector(self.buttonPressed))
-            self.cameraButton.tag = 8
-            self.cameraButton.translatesAutoresizingMaskIntoConstraints = false
-            self.buttonPanel.addArrangedSubview(self.cameraButton)
-            
-            var imageName: String!
-            if #available(iOS 14.0, *) {
-                imageName = "rectangle.fill.on.rectangle.fill.circle"
-            } else {
-                imageName = "person.crop.circle.fill.badge.plus"
+            self.createButtonPanel(panelButtons: self.panelButtons) { (buttonsArr) in
+                buttonsArr.forEach { (button) in
+                    button.addTarget(self, action: #selector(self.buttonPressed(_:)), for: .touchUpInside)
+                }
             }
             
-            let pickerImage = UIImage(systemName: imageName)!
-                .withTintColor(UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), renderingMode: .alwaysOriginal)
-                .withConfiguration(configuration)
-            self.imagePickerButton = UIButton.systemButton(with: pickerImage, target: self, action: #selector(self.buttonPressed(_:)))
-            self.imagePickerButton.tag = 9
-            self.imagePickerButton.translatesAutoresizingMaskIntoConstraints = false
-            self.buttonPanel.addArrangedSubview(self.imagePickerButton)
-            
-            let documentPickerImage = UIImage(systemName: "doc.circle")!
-                .withTintColor(UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), renderingMode: .alwaysOriginal)
-                .withConfiguration(configuration)
-            self.documentPickerButton = UIButton.systemButton(with: documentPickerImage, target: self, action: #selector(self.buttonPressed(_:)))
-            self.documentPickerButton.tag = 10
-            self.documentPickerButton.translatesAutoresizingMaskIntoConstraints = false
-            self.buttonPanel.addArrangedSubview(self.documentPickerButton)
-            
-            self.configureImagePreview()
+            self.configureImagePreview(postType: .tangible)
             
             self.submitButton = UIButton()
             self.submitButton.setTitle("Submit", for: .normal)
@@ -220,7 +207,7 @@ extension ReviewPostViewController {
             self.scrollView.addSubview(self.submitButton)
             
             self.imagePreviewConstraintHeight = self.imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 0)
-            NSLayoutConstraint.activate([
+            self.constraints.append(contentsOf: [
                 self.ratingTitleLabel.topAnchor.constraint(equalTo: self.displayNameTextField.bottomAnchor, constant: 40),
                 self.ratingTitleLabel.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
                 self.ratingTitleLabel.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
@@ -240,16 +227,11 @@ extension ReviewPostViewController {
                 self.reviewTextView.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
                 self.reviewTextView.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
                 self.reviewTextView.heightAnchor.constraint(equalToConstant: 150),
+            ])
+            
+            self.setButtonPanelConstraints(topView: self.reviewTextView)
 
-                self.buttonPanel.topAnchor.constraint(equalTo: self.reviewTextView.bottomAnchor, constant: 30),
-                self.buttonPanel.widthAnchor.constraint(equalTo: self.scrollView.widthAnchor, multiplier: 0.9),
-                self.buttonPanel.heightAnchor.constraint(equalToConstant: 80),
-                self.buttonPanel.centerXAnchor.constraint(equalTo: self.scrollView.centerXAnchor),
-                
-                self.cameraButton.heightAnchor.constraint(equalToConstant: 80),
-                self.imagePickerButton.heightAnchor.constraint(equalToConstant: 80),
-                self.documentPickerButton.heightAnchor.constraint(equalToConstant: 80),
-                
+            self.constraints.append(contentsOf: [
                 self.imagePreviewVC.view.topAnchor.constraint(equalTo: self.buttonPanel.bottomAnchor, constant: 20),
                 self.imagePreviewVC.view.widthAnchor.constraint(equalTo: self.view.widthAnchor, multiplier: 0.9),
                 self.imagePreviewVC.view.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
@@ -260,12 +242,14 @@ extension ReviewPostViewController {
                 self.submitButton.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
                 self.submitButton.heightAnchor.constraint(equalToConstant: 50),
             ])
+            
+            NSLayoutConstraint.activate(self.constraints)
         }
     }
     
     // MARK: - configureImagePreview
-    func configureImagePreview() {
-        imagePreviewVC = ImagePreviewViewController()
+    func configureImagePreview(postType: PostType) {
+        imagePreviewVC = ImagePreviewViewController(postType: postType)
         imagePreviewVC.data = previewDataArr
         imagePreviewVC.delegate = self
         imagePreviewVC.view.translatesAutoresizingMaskIntoConstraints = false
@@ -281,18 +265,6 @@ extension ReviewPostViewController {
         
         if previewDataArr.count < 3 {
             switch sender.tag {
-                case 0..<5:
-                    break
-//                    numOfStars = sender.tag
-//                    for case let av as UIButton in stackView.arrangedSubviews {
-//                        if av.tag <= sender.tag {
-//                            guard let image = UIImage(systemName: "star.fill") else { return }
-//                            av.setImage(image.withTintColor(starTintColor, renderingMode: .alwaysOriginal), for: .normal)
-//                        } else {
-//                            guard let image = UIImage(systemName: "star") else { return }
-//                            av.setImage(image.withTintColor(starTintColor, renderingMode: .alwaysOriginal), for: .normal)
-//                        }
-//                    }
                 case 6:
                     didSubmit()
                 case 7:

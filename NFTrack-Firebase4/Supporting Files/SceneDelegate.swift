@@ -64,10 +64,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     let listNav = UINavigationController(rootViewController: listVC)
                     tabBar.addChild(listNav)
                     
-                    let postVC = PostViewController()
-                    postVC.title = "Post"
+                    let newPostVC = NewPostViewController()
+                    newPostVC.title = "Post"
                     
-                    let postNav = UINavigationController(rootViewController: postVC)
+                    let postNav = UINavigationController(rootViewController: newPostVC)
                     tabBar.addChild(postNav)
                     
                     let chatListVC = ChatListViewController()
