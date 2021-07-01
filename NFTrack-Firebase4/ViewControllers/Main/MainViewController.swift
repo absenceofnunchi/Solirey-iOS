@@ -15,19 +15,19 @@ struct MainMenu {
 
 class MainViewController: UIViewController {
     private let data = [
-        MainMenu(image: UIImage(named: "electronics")!, title: Category.electronics.rawValue),
-        MainMenu(image: UIImage(named: "car")!, title: Category.vehicle.rawValue),
-        MainMenu(image: UIImage(named: "real estate")!, title: Category.realEstate.rawValue),
-        MainMenu(image: UIImage(named: "kayak")!, title: Category.other.rawValue)
+        MainMenu(image: UIImage(named: "electronics")!, title: Category.electronics.asString()),
+        MainMenu(image: UIImage(named: "car")!, title: Category.vehicle.asString()),
+        MainMenu(image: UIImage(named: "digital")!, title: Category.digital.asString()),
+        MainMenu(image: UIImage(named: "real estate")!, title: Category.realEstate.asString()),
+        MainMenu(image: UIImage(named: "kayak")!, title: Category.other.asString())
     ]
-    private var searchController: UISearchController!
-    private var searchResultsController: SearchResultsController!
+    final var searchController: UISearchController!
+    final var searchResultsController: SearchResultsController!
     private var collectionView: UICollectionView! = nil
-    private let alert = Alerts()
-    private var category: String! = "Electronics"
-    private var searchItems = [String]()
+    final let alert = Alerts()
+    final var category: ScopeButtonCategory! = .latest
     private var optionsBarItem: UIBarButtonItem!
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -42,99 +42,17 @@ class MainViewController: UIViewController {
 
 extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
     // configure search controller
-    func configureSearchController() {
+    private func configureSearchController() {
         searchResultsController = SearchResultsController()
-        let nav = UINavigationController(rootViewController: searchResultsController)        
+        let nav = UINavigationController(rootViewController: searchResultsController)
         searchController = UISearchController(searchResultsController: nav)
         searchController.searchResultsUpdater = self
         searchController.delegate = self
 //        searchController.hidesNavigationBarDuringPresentation = false
         searchController.obscuresBackgroundDuringPresentation = false
-        
+
         definesPresentationContext = true
         navigationItem.searchController = searchController
-    }
-    
-    func configureSearchBar() {
-        // search bar attributes
-        let searchBar = searchController!.searchBar
-        searchBar.delegate = self
-        searchBar.autocapitalizationType = .none
-        searchBar.tintColor = .black
-        searchBar.searchBarStyle = .minimal
-//        searchBar.scopeButtonTitles = [Category.electronics.rawValue, Category.vehicle.rawValue, Category.realEstate.rawValue, Category.other.rawValue, Category.other.rawValue]
-        
-        
-        
-        searchController.automaticallyShowsScopeBar = true
-        let segmentedControl = UISegmentedControl(items: ["Electronics, Real Estate"])
-        segmentedControl.selectedSegmentIndex = 0
-        segmentedControl.autoresizingMask = .flexibleWidth
-        segmentedControl.frame = CGRect(x: 0, y: 0, width: 300, height: 30)
-//        segmentedControl.addTarget(self, action: #selector(segmentedControlSelectionDidChange(_:)), for: .valueChanged)
-        searchController.navigationItem.titleView = segmentedControl
-        
-        
-        
-        
-        
-        
-        // search text field attributes
-        let searchTextField = searchBar.searchTextField
-        searchTextField.borderStyle = .roundedRect
-        searchTextField.layer.cornerRadius = 8
-        searchTextField.layer.borderWidth = 1
-        searchTextField.layer.borderColor = UIColor(red: 224/255, green: 224/255, blue: 224/255, alpha: 1).cgColor
-        searchTextField.textColor = .gray
-        searchTextField.attributedPlaceholder = NSAttributedString(string: "Enter Search Here", attributes: [NSAttributedString.Key.foregroundColor : UIColor.gray])
-    }
-    
-    // MARK: - searchBarSearchButtonClicked
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        guard let text = searchController.searchBar.text else { return }
-
-        // Strip out all the leading and trailing spaces.
-        let whitespaceCharacterSet = CharacterSet.whitespaces
-        let strippedString = text.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
-        searchItems = strippedString.components(separatedBy: " ") as [String]
-        
-        fetchData(category: category)
-        searchBar.resignFirstResponder()
-    }
-    
-    func fetchData(category: String) {
-        DispatchQueue.global(qos: .background).async { [weak self] in
-            self?.searchResultsController.postArr.removeAll()
-            FirebaseService.shared.db.collection("post")
-                .whereField("tags", arrayContainsAny: self!.searchItems)
-                .whereField("category", isEqualTo: category)
-                .order(by: "date", descending: true)
-                .getDocuments {(querySnapshot, err) in
-                    if let err = err {
-                        self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
-                    }
-                    
-                    defer {
-                        DispatchQueue.main.async {
-                            self?.searchResultsController.tableView.reloadData()
-                        }
-                    }
-                    
-                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                        DispatchQueue.main.async {
-                            self?.searchResultsController.postArr = data
-                        }
-                    }
-                }
-        }
-    }
-    
-    func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
-        if let selectedCategory = Category.getCategory(num: selectedScope), searchItems.count > 0 {
-            self.category = selectedCategory.rawValue
-            fetchData(category: self.category)
-        }
-//        updateSearchResults(for: searchController)
     }
 }
 
@@ -161,7 +79,7 @@ extension MainViewController {
 }
 
 extension MainViewController: UICollectionViewDelegate {
-    func configureHierarchy() {
+    private func configureHierarchy() {
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout())
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.backgroundColor = .systemBackground
@@ -174,7 +92,7 @@ extension MainViewController: UICollectionViewDelegate {
         view.addSubview(collectionView)
     }
     
-    func setConstraints() {
+    private func setConstraints() {
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
             collectionView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
@@ -218,7 +136,7 @@ extension MainViewController: UICollectionViewDataSource {
 }
 
 extension MainViewController {
-    func configureOptionsBar() {
+    private func configureOptionsBar() {
         let barButtonMenu = UIMenu(title: "", children: [
             UIAction(title: NSLocalizedString("Saved Items", comment: ""), image: UIImage(systemName: "square.grid.2x2"), handler: menuHandler),
             UIAction(title: NSLocalizedString("Quick UI Check", comment: ""), image: UIImage(systemName: "c.circle"), handler: menuHandler),
@@ -234,7 +152,7 @@ extension MainViewController {
         }
     }
     
-    @objc func menuHandler(action: UIAction) {
+    @objc private func menuHandler(action: UIAction) {
         switch action.title {
             case "Saved Items":
                 let savedVC = SavedViewController()

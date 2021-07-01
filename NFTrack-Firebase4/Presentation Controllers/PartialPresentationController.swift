@@ -31,6 +31,14 @@ extension PartialPresentationController {
                 }
             }
         }
+        
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped))
+        shadow.addGestureRecognizer(tap)
+    }
+    
+    @objc func tapped() {
+        self.presentedViewController.dismiss(animated: true, completion: nil)
     }
 }
 

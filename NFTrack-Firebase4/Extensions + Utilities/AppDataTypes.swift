@@ -230,25 +230,58 @@ struct ViewControllerIdentifiers {
 }
 
 // MARK: - Category
-enum Category: String {
-    case electronics = "Electronics"
-    case vehicle = "Vehicle"
-    case realEstate = "Real Estate"
-    case other = "Other"
+//enum Category: String {
+//    case electronics = "Electronics"
+//    case vehicle = "Vehicle"
+//    case realEstate = "Real Estate"
+//    case digital = "Digital"
+//    case other = "Other"
+//}
+
+enum Category: Int, CaseIterable {
+    case electronics
+    case vehicle
+    case digital
+    case realEstate
+    case other
     
-    static func getCategory(num: Int) -> Category? {
-        guard num >= 0, num < 4 else { return nil }
+    func asString() -> String {
+        switch self {
+            case .electronics:
+                return "Electronics"
+            case .vehicle:
+                return "Vehicle"
+            case .realEstate:
+                return "Real Estate"
+            case .digital:
+                return "Digital"
+            case .other:
+                return "Other"
+        }
+    }
+    
+    static func getAll() -> [String] {
+        return Category.allCases.map { $0.asString() }
+    }
+}
+
+// MARK: - ScopeButtonCategory
+enum ScopeButtonCategory: String, CaseIterable {
+    case latest = "Latest"
+    case categoryFilter = "Category Filter"
+    case users = "Users"
+    
+    static func getCategory(num: Int) -> ScopeButtonCategory? {
+        guard num >= 0, num < ScopeButtonCategory.allCases.count else { return nil }
         switch num {
             case 0:
-                return .electronics
+                return .latest
             case 1:
-                return .vehicle
+                return .categoryFilter
             case 2:
-                return .realEstate
-            case 3:
-                return .other
+                return .users
             default:
-                return .other
+                return .none
         }
     }
 }
@@ -278,6 +311,7 @@ struct UserDefaultKeys {
     static let userId: String = "userId"
     static let displayName: String = "displayName"
     static let photoURL: String = "photoURL"
+    static let filterSettings: String = "filterSettings"
 }
 
 

@@ -45,6 +45,9 @@
 		495FD317268AAB3100F1D81D /* DigitalAssetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD316268AAB3100F1D81D /* DigitalAssetViewController.swift */; };
 		495FD31C268B9DCA00F1D81D /* NewPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */; };
 		495FD324268C034000F1D81D /* QuickUICheckViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD323268C034000F1D81D /* QuickUICheckViewController.swift */; };
+		495FD329268D284E00F1D81D /* MainViewController + SearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD328268D284E00F1D81D /* MainViewController + SearchBar.swift */; };
+		495FD32E268D292E00F1D81D /* FilterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD32D268D292E00F1D81D /* FilterViewController.swift */; };
+		495FD333268D402900F1D81D /* FilterCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD332268D402900F1D81D /* FilterCell.swift */; };
 		4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45B2641B001005B3268 /* AppDelegate.swift */; };
 		4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45D2641B001005B3268 /* SceneDelegate.swift */; };
 		4964E4602641B001005B3268 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45F2641B001005B3268 /* SignInViewController.swift */; };
@@ -186,6 +189,9 @@
 		495FD316268AAB3100F1D81D /* DigitalAssetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitalAssetViewController.swift; sourceTree = "<group>"; };
 		495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewPostViewController.swift; sourceTree = "<group>"; };
 		495FD323268C034000F1D81D /* QuickUICheckViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickUICheckViewController.swift; sourceTree = "<group>"; };
+		495FD328268D284E00F1D81D /* MainViewController + SearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + SearchBar.swift"; sourceTree = "<group>"; };
+		495FD32D268D292E00F1D81D /* FilterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterViewController.swift; sourceTree = "<group>"; };
+		495FD332268D402900F1D81D /* FilterCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterCell.swift; sourceTree = "<group>"; };
 		4964E4582641B001005B3268 /* NFTrack-Firebase4.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NFTrack-Firebase4.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4964E45B2641B001005B3268 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4964E45D2641B001005B3268 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -504,6 +510,7 @@
 				493333652682860000B8BFC2 /* ReviewCell.swift */,
 				49DEFF6926868065004C2DD0 /* ImagePreviewHeaderView.swift */,
 				495FD311268A3D2000F1D81D /* ProfilePostCell.swift */,
+				495FD332268D402900F1D81D /* FilterCell.swift */,
 			);
 			path = "Cells and Supplementary Views";
 			sourceTree = "<group>";
@@ -614,6 +621,7 @@
 				497A9B1E2658927200F09CAA /* MainViewController.swift */,
 				49409A74265946870060193C /* SearchResultsViewController.swift */,
 				49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */,
+				495FD328268D284E00F1D81D /* MainViewController + SearchBar.swift */,
 				496D56C42659FF2100C3E7FD /* MainDetailViewController.swift */,
 				49E75A02266A7C670064BB34 /* HistoryViewController.swift */,
 				499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */,
@@ -621,6 +629,7 @@
 				499F9957266B2ADB00FC6CDE /* WebViewController.swift */,
 				499703092676CBFF001DD80A /* SavedViewController.swift */,
 				495FD323268C034000F1D81D /* QuickUICheckViewController.swift */,
+				495FD32D268D292E00F1D81D /* FilterViewController.swift */,
 			);
 			path = Main;
 			sourceTree = "<group>";
@@ -959,12 +968,14 @@
 				4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */,
 				496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */,
 				493BF9D7264C4DE100B9C9D2 /* BackgroundView2.swift in Sources */,
+				495FD333268D402900F1D81D /* FilterCell.swift in Sources */,
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
 				495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */,
 				493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */,
 				49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */,
 				496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */,
 				495FD2D826892FDC00F1D81D /* StarRatingView.swift in Sources */,
+				495FD329268D284E00F1D81D /* MainViewController + SearchBar.swift in Sources */,
 				499F9958266B2ADB00FC6CDE /* WebViewController.swift in Sources */,
 				496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */,
 				4964E4602641B001005B3268 /* SignInViewController.swift in Sources */,
@@ -1046,6 +1057,7 @@
 				493333322681116F00B8BFC2 /* ReviewPostViewController.swift in Sources */,
 				4964E50F264767A6005B3268 /* ImagePreviewViewController.swift in Sources */,
 				4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */,
+				495FD32E268D292E00F1D81D /* FilterViewController.swift in Sources */,
 				496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */,
 				4964E52C2648B096005B3268 /* MyPresentationController.swift in Sources */,
 				495FD2CE2687B33600F1D81D /* CustomPreviewItem.swift in Sources */,

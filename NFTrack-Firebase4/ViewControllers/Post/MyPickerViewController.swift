@@ -8,11 +8,11 @@
 import UIKit
 
 class MyPickerVC : UIInputViewController {
-    var currentPep = Category.electronics.rawValue
-    var pep = [Category.electronics.rawValue, Category.vehicle.rawValue, Category.realEstate.rawValue, Category.other.rawValue]
+    var currentPep = Category.electronics.asString()
+//    var pep = [Category.electronics.rawValue, Category.vehicle.rawValue, Category.realEstate.rawValue, Category.other.rawValue]
+    var pep = Category.getAll()
     
     override func viewDidLoad() {
-        
         let iv = self.inputView!
         iv.translatesAutoresizingMaskIntoConstraints = false
         

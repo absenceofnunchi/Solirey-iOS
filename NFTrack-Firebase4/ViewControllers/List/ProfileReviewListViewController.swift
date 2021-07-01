@@ -47,7 +47,7 @@ class ProfileReviewListViewController: ProfileListViewController<Review>, Pagina
         self.navigationController?.pushViewController(reviewDetailVC, animated: true)
     }
     
-    final func didFetchPaginate(reviewArr: [Review]?,  error: Error?) {
+    final func didFetchPaginate(data: [Review]?,  error: Error?) {
         if let error = error {
             self.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
         }

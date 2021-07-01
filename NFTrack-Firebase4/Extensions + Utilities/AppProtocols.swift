@@ -575,13 +575,13 @@ protocol DateConfigurable {
 
 protocol PaginateFetchDelegate {
     associatedtype FetchResult
-    func didFetchPaginate(reviewArr: [FetchResult]?, error: Error?)
+    func didFetchPaginate(data: [FetchResult]?, error: Error?)
     func didGetLastSnapshot(_ lastSnapshot: QueryDocumentSnapshot)
 }
 
 extension PaginateFetchDelegate {
-    func didFetchPaginate(reviewArr: [FetchResult]?, error: Error?) {
-        print("fetch")
+    func didFetchPaginate(data: [FetchResult]?, error: Error?) {
+       
     }
 
     func didGetLastSnapshot(_ lastSnapshot: QueryDocumentSnapshot) {

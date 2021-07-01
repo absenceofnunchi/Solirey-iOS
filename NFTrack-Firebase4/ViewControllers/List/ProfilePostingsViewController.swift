@@ -48,7 +48,7 @@ class ProfilePostingsViewController: ProfileListViewController<Post>, PaginateFe
         self.navigationController?.pushViewController(listDetailVC, animated: true)
     }
     
-    final func didFetchPaginate(postArr: [Post]?,  error: Error?) {
+    final func didFetchPaginate(data: [Post]?,  error: Error?) {
         if let error = error {
             self.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
         }

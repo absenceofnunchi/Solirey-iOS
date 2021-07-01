@@ -91,7 +91,7 @@ extension ImagePreviewViewController {
 }
 
 extension ImagePreviewViewController: UICollectionViewDelegate {
-    func configureHierarchy() {
+    private func configureHierarchy() {
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout(postType: postType))
         collectionView.translatesAutoresizingMaskIntoConstraints = false
 //        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -105,7 +105,7 @@ extension ImagePreviewViewController: UICollectionViewDelegate {
         view.addSubview(collectionView)
     }
     
-    func setConstraints() {
+    private func setConstraints() {
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -172,7 +172,7 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
 
 extension ImagePreviewViewController {
     // MARK: - loadImageFromDiskWith
-    func loadImageFromDiskWith(fileName: String) -> UIImage? {
+    private func loadImageFromDiskWith(fileName: String) -> UIImage? {
         let documentDirectory = FileManager.SearchPathDirectory.documentDirectory
         let userDomainMask = FileManager.SearchPathDomainMask.userDomainMask
         let paths = NSSearchPathForDirectoriesInDomains(documentDirectory, userDomainMask, true)
@@ -187,7 +187,7 @@ extension ImagePreviewViewController {
     }
     
     // MARK: - delete file
-    func deleteLocalFile(filePath : URL) -> Bool{
+    private func deleteLocalFile(filePath : URL) -> Bool{
 //        let fileManager = FileManager.default
 //        let docDir = try! fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
 //        let filePath = docDir.appendingPathComponent(fileName)
@@ -225,7 +225,7 @@ extension ImagePreviewViewController {
         }
     }
     
-    func deleteAllLocalFiles() {
+    private func deleteAllLocalFiles() {
         let fileManager = FileManager.default
         let documentsUrl =  fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first! as NSURL
         let documentsPath = documentsUrl.path
@@ -253,7 +253,7 @@ extension ImagePreviewViewController {
         }
     }
     
-    func deletePreviewImage(indexPath: IndexPath) {
+    private func deletePreviewImage(indexPath: IndexPath) {
         let filePath = data[indexPath.row].filePath
         self.collectionView.deleteItems(at: [indexPath])
         self.data.remove(at: indexPath.row)
