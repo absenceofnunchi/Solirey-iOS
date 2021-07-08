@@ -8,11 +8,11 @@
 import UIKit
 import Firebase
 import FirebaseMessaging
+import FirebaseFirestore
 import UserNotifications
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
     let gcmMessageIDKey = "gcm.message_id"
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -50,6 +50,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
             }
         }
+        // chat message
+        // status update
+        // subscription
+        // https://firebase.google.com/docs/cloud-messaging/ios/topic-messaging#manage_topic_subscriptions_from_the_server
         
         if let options = launchOptions, let notification = options[UIApplication.LaunchOptionsKey.remoteNotification] as? [AnyHashable : Any] {
             print("notification", notification)
@@ -171,34 +175,168 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let sceneDelegate = windowScene.delegate as? SceneDelegate
         else {
+            completionHandler()
             return
         }
         
         if let rootViewController = sceneDelegate.window?.rootViewController {
-            // docId, sellerUserId, buyerUserId
-            // the sellerUserId/buyerUserId names are misnomers and have to be changed
-            // they simply have to be two members of a chat room
-            // simply going with how the chat room currently has sellerUserId/buyerUserId labels
-            // ChatVC will compare them against UserId
-            if let docId = userInfo["docId"] as? String,
-               let sellerUserId = userInfo["uid"] as? String,
-               let buyerUserId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId),
-               let displayName = userInfo["displayName"] as? String {
-                let chatModelCore = PostCoreModel(documentId: docId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
-                let userInfo = UserInfo(email: nil, displayName: displayName, photoURL: nil, uid: nil)
-                
-                if let tabBarController = rootViewController as? UITabBarController,
-                   let navController = tabBarController.selectedViewController as? UINavigationController {
+            guard let messageType = userInfo["messageType"] as? String else {
+                completionHandler()
+                return
+            }
+            
+            switch messageType {
+                case "chat":
+                    // docId, sellerUserId, buyerUserId
+                    // the sellerUserId/buyerUserId names are misnomers and have to be changed
+                    // they simply have to be two members of a chat room
+                    // simply going with how the chat room currently has sellerUserId/buyerUserId labels
+                    // ChatVC will compare them against UserId
+                    if let docId = userInfo["docId"] as? String,
+                       let sellerUserId = userInfo["uid"] as? String,
+                       let buyerUserId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId),
+                       let displayName = userInfo["displayName"] as? String {
+                        let chatModelCore = PostCoreModel(documentId: docId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
+                        let userInfo = UserInfo(email: nil, displayName: displayName, photoURL: nil, uid: nil)
+                        
+                        if let tabBarController = rootViewController as? UITabBarController,
+                           let navController = tabBarController.selectedViewController as? UINavigationController {
+                            
+                            let chatVC = ChatViewController()
+                            chatVC.post = chatModelCore
+                            chatVC.userInfo = userInfo
+                            navController.pushViewController(chatVC, animated: true)
+                        }
+                    }
+                case "status":
+                    guard let docId = userInfo["docID"] as? String else {
+                        completionHandler()
+                        return
+                    }
                     
-                    let chatVC = ChatViewController()
-                    chatVC.post = chatModelCore
-                    chatVC.userInfo = userInfo
-                    navController.pushViewController(chatVC, animated: true)
-                }
+                    let docRef = FirebaseService.shared.db.collection("post").document(docId)
+                    docRef.getDocument { [weak self] (document, error) in
+                        if let error = error {
+                            print("app delegate error", error)
+                            completionHandler()
+                            return
+                        }
+                        
+                        guard let document = document,
+                              let post = self?.parseDocument(document: document),
+                              let status = PostStatus(rawValue: post.status),
+                              let tabBarController = rootViewController as? UITabBarController,
+                              let navController = tabBarController.selectedViewController as? UINavigationController,
+                              let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) else {
+                            completionHandler()
+                            return
+                        }
+                        
+                        switch status {
+                            case .pending:
+                                /// buyer to seller
+                                guard userId == post.sellerUserId else {
+                                    completionHandler()
+                                    return
+                                }
+                                break
+                            case .transferred:
+                                /// seller to buyer
+                                guard userId == post.buyerUserId else {
+                                    completionHandler()
+                                    return
+                                }
+                                break
+                            case .complete:
+                                guard userId == post.sellerUserId else {
+                                    completionHandler()
+                                    return
+                                }
+                                break
+                            default:
+                                break
+                        }
+                        
+                        let listDetailVC = ListDetailViewController()
+                        listDetailVC.post = post
+                        navController.pushViewController(listDetailVC, animated: true)
+                        //                                      let viewControllers = tabBarController.viewControllers else { return }
+                        //                                for case let navController as UINavigationController in viewControllers where navController.title == "List" {
+                        //                                    if let listVC = navController.viewControllers.first as? ListViewController {
+                        //                                        listVC.segmentedControl.selectedSegmentIndex = 1
+                        //                                        listVC.segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+                        //
+                        //                                    }
+                        //                                }
+                    }
+                default:
+                    break
             }
         }
         
         completionHandler()
+    }
+    
+    func parseDocument(document: DocumentSnapshot) -> Post? {
+        guard let data = document.data() else { return nil }
+        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type: String!
+        var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
+        var files, savedBy: [String]?
+        data.forEach { (item) in
+            switch item.key {
+                case "sellerUserId":
+                    sellerUserId = item.value as? String
+                case "senderAddress":
+                    sellerHash = item.value as? String
+                case "title":
+                    title = item.value as? String
+                case "description":
+                    description = item.value as? String
+                case "date":
+                    let timeStamp = item.value as? Timestamp
+                    date = timeStamp?.dateValue()
+                case "files":
+                    files = item.value as? [String]
+                case "price":
+                    price = item.value as? String
+                case "mintHash":
+                    mintHash = item.value as? String
+                case "escrowHash":
+                    escrowHash = item.value as? String
+                case "itemIdentifier":
+                    id = item.value as? String
+                case "transferHash":
+                    transferHash = item.value as? String
+                case "status":
+                    status = item.value as? String
+                case "confirmPurchaseHash":
+                    confirmPurchaseHash = item.value as? String
+                case "confirmReceivedHash":
+                    confirmReceivedHash = item.value as? String
+                case "confirmPurchaseDate":
+                    let timeStamp = item.value as? Timestamp
+                    confirmPurchaseDate = timeStamp?.dateValue()
+                case "transferDate":
+                    let timeStamp = item.value as? Timestamp
+                    transferDate = timeStamp?.dateValue()
+                case "confirmReceivedDate":
+                    let timeStamp = item.value as? Timestamp
+                    confirmReceivedDate = timeStamp?.dateValue()
+                case "buyerHash":
+                    buyerHash = item.value as? String
+                case "savedBy":
+                    savedBy = item.value as? [String]
+                case "buyerUserId":
+                    buyerUserId = item.value as? String
+                case "type":
+                    type = item.value as? String
+                default:
+                    break
+            }
+        }
+
+        let post = Post(documentId: document.documentID, title: title, description: description, date: date, files: files, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy, type: type)
+        return post
     }
 }
 // [END ios_10_message_handling]

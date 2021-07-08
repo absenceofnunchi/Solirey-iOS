@@ -40,6 +40,7 @@ class ListDetailViewController: ParentDetailViewController {
     final var chatButtonItem: UIBarButtonItem!
     final var starButtonItem: UIBarButtonItem!
     weak var delegate: RefetchDataDelegate?
+    final var observation: NSKeyValueObservation?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -48,6 +49,21 @@ class ListDetailViewController: ParentDetailViewController {
         /// and the topAnchor of the tableView is against the updateStatusButton
         setHistoryVC()
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if observation != nil {
+            observation?.invalidate()
+        }
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if observation != nil {
+            observation?.invalidate()
+        }
+    }
+    
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -186,6 +202,10 @@ extension ListDetailViewController {
                         self.delegate?.didFetchData()
                     }
                 }
+            case 8:
+                break
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Delivery Method", detail: InfoText.transferPending)])
+                self.present(infoVC, animated: true, completion: nil)
             default:
                 break
         }
@@ -256,12 +276,11 @@ extension ListDetailViewController {
                                                     buyerTag = 3
                                                 } else {
                                                     buyerButtonTitle = "Transfer Pending"
-                                                    buyerTag = 7
+                                                    buyerTag = 8
                                                 }
                                             case 2:
                                                 status = "Inactive"
                                                 sellerButtonTitle = "Transaction Completed"
-                                                sellerTag = 5
                                                 
                                                 buyerButtonTitle = "Sell"
                                                 buyerTag = 4
@@ -368,9 +387,17 @@ extension ListDetailViewController {
                                                         if let error = error {
                                                             self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                         } else {
-                                                            self?.alert.showDetail("Success!", with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.", alignment: .left, for: self) {
-                                                                self?.getStatus()
-                                                                self?.navigationController?.popViewController(animated: true)
+                                                            /// send the push notification to the seller
+                                                            guard let `self` = self else { return }
+                                                            self.sendNotification(sender: self.userId, recipient: self.post.sellerUserId, content: "Your item has been purchased!", docID: self.post.documentId) { [weak self] (error) in
+                                                                if let error = error {
+                                                                    print("error", error)
+                                                                }
+                                                                
+                                                                self?.alert.showDetail("Success!", with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.", alignment: .left, for: self) {
+                                                                    self?.getStatus()
+                                                                    self?.navigationController?.popViewController(animated: true)
+                                                                }
                                                             }
                                                         }
                                                     })
@@ -385,9 +412,16 @@ extension ListDetailViewController {
                                                         if let error = error {
                                                             self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                         } else {
-                                                            self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", alignment: .left, for: self) {
-                                                                self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
-                                                                self?.navigationController?.popViewController(animated: true)
+                                                            /// send the push notification to the seller
+                                                            guard let `self` = self else { return }
+                                                            self.sendNotification(sender: self.userId, recipient: self.post.sellerUserId, content: "Your item has been received by the buyer!", docID: self.post.documentId) { [weak self] (error) in
+                                                                if let error = error {
+                                                                    print("error", error)
+                                                                }
+                                                                self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", alignment: .left, for: self) {
+                                                                    self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
+                                                                    self?.navigationController?.popViewController(animated: true)
+                                                                }
                                                             }
                                                         }
                                                     })
@@ -479,7 +513,7 @@ extension ListDetailViewController {
                 }
                 
                 guard let ti = tokenId else {
-                    self?.alert.showDetail("Error", with: "The item does not have token ID registered.", for: self)
+                    self?.alert.showDetail("Error", with: "The item does not have token ID registered. It may take up to 10 mins to process.", for: self)
                     return
                 }
                 
@@ -522,9 +556,17 @@ extension ListDetailViewController {
                                                     if let error = error {
                                                         self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                     } else {
-                                                        self?.alert.showDetail("Success!", with: "The token has been successfully transferred.", for: self) {
-                                                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
-                                                            self?.navigationController?.popViewController(animated: true)
+                                                        /// send the push notification to the seller
+                                                        guard let `self` = self, let buyerUserId = self.post.buyerUserId else { return }
+                                                        self.sendNotification(sender: self.userId, recipient: buyerUserId, content: "The seller has transferred the item!", docID: self.post.documentId) { [weak self] (error) in
+                                                            if let error = error {
+                                                                print("error", error)
+                                                            }
+                                                            
+                                                            self?.alert.showDetail("Success!", with: "The token has been successfully transferred.", for: self) {
+                                                                self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
+                                                                self?.navigationController?.popViewController(animated: true)
+                                                            }
                                                         }
                                                     }
                                                 })
@@ -569,5 +611,64 @@ extension ListDetailViewController {
                 self?.alert.showDetail("Sorry", with: "Unable to find the token to transfer.", for: self)
             }
         }
+    }
+}
+
+extension ListDetailViewController {
+    /// sender, recipient: firebase userId
+    /// content: the message to be show on the push notification
+    /// docID: the ID that'll be used to fetch the firebase entry once the recipient taps on the message
+    /// Post is not sent along with the message because 1) it's a class and 2) FCM only allows strings in the properties
+    func sendNotification(sender: String, recipient: String, content: String, docID: String, completion: @escaping (Error?) -> Void) {
+        // build request URL
+        guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/sendStatusNotification-sendStatusNotification") else {
+            return
+        }
+//        guard let requestURL = URL(string: "http://localhost:5001/nftrack-69488/us-central1/sendStatusNotification-sendStatusNotification") else {
+//            return
+//        }
+        
+        // prepare request
+        var request = URLRequest(url: requestURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        
+        print("sender", sender)
+        print("recipient", recipient)
+        print("content", content)
+        print("docID", docID)
+        let parameter: [String: Any] = [
+            "sender": sender,
+            "recipient": recipient,
+            "content": content,
+            "docID": docID
+        ]
+        
+        let paramData = try? JSONSerialization.data(withJSONObject: parameter, options: [])
+        request.httpBody = paramData
+        
+        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (_, response, error) -> Void in
+            if let error = error {
+                completion(error)
+            }
+            
+            if let response = response as? HTTPURLResponse {
+                print("response", response)
+                
+                let httpStatusCode = HTTPStatusCode(rawValue: response.statusCode)
+                completion(httpStatusCode)
+                
+                //                if !(200...299).contains(response.statusCode) {
+                //                    print("start1")
+                //                    // handle HTTP server-side error
+                //                }
+            }
+        })
+        
+        observation = task.progress.observe(\.fractionCompleted) {(progress, _) in
+            print("progress", progress)
+        }
+        
+        task.resume()
     }
 }

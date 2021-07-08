@@ -268,8 +268,7 @@ enum Category: Int, CaseIterable {
 // MARK: - ScopeButtonCategory
 enum ScopeButtonCategory: String, CaseIterable {
     case latest = "Latest"
-    case categoryFilter = "Category Filter"
-    case users = "Users"
+    case categoryFilter = "Filtered Search"
     
     static func getCategory(num: Int) -> ScopeButtonCategory? {
         guard num >= 0, num < ScopeButtonCategory.allCases.count else { return nil }
@@ -278,11 +277,13 @@ enum ScopeButtonCategory: String, CaseIterable {
                 return .latest
             case 1:
                 return .categoryFilter
-            case 2:
-                return .users
             default:
                 return .none
         }
+    }
+    
+    static func getAll() -> [String] {
+        return ScopeButtonCategory.allCases.map { $0.rawValue }
     }
 }
 
@@ -398,4 +399,73 @@ enum PostType: Int, CaseIterable {
         }
         return segmentTextArr
     }
+}
+
+// MARK: - Delivery method
+enum DeliveryMethod: String {
+    case shipping = "Shipping"
+    case inPerson = "In Person Pickup"
+}
+
+enum PaymentMethod: String {
+    case escrow = "Escrow"
+    case directTransfer = "Direct Transfer"
+    case auctionBeneficiary = "Auction Beneficiary"
+}
+
+// MARK: - FilterSettings
+struct FilterSettings: Codable {
+    let priceLimit: Float
+    var itemIndexPath: IndexPath?
+    var priceIsDescending: Bool = false
+    var dateIsDescending: Bool = false
+}
+
+
+struct InfoText {
+    static let deliveryMethod = """
+    The method of payment is escrow for shipping and a direct account-to-account transfer for the in-person pickup. The method cannot be modified after the item has been posted.
+    """
+    static let transferPending = """
+    You're almost there!. Currently waiting for the owner to transfer the ownership on the blockchain so hang tight!
+    """
+    
+    static let escrow = """
+    Leveraging the smart contracts' ability to facilitate two trustless parties to easily exchange goods/services without an intermediary, escrow is the designated payment method for shipping a non-digital product. How does it work?
+    
+    When you post your item, an escrow smart contract gets deployed to the blockchain. Along with the contract is required a deposit for the item you're selling. Why do you need to make a deposit if you're the seller?  It's so that the buyer and the seller both have the incentive to complete the transaction in a timely manner.
+
+    The deposit amount required is two times the price of the item. For example, if you are pricing your item at 1 ETH, the deposit is 2 x 1 = 2 ETH. The deposit is fully refunded upon the buyer's acceptence of your item. The buyer also makes a deposit on top of the price of the item which means if your item is priced at 1 ETH, the total amount required to purchase your item is 3 ETH.  Upon the buyer's acceptence of your item, the price of your item gets paid to your account and the deposit gets refunded back to the buyer.  If the buyer does not receive your item, your deposit as well as the buyer's deposit gets locked up in the escrow's contract indefinitely.
+
+    To sum up, following is the order of purchasing a non-digital good through an escrow contract:
+
+    1. First, you post your item along with the escrow contract and the deposit.
+
+    2. The buyer purchases the item by paying the price of the item along with the deposit into the escrow account.
+
+    3. You ship your item to the buyer's address and press "Transfer Ownership" on the app.
+
+    4. The buyer confirms the arrival of your item and the item is in a condition as represented.
+
+    5. The deposit gets paid out to both parties.
+    """
+    static let directTransfer = """
+    Direct transfer is the designated payment method for in-person pickup. The wallet on the app has to be used to send the ether in order for the item's corresponding token on the blockchain to be transferred to your ownership.
+    """
+    
+    static let onlineDirect = """
+    Direct sale is the designated format for tangible items, as opposed to the auction format available to the digital items.
+    """
+    
+    static let onlineDigital = """
+    A P2P transfer using the escrow payment method.  See "Escrow" from the information button of "Payment Method"
+    """
+    
+    static let auctionBeneficiary = """
+    As the beneficiary of the auction, you get to withdraw the final bidding amount from the auction smart contract after the auction has ended.
+    """
+    
+    static let auction = """
+    An auction smart contract gets deployed to the blockchain when you post your item.  You set the bidding time limit. The starting price is from zero.  When the auction is finished, the token gets transferred to the buyer and you get to withdraw the final bid amount as a beneficiary. If no bid exists, you get to withdraw the token.
+    """
 }

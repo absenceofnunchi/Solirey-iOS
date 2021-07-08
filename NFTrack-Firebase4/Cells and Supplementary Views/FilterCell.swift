@@ -9,7 +9,6 @@ import UIKit
 
 class FilterCell: UICollectionViewCell {
     static let reuseIdentifier = "FilterCell"
-    var imageView = UIImageView()
     var titleLabel = UILabel()
     
     override init(frame: CGRect) {
@@ -21,16 +20,24 @@ class FilterCell: UICollectionViewCell {
     required init?(coder: NSCoder) {
         fatalError("not implemnted")
     }
+    
+    override var isSelected: Bool {
+        didSet {
+            if isSelected {
+                titleLabel.textColor = .white
+                contentView.backgroundColor = #colorLiteral(red: 1, green: 0.4932718873, blue: 0.4739984274, alpha: 1)
+            }else {
+                titleLabel.textColor = .gray
+                contentView.backgroundColor = .white
+            }
+        }
+    }
 }
 
 extension FilterCell {
     func configure() {
-//        imageView.translatesAutoresizingMaskIntoConstraints = false
-//        contentView.addSubview(imageView)
-        
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.font = UIFont.systemFont(ofSize: 15)
-        titleLabel.textColor = .gray
         titleLabel.textAlignment = .center
         contentView.addSubview(titleLabel)
         
@@ -42,19 +49,12 @@ extension FilterCell {
     
     func setConstraints() {
         NSLayoutConstraint.activate([
-//            imageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 5),
-//            imageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-//            imageView.heightAnchor.constraint(equalToConstant: 25),
-//            imageView.widthAnchor.constraint(equalToConstant: 25),
-            
-//            titleLabel.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 5),
             titleLabel.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 1),
             titleLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor),
         ])
     }
     
     func set(title: String) {
-//        imageView.image = mainMenu.image
         titleLabel.text = title
     }
 }

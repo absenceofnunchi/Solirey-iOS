@@ -58,10 +58,8 @@ extension WalletViewController {
 
 extension WalletViewController: WalletDelegate {
     func didProcessWallet() {
-        print("self.children", self.children)
         if let _ = localDatabase.getWallet() {
             newPageVC = RegisteredWalletViewController()
-            print("newPageVC", newPageVC as Any)
             (newPageVC as! RegisteredWalletViewController).delegate = self
             delay(0.2) {
                 self.configureChildVC()

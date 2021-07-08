@@ -145,6 +145,7 @@ extension ProfileDetailViewController: PaginateFetchDelegate {
         let h = size.height
         let reload_distance:CGFloat = 10.0
         if y > (h + reload_distance) {
+            
             guard let uid = userInfo.uid else { return }
             db.refetchReviews(uid: uid, lastSnapshot: self.lastSnapshot)
         }

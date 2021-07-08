@@ -12,10 +12,6 @@ extension ParentPostViewController {
         return showKeyboard
     }
     
-    override var inputView: UIView? {
-        return self.pvc.inputView
-    }
-    
     override var inputAccessoryViewController: UIInputViewController? {
         if showKeyboard {
             return self.mdbvc
@@ -24,16 +20,12 @@ extension ParentPostViewController {
         }
     }
     
-    @objc func doPickBoy(_ sender: Any) { // button in the interface
+    @objc func doPickBoy(_ sender: UITapGestureRecognizer) { // button in the interface
+        guard let v = sender.view else { return }
+        pickerTag = v.tag
         /// MyDoneButtonVC
         self.mdbvc.view.alpha = 1
         self.showKeyboard = true
         self.becomeFirstResponder()
-    }
-    
-    @objc func doDone() { // user tapped button in accessory view
-        self.pickerLabel.text = pvc.currentPep
-        self.resignFirstResponder()
-        self.showKeyboard = false
     }
 }

@@ -7,40 +7,35 @@
 
 import UIKit
 
-struct FilterSettings: Codable {
-    let priceLimit: Float
-    var itemIndexPath: IndexPath?
-}
-
 class FilterViewController: UIViewController, ModalConfigurable {
     var closeButton: UIButton!
     private var titleLabel: UILabel!
     private var sliderTitleLabel: UILabel!
+    private var underlineView: UnderlineView!
     private var slider: UISlider!
     private var sliderTextLabel: UILabel!
-    private var categoryTitleLabel: UILabel!
     private var selectedSliderValue: Float!
     private var selectedCategoryIndexPath: IndexPath! {
         didSet {
             collectionView.reloadData()
         }
     }
-//    let configuration = UIImage.SymbolConfiguration(pointSize: 20, weight: .light, scale: .small)
-//    lazy var data: [MainMenu] = [
-//        MainMenu(image: UIImage(systemName: "tv.circle")!.withConfiguration(configuration).withTintColor(.lightGray, renderingMode: .alwaysOriginal), title: Category.electronics.rawValue),
-//        MainMenu(image: UIImage(systemName: "car.circle")!.withConfiguration(configuration).withTintColor(.lightGray, renderingMode: .alwaysOriginal), title: Category.vehicle.rawValue),
-//        MainMenu(image: UIImage(systemName: "waveform.circle")!.withConfiguration(configuration).withTintColor(.lightGray, renderingMode: .alwaysOriginal), title: Category.digital.rawValue),
-//        MainMenu(image: UIImage(systemName: "house.circle")!.withConfiguration(configuration).withTintColor(.lightGray, renderingMode: .alwaysOriginal), title: Category.realEstate.rawValue),
-//        MainMenu(image: UIImage(systemName: "line.horizontal.3.decrease.circle")!.withConfiguration(configuration).withTintColor(.lightGray, renderingMode: .alwaysOriginal), title: Category.other.rawValue)
-//    ]
-    lazy private var data: [String] = [
-        Category.electronics.asString(),
-        Category.vehicle.asString(),
-        Category.digital.asString(),
-        Category.realEstate.asString(),
-        Category.other.asString()
-    ]
-    
+    private var toggleSwitchContainer: UIView!
+    private var toggleSwitchLabel: UILabel!
+    private var toggleSwitch: UISwitch!
+    private var toggleValue: Bool!
+    private var priceTitleLabel: UILabel!
+    private var toggleSwitchSubContainer: UIView!
+    private var dateTitleLabel: UILabel!
+    private var dateContainer: UIView!
+    private var dateSubcontainer: UIView!
+    private var dateLabel: UILabel!
+    private var dateToggleSwitch: UISwitch!
+    private var dateToggleValue: Bool!
+    var onDoneBlock: ((UIViewController) -> Void)!
+    lazy private var data: [String] = Category.getAll()
+    private var categoryTitleLabel: UILabel!
+    private var underlineView3: UnderlineView!
     private var collectionView: UICollectionView! = nil
     private let defaults = UserDefaults.standard
     
@@ -73,6 +68,7 @@ class FilterViewController: UIViewController, ModalConfigurable {
             if let decoded = try? decoder.decode(FilterSettings.self, from: filterSettings) {
                 let priceLimit = decoded.priceLimit
                 slider.setValue(priceLimit, animated: true)
+                selectedSliderValue = priceLimit
                 if priceLimit == slider.maximumValue {
                     sliderTextLabel.text = "All items"
                 } else if priceLimit == slider.minimumValue {
@@ -84,18 +80,29 @@ class FilterViewController: UIViewController, ModalConfigurable {
                 if let itemIndexPath = decoded.itemIndexPath {
                     selectedCategoryIndexPath = itemIndexPath
                 }
+                
+                toggleSwitch.setOn(decoded.priceIsDescending, animated: true)
+                toggleValue = decoded.priceIsDescending
+                
+                dateToggleSwitch.setOn(decoded.dateIsDescending, animated: true)
+                dateToggleValue = decoded.dateIsDescending
             }
+        } else {
+            toggleValue = false
+            dateToggleValue = false
         }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         if isBeingDismissed {
-            let filterSettings = FilterSettings(priceLimit: selectedSliderValue ?? slider.maximumValue, itemIndexPath: selectedCategoryIndexPath)
+            let filterSettings = FilterSettings(priceLimit: selectedSliderValue ?? slider.maximumValue, itemIndexPath: selectedCategoryIndexPath, priceIsDescending: toggleValue, dateIsDescending: dateToggleValue)
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(filterSettings) {
                 defaults.set(encoded, forKey: UserDefaultKeys.filterSettings)
             }
+            /// refresh the search result
+            self.onDoneBlock(self)
         }
     }
 }
@@ -111,6 +118,10 @@ extension FilterViewController {
         sliderTitleLabel = createTitleLabel(text: "Price Limit")
         sliderTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(sliderTitleLabel)
+        
+        underlineView = UnderlineView()
+        underlineView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(underlineView)
         
         slider = UISlider()
         slider.minimumValue = 0
@@ -131,9 +142,77 @@ extension FilterViewController {
         sliderTextLabel.font = UIFont.systemFont(ofSize: 16)
         view.addSubview(sliderTextLabel)
         
+        priceTitleLabel = createTitleLabel(text: "Price")
+        view.addSubview(priceTitleLabel)
+        
+        toggleSwitchContainer = UIView()
+        toggleSwitchContainer.layer.cornerRadius = 8
+        toggleSwitchContainer.layer.borderWidth = 0.5
+        toggleSwitchContainer.layer.borderColor = UIColor.lightGray.cgColor
+        toggleSwitchContainer.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(toggleSwitchContainer)
+        
+        toggleSwitchSubContainer = UIView()
+        toggleSwitchSubContainer.translatesAutoresizingMaskIntoConstraints = false
+        toggleSwitchContainer.addSubview(toggleSwitchSubContainer)
+        
+        toggleSwitchLabel = UILabel()
+        toggleSwitchLabel.font = UIFont.systemFont(ofSize: 15)
+        toggleSwitchLabel.textColor = .lightGray
+        toggleSwitchLabel.text = "Descending"
+        toggleSwitchLabel.translatesAutoresizingMaskIntoConstraints = false
+        toggleSwitchSubContainer.addSubview(toggleSwitchLabel)
+        
+        toggleSwitch = UISwitch()
+        toggleSwitch.onTintColor = .gray
+        toggleSwitch.onTintColor = #colorLiteral(red: 1, green: 0.4932718873, blue: 0.4739984274, alpha: 1)
+        toggleSwitch.addTarget(self, action: #selector(switchDidToggle), for: .valueChanged)
+        toggleSwitch.tag = 1
+        toggleSwitch.translatesAutoresizingMaskIntoConstraints = false
+        toggleSwitchSubContainer.addSubview(toggleSwitch)
+        
+        dateTitleLabel = createTitleLabel(text: "Date")
+        view.addSubview(dateTitleLabel)
+        
+        dateContainer = UIView()
+        dateContainer.layer.cornerRadius = 8
+        dateContainer.layer.borderWidth = 0.5
+        dateContainer.layer.borderColor = UIColor.lightGray.cgColor
+        dateContainer.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(dateContainer)
+        
+        dateSubcontainer = UIView()
+        dateSubcontainer.translatesAutoresizingMaskIntoConstraints = false
+        dateContainer.addSubview(dateSubcontainer)
+        
+        dateLabel = UILabel()
+        dateLabel.font = UIFont.systemFont(ofSize: 15)
+        dateLabel.textColor = .lightGray
+        dateLabel.text = "Descending"
+        dateLabel.sizeToFit()
+        dateLabel.translatesAutoresizingMaskIntoConstraints = false
+        dateSubcontainer.addSubview(dateLabel)
+        
+        dateToggleSwitch = UISwitch()
+        dateToggleSwitch.onTintColor = .gray
+        dateToggleSwitch.onTintColor = #colorLiteral(red: 1, green: 0.4932718873, blue: 0.4739984274, alpha: 1)
+        dateToggleSwitch.addTarget(self, action: #selector(switchDidToggle), for: .valueChanged)
+        dateToggleSwitch.tag = 2
+        dateToggleSwitch.translatesAutoresizingMaskIntoConstraints = false
+        dateSubcontainer.addSubview(dateToggleSwitch)
+        
         categoryTitleLabel = createTitleLabel(text: "Categories")
         categoryTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(categoryTitleLabel)
+        
+        underlineView3 = UnderlineView()
+        underlineView3.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(underlineView3)
+        underlineView3.setNeedsDisplay()
+        
+        let swipe = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
+        swipe.direction = .down
+        view.addGestureRecognizer(swipe)
     }
     
     private func setConstraints() {
@@ -146,18 +225,65 @@ extension FilterViewController {
             sliderTitleLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
             sliderTitleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            slider.topAnchor.constraint(equalTo: sliderTitleLabel.bottomAnchor, constant: 15),
+            underlineView.topAnchor.constraint(equalTo: sliderTitleLabel.bottomAnchor),
+            underlineView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            underlineView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            underlineView.heightAnchor.constraint(equalToConstant: 0.2),
+            
+            slider.topAnchor.constraint(equalTo: underlineView.bottomAnchor, constant: 15),
             slider.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
             slider.heightAnchor.constraint(equalToConstant: 50),
             slider.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            categoryTitleLabel.topAnchor.constraint(equalTo: slider.bottomAnchor, constant: 20),
+            priceTitleLabel.topAnchor.constraint(equalTo: slider.bottomAnchor, constant: 20),
+            priceTitleLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            priceTitleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            toggleSwitchContainer.topAnchor.constraint(equalTo: priceTitleLabel.bottomAnchor, constant: 5),
+            toggleSwitchContainer.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            toggleSwitchContainer.heightAnchor.constraint(equalToConstant: 80),
+            toggleSwitchContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            toggleSwitchSubContainer.centerXAnchor.constraint(equalTo: toggleSwitchContainer.centerXAnchor),
+            toggleSwitchSubContainer.centerYAnchor.constraint(equalTo: toggleSwitchContainer.centerYAnchor),
+            toggleSwitchSubContainer.widthAnchor.constraint(equalToConstant: 140),
+            
+            toggleSwitchLabel.leadingAnchor.constraint(equalTo: toggleSwitchSubContainer.leadingAnchor),
+            toggleSwitchLabel.heightAnchor.constraint(equalTo: toggleSwitchSubContainer.heightAnchor),
+            
+            toggleSwitch.leadingAnchor.constraint(equalTo: toggleSwitchLabel.trailingAnchor, constant: 5),
+            toggleSwitch.heightAnchor.constraint(equalTo: toggleSwitchSubContainer.heightAnchor),
+            
+            dateTitleLabel.topAnchor.constraint(equalTo: toggleSwitchContainer.bottomAnchor, constant: 30),
+            dateTitleLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            dateTitleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            dateContainer.topAnchor.constraint(equalTo: dateTitleLabel.bottomAnchor, constant: 5),
+            dateContainer.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            dateContainer.heightAnchor.constraint(equalToConstant: 80),
+            dateContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            dateSubcontainer.centerXAnchor.constraint(equalTo: dateContainer.centerXAnchor),
+            dateSubcontainer.centerYAnchor.constraint(equalTo: dateContainer.centerYAnchor),
+            dateSubcontainer.widthAnchor.constraint(equalToConstant: 140),
+            
+            dateLabel.leadingAnchor.constraint(equalTo: dateSubcontainer.leadingAnchor),
+            dateLabel.heightAnchor.constraint(equalTo: dateSubcontainer.heightAnchor),
+            
+            dateToggleSwitch.leadingAnchor.constraint(equalTo: dateLabel.trailingAnchor, constant: 5),
+            dateToggleSwitch.heightAnchor.constraint(equalTo: dateSubcontainer.heightAnchor),
+            
+            categoryTitleLabel.topAnchor.constraint(equalTo: dateContainer.bottomAnchor, constant: 30),
             categoryTitleLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
-            categoryTitleLabel.heightAnchor.constraint(equalToConstant: 50),
             categoryTitleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            collectionView.topAnchor.constraint(equalTo: categoryTitleLabel.bottomAnchor, constant: 0),
-            collectionView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            underlineView3.topAnchor.constraint(equalTo: categoryTitleLabel.bottomAnchor, constant: 0),
+            underlineView3.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            underlineView3.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+            underlineView3.heightAnchor.constraint(equalToConstant: 0.4),
+            
+            collectionView.topAnchor.constraint(equalTo: underlineView3.bottomAnchor, constant: 25),
+            collectionView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.93),
             collectionView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
@@ -178,6 +304,21 @@ extension FilterViewController {
             sliderTextLabel.text = "Below \(Int(sender.value)) ETH"
         }
     }
+    
+    @objc func switchDidToggle(_ sender: UISwitch) {
+        switch sender.tag {
+            case 1:
+                toggleValue = sender.isOn
+            case 2:
+                dateToggleValue = sender.isOn
+            default:
+                break
+        }
+    }
+    
+    @objc func swiped() {
+        self.dismiss(animated: true, completion: nil)
+    }
 }
 
 extension FilterViewController: UICollectionViewDelegate, UICollectionViewDataSource {
@@ -187,6 +328,7 @@ extension FilterViewController: UICollectionViewDelegate, UICollectionViewDataSo
         collectionView.backgroundColor = .white
         collectionView.delegate = self
         collectionView.dataSource = self
+//        collectionView.allowsMultipleSelection = true
         collectionView.register(FilterCell.self, forCellWithReuseIdentifier: FilterCell.reuseIdentifier)
         collectionView.isScrollEnabled = false
         view.addSubview(collectionView)
@@ -236,27 +378,24 @@ extension FilterViewController: UICollectionViewDelegate, UICollectionViewDataSo
         return cell
     }
 
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        self.selectedCategoryIndexPath = indexPath
-        if let cell = collectionView.cellForItem(at: indexPath) as? FilterCell {
-            cell.contentView.backgroundColor = #colorLiteral(red: 1, green: 0.4932718873, blue: 0.4739984274, alpha: 1)
-            cell.titleLabel.textColor = .white
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        let item = collectionView.cellForItem(at: indexPath) as! FilterCell
+        if item.isSelected {
+            selectedCategoryIndexPath = nil
+            collectionView.deselectItem(at: indexPath, animated: true)
+        } else {
+            selectedCategoryIndexPath = indexPath
+            collectionView.selectItem(at: indexPath, animated: true, scrollPosition: [])
+            return true
         }
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        self.selectedCategoryIndexPath = nil
-        if let cell = collectionView.cellForItem(at: indexPath) as? FilterCell {
-            cell.contentView.backgroundColor = nil
-            cell.titleLabel.textColor = .gray
-        }
+        
+        return false
     }
 }
 
 extension FilterViewController : UIViewControllerTransitioningDelegate {
     func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
-        let pc = PartialPresentationController(presentedViewController: presented, presenting: presenting)
+        let pc = PartialPresentationController(presentedViewController: presented, presenting: presenting, yCoordinate: UIScreen.main.bounds.size.height * 0.2)
         return pc
     }
     

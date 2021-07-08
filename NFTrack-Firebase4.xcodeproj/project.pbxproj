@@ -37,6 +37,7 @@
 		493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */; };
 		49409A75265946870060193C /* SearchResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A74265946870060193C /* SearchResultsViewController.swift */; };
 		49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */; };
+		495D5E08268FE92F00F5DF71 /* InfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495D5E07268FE92E00F5DF71 /* InfoViewController.swift */; };
 		495FD2CE2687B33600F1D81D /* CustomPreviewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2CD2687B33600F1D81D /* CustomPreviewItem.swift */; };
 		495FD2D32688043000F1D81D /* PDFPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */; };
 		495FD2D826892FDC00F1D81D /* StarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2D726892FDB00F1D81D /* StarRatingView.swift */; };
@@ -113,6 +114,7 @@
 		499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9961266C061A00FC6CDE /* ParentNavViewController.swift */; };
 		499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9966266C195F00FC6CDE /* AccountCell.swift */; };
 		499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F998D266C8D9700FC6CDE /* ProgressCell.swift */; };
+		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
 		49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */; };
 		49D59C762663326500107F79 /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D59C752663326500107F79 /* SocketDelegate.swift */; };
 		49DEFF5526841C54004C2DD0 /* ReviewDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */; };
@@ -181,6 +183,7 @@
 		493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ERC721PresetABI.swift; sourceTree = "<group>"; };
 		49409A74265946870060193C /* SearchResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsViewController.swift; sourceTree = "<group>"; };
 		49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + ResultsUpdate.swift"; sourceTree = "<group>"; };
+		495D5E07268FE92E00F5DF71 /* InfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoViewController.swift; sourceTree = "<group>"; };
 		495FD2CD2687B33600F1D81D /* CustomPreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomPreviewItem.swift; sourceTree = "<group>"; };
 		495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPreviewViewController.swift; sourceTree = "<group>"; };
 		495FD2D726892FDB00F1D81D /* StarRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRatingView.swift; sourceTree = "<group>"; };
@@ -263,6 +266,7 @@
 		499F9961266C061A00FC6CDE /* ParentNavViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentNavViewController.swift; sourceTree = "<group>"; };
 		499F9966266C195F00FC6CDE /* AccountCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCell.swift; sourceTree = "<group>"; };
 		499F998D266C8D9700FC6CDE /* ProgressCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCell.swift; sourceTree = "<group>"; };
+		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
 		49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		49D59C752663326500107F79 /* SocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
 		49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewDetailViewController.swift; sourceTree = "<group>"; };
@@ -362,6 +366,7 @@
 			children = (
 				493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */,
 				497A9AEB2655A60300F09CAA /* NFTrackABI.swift */,
+				49B47E9B26953B05003D6F7A /* AuctionABI.swift */,
 			);
 			path = Contracts;
 			sourceTree = "<group>";
@@ -590,6 +595,7 @@
 				490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */,
 				49DEFF642686552E004C2DD0 /* PreviewPDFViewController.swift */,
 				495FD316268AAB3100F1D81D /* DigitalAssetViewController.swift */,
+				495D5E07268FE92E00F5DF71 /* InfoViewController.swift */,
 			);
 			path = Post;
 			sourceTree = "<group>";
@@ -971,6 +977,7 @@
 				495FD333268D402900F1D81D /* FilterCell.swift in Sources */,
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
 				495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */,
+				49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */,
 				493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */,
 				49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */,
 				496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */,
@@ -1063,6 +1070,7 @@
 				495FD2CE2687B33600F1D81D /* CustomPreviewItem.swift in Sources */,
 				495FD324268C034000F1D81D /* QuickUICheckViewController.swift in Sources */,
 				4997030526769A36001DD80A /* CardCell.swift in Sources */,
+				495D5E08268FE92F00F5DF71 /* InfoViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

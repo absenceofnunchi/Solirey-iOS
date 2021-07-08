@@ -27,6 +27,7 @@ extension ListDetailViewController: TableViewConfigurable {
                     }
                     
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        print("history data", data)
                         self?.historicData = data
                     }
                 }

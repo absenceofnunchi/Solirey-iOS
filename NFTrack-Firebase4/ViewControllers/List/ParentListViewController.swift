@@ -127,7 +127,9 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     }
     
     // MARK: - didRefreshTableView
-    @objc func didRefreshTableView(index: Int = 0) {
-        
-    }
+    @objc func didRefreshTableView(index: Int = 0) {}
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {}
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {}
 }

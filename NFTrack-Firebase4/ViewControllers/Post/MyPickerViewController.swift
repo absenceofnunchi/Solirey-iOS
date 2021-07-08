@@ -8,9 +8,18 @@
 import UIKit
 
 class MyPickerVC : UIInputViewController {
-    var currentPep = Category.electronics.asString()
-//    var pep = [Category.electronics.rawValue, Category.vehicle.rawValue, Category.realEstate.rawValue, Category.other.rawValue]
-    var pep = Category.getAll()
+    var currentPep: String!
+    var pep: [String]!
+    
+    init(currentPep: String, pep: [String]) {
+        super.init(nibName: nil, bundle: nil)
+        self.currentPep = currentPep
+        self.pep = pep
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidLoad() {
         let iv = self.inputView!
@@ -28,19 +37,6 @@ class MyPickerVC : UIInputViewController {
             p.trailingAnchor.constraint(equalTo: iv.trailingAnchor),
         ])
     }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        print("did")
-    }
-    
-    override func traitCollectionDidChange(_ prev: UITraitCollection?) {
-        super.traitCollectionDidChange(prev)
-        print("trait")
-    }
-    
-    // unfortunately, viewWillDisappear is called _twice_ and too late anyway
-    
 }
 
 extension MyPickerVC : UIPickerViewDelegate, UIPickerViewDataSource {

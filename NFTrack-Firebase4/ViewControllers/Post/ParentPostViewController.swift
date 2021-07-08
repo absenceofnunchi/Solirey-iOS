@@ -21,6 +21,17 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
     var priceTextField: UITextField!
     var descLabel: UILabel!
     var descTextView: UITextView!
+    var deliveryMethodTitleLabel: UILabel!
+    var deliveryInfoButton: UIButton!
+    var deliveryMethodLabel: UILabel!
+    var paymentMethodTitleLabel: UILabel!
+    var paymentInfoButton: UIButton!
+    var paymentMethodLabel: UILabel!
+    var saleMethodInfoButton: UIButton!
+    var saleMethodTitleLabel: UILabel!
+    var saleMethodLabelContainer: UIView!
+    var saleMethodContainerConstraintHeight: NSLayoutConstraint!
+    var saleMethodLabel: UILabel!
     var idTitleLabel: UILabel!
     var idContainerView: UIView!
     var idTextField: UITextField!
@@ -34,12 +45,16 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
     var buttonPanel: UIStackView!
     var previewDataArr: [PreviewData]! {
         didSet {
+            /// shows the image preview when an image or a doc is selected
             if previewDataArr.count > 0 {
                 DispatchQueue.main.async { [weak self] in
                     self?.imagePreviewVC.view.isHidden = false
-                    self?.imagePreviewConstraintHeight.constant = 180
+                    self?.imagePreviewConstraintHeight.constant = self!.IMAGE_PREVIEW_HEIGHT
                     UIView.animate(withDuration: 0.5) {
                         self?.view.layoutIfNeeded()
+                    } completion: { (_) in
+                        guard let `self` = self else { return }
+                        self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.scrollView.contentSize.height + self.IMAGE_PREVIEW_HEIGHT)
                     }
                 }
             } else {
@@ -48,6 +63,9 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
                     self?.imagePreviewConstraintHeight.constant = 0
                     UIView.animate(withDuration: 0.5) {
                         self?.view.layoutIfNeeded()
+                    } completion: { (_) in
+                        guard let `self` = self else { return }
+                        self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.scrollView.contentSize.height - self.IMAGE_PREVIEW_HEIGHT)
                     }
                 }
             }
@@ -72,11 +90,17 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
         return []
     }
     
-    let pvc = MyPickerVC()
-    /// MyDoneButtonVC
+    /// payment method
+    let deliveryMethodPicker = MyPickerVC(currentPep: DeliveryMethod.shipping.rawValue, pep: [DeliveryMethod.shipping.rawValue, DeliveryMethod.inPerson.rawValue])
+    /// category picker
+    let pvc = MyPickerVC(currentPep: Category.electronics.asString(), pep: Category.getAll())
+
+    /// done button for the picker
     let mdbvc = MyDoneButtonVC()
     var showKeyboard = false
     
+    /// to determine which picker to invoke
+    var pickerTag: Int!
     let configuration = UIImage.SymbolConfiguration(pointSize: 50, weight: .light, scale: .medium)
     var pickerImageName: String! {
         var imageName: String!
@@ -87,6 +111,9 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
         }
         return imageName
     }
+    
+    let SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat = 1600
+    let IMAGE_PREVIEW_HEIGHT: CGFloat = 180
     
     deinit {
         if observation != nil {
@@ -103,11 +130,19 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
         setConstraints()
     }
  
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         /// whenever the image picker is dismissed, the collection view has to be updated
         imagePreviewVC.data = previewDataArr
         
+        if observation != nil {
+            observation?.invalidate()
+        }
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
         if observation != nil {
             observation?.invalidate()
         }
@@ -134,7 +169,7 @@ extension ParentPostViewController {
         constraints = [NSLayoutConstraint]()
         
         scrollView = UIScrollView()
-        scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: 1200)
+        scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT)
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
         scrollView.fill()
@@ -153,7 +188,7 @@ extension ParentPostViewController {
         priceTextField.keyboardType = .decimalPad
         priceTextField.placeholder = "In ETH"
         scrollView.addSubview(priceTextField)
-        
+    
         descLabel = createTitleLabel(text: "Description")
         scrollView.addSubview(descLabel)
         
@@ -166,8 +201,52 @@ extension ParentPostViewController {
         descTextView.clipsToBounds = true
         descTextView.isScrollEnabled = true
         descTextView.layer.borderColor = UIColor.gray.withAlphaComponent(0.5).cgColor
+        descTextView.font = UIFont.systemFont(ofSize: 20)
         descTextView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(descTextView)
+        
+        deliveryMethodTitleLabel = createTitleLabel(text: "Delivery Method")
+        deliveryMethodTitleLabel.isUserInteractionEnabled = true
+        scrollView.addSubview(deliveryMethodTitleLabel)
+        
+        guard let infoImage = UIImage(systemName: "info.circle") else { return }
+        deliveryInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
+        deliveryInfoButton.translatesAutoresizingMaskIntoConstraints = false
+        deliveryMethodTitleLabel.addSubview(deliveryInfoButton)
+        
+        deliveryMethodLabel = createLabel(text: "")
+        scrollView.addSubview(deliveryMethodLabel)
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
+        deliveryMethodLabel.addGestureRecognizer(tap)
+        
+        paymentMethodTitleLabel = createTitleLabel(text: "Payment Method")
+        paymentMethodTitleLabel.isUserInteractionEnabled = true
+        scrollView.addSubview(paymentMethodTitleLabel)
+        
+        saleMethodTitleLabel = createTitleLabel(text: "Sale Format")
+        saleMethodTitleLabel.isUserInteractionEnabled = true
+        scrollView.addSubview(saleMethodTitleLabel)
+        
+        guard let saleInfoImage = UIImage(systemName: "info.circle") else { return }
+        saleMethodInfoButton = UIButton.systemButton(with: saleInfoImage, target: self, action: #selector(buttonPressed(_:)))
+        saleMethodInfoButton.translatesAutoresizingMaskIntoConstraints = false
+        saleMethodTitleLabel.addSubview(saleMethodInfoButton)
+        
+        saleMethodLabelContainer = UIView()
+        saleMethodLabelContainer.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(saleMethodLabelContainer)
+        
+        saleMethodLabel = createLabel(text: "")
+        saleMethodLabelContainer.addSubview(saleMethodLabel)
+        
+        guard let paymentInfoImage = UIImage(systemName: "info.circle") else { return }
+        paymentInfoButton = UIButton.systemButton(with: paymentInfoImage, target: self, action: #selector(buttonPressed(_:)))
+        paymentInfoButton.translatesAutoresizingMaskIntoConstraints = false
+        paymentMethodTitleLabel.addSubview(paymentInfoButton)
+        
+        paymentMethodLabel = createLabel(text: "")
+        scrollView.addSubview(paymentMethodLabel)
         
         idTitleLabel = createTitleLabel(text: "Unique Identifier")
         scrollView.addSubview(idTitleLabel)
@@ -177,18 +256,13 @@ extension ParentPostViewController {
         pickerTitleLabel = createTitleLabel(text: "Category")
         scrollView.addSubview(pickerTitleLabel)
         
-        pickerLabel = UILabelPadding()
-        pickerLabel.isUserInteractionEnabled = true
-        pickerLabel.layer.borderWidth = 0.7
-        pickerLabel.layer.cornerRadius = 5
-        pickerLabel.layer.borderColor = UIColor.lightGray.cgColor
-        pickerLabel.translatesAutoresizingMaskIntoConstraints = false
+        pickerLabel = createLabel(text: "")
         scrollView.addSubview(pickerLabel)
         
         self.mdbvc.delegate = self
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
-        pickerLabel.addGestureRecognizer(tap)
+        let categoryLabelTap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
+        pickerLabel.addGestureRecognizer(categoryLabelTap)
         
         tagContainerView = UIView()
         tagContainerView.translatesAutoresizingMaskIntoConstraints = false
@@ -237,6 +311,7 @@ extension ParentPostViewController {
     
     // MARK: - setConstraints
     @objc func setConstraints() {
+        saleMethodContainerConstraintHeight = saleMethodLabelContainer.heightAnchor.constraint(equalToConstant: 50)
         imagePreviewConstraintHeight = imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 0)
         constraints.append(contentsOf: [
             titleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
@@ -259,17 +334,62 @@ extension ParentPostViewController {
             priceTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             priceTextField.topAnchor.constraint(equalTo: priceLabel.bottomAnchor, constant: 0),
             
+            descLabel.topAnchor.constraint(equalTo: priceTextField.bottomAnchor, constant: 20),
             descLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             descLabel.heightAnchor.constraint(equalToConstant: 50),
             descLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            descLabel.topAnchor.constraint(equalTo: priceTextField.bottomAnchor, constant: 20),
             
             descTextView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             descTextView.heightAnchor.constraint(equalToConstant: 100),
             descTextView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             descTextView.topAnchor.constraint(equalTo: descLabel.bottomAnchor, constant: 0),
             
-            pickerTitleLabel.topAnchor.constraint(equalTo: descTextView.bottomAnchor, constant: 20),
+            deliveryMethodTitleLabel.topAnchor.constraint(equalTo: descTextView.bottomAnchor, constant: 20),
+            deliveryMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            deliveryMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50),
+            deliveryMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+            
+            deliveryInfoButton.trailingAnchor.constraint(equalTo: deliveryMethodTitleLabel.trailingAnchor),
+            deliveryInfoButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            deliveryMethodLabel.topAnchor.constraint(equalTo: deliveryMethodTitleLabel.bottomAnchor, constant: 0),
+            deliveryMethodLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            deliveryMethodLabel.heightAnchor.constraint(equalToConstant: 50),
+            deliveryMethodLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+            
+            saleMethodTitleLabel.topAnchor.constraint(equalTo: deliveryMethodLabel.bottomAnchor, constant: 20),
+            saleMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            saleMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50),
+            saleMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+            
+            saleMethodInfoButton.trailingAnchor.constraint(equalTo: saleMethodTitleLabel.trailingAnchor),
+            saleMethodInfoButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            saleMethodLabelContainer.topAnchor.constraint(equalTo: saleMethodTitleLabel.bottomAnchor, constant: 0),
+            saleMethodLabelContainer.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            saleMethodLabelContainer.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+            saleMethodContainerConstraintHeight,
+            
+            saleMethodLabel.topAnchor.constraint(equalTo: saleMethodLabelContainer.topAnchor),
+            saleMethodLabel.leadingAnchor.constraint(equalTo: saleMethodLabelContainer.leadingAnchor),
+            saleMethodLabel.trailingAnchor.constraint(equalTo: saleMethodLabelContainer.trailingAnchor),
+            saleMethodLabel.heightAnchor.constraint(equalToConstant: 50),
+            
+            paymentMethodTitleLabel.topAnchor.constraint(equalTo: saleMethodLabelContainer.bottomAnchor, constant: 20),
+            paymentMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            paymentMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50),
+            paymentMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+            
+            paymentInfoButton.trailingAnchor.constraint(equalTo: paymentMethodTitleLabel.trailingAnchor),
+            paymentInfoButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            paymentMethodLabel.topAnchor.constraint(equalTo: paymentMethodTitleLabel.bottomAnchor, constant: 0),
+            paymentMethodLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            paymentMethodLabel.heightAnchor.constraint(equalToConstant: 50),
+            paymentMethodLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+            
+            // category
+            pickerTitleLabel.topAnchor.constraint(equalTo: paymentMethodLabel.bottomAnchor, constant: 20),
             pickerTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             pickerTitleLabel.heightAnchor.constraint(equalToConstant: 50),
             pickerTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
@@ -461,6 +581,97 @@ extension ParentPostViewController {
     }
     
     @objc func mint() {
+        self.showSpinner { [weak self] in
+            guard let userId = self?.userDefaults.string(forKey: UserDefaultKeys.userId) else {
+                self?.alert.showDetail("Sorry", with: "You need to be logged in.", for: self)
+                return
+            }
+            self?.userId = userId
+            
+            guard let title = self?.titleTextField.text, !title.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please fill in the title field.", for: self)
+                return
+            }
+            
+            guard let price = self?.priceTextField.text, !price.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+                return
+            }
+            
+            guard let desc = self?.descTextView.text, !desc.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please fill in the description field.", for: self)
+                return
+            }
+            
+            guard let deliveryMethod = self?.deliveryMethodLabel.text,
+                  !deliveryMethod.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please select the delivery method.", for: self)
+                return
+            }
+            
+            guard let saleFormat = self?.saleMethodLabel.text,
+                  !saleFormat.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please select the sale method.", for: self)
+                return
+            }
+            
+            guard let paymentMethod = self?.paymentMethodLabel.text,
+                  !paymentMethod.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please select the payment method.", for: self)
+                return
+            }
+            
+            guard let category = self?.pickerLabel.text, !category.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please choose the category.", for: self)
+                return
+            }
+            
+            guard let id = self?.idTextField.text,!id.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please select the digital asset.", for: self)
+                return
+            }
+            
+            guard let tagTextField = self?.tagTextField, tagTextField.tokens.count > 0 else {
+                self?.alert.showDetail("Missing Tags", with: "Please add the tags using the plus sign.", for: self)
+                return
+            }
+            
+            guard tagTextField.tokens.count < 6 else {
+                self?.alert.showDetail("Tag Limit", with: "You can add up to 5 tags.", for: self)
+                return
+            }
+            
+            // process id
+            let whitespaceCharacterSet = CharacterSet.whitespaces
+            let convertedId = id.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+            
+            self?.checkExistingId(id: convertedId) { (isDuplicate) in
+                if isDuplicate {
+                    self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 300, for: self)
+                } else {
+                    // add both the tokens and the title to the tokens field
+                    var tokensArr = Set<String>()
+                    let strippedString = title.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+                    let searchItems = strippedString.components(separatedBy: " ") as [String]
+                    searchItems.forEach { (item) in
+                        tokensArr.insert(item)
+                    }
+                    
+                    for token in self!.tagTextField.tokens {
+                        if let retrievedToken = token.representedObject as? String {
+                            tokensArr.insert(retrievedToken.lowercased())
+                        }
+                    }
+                    
+                    self?.processMint(price: price, title: title, desc: desc, category: category, convertedId: convertedId, tokensArr: tokensArr, userId: userId, deliveryMethod: deliveryMethod, saleFormat: saleFormat, paymentMethod: paymentMethod)
+                    
+                } // not duplicate
+            } // end of checkExistingId
+        } // 
+    }
+    
+    @objc func processMint(price: String, title: String, desc: String, category: String, convertedId: String, tokensArr: Set<String>, userId: String, deliveryMethod: String, saleFormat: String, paymentMethod: String) {
+        
     }
     
     @objc func configureProgress() {
@@ -477,12 +688,6 @@ extension ParentPostViewController: UITextFieldDelegate, UITextViewDelegate {
     func textViewDidBeginEditing(_ textView: UITextView) {
         showKeyboard = false
         mdbvc.view.alpha = 0
-    }
-}
-
-extension ParentPostViewController {
-    func mint(_ hash: Data) {
-
     }
 }
 
@@ -516,10 +721,12 @@ extension ParentPostViewController: MessageDelegate, FileUploadable {
                             DispatchQueue.main.async {
                                 self?.titleTextField.text?.removeAll()
                                 self?.priceTextField.text?.removeAll()
+                                self?.deliveryMethodLabel.text?.removeAll()
                                 self?.descTextView.text?.removeAll()
                                 self?.idTextField.text?.removeAll()
                                 self?.pickerLabel.text?.removeAll()
                                 self?.tagTextField.tokens.removeAll()
+                                self?.paymentMethodLabel.text?.removeAll()
                             }
                         default:
                             self?.alert.showDetail("Error", with: "Unknown Network Error. Please contact the admin.", for: self)
@@ -540,11 +747,6 @@ extension ParentPostViewController: MessageDelegate, FileUploadable {
                     strongSelf.db.collection("post").document(strongSelf.documentId).updateData([
                         "files": FieldValue.arrayUnion(["\(url)"])
                     ], completion: { (error) in
-                        defer {
-                            /// this runs last. place the success alert here. use the same image counter to check if all the images have been fulfilled
-                            /// there has to be a success alert for if you don't have images to upload
-                            print("after update data")
-                        }
                         if let error = error {
                             strongSelf.alert.showDetail("Error", with: error.localizedDescription, for: self)
                         }
@@ -568,15 +770,16 @@ extension ParentPostViewController: MessageDelegate, FileUploadable {
     }
     
     // MARK: - getTokenId
+    /// uploads the receipt to the Firebase function to get the token number, which will update the Firestore
     func getTokenId(topics: [String], completion: @escaping (Error?) -> Void) {
         // build request URL
-        guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/decodeLog") else {
+        guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/decodeLog-decodeLog") else {
             return
         }
 //        guard let requestURL = URL(string: "http://localhost:5001/nftrack-69488/us-central1/decodeLog") else {
 //            return
 //        }
-        
+                
         // prepare request
         var request = URLRequest(url: requestURL)
         request.httpMethod = "POST"
@@ -601,7 +804,7 @@ extension ParentPostViewController: MessageDelegate, FileUploadable {
             }
             
             if let response = response as? HTTPURLResponse {
-                print("response", response)
+                print("response from decodeLog", response)
                 
                 let httpStatusCode = HTTPStatusCode(rawValue: response.statusCode)
                 completion(httpStatusCode)
@@ -614,7 +817,7 @@ extension ParentPostViewController: MessageDelegate, FileUploadable {
         })
         
         observation = task.progress.observe(\.fractionCompleted) { [weak self] (progress, _) in
-            print("progress", progress)
+            print("decode log progress", progress)
             DispatchQueue.main.async {
                 self?.progressModal.progressView.isHidden = false
                 self?.progressModal.progressLabel.isHidden = false

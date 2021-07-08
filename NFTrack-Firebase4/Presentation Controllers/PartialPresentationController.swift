@@ -8,11 +8,18 @@
 import UIKit
 
 class PartialPresentationController : UIPresentationController {
+    var yCoordinate: CGFloat!
+    init(presentedViewController: UIViewController, presenting: UIViewController?, yCoordinate: CGFloat = UIScreen.main.bounds.size.height / 2) {
+        super.init(presentedViewController: presentedViewController, presenting: presenting)
+        self.yCoordinate = yCoordinate
+    }
+    
     override var shouldPresentInFullscreen: Bool {
         return false
     }
     override var frameOfPresentedViewInContainerView : CGRect {
-        return CGRect(x: 0, y: super.frameOfPresentedViewInContainerView.height/2, width: super.frameOfPresentedViewInContainerView.width, height: super.frameOfPresentedViewInContainerView.height)
+//        return CGRect(x: 0, y: (super.frameOfPresentedViewInContainerView.height/10) * 2, width: super.frameOfPresentedViewInContainerView.width, height: super.frameOfPresentedViewInContainerView.height)
+        return CGRect(x: 0, y: yCoordinate, width: super.frameOfPresentedViewInContainerView.width, height: UIScreen.main.bounds.size.height - yCoordinate)
     }
 }
 
@@ -89,7 +96,6 @@ extension PartialPresentationController {
         if let tc = pc.presentedViewController.transitionCoordinator {
             tc.animate(alongsideTransition: {_ in
                 for v in pc.presentedViewController.view.subviews {
-                    print("v", v)
                     v.alpha = 0
                 }
             })

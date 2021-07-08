@@ -52,8 +52,8 @@ class ProfileReviewListViewController: ProfileListViewController<Review>, Pagina
             self.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
         }
         
-        if let reviewArr = reviewArr {
-            self.postArr.append(contentsOf:reviewArr)
+        if let data = data {
+            self.postArr.append(contentsOf: data)
         }
     }
 }

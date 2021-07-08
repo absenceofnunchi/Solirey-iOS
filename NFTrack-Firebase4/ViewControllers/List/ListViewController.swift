@@ -10,7 +10,7 @@ import FirebaseFirestore
 
 class ListViewController: ParentListViewController<Post> {
     private let userDefaults = UserDefaults.standard
-    internal var segmentedControl: UISegmentedControl!
+    var segmentedControl: UISegmentedControl!
     private var currentIndex: Int! = 0
     
     final override func viewDidLoad() {

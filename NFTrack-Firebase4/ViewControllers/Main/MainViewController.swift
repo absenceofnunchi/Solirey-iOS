@@ -27,6 +27,9 @@ class MainViewController: UIViewController {
     final let alert = Alerts()
     final var category: ScopeButtonCategory! = .latest
     private var optionsBarItem: UIBarButtonItem!
+    final let db = FirebaseService.shared.db
+    final var searchItems: [String]!
+    final var lastSnapshot: QueryDocumentSnapshot!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,22 +43,6 @@ class MainViewController: UIViewController {
     }
 }
 
-extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate {
-    // configure search controller
-    private func configureSearchController() {
-        searchResultsController = SearchResultsController()
-        let nav = UINavigationController(rootViewController: searchResultsController)
-        searchController = UISearchController(searchResultsController: nav)
-        searchController.searchResultsUpdater = self
-        searchController.delegate = self
-//        searchController.hidesNavigationBarDuringPresentation = false
-        searchController.obscuresBackgroundDuringPresentation = false
-
-        definesPresentationContext = true
-        navigationItem.searchController = searchController
-    }
-}
-
 extension MainViewController {
     /// - Tag: TwoColumn
     private func createLayout() -> UICollectionViewLayout {
@@ -65,7 +52,7 @@ extension MainViewController {
         item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 5, bottom: 0, trailing: 5)
         
         let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                               heightDimension: .fractionalHeight(0.3))
+                                               heightDimension: .absolute(200))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 2)
         let spacing = CGFloat(20)
         group.interItemSpacing = .fixed(spacing)
@@ -82,13 +69,15 @@ extension MainViewController: UICollectionViewDelegate {
     private func configureHierarchy() {
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout())
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.backgroundColor = .systemBackground
+        collectionView.backgroundColor = .white
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(CategoryCell.self, forCellWithReuseIdentifier: CategoryCell.identifier)
         collectionView.contentInset = UIEdgeInsets(top: 64, left: 0, bottom: 0, right: 0)
         collectionView.contentOffset = CGPoint(x: 0, y: -64)
-        collectionView.isScrollEnabled = false
+        collectionView.isScrollEnabled = true
+        let height = CGFloat(200 * (data.count / 2) + 300)
+        collectionView.contentSize = CGSize(width: view.bounds.size.width, height: height)
         view.addSubview(collectionView)
     }
     
@@ -97,7 +86,7 @@ extension MainViewController: UICollectionViewDelegate {
             collectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
             collectionView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 }
@@ -149,6 +138,7 @@ extension MainViewController {
         } else {
             optionsBarItem = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(menuHandler(action:)))
             navigationItem.rightBarButtonItem = optionsBarItem
+            print("below iOS 14")
         }
     }
     

@@ -53,7 +53,7 @@ class ProfilePostingsViewController: ProfileListViewController<Post>, PaginateFe
             self.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
         }
         
-        if let postArr = postArr {
+        if let data = data {
             self.postArr.append(contentsOf:postArr)
         }
     }

@@ -25,7 +25,6 @@ class FirebaseService {
     weak var profileReviewDelegate: ProfileReviewListViewController?
     weak var profilePostDelegate: ProfilePostingsViewController?
     weak var lastSnapshotDelegate: ProfileDetailViewController?
-    weak var searchResultDelegate: SearchResultsController?
 }
 
 extension FirebaseService: PostParseDelegate {
@@ -222,15 +221,23 @@ extension FirebaseService: PostParseDelegate {
             .limit(to: 8)
             
         first?.getDocuments { [weak self] (querySnapshot, err) in
-                if let err = err {
-                    print("err", err)
-                    self?.profilePostDelegate?.didFetchPaginate(data: nil, error: err)
-                } else {
-                    if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
-                        self?.profilePostDelegate?.didFetchPaginate(data: postArr, error: nil)
-                    }
+            guard let querySnapshot = querySnapshot else {
+                print("snapshot error")
+                return
+            }
+            
+            if let err = err {
+                self?.profilePostDelegate?.didFetchPaginate(data: nil, error: err)
+            } else {
+                if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
+                    self?.profilePostDelegate?.didFetchPaginate(data: postArr, error: nil)
                 }
             }
+            
+            if let lastSnapshot = querySnapshot.documents.last {
+                self?.lastSnapshotDelegate?.didGetLastSnapshot(lastSnapshot)
+            }
+        }
     }
     
     func refetchPosts(uid: String, lastSnapshot: QueryDocumentSnapshot) {
@@ -242,6 +249,11 @@ extension FirebaseService: PostParseDelegate {
             .start(afterDocument: lastSnapshot)
         
         next?.getDocuments { [weak self] (querySnapshot, err) in
+            guard let querySnapshot = querySnapshot else {
+                print("snapshot error")
+                return
+            }
+            
             if let err = err {
                 self?.profilePostDelegate?.didFetchPaginate(data: nil, error: err)
             } else {
@@ -249,57 +261,11 @@ extension FirebaseService: PostParseDelegate {
                     self?.profilePostDelegate?.didFetchPaginate(data: postArr, error: nil)
                 }
             }
-        }
-    }
-    
-    func getLatestSearchPosts(searchItems: [String]) {
-        db?.collection("post")
-            .whereField("tags", arrayContainsAny: searchItems)
-            .order(by: "date", descending: true)
-            .getDocuments {[weak self] (querySnapshot, err) in
-                if let err = err {
-                    self?.profilePostDelegate?.didFetchPaginate(data: nil, error: err)
-                }
-                
-                if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
-                    self?.searchResultDelegate?.didFetchPaginate(data: postArr, error: nil)
-                }
-            }
-    }
-    
-    func getFilteredPosts() {
-        guard let filterSettings = UserDefaults.standard.object(forKey: UserDefaultKeys.filterSettings) as? Data,
-              let decoded = try? JSONDecoder().decode(FilterSettings.self, from: filterSettings) else {
-//            view.endEditing(true)
-//            let filterVC = FilterViewController()
-//            self.present(filterVC, animated: true, completion: nil)
-            return
-        }
-        
-        var first = db?.collection("post")
-            .order(by: "date", descending: true)
-            .limit(to: 8)
-        
-        if let itemIndexPath = decoded.itemIndexPath,
-           let category = Category(rawValue: itemIndexPath.item) {
-            first = first?.whereField("category", isEqualTo: category.asString())
-        }
-        
-        first = first?.whereField("price", isLessThan: decoded.priceLimit)
-        first?.getDocuments(completion: { [weak self] (querySnapshot, error) in
-            guard let querySnapshot = querySnapshot else {
-                print("snapshot error")
-                return
-            }
-            
-            if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                
-            }
             
             if let lastSnapshot = querySnapshot.documents.last {
-//                self?.searchResultsController.lastSnapshot = lastSnapshot
+                self?.lastSnapshotDelegate?.didGetLastSnapshot(lastSnapshot)
             }
-        })
+        }
     }
 }
 
