@@ -469,3 +469,4 @@ struct InfoText {
     An auction smart contract gets deployed to the blockchain when you post your item.  You set the bidding time limit. The starting price is from zero.  When the auction is finished, the token gets transferred to the buyer and you get to withdraw the final bid amount as a beneficiary. If no bid exists, you get to withdraw the token.
     """
 }
+

@@ -221,11 +221,13 @@ extension ListDetailViewController {
 extension ListDetailViewController {
     // MARK: - getStatus
     final func getStatus() {
-        DispatchQueue.global().async {
+        DispatchQueue.global().async { [weak self] in
+            guard let `self` = self else { return }
             do {
                 let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(self.post.escrowHash)
-                self.contractAddress = receipt.contractAddress
-                self.transactionService.prepareTransactionForReading(method: "state", contractAddress: receipt.contractAddress!, completion: { (transaction, error) in
+                guard let contractAddress = receipt.contractAddress else { return }
+                self.contractAddress = contractAddress
+                self.transactionService.prepareTransactionForReading(method: "state", contractAddress: contractAddress, completion: { (transaction, error) in
                     if let error = error {
                         switch error {
                             case .contractLoadingError:
@@ -365,10 +367,9 @@ extension ListDetailViewController {
                     if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
                         self?.dismiss(animated: true, completion: {
                             self?.showSpinner {
-                                DispatchQueue.global().async {
+                                DispatchQueue.global(qos: .background).async {
                                     do {
                                         let result = try transaction.send(password: password, transactionOptions: nil)
-                                        
                                         if let status = status {
                                             switch status {
                                                 case .ready:
@@ -517,10 +518,15 @@ extension ListDetailViewController {
                     return
                 }
                 
-                let fromAddress = Web3swiftService.currentAddress
-                let toAddress = EthereumAddress(bh)
-                let param: [AnyObject] = [fromAddress!, toAddress!, ti] as [AnyObject]
-                self?.transactionService.prepareTransactionForWriting(method: "transferFrom", abi: NFTrackABI, param: param, contractAddress: erc721ContractAddress!, completion: { (transaction, error) in
+                guard let fromAddress = Web3swiftService.currentAddress,
+                      let toAddress = EthereumAddress(bh),
+                      let erc721ContractAddress = erc721ContractAddress else {
+                    self?.alert.showDetail("Error", with: "Could not get the contract address to transfer the token.", for: self)
+                    return
+                }
+                
+                let param: [AnyObject] = [fromAddress, toAddress, ti] as [AnyObject]
+                self?.transactionService.prepareTransactionForWriting(method: "transferFrom", abi: NFTrackABI, param: param, contractAddress: erc721ContractAddress, completion: { (transaction, error) in
                     if let error = error {
                         switch error {
                             case .invalidAmountFormat:
@@ -599,8 +605,8 @@ extension ListDetailViewController {
                                             } catch {
                                                 self?.alert.showDetail("Error", with: "There was an error with the transfer transaction.", for: self)
                                             }
-                                        }
-                                    })
+                                        } // dispatchQueue
+                                    }) // showSpinner
                                 })
                             }
                         }
@@ -655,7 +661,7 @@ extension ListDetailViewController {
             if let response = response as? HTTPURLResponse {
                 print("response", response)
                 
-                let httpStatusCode = HTTPStatusCode(rawValue: response.statusCode)
+                let httpStatusCode = APIError.HTTPStatusCode(rawValue: response.statusCode)
                 completion(httpStatusCode)
                 
                 //                if !(200...299).contains(response.statusCode) {

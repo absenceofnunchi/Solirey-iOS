@@ -19,6 +19,8 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
     var titleTextField: UITextField!
     var priceLabel: UILabel!
     var priceTextField: UITextField!
+    var priceLabelConstraintHeight: NSLayoutConstraint!
+    var priceTextFieldConstraintHeight: NSLayoutConstraint!
     var descLabel: UILabel!
     var descTextView: UITextView!
     var deliveryMethodTitleLabel: UILabel!
@@ -54,7 +56,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
                         self?.view.layoutIfNeeded()
                     } completion: { (_) in
                         guard let `self` = self else { return }
-                        self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.scrollView.contentSize.height + self.IMAGE_PREVIEW_HEIGHT)
+                        self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW)
                     }
                 }
             } else {
@@ -65,7 +67,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
                         self?.view.layoutIfNeeded()
                     } completion: { (_) in
                         guard let `self` = self else { return }
-                        self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.scrollView.contentSize.height - self.IMAGE_PREVIEW_HEIGHT)
+                        self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT)
                     }
                 }
             }
@@ -112,14 +114,13 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
         return imageName
     }
     
-    let SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat = 1600
+    let SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat = 1650
     let IMAGE_PREVIEW_HEIGHT: CGFloat = 180
+    lazy var SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW: CGFloat = SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT + IMAGE_PREVIEW_HEIGHT
     
-    deinit {
-        if observation != nil {
-            observation?.invalidate()
-        }
-    }
+    var escrowHash: String!
+    var mintHash: String!
+    var senderAddress: String!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -145,6 +146,10 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
         super.viewDidDisappear(animated)
         if observation != nil {
             observation?.invalidate()
+        }
+        
+        if socketDelegate != nil {
+            socketDelegate.disconnectSocket()
         }
     }
     
@@ -201,7 +206,7 @@ extension ParentPostViewController {
         descTextView.clipsToBounds = true
         descTextView.isScrollEnabled = true
         descTextView.layer.borderColor = UIColor.gray.withAlphaComponent(0.5).cgColor
-        descTextView.font = UIFont.systemFont(ofSize: 20)
+        descTextView.font = UIFont.preferredFont(forTextStyle: .body)
         descTextView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(descTextView)
         
@@ -311,6 +316,8 @@ extension ParentPostViewController {
     
     // MARK: - setConstraints
     @objc func setConstraints() {
+        priceLabelConstraintHeight = priceLabel.heightAnchor.constraint(equalToConstant: 50)
+        priceTextFieldConstraintHeight = priceTextField.heightAnchor.constraint(equalToConstant: 50)
         saleMethodContainerConstraintHeight = saleMethodLabelContainer.heightAnchor.constraint(equalToConstant: 50)
         imagePreviewConstraintHeight = imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 0)
         constraints.append(contentsOf: [
@@ -325,14 +332,14 @@ extension ParentPostViewController {
             titleTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 0),
             
             priceLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            priceLabel.heightAnchor.constraint(equalToConstant: 50),
             priceLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             priceLabel.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 20),
+            priceLabelConstraintHeight,
             
             priceTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            priceTextField.heightAnchor.constraint(equalToConstant: 50),
             priceTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             priceTextField.topAnchor.constraint(equalTo: priceLabel.bottomAnchor, constant: 0),
+            priceTextFieldConstraintHeight,
             
             descLabel.topAnchor.constraint(equalTo: priceTextField.bottomAnchor, constant: 20),
             descLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
@@ -340,7 +347,7 @@ extension ParentPostViewController {
             descLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             
             descTextView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            descTextView.heightAnchor.constraint(equalToConstant: 100),
+            descTextView.heightAnchor.constraint(equalToConstant: 150),
             descTextView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             descTextView.topAnchor.constraint(equalTo: descLabel.bottomAnchor, constant: 0),
             
@@ -588,13 +595,8 @@ extension ParentPostViewController {
             }
             self?.userId = userId
             
-            guard let title = self?.titleTextField.text, !title.isEmpty else {
+            guard let itemTitle = self?.titleTextField.text, !itemTitle.isEmpty else {
                 self?.alert.showDetail("Incomplete", with: "Please fill in the title field.", for: self)
-                return
-            }
-            
-            guard let price = self?.priceTextField.text, !price.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
                 return
             }
             
@@ -651,7 +653,7 @@ extension ParentPostViewController {
                 } else {
                     // add both the tokens and the title to the tokens field
                     var tokensArr = Set<String>()
-                    let strippedString = title.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+                    let strippedString = itemTitle.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
                     let searchItems = strippedString.components(separatedBy: " ") as [String]
                     searchItems.forEach { (item) in
                         tokensArr.insert(item)
@@ -663,14 +665,14 @@ extension ParentPostViewController {
                         }
                     }
                     
-                    self?.processMint(price: price, title: title, desc: desc, category: category, convertedId: convertedId, tokensArr: tokensArr, userId: userId, deliveryMethod: deliveryMethod, saleFormat: saleFormat, paymentMethod: paymentMethod)
+                    self?.processMint(price: self?.priceTextField.text, itemTitle: itemTitle, desc: desc, category: category, convertedId: convertedId, tokensArr: tokensArr, userId: userId, deliveryMethod: deliveryMethod, saleFormat: saleFormat, paymentMethod: paymentMethod)
                     
                 } // not duplicate
             } // end of checkExistingId
         } // 
     }
     
-    @objc func processMint(price: String, title: String, desc: String, category: String, convertedId: String, tokensArr: Set<String>, userId: String, deliveryMethod: String, saleFormat: String, paymentMethod: String) {
+    @objc func processMint(price: String?, itemTitle: String, desc: String, category: String, convertedId: String, tokensArr: Set<String>, userId: String, deliveryMethod: String, saleFormat: String, paymentMethod: String) {
         
     }
     
@@ -691,50 +693,57 @@ extension ParentPostViewController: UITextFieldDelegate, UITextViewDelegate {
     }
 }
 
-extension ParentPostViewController: MessageDelegate, FileUploadable {
+extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
     // MARK: - didReceiveMessage
     @objc func didReceiveMessage(topics: [String]) {
-        defer {
-            // disconnect socket
-            self.socketDelegate.disconnectSocket()
-        }
+
+        
         
         // get the token ID to be uploaded to Firestore
-        getTokenId(topics: topics) { [weak self](res) in
-            if let res = res {
-                if res is HTTPStatusCode {
-                    switch res as! HTTPStatusCode {
-                        case .badRequest:
-                            self?.alert.showDetail("Error", with: "Bad request. Please contact the support.", for: self)
-                        case .unauthorized:
-                            self?.alert.showDetail("Error", with: "Unauthorized request. Please contact the support.", for: self)
-                        case .internalServerError:
-                            self?.alert.showDetail("Error", with: "Internal Server Error. Please contact the support.", for: self)
-                        case .serviceUnavailable:
-                            self?.alert.showDetail("Error", with: "Service Unavailable. Please contact the support.", for: self)
-                        case .ok, .created, .accepted:
-                            let update: [String: PostProgress] = ["update": .minting]
-                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                            
-                            self?.uploadFiles()
-                            
-                            DispatchQueue.main.async {
-                                self?.titleTextField.text?.removeAll()
-                                self?.priceTextField.text?.removeAll()
-                                self?.deliveryMethodLabel.text?.removeAll()
-                                self?.descTextView.text?.removeAll()
-                                self?.idTextField.text?.removeAll()
-                                self?.pickerLabel.text?.removeAll()
-                                self?.tagTextField.tokens.removeAll()
-                                self?.paymentMethodLabel.text?.removeAll()
-                            }
+        getTokenId(topics: topics) { [weak self](_, res) in
+            guard let res = res else { return }
+            switch res {
+//                case is HTTPStatusCode:
+//                    switch res as! HTTPStatusCode {
+//                        case .badRequest:
+//                            self?.alert.showDetail("Error", with: "Bad request. Please contact the support.", for: self)
+//                        case .unauthorized:
+//                            self?.alert.showDetail("Error", with: "Unauthorized request. Please contact the support.", for: self)
+//                        case .internalServerError:
+//                            self?.alert.showDetail("Error", with: "Internal Server Error. Please contact the support.", for: self)
+//                        case .serviceUnavailable:
+//                            self?.alert.showDetail("Error", with: "Service Unavailable. Please contact the support.", for: self)
+//                        case .ok, .created, .accepted:
+//                            let update: [String: PostProgress] = ["update": .minting]
+//                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//
+//                            self?.uploadFiles()
+//
+//                            DispatchQueue.main.async {
+//                                self?.titleTextField.text?.removeAll()
+//                                self?.priceTextField.text?.removeAll()
+//                                self?.deliveryMethodLabel.text?.removeAll()
+//                                self?.descTextView.text?.removeAll()
+//                                self?.idTextField.text?.removeAll()
+//                                self?.pickerLabel.text?.removeAll()
+//                                self?.tagTextField.tokens.removeAll()
+//                                self?.paymentMethodLabel.text?.removeAll()
+//                            }
+//                        default:
+//                            self?.alert.showDetail("Error", with: "Unknown Network Error. Please contact the admin.", for: self)
+//                    }
+                case is GeneralErrors:
+                    switch res as! GeneralErrors {
+                        case .decodingError:
+                            self?.alert.showDetail("Error", with: "There was an error decoding the token ID. Please contact the admin.", for: self)
                         default:
-                            self?.alert.showDetail("Error", with: "Unknown Network Error. Please contact the admin.", for: self)
+                            break
                     }
-                } else {
+                default:
                     self?.alert.showDetail("Error in Minting", with: res.localizedDescription, for: self)
-                }
             }
+            
+            print("runnnn")
         }
     }
     
@@ -771,7 +780,7 @@ extension ParentPostViewController: MessageDelegate, FileUploadable {
     
     // MARK: - getTokenId
     /// uploads the receipt to the Firebase function to get the token number, which will update the Firestore
-    func getTokenId(topics: [String], completion: @escaping (Error?) -> Void) {
+    func getTokenId(topics: [String], completion: @escaping (Int?, Error?) -> Void) {
         // build request URL
         guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/decodeLog-decodeLog") else {
             return
@@ -798,21 +807,36 @@ extension ParentPostViewController: MessageDelegate, FileUploadable {
         let paramData = try? JSONSerialization.data(withJSONObject: parameter, options: [])
         request.httpBody = paramData
         
-        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (_, response, error) -> Void in
+        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
             if let error = error {
-                completion(error)
+                completion(nil, error)
             }
             
             if let response = response as? HTTPURLResponse {
                 print("response from decodeLog", response)
                 
-                let httpStatusCode = HTTPStatusCode(rawValue: response.statusCode)
-                completion(httpStatusCode)
+                let httpStatusCode = APIError.HTTPStatusCode(rawValue: response.statusCode)
+                completion(nil, httpStatusCode)
                 
 //                if !(200...299).contains(response.statusCode) {
 //                    print("start1")
 //                    // handle HTTP server-side error
 //                }
+            }
+            
+            if let data = data {
+                do {
+                    let json = try JSONSerialization.jsonObject(with: data, options: [.allowFragments])
+                    guard let convertedJson = json as? NSNumber else {
+                        // default error
+                        completion(nil, GeneralErrors.decodingError)
+                        return
+                    }
+                    print("convertedJson.intValue", convertedJson.intValue)
+                    completion(convertedJson.intValue, nil)
+                } catch {
+                    completion(nil, GeneralErrors.decodingError)
+                }
             }
         })
         

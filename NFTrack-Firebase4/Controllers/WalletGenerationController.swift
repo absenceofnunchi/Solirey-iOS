@@ -17,7 +17,7 @@ class WalletGenerationController {
 extension WalletGenerationController {
     func createWallet(with mode: WalletCreationType, password: String?, key: String?, completion: @escaping (Error?) -> Void) {
         guard let password = password else {
-            completion(Errors.noPassword)
+            completion(GeneralErrors.noPassword)
             return
         }
         
@@ -39,7 +39,7 @@ extension WalletGenerationController {
                 }
             case .importKey:
                 guard let key = key else {
-                    completion(Errors.noKey)
+                    completion(GeneralErrors.noKey)
                     return
                 }
                 

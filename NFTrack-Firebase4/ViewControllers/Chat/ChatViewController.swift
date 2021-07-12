@@ -160,9 +160,9 @@ extension ChatViewController {
     }
     
     private func fetchData(docId: String) {
-        DispatchQueue.global(qos: .background).async {
+        DispatchQueue.global(qos: .background).async { [weak self] in
             FirebaseService.shared.db.collection("chatrooms").document(docId).collection("messages")
-                .order(by: "sentAt", descending: false).addSnapshotListener { [weak self] (snapShot, error) in
+                .order(by: "sentAt", descending: false).addSnapshotListener { (snapShot, error) in
                     if let error = error {
                         self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                     }

@@ -132,9 +132,16 @@ class PostViewController: ParentPostViewController {
     /// 8. update the firestore with the urls of the photos
     /// 9. delete the photos from the local storage
     
-    final override func processMint(price: String, title: String, desc: String, category: String, convertedId: String, tokensArr: Set<String>, userId: String, deliveryMethod: String, saleFormat: String, paymentMethod: String) {
+    final override func processMint(price: String?, itemTitle: String, desc: String, category: String, convertedId: String, tokensArr: Set<String>, userId: String, deliveryMethod: String, saleFormat: String, paymentMethod: String) {
+        
+        guard let price = price, !price.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+            return
+        }
+        
         // escrow deployment
-        self.transactionService.prepareTransactionForNewContract(contractABI: purchaseABI2, value: String(price), completion: { (transaction, error, estimatedGasForDeploying) in
+        self.transactionService.prepareTransactionForNewContract(contractABI: purchaseABI2, value: String(price), completion: { [weak self] (transaction, error) in
+            guard let `self` = self else { return }
             if let error = error {
                 switch error {
                     case .invalidAmountFormat:
@@ -145,13 +152,15 @@ class PostViewController: ParentPostViewController {
                         self.alert.showDetail("Error", with: "Escrow Contract Transaction Issue", for: self)
                     case .retrievingEstimatedGasError:
                         self.alert.showDetail("Error", with: "There was an error getting the estimating the gas limit.", for: self)
+                    case .retrievingCurrentAddressError:
+                        self.alert.showDetail("Error", with: "There was an error getting your account address.", for: self)
                     default:
                         self.alert.showDetail("Error", with: "There was an error deploying your escrow contract.", for: self)
                 }
             }
             
             // minting
-            self.transactionService.prepareTransactionForMinting { (mintTransaction, mintError, estimatedGasForMinting) in
+            self.transactionService.prepareTransactionForMinting { (mintTransaction, mintError) in
                 if let error = mintError {
                     switch error {
                         case .contractLoadingError:
@@ -165,28 +174,33 @@ class PostViewController: ParentPostViewController {
                     }
                 }
                 
-                /// check the balance of the wallet against the deposit into the escrow + gas limit for two transactions: minting and deploying the contract
-                let localDatabase = LocalDatabase()
-                guard let wallet = localDatabase.getWallet(), let walletAddress = EthereumAddress(wallet.address) else {
-                    self.alert.showDetail("Sorry", with: "There was an error retrieving your wallet.", for: self)
-                    return
-                }
-                
-                var balanceResult: BigUInt!
-                do {
-                    balanceResult = try Web3swiftService.web3instance.eth.getBalance(address: walletAddress)
-                } catch {
-                    self.alert.showDetail("Sorry", with: "An error retrieving the balance of your wallet.", for: self)
-                    return
-                }
-                
-                guard let estimatedGasForMinting = estimatedGasForMinting,
-                      let estimatedGasForDeploying = estimatedGasForDeploying,
-                      let priceInWei = Web3.Utils.parseToBigUInt(String(price), units: .eth),
-                      (estimatedGasForMinting + estimatedGasForDeploying + priceInWei) < balanceResult else {
-                    self.alert.showDetail("Sorry", with: "Insufficient funds in your wallet to cover both the gas fee and the deposit for the escrow.", height: 300, for: self)
-                    return
-                }
+//                /// check the balance of the wallet against the deposit into the escrow + gas limit for two transactions: minting and deploying the contract
+//                let localDatabase = LocalDatabase()
+//                guard let wallet = localDatabase.getWallet(), let walletAddress = EthereumAddress(wallet.address) else {
+//                    self.alert.showDetail("Sorry", with: "There was an error retrieving your wallet.", for: self)
+//                    return
+//                }
+//
+//                var balanceResult: BigUInt!
+//                do {
+//                    balanceResult = try Web3swiftService.web3instance.eth.getBalance(address: walletAddress)
+//                } catch {
+//                    self.alert.showDetail("Sorry", with: "An error retrieving the balance of your wallet.", for: self)
+//                    return
+//                }
+//
+//                guard let currentGasPrice = try? Web3swiftService.web3instance.eth.getGasPrice() else {
+//                    self.alert.showDetail("Sorry", with: "An error retreiving the current gas price.", for: self)
+//                    return
+//                }
+//
+//                guard let estimatedGasForMinting = estimatedGasForMinting,
+//                      let estimatedGasForDeploying = estimatedGasForDeploying,
+//                      let priceInWei = Web3.Utils.parseToBigUInt(String(price), units: .eth),
+//                      ((estimatedGasForMinting + estimatedGasForDeploying) * currentGasPrice + priceInWei) < balanceResult else {
+//                    self.alert.showDetail("Sorry", with: "Insufficient funds in your wallet to cover both the gas fee and the deposit for the escrow.", height: 300, for: self)
+//                    return
+//                }
                 
                 // escrow deployment transaction
                 if let transaction = transaction {
@@ -229,7 +243,7 @@ class PostViewController: ParentPostViewController {
                                                                 "escrowHash": result.hash,
                                                                 "mintHash": mintResult.hash,
                                                                 "date": Date(),
-                                                                "title": title,
+                                                                "title": itemTitle,
                                                                 "description": desc,
                                                                 "price": price,
                                                                 "category": category,
@@ -248,8 +262,8 @@ class PostViewController: ParentPostViewController {
                                                                     /// no need for a socket if you don't have images to upload?
                                                                     /// show the success alert here
                                                                     /// apply the same for resell
-                                                                    self.socketDelegate = SocketDelegate(contractAddress: "0x656f9bf02fa8eff800f383e5678e699ce2788c5c", id: id)
-                                                                    self.socketDelegate.delegate = self
+//                                                                    self.socketDelegate = SocketDelegate(contractAddress: "0x656f9bf02fa8eff800f383e5678e699ce2788c5c")
+//                                                                    self.socketDelegate.delegate = self
                                                                 }
                                                             }
                                                         } catch Web3Error.nodeError(let desc) {
@@ -330,13 +344,13 @@ class PostViewController: ParentPostViewController {
     }
 }
 
-extension PostViewController {
-    final override func didReceiveMessage(topics: [String]) {
-        super.didReceiveMessage(topics: topics)
-        self.socketDelegate.disconnectSocket()
-        print("did receive")
-    }
-}
+//extension PostViewController {
+//    final override func didReceiveMessage(topics: [String]) {
+//        super.didReceiveMessage(topics: topics)
+//        self.socketDelegate.disconnectSocket()
+//        print("did receive")
+//    }
+//}
 
 extension PostViewController {
     override var inputView: UIView? {

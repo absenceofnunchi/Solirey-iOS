@@ -22,7 +22,7 @@ protocol PreviewDelegate: AnyObject {
 
 // MARK: - MessageDelegate
 /// PostViewController
-protocol MessageDelegate: AnyObject {
+protocol SocketMessageDelegate: AnyObject {
     func didReceiveMessage(topics: [String])
 }
 

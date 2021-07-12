@@ -262,12 +262,12 @@ extension SendViewController: UITextFieldDelegate {
                     return
                 }
                 
-                DispatchQueue.global().async {
+                DispatchQueue.global().async { [weak self] in
                     do {
                         let balance = try Web3swiftService.web3instance.eth.getBalance(address: address)
                         if let balanceString = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth, decimals: 4) {
                             DispatchQueue.main.async {
-                                self.amountTextField.text = self.transactionService.stripZeros(balanceString)
+                                self?.amountTextField.text = self?.transactionService.stripZeros(balanceString)
                             }
                         }
                     } catch {
@@ -294,6 +294,8 @@ extension SendViewController: UITextFieldDelegate {
                                 self?.alert.showDetail("Error", with: "There was an error creating your transaction. Please try again.", for: self)
                             case .insufficientFund:
                                 self?.alert.showDetail("Error", with: "Insufficient fund", for: self)
+                            case .retrievingCurrentAddressError:
+                                self?.alert.showDetail("Error", with: "There was an error getting your account address.", for: self)
                             default:
                                 self?.alert.showDetail("Error", with: "Please try again.", for: self)
                         }

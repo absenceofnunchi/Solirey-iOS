@@ -71,57 +71,61 @@ extension TransactionService {
     func prepareTransactionForSending(destinationAddressString: String?,
                                       amountString: String?,
                                       gasLimit: UInt = 21000,
-                                      completion:  @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
-        guard let address = Web3swiftService.currentAddress else { return }
+                                      completion:  @escaping (WriteTransaction?, PostingError?) -> Void) {
         var balance: BigUInt!
         
         DispatchQueue.global().async {
-            balance = try? Web3swiftService.web3instance.eth.getBalance(address: address)
+            guard let currentAddress = Web3swiftService.currentAddress else {
+                completion(nil, PostingError.retrievingCurrentAddressError)
+                return
+            }
+            
+            balance = try? Web3swiftService.web3instance.eth.getBalance(address: currentAddress)
             
             guard let destinationAddressString = destinationAddressString, !destinationAddressString.isEmpty else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.emptyDestinationAddress)
+                    completion(nil, PostingError.emptyDestinationAddress)
                 }
                 return
             }
             
             guard let amountString = amountString, !amountString.isEmpty else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.emptyAmount)
+                    completion(nil, PostingError.emptyAmount)
                 }
                 return
             }
             
             guard let destinationEthAddress = EthereumAddress(destinationAddressString) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.invalidDestinationAddress)
+                    completion(nil, PostingError.invalidDestinationAddress)
                 }
                 return
             }
             
             guard let amount = Web3.Utils.parseToBigUInt(amountString, units: .wei) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.invalidAmountFormat)
+                    completion(nil, PostingError.invalidAmountFormat)
                 }
                 return
             }
             
             guard amount > 0 else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.zeroAmount)
+                    completion(nil, PostingError.zeroAmount)
                 }
                 return
             }
             
             guard amount <= (balance ?? 0) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.insufficientFund)
+                    completion(nil, PostingError.insufficientFund)
                 }
                 return
             }
             
             var options = TransactionOptions.defaultOptions
-            options.from = address
+            options.from = currentAddress
             options.value = BigUInt(amount)
             options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
             options.gasPrice = TransactionOptions.GasPricePolicy.automatic
@@ -129,14 +133,14 @@ extension TransactionService {
             let web3 = Web3swiftService.web3instance
             guard let contract = web3.contract(Web3.Utils.coldWalletABI, at: destinationEthAddress, abiVersion: 2) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.contractLoadingError)
+                    completion(nil, PostingError.contractLoadingError)
                 }
                 return
             }
             
             guard let transaction = contract.write("fallback", parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.createTransactionIssue)
+                    completion(nil, PostingError.createTransactionIssue)
                 }
                 return
             }
@@ -148,7 +152,7 @@ extension TransactionService {
     }
     
 //    // MARK: - prepareTransactionForNewContract
-//    func prepareTransactionForNewContract(value: String, completion: @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
+//    func prepareTransactionForNewContract(value: String, completion: @escaping (WriteTransaction?, PostingError?) -> Void) {
 //        let web3 = Web3swiftService.web3instance
 //        let localDatabase = LocalDatabase()
 //        if let wallet = localDatabase.getWallet() {
@@ -180,7 +184,7 @@ extension TransactionService {
 //
 //            guard let amount = Web3.Utils.parseToBigUInt(value, units: .eth) else {
 //                DispatchQueue.main.async {
-//                    completion(nil, SendEthErrors.invalidAmountFormat)
+//                    completion(nil, PostingError.invalidAmountFormat)
 //                }
 //                return
 //            }
@@ -189,14 +193,14 @@ extension TransactionService {
 ////            let web3 = Web3swiftService.web3instance
 //            guard let contract = web3.contract(purchaseABI2) else {
 //                DispatchQueue.main.async {
-//                    completion(nil, SendEthErrors.contractLoadingError)
+//                    completion(nil, PostingError.contractLoadingError)
 //                }
 //                return
 //            }
 //
 //            guard let transaction = contract.deploy(bytecode: bytecode, parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
 //                DispatchQueue.main.async {
-//                    completion(nil, SendEthErrors.createTransactionIssue)
+//                    completion(nil, PostingError.createTransactionIssue)
 //                }
 //                return
 //            }
@@ -214,17 +218,21 @@ extension TransactionService {
 
     // purchaseABI2
     // MARK: - prepareTransactionForNewContract
-    func prepareTransactionForNewContract(contractABI: String, value: String, parameters: [AnyObject]? = nil, completion: @escaping (WriteTransaction?, SendEthErrors?, BigUInt?) -> Void) {
-        DispatchQueue.global().async {
-            guard let address = Web3swiftService.currentAddress else { return }
+    func prepareTransactionForNewContract(contractABI: String, value: String, parameters: [AnyObject]? = nil, completion: @escaping (WriteTransaction?, PostingError?) -> Void) {
+//        DispatchQueue.global().async {
+            guard let currentAddress = Web3swiftService.currentAddress else {
+                completion(nil, PostingError.retrievingCurrentAddressError)
+                return
+            }
+            
             var options = TransactionOptions.defaultOptions
-            options.from = address
+            options.from = currentAddress
             options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
             options.gasPrice = TransactionOptions.GasPricePolicy.automatic
 
             guard let amount = Web3.Utils.parseToBigUInt(value, units: .eth) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.invalidAmountFormat, nil)
+                    completion(nil, PostingError.invalidAmountFormat)
                 }
                 return
             }
@@ -233,7 +241,7 @@ extension TransactionService {
             let web3 = Web3swiftService.web3instance
             guard let contract = web3.contract(contractABI) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.contractLoadingError, nil)
+                    completion(nil, PostingError.contractLoadingError)
                 }
                 return
             }
@@ -241,24 +249,17 @@ extension TransactionService {
             let bytecode = Data(hex: purchaseBytecode2)
             guard let transaction = contract.deploy(bytecode: bytecode, parameters: parameters ?? [AnyObject](), extraData: Data(), transactionOptions: options) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.createTransactionIssue, nil)
+                    completion(nil, PostingError.createTransactionIssue)
                 }
                 return
             }
 
-            var estimatedGasResult: BigUInt!
-            do {
-                estimatedGasResult = try web3.contract(contractABI)?.deploy(bytecode: bytecode)?.estimateGas(transactionOptions: nil)
-            } catch {
-                completion(nil, SendEthErrors.retrievingEstimatedGasError, nil)
-            }
-            
-            completion(transaction, nil, estimatedGasResult)
-        }
+            completion(transaction, nil)
+//        }
     }
     
 //    // MARK: - prepareTransactionForMinting
-//    func prepareTransactionForMinting(completion: @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
+//    func prepareTransactionForMinting(completion: @escaping (WriteTransaction?, PostingError?) -> Void) {
 //        DispatchQueue.global(qos: .background).async {
 //            guard let address = Web3swiftService.currentAddress else { return }
 //            var options = TransactionOptions.defaultOptions
@@ -269,7 +270,7 @@ extension TransactionService {
 //            let web3 = Web3swiftService.web3instance
 //            guard let contract = web3.contract(NFTrackABI, at: NFTrackAddress, abiVersion: 2) else {
 //                DispatchQueue.main.async {
-//                    completion(nil, SendEthErrors.contractLoadingError)
+//                    completion(nil, PostingError.contractLoadingError)
 //                }
 //                return
 //            }
@@ -277,7 +278,7 @@ extension TransactionService {
 //            let parameters: [AnyObject] = [Web3swiftService.currentAddressString!] as [AnyObject]
 //            guard let transaction = contract.write("mintNft", parameters: parameters, extraData: Data(), transactionOptions: options) else {
 //                DispatchQueue.main.async {
-//                    completion(nil, SendEthErrors.createTransactionIssue)
+//                    completion(nil, PostingError.createTransactionIssue)
 //                }
 //                return
 //            }
@@ -290,7 +291,7 @@ extension TransactionService {
 //    }
     
     // MARK: - prepareTransactionForMinting
-    func prepareTransactionForMinting(completion: @escaping (WriteTransaction?, SendEthErrors?, BigUInt?) -> Void) {
+    func prepareTransactionForMinting(completion: @escaping (WriteTransaction?, PostingError?) -> Void) {
         DispatchQueue.global(qos: .background).async {
             guard let address = Web3swiftService.currentAddress else { return }
             var options = TransactionOptions.defaultOptions
@@ -300,33 +301,27 @@ extension TransactionService {
             
             let web3 = Web3swiftService.web3instance
             guard let contract = web3.contract(NFTrackABI, at: NFTrackAddress, abiVersion: 2) else {
-                DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.contractLoadingError, nil)
-                }
+                completion(nil, PostingError.contractLoadingError)
                 return
             }
             
-            let parameters: [AnyObject] = [Web3swiftService.currentAddressString!] as [AnyObject]
+            guard let currentAddress = Web3swiftService.currentAddressString else {
+                completion(nil, PostingError.retrievingCurrentAddressError)
+                return
+            }
+            
+            let parameters: [AnyObject] = [currentAddress] as [AnyObject]
             guard let transaction = contract.write("mintNft", parameters: parameters, extraData: Data(), transactionOptions: options) else {
-                DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.createTransactionIssue, nil)
-                }
+                completion(nil, PostingError.createTransactionIssue)
                 return
             }
             
-            var estimatedGasResult: BigUInt!
-            do {
-                estimatedGasResult = try web3.contract(NFTrackABI, at: NFTrackAddress, abiVersion: 2)?.write("mintNft", parameters: parameters, extraData: Data(), transactionOptions: options)?.estimateGas(transactionOptions: nil)
-            } catch {
-                completion(nil, SendEthErrors.retrievingEstimatedGasError, nil)
-            }
-            
-            completion(transaction, nil, estimatedGasResult)
+            completion(transaction, nil)
         }
     }
     
     // MARK: - prepareTransactionForReading
-    func prepareTransactionForReading(method: String, abi: String = purchaseABI2, contractAddress: EthereumAddress, completion: @escaping (ReadTransaction?, SendEthErrors?) -> Void) {
+    func prepareTransactionForReading(method: String, abi: String = purchaseABI2, contractAddress: EthereumAddress, completion: @escaping (ReadTransaction?, PostingError?) -> Void) {
         guard let address = Web3swiftService.currentAddress else { return }
         var options = TransactionOptions.defaultOptions
         options.from = address
@@ -337,14 +332,14 @@ extension TransactionService {
             let web3 = Web3swiftService.web3instance
             guard let contract = web3.contract(abi, at: contractAddress, abiVersion: 2) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.contractLoadingError)
+                    completion(nil, PostingError.contractLoadingError)
                 }
                 return
             }
             
             guard let transaction = contract.read(method, parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.createTransactionIssue)
+                    completion(nil, PostingError.createTransactionIssue)
                 }
                 return
             }
@@ -355,7 +350,7 @@ extension TransactionService {
         }
     }
     
-    func prepareTransactionForWriting(method: String, abi: String = purchaseABI2, param: [AnyObject] = [AnyObject](), contractAddress: EthereumAddress, amountString: String = "0", completion: @escaping (WriteTransaction?, SendEthErrors?) -> Void) {
+    func prepareTransactionForWriting(method: String, abi: String = purchaseABI2, param: [AnyObject] = [AnyObject](), contractAddress: EthereumAddress, amountString: String = "0", completion: @escaping (WriteTransaction?, PostingError?) -> Void) {
         let web3 = Web3swiftService.web3instance
         guard let myAddress = Web3swiftService.currentAddress else { return }
         var balance: BigUInt!
@@ -364,28 +359,28 @@ extension TransactionService {
             
             guard !amountString.isEmpty else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.emptyAmount)
+                    completion(nil, PostingError.emptyAmount)
                 }
                 return
             }
             
             guard let amount = Web3.Utils.parseToBigUInt(amountString, units: .eth) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.invalidAmountFormat)
+                    completion(nil, PostingError.invalidAmountFormat)
                 }
                 return
             }
             
             guard amount >= 0 else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.zeroAmount)
+                    completion(nil, PostingError.zeroAmount)
                 }
                 return
             }
             
             guard amount <= (balance ?? 0) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.insufficientFund)
+                    completion(nil, PostingError.insufficientFund)
                 }
                 return
             }
@@ -398,14 +393,14 @@ extension TransactionService {
             
             guard let contract = web3.contract(abi, at: contractAddress, abiVersion: 2) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.contractLoadingError)
+                    completion(nil, PostingError.contractLoadingError)
                 }
                 return
             }
             
             guard let transaction = contract.write(method, parameters: param, extraData: Data(), transactionOptions: options) else {
                 DispatchQueue.main.async {
-                    completion(nil, SendEthErrors.createTransactionIssue)
+                    completion(nil, PostingError.createTransactionIssue)
                 }
                 return
             }

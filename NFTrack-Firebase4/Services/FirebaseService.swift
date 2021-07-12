@@ -9,6 +9,7 @@ import Foundation
 import FirebaseStorage
 import Firebase
 import FirebaseFirestore
+import Combine
 
 class FirebaseService {
     static let shared = FirebaseService()
@@ -267,169 +268,162 @@ extension FirebaseService: PostParseDelegate {
             }
         }
     }
+    
+    // MARK: - getTokenId
+    /// uploads the receipt to the Firebase function to get the token number, which will update the Firestore
+    func getTokenId1(topics: [String], documentId: String, promise: @escaping (Result<Int, PostingError>) -> Void) {
+        // build request URL
+        guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/decodeLog-decodeLog") else {
+            return
+        }
+        //        guard let requestURL = URL(string: "http://localhost:5001/nftrack-69488/us-central1/decodeLog") else {
+        //            return
+        //        }
+        
+        // prepare request
+        var request = URLRequest(url: requestURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        
+        let parameter: [String: Any] = [
+            "hexString": topics[0],
+            "topics": [
+                topics[1],
+                topics[2],
+                topics[3]
+            ],
+            "documentID": documentId
+        ]
+        
+        let paramData = try? JSONSerialization.data(withJSONObject: parameter, options: [])
+        request.httpBody = paramData
+        
+        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
+            if let error = error {
+                promise(.failure(.apiError(APIError.generalError(reason: error.localizedDescription))))
+            }
+            
+            if let response = response as? HTTPURLResponse,
+               let httpStatusCode = APIError.HTTPStatusCode(rawValue: response.statusCode) {
+                if !(200...299).contains(response.statusCode) {
+                    promise(.failure(.apiError(APIError.generalError(reason: httpStatusCode.description))))
+                }
+            }
+            
+            if let data = data {
+                do {
+                    let json = try JSONSerialization.jsonObject(with: data, options: [.allowFragments])
+                    guard let convertedJson = json as? NSNumber else {
+                        promise(.failure(.apiError(APIError.decodingError)))
+                        return
+                    }
+                    promise(.success(convertedJson.intValue))
+                } catch {
+                    promise(.failure(.apiError(APIError.decodingError)))
+                }
+            }
+        })
+        
+        //            observation = task.progress.observe(\.fractionCompleted) { [weak self] (progress, _) in
+        //                print("decode log progress", progress)
+        //                DispatchQueue.main.async {
+        //                    self?.progressModal.progressView.isHidden = false
+        //                    self?.progressModal.progressLabel.isHidden = false
+        //                    self?.progressModal.progressView.progress = Float(progress.fractionCompleted)
+        //                    self?.progressModal.progressLabel.text = String(Int(progress.fractionCompleted * 100)) + "%"
+        //                    self?.progressModal.progressView.isHidden = true
+        //                    self?.progressModal.progressLabel.isHidden = true
+        //                }
+        //            }
+        task.resume()
+    }
+    
+    func getTokenId(topics: [String], documentId: String) -> AnyPublisher<Data, APIError> {            // build request URL
+        let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/decodeLog-decodeLog")
+        //        guard let requestURL = URL(string: "http://localhost:5001/nftrack-69488/us-central1/decodeLog") else {
+        //            return
+        //        }
+        
+        var request = URLRequest(url: requestURL!)
+        request.httpMethod = "POST"
+        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        
+        let parameter: [String: Any] = [
+            "hexString": topics[0],
+            "topics": [
+                topics[1],
+                topics[2],
+                topics[3]
+            ],
+            "documentID": documentId
+        ]
+        
+        let paramData = try? JSONSerialization.data(withJSONObject: parameter, options: [])
+        request.httpBody = paramData
+        
+        return URLSession.DataTaskPublisher(request: request, session: .shared)
+            .tryMap { data, response in
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw APIError.unknown
+                }
+                
+                if httpResponse.statusCode > 300 {
+                    if let httpStatusCode = APIError.HTTPStatusCode(rawValue: httpResponse.statusCode) {
+                        throw APIError.generalError(reason: httpStatusCode.description)
+                    }
+                }
+                
+                return data
+            }
+            .mapError { error in
+                if let error = error as? APIError {
+                    return error
+                }
+                
+                if let urlError = error as? URLError {
+                    return APIError.networkError(from: urlError)
+                }
+                
+                return APIError.unknown
+            }
+            .eraseToAnyPublisher()
+        
+//        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
+//            if let error = error {
+//                promise(.failure(error))
+//            }
+//
+//            if let response = response as? HTTPURLResponse,
+//               let httpStatusCode = HTTPError.HTTPStatusCode(rawValue: response.statusCode) {
+//                //                    if !(200...299).contains(response.statusCode) {}
+//                promise(.failure(httpStatusCode))
+//            }
+//
+//            if let data = data {
+//                do {
+//                    let json = try JSONSerialization.jsonObject(with: data, options: [.allowFragments])
+//                    guard let convertedJson = json as? NSNumber else {
+//                        promise(.failure(HTTPError.decodingError))
+//                        return
+//                    }
+//                    promise(.success(convertedJson.intValue))
+//                } catch {
+//                    promise(.failure(HTTPError.decodingError))
+//                }
+//            }
+//        })
+        
+        //            observation = task.progress.observe(\.fractionCompleted) { [weak self] (progress, _) in
+        //                print("decode log progress", progress)
+        //                DispatchQueue.main.async {
+        //                    self?.progressModal.progressView.isHidden = false
+        //                    self?.progressModal.progressLabel.isHidden = false
+        //                    self?.progressModal.progressView.progress = Float(progress.fractionCompleted)
+        //                    self?.progressModal.progressLabel.text = String(Int(progress.fractionCompleted * 100)) + "%"
+        //                    self?.progressModal.progressView.isHidden = true
+        //                    self?.progressModal.progressLabel.isHidden = true
+        //                }
+        //            }
+//        task.resume()
+    }
 }
-
-//func getReviews(uid: String) {
-//    let first = db?.collection("review").document(uid).collection("details")
-//        .order(by: "finalizedDate")
-//        .limit(to: 2)
-//
-//    first?.addSnapshotListener({ [weak self] (snapshot, error) in
-//        self?.delegate?.didFetchPaginate(data: nil, error: error)
-//
-//        guard let snapshot = snapshot else {
-//            print("snapshot error")
-//            return
-//        }
-//
-//        let documents = snapshot.documents
-//        var reviewArr = [Review]()
-//        documents.forEach { (querySnapshot) in
-//            let data = querySnapshot.data()
-//            var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash: String!
-//            var finalizedDate: Date!
-//            var starRating: Int!
-//            var images: [String]?
-//            data.forEach({ (item) in
-//                switch item.key {
-//                    case "revieweeUserId":
-//                        revieweeUserId = item.value as? String
-//                    case "reviewerDisplayName":
-//                        reviewerDisplayName = item.value as? String
-//                    case "reviewerPhotoURL":
-//                        reviewerPhotoURL = item.value as? String
-//                    case "reviewerUserId":
-//                        reviewerUserId = item.value as? String
-//                    case "starRating":
-//                        starRating = item.value as? Int
-//                    case "review":
-//                        review = item.value as? String
-//                    case "images":
-//                        images = item.value as? [String]
-//                    case "confirmReceivedHash":
-//                        confirmReceivedHash = item.value as? String
-//                    case "finalizedDate":
-//                        let timeStamp = item.value as? Timestamp
-//                        finalizedDate = timeStamp?.dateValue()
-//                    default:
-//                        break
-//                }
-//            })
-//            let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, images: images, confirmReceivedHash: confirmReceivedHash, finalizedDate: finalizedDate)
-//            reviewArr.append(reviewModel)
-//        }
-//
-//        if let lastSnapshot = snapshot.documents.last {
-//            self?.lastSnapshotDelegate?.didGetLastSnapshot(lastSnapshot)
-//            self?.delegate?.didFetchPaginate(data: reviewArr, error: nil)
-//        }
-//    })
-//}
-////        guard let uid = userInfo.uid else { return }
-////        FirebaseService.shared.db.collection("review")
-////            .whereField("revieweeUserId", isEqualTo: uid)
-////            .getDocuments { [weak self] (querySnapshot, err) in
-////                if let err = err {
-////                    self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
-////                } else {
-////                    var reviewArr = [Review]()
-////                    for document in querySnapshot!.documents {
-////                        let data = document.data()
-////                        var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash: String!
-////                        var finalizedDate: Date!
-////                        var starRating: Int!
-////                        var images: [String]?
-////                        data.forEach({ (item) in
-////                            switch item.key {
-////                                case "revieweeUserId":
-////                                    revieweeUserId = item.value as? String
-////                                case "reviewerDisplayName":
-////                                    reviewerDisplayName = item.value as? String
-////                                case "reviewerPhotoURL":
-////                                    reviewerPhotoURL = item.value as? String
-////                                case "reviewerUserId":
-////                                    reviewerUserId = item.value as? String
-////                                case "starRating":
-////                                    starRating = item.value as? Int
-////                                case "review":
-////                                    review = item.value as? String
-////                                case "images":
-////                                    images = item.value as? [String]
-////                                case "confirmReceivedHash":
-////                                    confirmReceivedHash = item.value as? String
-////                                case "finalizedDate":
-////                                    let timeStamp = item.value as? Timestamp
-////                                    finalizedDate = timeStamp?.dateValue()
-////                                default:
-////                                    break
-////                            }
-////                        })
-////                        let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, images: images, confirmReceivedHash: confirmReceivedHash, finalizedDate: finalizedDate)
-////                        reviewArr.append(reviewModel)
-////                    }
-////                    self?.profileReviewVC.postArr = reviewArr
-////            }
-////        }
-//
-//func refetchReviews(uid: String, lastSnapshot: QueryDocumentSnapshot) {
-//    let next = db?.collection("review").document(uid).collection("details")
-//        .order(by: "finalizedDate")
-//        .limit(to: 8)
-//        .start(afterDocument: lastSnapshot)
-//
-//    next?.addSnapshotListener({ [weak self] (snapshot, error) in
-//        self?.delegate?.didFetchPaginate(data: nil, error: error)
-//
-//        guard let snapshot = snapshot else {
-//            print("snapshot error")
-//            return
-//        }
-//
-//        var num: Int! = 0
-//        let documents = snapshot.documents
-//        var reviewArr = [Review]()
-//        documents.forEach { (querySnapshot) in
-//            let data = querySnapshot.data()
-//            var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash: String!
-//            var finalizedDate: Date!
-//            var starRating: Int!
-//            var images: [String]?
-//            data.forEach({ (item) in
-//                switch item.key {
-//                    case "revieweeUserId":
-//                        revieweeUserId = item.value as? String
-//                    case "reviewerDisplayName":
-//                        reviewerDisplayName = item.value as? String
-//                    case "reviewerPhotoURL":
-//                        reviewerPhotoURL = item.value as? String
-//                    case "reviewerUserId":
-//                        reviewerUserId = item.value as? String
-//                    case "starRating":
-//                        starRating = item.value as? Int
-//                    case "review":
-//                        //                            review = item.value as? String
-//                        review = "\(String(describing: num))"
-//                    case "images":
-//                        images = item.value as? [String]
-//                    case "confirmReceivedHash":
-//                        confirmReceivedHash = item.value as? String
-//                    case "finalizedDate":
-//                        let timeStamp = item.value as? Timestamp
-//                        finalizedDate = timeStamp?.dateValue()
-//                    default:
-//                        break
-//                }
-//                num += 1
-//            })
-//
-//            let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, images: images, confirmReceivedHash: confirmReceivedHash, finalizedDate: finalizedDate)
-//            reviewArr.append(reviewModel)
-//        }
-//
-//        if let lastSnapshot = snapshot.documents.last {
-//            self?.lastSnapshotDelegate?.didGetLastSnapshot(lastSnapshot)
-//            self?.delegate?.didFetchPaginate(data: reviewArr, error: nil)
-//        }
-//    })
-//}
-

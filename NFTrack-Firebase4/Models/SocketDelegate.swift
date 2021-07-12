@@ -8,44 +8,70 @@
 import UIKit
 import web3swift
 
+struct FirebaseDataPrep {
+    let txResults: [TxResult]
+    let topics: [String]
+}
+
 class SocketDelegate: Web3SocketDelegate {
     var socketProvider: InfuraWebsocketProvider? = nil
-    
-    // document ID for firestore
-    var id: String!
     
     var contractAddress: String!
     // NFTrack
     // "0x656f9bf02fa8eff800f383e5678e699ce2788c5c"
-    weak var delegate: MessageDelegate?
+    weak var delegate: SocketMessageDelegate?
+    var didReceiveTopics: (([String]) -> Void)?
+    var txResults: [TxResult]!
+    var promise: ((Result<[String], PostingError>) -> Void)!
     
-    init(contractAddress: String, id: String) {
-        self.id = id
+    init(contractAddress: String) {
         self.contractAddress = contractAddress
         configure()
     }
     
+//    init(contractAddress: String, txResults: [TxResult], promise: @escaping (Result<FirebaseDataPrep, PostingError>) -> Void) {
+//        self.contractAddress = contractAddress
+//        self.txResults = txResults
+//        self.promise = promise
+//        configure()
+//    }
+    
     deinit {
         if socketProvider != nil {
+            print("websocket disconnected")
             socketProvider!.disconnectSocket()
         }
     }
     
     func disconnectSocket() {
         if socketProvider != nil {
+            print("websocket disconnected")
             socketProvider!.disconnectSocket()
         }
     }
     
     // Protocol method, here will be messages, received from WebSocket server
     func received(message: Any) {
-        if let dict = message as? [String: Any], let topics = dict["topics"] as? [String] {
-            delegate?.didReceiveMessage(topics: topics)
+//        print("message", message)
+        if let dict = message as? [String: Any],
+           let topics = dict["topics"] as? [String],
+           let promise = promise {
+            promise(.success(topics))
         }
     }
     
+//    func received(message: Any) {
+//        if let dict = message as? [String: Any], let topics = dict["topics"] as? [String] {
+//            delegate?.didReceiveMessage(topics: topics)
+//            if let didReceiveTopics = didReceiveTopics {
+//                didReceiveTopics(topics)
+//            }
+//        }
+//    }
+    
     func gotError(error: Error) {
         print("error", error)
+        promise(.failure(.generalError(reason: error.localizedDescription)))
     }
     
     func configure() {

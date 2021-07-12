@@ -151,7 +151,8 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
             return
         }
         
-        DispatchQueue.global().async {
+        DispatchQueue.global().async { [weak self] in
+            guard let `self` = self else { return }
             do {
                 let balance = try Web3swiftService.web3instance.eth.getBalance(address: address)
                 if let balanceString = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth, decimals: 4) {
