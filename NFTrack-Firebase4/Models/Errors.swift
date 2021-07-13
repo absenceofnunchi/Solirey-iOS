@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import web3swift
 
 enum GeneralErrors: Error {
     case noKey
@@ -143,4 +144,24 @@ enum APIError: Error, LocalizedError {
     case unknown
     case generalError(reason: String)
     case networkError(from: URLError)
+}
+
+enum PostingError: Error {
+    case generalError(reason: String)
+    case invalidDestinationAddress
+    case invalidAmountFormat
+    case emptyDestinationAddress
+    case emptyAmount
+    case contractLoadingError
+    case retrievingGasPriceError
+    case retrievingEstimatedGasError
+    case emptyResult
+    case noAvailableKeys
+    case createTransactionIssue
+    case zeroAmount
+    case insufficientFund
+    case retrievingCurrentAddressError
+    case web3Error(Web3Error)
+    case apiError(APIError)
+    case fileUploadError(FileUploadError)
 }
