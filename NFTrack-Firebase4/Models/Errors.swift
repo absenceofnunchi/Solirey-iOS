@@ -159,7 +159,7 @@ enum PostingError: Error {
     case noAvailableKeys
     case createTransactionIssue
     case zeroAmount
-    case insufficientFund
+    case insufficientFund(String)
     case retrievingCurrentAddressError
     case web3Error(Web3Error)
     case apiError(APIError)

@@ -51,14 +51,14 @@ class Web3swiftService {
     }
     
     static func getReceipt(hash: String, promise: @escaping (Result<TransactionReceipt, PostingError>) -> Void) {
-        DispatchQueue.global(qos: .background).async {
+//        DispatchQueue.global(qos: .background).async {
             do {
                 let receipt = try web3instance.eth.getTransactionReceipt(hash)
                 promise(.success(receipt))
             } catch {
                 promise(.failure(.generalError(reason: error.localizedDescription)))
             }
-        }
+//        }
     }
 }
 
