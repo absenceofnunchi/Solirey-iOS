@@ -232,16 +232,6 @@ extension FileUploadable {
             }
             
             if let uploadTask = uploadTask {
-                // Listen for state changes, errors, and completion of the upload.
-                uploadTask.observe(.resume) { snapshot in
-                    // Upload resumed, also fires when the upload starts
-                }
-                
-                uploadTask.observe(.pause) { snapshot in
-                    // Upload paused
-                    self?.alert.showDetail("Image Upload", with: "The image uploading process has been paused.", for: self)
-                }
-                
                 uploadTask.observe(.progress) { snapshot in
                     // Upload reported progress
                     let percentComplete = 100.0 * Double(snapshot.progress!.completedUnitCount)
@@ -253,7 +243,7 @@ extension FileUploadable {
                     // Upload completed successfully
                     snapshot.reference.downloadURL {(url, error) in
                         if let error = error {
-                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                            promise(.failure(.generalError(reason: error.localizedDescription)))
                         }
                         
                         if let url = url {
@@ -667,16 +657,16 @@ extension PaginateFetchDelegate {
 }
 
 protocol PostParseDelegate {
-    func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post]
+    func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post]?
 }
 
 extension PostParseDelegate {
-    func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post] {
+    func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post]? {
         var postArr = [Post]()
-        for document in querySnapshot!.documents {
-            //            print("\(document.documentID) => \(document.data())")
+        guard let querySnapshot = querySnapshot else { return nil }
+        for document in querySnapshot.documents {
             let data = document.data()
-            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type: String!
+            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
             var files, savedBy: [String]?
             data.forEach { (item) in
@@ -700,6 +690,8 @@ extension PostParseDelegate {
                         mintHash = item.value as? String
                     case "escrowHash":
                         escrowHash = item.value as? String
+                    case "auctionHash":
+                        auctionHash = item.value as? String
                     case "itemIdentifier":
                         id = item.value as? String
                     case "transferHash":
@@ -727,12 +719,18 @@ extension PostParseDelegate {
                         buyerUserId = item.value as? String
                     case "type":
                         type = item.value as? String
+                    case "deliveryMethod":
+                        deliveryMethod = item.value as? String
+                    case "paymentMethod":
+                        paymentMethod = item.value as? String
+                    case "saleFormat":
+                        saleFormat = item.value as? String
                     default:
                         break
                 }
             }
             
-            let post = Post(documentId: document.documentID, title: title, description: description, date: date, files: files, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy, type: type)
+            let post = Post(documentId: document.documentID, title: title, description: description, date: date, files: files, price: price, mintHash: mintHash, escrowHash: escrowHash, auctionHash: auctionHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy, type: type, deliveryMethod: deliveryMethod, paymentMethod: paymentMethod, saleFormat: saleFormat)
             postArr.append(post)
         }
         return postArr

@@ -5,6 +5,10 @@
 //  Created by J C on 2021-06-29.
 //
 
+/*
+ Parent container view controller for PostVC and DigitalVC
+ */
+
 import UIKit
 
 class NewPostViewController: UIViewController, SegmentConfigurable {

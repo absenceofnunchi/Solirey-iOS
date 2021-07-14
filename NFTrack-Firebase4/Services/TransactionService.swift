@@ -13,6 +13,11 @@ import Combine
 
 class TransactionService {
     let keysService = KeysService()
+    let db = FirebaseService.shared.db!
+    let alert = Alerts()
+    var userId: String? {
+        return UserDefaults.standard.string(forKey: UserDefaultKeys.userId) 
+    }
     
     func requestGasPrice(onComplition:@escaping (Double?) -> Void) {
         let path = "https://ethgasstation.info/json/ethgasAPI.json"
@@ -258,7 +263,7 @@ extension TransactionService {
         completion(transaction, nil)
     }
     
-    func prepareTransactionForNewContract(contractABI: String, value: String, parameters: [AnyObject]? = nil, promise: @escaping (Result<WriteTransaction, PostingError>) -> Void) {
+    func prepareTransactionForNewContract(contractABI: String, bytecode: String, value: String, parameters: [AnyObject]? = nil, promise: @escaping (Result<WriteTransaction, PostingError>) -> Void) {
         guard let currentAddress = Web3swiftService.currentAddress else {
             promise(.failure(PostingError.retrievingCurrentAddressError))
             return
@@ -281,7 +286,7 @@ extension TransactionService {
             return
         }
         
-        let bytecode = Data(hex: purchaseBytecode2)
+        let bytecode = Data(hex: bytecode)
         guard let transaction = contract.deploy(bytecode: bytecode, parameters: parameters ?? [AnyObject](), extraData: Data(), transactionOptions: options) else {
             promise(.failure(PostingError.createTransactionIssue))
             return
@@ -322,32 +327,30 @@ extension TransactionService {
     
     // MARK: - prepareTransactionForMinting
     func prepareTransactionForMinting(promise: @escaping (Result<WriteTransaction, PostingError>) -> Void) {
-        DispatchQueue.global(qos: .background).async {
-            guard let address = Web3swiftService.currentAddress else { return }
-            var options = TransactionOptions.defaultOptions
-            options.from = address
-            options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
-            options.gasPrice = TransactionOptions.GasPricePolicy.automatic
-            
-            let web3 = Web3swiftService.web3instance
-            guard let contract = web3.contract(NFTrackABI, at: NFTrackAddress, abiVersion: 2) else {
-                promise(.failure(PostingError.contractLoadingError))
-                return
-            }
-            
-            guard let currentAddress = Web3swiftService.currentAddressString else {
-                promise(.failure(PostingError.retrievingCurrentAddressError))
-                return
-            }
-            
-            let parameters: [AnyObject] = [currentAddress] as [AnyObject]
-            guard let transaction = contract.write("mintNft", parameters: parameters, extraData: Data(), transactionOptions: options) else {
-                promise(.failure(PostingError.createTransactionIssue))
-                return
-            }
-            
-            promise(.success(transaction))
+        guard let address = Web3swiftService.currentAddress else { return }
+        var options = TransactionOptions.defaultOptions
+        options.from = address
+        options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
+        options.gasPrice = TransactionOptions.GasPricePolicy.automatic
+        
+        let web3 = Web3swiftService.web3instance
+        guard let contract = web3.contract(NFTrackABI, at: NFTrackAddress, abiVersion: 2) else {
+            promise(.failure(PostingError.contractLoadingError))
+            return
         }
+        
+        guard let currentAddress = Web3swiftService.currentAddressString else {
+            promise(.failure(PostingError.retrievingCurrentAddressError))
+            return
+        }
+        
+        let parameters: [AnyObject] = [currentAddress] as [AnyObject]
+        guard let transaction = contract.write("mintNft", parameters: parameters, extraData: Data(), transactionOptions: options) else {
+            promise(.failure(PostingError.createTransactionIssue))
+            return
+        }
+        
+        promise(.success(transaction))
     }
     
     // MARK: - prepareTransactionForReading
@@ -461,45 +464,222 @@ extension TransactionService {
     }
 }
 
-//        options.gasPrice = .manual(BigUInt(gasPrice))
-//        options.gasLimit = .manual(BigUInt(gasLimit))
-//if let gasPrice = gasPrice,
-//   let wei = Web3.Utils.parseToBigUInt(gasPrice, units: .eth) {
-//    options.gasLimit = .manual(defaultGasLimitForTokenTransfer)
-//    options.gasPrice = .manual(wei)
-//}
+// MARK: - helper functions
+extension TransactionService {
+    final func createDeploymentTransaction(contractABI: String, bytecode: String, price: String, parameters: [AnyObject] = [AnyObject](), promise: @escaping (Result<TxPackage, PostingError>) -> Void) {
+        self.prepareTransactionForNewContract(contractABI: contractABI, value: price, parameters: parameters, completion: { (transaction, error) in
+            if let error = error {
+                promise(.failure(.generalError(reason: error.localizedDescription)))
+            }
+            
+            if let transaction = transaction {
+                DispatchQueue.global(qos: .userInitiated).async {
+                    do {
+                        let escrowGasEstimate = try transaction.estimateGas()
+                        let txPackage = TxPackage(transaction: transaction, gasEstimate: escrowGasEstimate, price: price, type: .deploy)
+                        //                        print("escrow txPackage", txPackage)
+                        promise(.success(txPackage))
+                    } catch {
+                        promise(.failure(.retrievingEstimatedGasError))
+                    }
+                }
+            }
+        })
+    }
+    
+    final func createMintTransaction(_ promise: @escaping (Result<TxPackage, PostingError>) -> Void) {
+        self.prepareTransactionForMinting { (transaction, error) in
+            if let error = error {
+                promise(.failure(error))
+            }
+            
+            if let transaction = transaction {
+                DispatchQueue.global(qos: .userInitiated).async {
+                    do {
+                        let escrowGasEstimate = try transaction.estimateGas()
+                        let txPackage = TxPackage(transaction: transaction, gasEstimate: escrowGasEstimate, price: nil, type: .mint)
+                        //                        print("mint txPackage", txPackage)
+                        promise(.success(txPackage))
+                    } catch {
+                        promise(.failure(.retrievingEstimatedGasError))
+                    }
+                }
+            }
+        }
+    }
+    
+    final func createWriteTransaction(method: String, paramters: [AnyObject], contractAddress: EthereumAddress, promise: @escaping (Result<TxPackage, PostingError>) -> Void) {
+        self.prepareTransactionForWriting(method: method, param: paramters, contractAddress: contractAddress) { (transaction, error) in
+            if let error = error {
+                promise(.failure(.generalError(reason: error.localizedDescription)))
+            }
+            
+            if let transaction = transaction {
+                do {
+                    let transferGasEstimate = try transaction.estimateGas()
+                    let txPackage = TxPackage(transaction: transaction, gasEstimate: transferGasEstimate, price: nil, type: .mint)
+                    promise(.success(txPackage))
+                } catch {
+                    promise(.failure(.retrievingEstimatedGasError))
+                }
+            }
+        }
+    }
+    
+    final func calculateTotalGasCost(with gasEstimates: [BigUInt], price: String, plus additionalGasUnits: BigUInt = 0, promise: @escaping (Result<Bool, PostingError>) -> Void) {
+        /// check the balance of the wallet against the deposit into the escrow + gas limit for two transactions: minting and deploying the contract
+        let localDatabase = LocalDatabase()
+        guard let wallet = localDatabase.getWallet(), let walletAddress = EthereumAddress(wallet.address) else {
+            promise(.failure(PostingError.generalError(reason: "There was an error retrieving your wallet.")))
+            return
+        }
+        
+        var balanceResult: BigUInt!
+        do {
+            balanceResult = try Web3swiftService.web3instance.eth.getBalance(address: walletAddress)
+        } catch {
+            promise(.failure(PostingError.generalError(reason: "An error retrieving the balance of your wallet.")))
+        }
+        
+        var currentGasPrice: BigUInt!
+        do {
+            currentGasPrice = try Web3swiftService.web3instance.eth.getGasPrice()
+        } catch {
+            promise(.failure(PostingError.retrievingGasPriceError))
+        }
+        
+        var totalGasUnits: BigUInt! = 0
+        for estimate in gasEstimates {
+            totalGasUnits += estimate
+        }
+        
+        // Auction needs an additional gas allowance for transferring the token
+        totalGasUnits += additionalGasUnits
+        
+        guard let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth),
+              (totalGasUnits * currentGasPrice + priceInWei) < balanceResult else {
+            let msg = """
+            Insufficient funds in your wallet to cover the gas fee for deploying the auction contract and minting a token.
 
-//TransactionSendingResult(transaction: Transaction
-//                         Nonce: 99
-//                         Gas price: 1000000000
-//                         Gas limit: 57289
-//                         To: 0x656f9BF02FA8EfF800f383E5678e699ce2788C5C
-//                         Value: 0
-//                         Data: 0xe9c2e14b0000000000000000000000009ce24c07aab108283b3518c6801c6e757b0c514c
-//                         v: 43
-//                         r: 2280159737137638003207476698716749457091804291606456927160914703478058179025
-//                         s: 1626766791259019315163922223723536520307630036486086251261618980737456711270
-//                         Intrinsic chainID: Optional(4)
-//                         Infered chainID: Optional(4)
-//                         sender: Optional("0x9Ce24C07AaB108283b3518c6801c6E757b0C514C")
-//                         hash: Optional("0x0cd134994977be4e5294d9c95b2b05a30240398495c68ab739699418bf8c0225")
-//                         , hash: "0x0cd134994977be4e5294d9c95b2b05a30240398495c68ab739699418bf8c0225")
+            A. Total estimated gas for your transaction: \(totalGasUnits ?? 0) units
+            B. Current gas price: \(currentGasPrice ?? 0) Gwei
+            C. Your current balance: \(balanceResult ?? 0) Wei
 
-//TransactionSendingResult(transaction: Transaction
-//                         Nonce: 80
-//                         Gas price: 1000000000
-//                         Gas limit: 57289
-//                         To: 0x656f9BF02FA8EfF800f383E5678e699ce2788C5C
-//                         Value: 0
-//                         Data: 0xe9c2e14b0000000000000000000000006879f0a123056b5bb56c7e787cf64a67f3a16a71
-//                         v: 43
-//                         r: 68050701568546023666251596280823648350722752180838243890427235514308429619001
-//                         s: 4250613332262705056579686434897004420380205267553040033091827715143850010970
-//                         Intrinsic chainID: Optional(4)
-//                         Infered chainID: Optional(4)
-//                         sender: Optional("0x6879f0A123056B5Bb56c7E787cF64A67f3a16a71")
-//                         hash: Optional("0x83c91bfdbe0fba135d447c84d7c93c242e09e7415c02517e343247d7107781ed")
-//                         , hash: "0x83c91bfdbe0fba135d447c84d7c93c242e09e7415c02517e343247d7107781ed")
+            A * B = \(totalGasUnits * currentGasPrice) Wei
+            """
+            promise(.failure(PostingError.insufficientFund(msg)))
+            return
+        }
+        
+        promise(.success(true))
+    }
+    
+    final func calculateTotalGasCost(with txPackages: [TxPackage], plus additionalGasUnits: BigUInt = 0, promise: @escaping (Result<[TxPackage], PostingError>) -> Void) {
+        /// check the balance of the wallet against the deposit into the escrow + gas limit for two transactions: minting and deploying the contract
+        let localDatabase = LocalDatabase()
+        guard let wallet = localDatabase.getWallet(), let walletAddress = EthereumAddress(wallet.address) else {
+            promise(.failure(PostingError.generalError(reason: "There was an error retrieving your wallet.")))
+            return
+        }
+        
+        var balanceResult: BigUInt!
+        do {
+            balanceResult = try Web3swiftService.web3instance.eth.getBalance(address: walletAddress)
+        } catch {
+            promise(.failure(PostingError.generalError(reason: "An error retrieving the balance of your wallet.")))
+        }
+        
+        var currentGasPrice: BigUInt!
+        do {
+            currentGasPrice = try Web3swiftService.web3instance.eth.getGasPrice()
+        } catch {
+            promise(.failure(PostingError.retrievingGasPriceError))
+        }
+        
+        var totalGasUnits: BigUInt! = 0
+        var price: String!
+        for txPackage in txPackages {
+            totalGasUnits += txPackage.gasEstimate
+            // only one of the transactions will have price
+            if price != nil { continue }
+            price = txPackage.price
+        }
+        
+        totalGasUnits += additionalGasUnits
+        
+        guard let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth),
+              (totalGasUnits * currentGasPrice + priceInWei) < balanceResult else {
+            let msg = """
+            Insufficient funds in your wallet to cover the gas fee for deploying the auction contract and minting a token.
+
+            A. Total estimated gas for your transaction: \(totalGasUnits ?? 0) units
+            B. Current gas price: \(currentGasPrice ?? 0) Gwei
+            C. Your current balance: \(balanceResult ?? 0) Wei
+
+            A * B = \(totalGasUnits * currentGasPrice) Wei
+            """
+            promise(.failure(PostingError.insufficientFund(msg)))
+            return
+        }
+        
+        promise(.success(txPackages))
+    }
+    
+    final func executeTransaction(transaction: WriteTransaction, password: String, type: TxType) -> Future<TxResult, PostingError> {
+        return Future<TxResult, PostingError> { promise in
+            do {
+                let result = try transaction.send(password: password, transactionOptions: nil)
+                print("executeTransaction", result)
+                let senderAddress = result.transaction.sender!.address
+                let txResult = TxResult(senderAddress: senderAddress, txHash: result.hash, txType: type)
+                promise(.success(txResult))
+            } catch {
+                if case PostingError.web3Error(let err) = error {
+                    promise(.failure(.generalError(reason: err.errorDescription)))
+                } else {
+                    promise(.failure(.generalError(reason: error.localizedDescription)))
+                }
+            }
+        }
+    }
+    
+    final func createFireStoreEntry(documentId: inout String?, senderAddress: String, escrowHash: String, auctionHash: String, mintHash: String, itemTitle: String, desc: String, price: String, category: String, tokensArr: Set<String>, convertedId: String, deliveryMethod: String, saleFormat: String, paymentMethod: String, topics: [String], urlStrings: [String?], promise: @escaping (Result<Int, PostingError>) -> Void) {
+        let ref = self.db.collection("post")
+        let id = ref.document().documentID
+        // for deleting photos afterwards
+        documentId = id
+        
+        // txHash is either minting or transferring the ownership
+        self.db.collection("post").document(id).setData([
+            "sellerUserId": userId,
+            "senderAddress": senderAddress,
+            "escrowHash": escrowHash,
+            "auctionHash": auctionHash,
+            "mintHash": mintHash,
+            "date": Date(),
+            "title": itemTitle,
+            "description": desc,
+            "price": price,
+            "category": category,
+            "status": PostStatus.ready.rawValue,
+            "tags": Array(tokensArr),
+            "itemIdentifier": convertedId,
+            "isReviewed": false,
+            "type": "digital",
+            "deliveryMethod": deliveryMethod,
+            "saleFormat": saleFormat,
+            "files": urlStrings,
+            "paymentMethod": paymentMethod
+        ]) { (error) in
+            if let error = error {
+                promise(.failure(.generalError(reason: error.localizedDescription)))
+            } else {
+                return FirebaseService.shared.getTokenId1(topics: topics, documentId: id, promise: promise)
+            }
+        }
+    }
+}
+
 
 // subscription
 //address = 0x656f9BF02FA8EfF800f383E5678e699ce2788C5C;

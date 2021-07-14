@@ -64,7 +64,6 @@ class ListDetailViewController: ParentDetailViewController {
         }
     }
     
-    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         var contentHeight: CGFloat!
@@ -203,9 +202,9 @@ extension ListDetailViewController {
                     }
                 }
             case 8:
-                break
-                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Delivery Method", detail: InfoText.transferPending)])
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Status", detail: InfoText.transferPending)])
                 self.present(infoVC, animated: true, completion: nil)
+                break
             default:
                 break
         }
@@ -224,7 +223,11 @@ extension ListDetailViewController {
         DispatchQueue.global().async { [weak self] in
             guard let `self` = self else { return }
             do {
-                let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(self.post.escrowHash)
+                guard let escrowHash = self.post.escrowHash else {
+                    self.alert.showDetail("Error", with: "Could not load the escrow hash", for: self)
+                    return
+                }
+                let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(escrowHash)
                 guard let contractAddress = receipt.contractAddress else { return }
                 self.contractAddress = contractAddress
                 self.transactionService.prepareTransactionForReading(method: "state", contractAddress: contractAddress, completion: { (transaction, error) in

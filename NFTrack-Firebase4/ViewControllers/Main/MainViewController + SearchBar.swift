@@ -97,7 +97,7 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
     }
 }
 
-extension MainViewController: RefetchDataDelegate {
+extension MainViewController: RefetchDataDelegate, PostParseDelegate {
     func getLatestSearchPosts(searchItems: [String]) {
         var first = db?.collection("post")
             .limit(to: 8)

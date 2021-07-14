@@ -195,6 +195,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         let tag = sender.view?.tag
         switch tag {
             case 1:
+                // tapping on the user profile
                 let profileDetailVC = ProfileDetailViewController()
                 profileDetailVC.userInfo = userInfo
                 profileDetailVC.profileImage = fetchedImage

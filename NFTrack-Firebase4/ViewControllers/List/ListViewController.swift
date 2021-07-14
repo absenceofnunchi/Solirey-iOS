@@ -105,7 +105,7 @@ class ListViewController: ParentListViewController<Post> {
     }
 }
 
-extension ListViewController: SegmentConfigurable {
+extension ListViewController: SegmentConfigurable, PostParseDelegate {
     enum Segment: Int, CaseIterable {
         case buying, selling, purchases, posts
         

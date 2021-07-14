@@ -82,7 +82,8 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var files: [String]?
     var price: String!
     var mintHash: String!
-    var escrowHash: String!
+    var escrowHash: String?
+    var auctionHash: String?
     var id: String!
     var status: String!
     var sellerHash: String!
@@ -95,8 +96,11 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var confirmReceivedDate: Date?
     var savedBy: [String]?
     var type: String!
+    var deliveryMethod: String!
+    var paymentMethod: String!
+    var saleFormat: String!
     
-    init(documentId: String, title: String, description: String, date: Date, files: [String]?, price: String, mintHash: String, escrowHash: String, id: String, status: String, sellerUserId: String, buyerUserId: String?,sellerHash: String, buyerHash: String?, confirmPurchaseHash: String?, confirmPurchaseDate: Date?, transferHash: String?, transferDate: Date?, confirmReceivedHash: String?, confirmReceivedDate: Date?, savedBy: [String]?, type: String) {
+    init(documentId: String, title: String, description: String, date: Date, files: [String]?, price: String, mintHash: String, escrowHash: String? = "N/A", auctionHash: String? = "N/A", id: String, status: String, sellerUserId: String, buyerUserId: String?,sellerHash: String, buyerHash: String?, confirmPurchaseHash: String?, confirmPurchaseDate: Date?, transferHash: String?, transferDate: Date?, confirmReceivedHash: String?, confirmReceivedDate: Date?, savedBy: [String]?, type: String, deliveryMethod: String, paymentMethod: String, saleFormat: String) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
         self.title = title
@@ -106,6 +110,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.price = price
         self.mintHash = mintHash
         self.escrowHash = escrowHash
+        self.auctionHash = auctionHash
         self.id = id
         self.status = status
         self.sellerHash = sellerHash
@@ -118,6 +123,9 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.confirmReceivedDate = confirmReceivedDate
         self.savedBy = savedBy
         self.type = type
+        self.deliveryMethod = deliveryMethod
+        self.paymentMethod = paymentMethod
+        self.saleFormat = saleFormat
     }
 }
 
@@ -379,8 +387,32 @@ struct PanelButton {
     let tag: Int
 }
 
-enum PostType: Int, CaseIterable {
-    case tangible, digital
+//enum PostType: Int, CaseIterable {
+//    case tangible
+//    case digital
+//
+//    func asString() -> String {
+//        switch self {
+//            case .tangible:
+//                return NSLocalizedString("Tangible", comment: "")
+//            case .digital:
+//                return NSLocalizedString("Digital", comment: "")
+//        }
+//    }
+//
+//    static func getSegmentText() -> [String] {
+//        let segmentArr = PostType.allCases
+//        var segmentTextArr = [String]()
+//        for segment in segmentArr {
+//            segmentTextArr.append(NSLocalizedString(segment.asString(), comment: ""))
+//        }
+//        return segmentTextArr
+//    }
+//}
+
+enum PostType {
+    case tangible
+    case digital(_ saleFormat: SaleFormat)
     
     func asString() -> String {
         switch self {
@@ -392,7 +424,7 @@ enum PostType: Int, CaseIterable {
     }
     
     static func getSegmentText() -> [String] {
-        let segmentArr = PostType.allCases
+        let segmentArr = PostType.allValues
         var segmentTextArr = [String]()
         for segment in segmentArr {
             segmentTextArr.append(NSLocalizedString(segment.asString(), comment: ""))
@@ -400,6 +432,64 @@ enum PostType: Int, CaseIterable {
         return segmentTextArr
     }
 }
+
+extension PostType: RawRepresentable, CaseCountable {
+    typealias RawValue = Int
+
+    var rawValue: RawValue {
+        switch self {
+            case .tangible:
+                return 0
+            case .digital(.onlineDirect):
+                return 1
+            case .digital(.openAuction):
+                return 2
+        }
+    }
+    
+    init?(rawValue: Int) {
+        switch rawValue {
+            case 0:
+                self = .tangible
+            case 1:
+                self = .digital(.onlineDirect)
+            default:
+                return nil
+        }
+    }
+}
+
+protocol CaseCountable {
+    static var caseCount: Int { get }
+    static var allValues: [Self] { get }
+}
+
+extension CaseCountable where Self: RawRepresentable, Self.RawValue == Int {
+    internal static var caseCount: Int {
+        var count = 0
+        while let _ = Self(rawValue: count) {
+            count += 1
+        }
+        return count
+    }
+    
+    internal static var allValues: [Self] {
+        var allValuesArr = [Self]()
+        var count = 0
+        while let rawValue = Self(rawValue: count) {
+            allValuesArr.append(rawValue)
+            count += 1
+        }
+        return allValuesArr
+    }
+}
+
+
+enum SaleFormat: String {
+    case onlineDirect = "Online Direct"
+    case openAuction = "Open Auction"
+}
+
 
 // MARK: - Delivery method
 enum DeliveryMethod: String {

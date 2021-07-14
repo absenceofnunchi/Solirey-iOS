@@ -8,7 +8,7 @@
 import UIKit
 import FirebaseFirestore
 
-class MainDetailViewController: ParentListViewController<Post> {
+class MainDetailViewController: ParentListViewController<Post>, PostParseDelegate {
     var category: String! {
         didSet {
             title = category!
@@ -65,9 +65,25 @@ class MainDetailViewController: ParentListViewController<Post> {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = post
-        listDetailVC.tableViewRefreshDelegate = self
-        self.navigationController?.pushViewController(listDetailVC, animated: true)
+        
+        guard let saleFormat = SaleFormat(rawValue: post.saleFormat) else {
+            self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
+            return
+        }
+        
+        switch saleFormat {
+            case .onlineDirect:
+                let listDetailVC = ListDetailViewController()
+                listDetailVC.post = post
+                // refreshes the MainDetailVC table when the user updates the status
+                listDetailVC.tableViewRefreshDelegate = self
+                self.navigationController?.pushViewController(listDetailVC, animated: true)
+            case .openAuction:
+                let auctionDetailVC = AuctionDetailViewController()
+                auctionDetailVC.post = post
+                self.navigationController?.pushViewController(auctionDetailVC, animated: true)
+        }
+        
+
     }
 }

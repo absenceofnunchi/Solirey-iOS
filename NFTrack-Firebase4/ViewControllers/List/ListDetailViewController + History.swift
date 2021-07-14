@@ -7,7 +7,7 @@
 
 import UIKit
 
-extension ListDetailViewController: TableViewConfigurable {
+extension ListDetailViewController: TableViewConfigurable, PostParseDelegate {
     // MARK: - getHistory
     func getHistory() {
         FirebaseService.shared.db.collection("post")
@@ -47,27 +47,27 @@ extension ListDetailViewController: TableViewConfigurable {
         ])
     }
     
-    func fetchUserData(id: String, completion: @escaping (UserInfo?) -> Void) {
-        showSpinner {
-            let docRef = FirebaseService.shared.db.collection("user").document(id)
-            docRef.getDocument { [weak self] (document, error) in
-                if let document = document, document.exists {
-                    if let data = document.data() {
-                        let displayName = data[UserDefaultKeys.displayName] as? String
-                        let photoURL = data[UserDefaultKeys.photoURL] as? String
-                        let userInfo = UserInfo(email: nil, displayName: displayName!, photoURL: photoURL, uid: nil)
-                        self?.hideSpinner {
-                            completion(userInfo)
-                        }
-                    }
-                } else {
-                    self?.hideSpinner {
-                        completion(nil)
-                    }
-                }
-            }
-        }
-    }
+//    func fetchUserData(id: String, completion: @escaping (UserInfo?) -> Void) {
+//        showSpinner {
+//            let docRef = FirebaseService.shared.db.collection("user").document(id)
+//            docRef.getDocument { [weak self] (document, error) in
+//                if let document = document, document.exists {
+//                    if let data = document.data() {
+//                        let displayName = data[UserDefaultKeys.displayName] as? String
+//                        let photoURL = data[UserDefaultKeys.photoURL] as? String
+//                        let userInfo = UserInfo(email: nil, displayName: displayName!, photoURL: photoURL, uid: nil)
+//                        self?.hideSpinner {
+//                            completion(userInfo)
+//                        }
+//                    }
+//                } else {
+//                    self?.hideSpinner {
+//                        completion(nil)
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 

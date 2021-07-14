@@ -51,7 +51,7 @@ extension HistoryDetailViewController {
         escrowHashTitleLabel = createTitleLabel(text: "Escrow Address")
         scrollView.addSubview(escrowHashTitleLabel)
         
-        escrowHashLabel = createLabel(text: post.escrowHash, hashType: .tx, target: self, action: #selector(buttonPressed))
+        escrowHashLabel = createLabel(text: post.escrowHash ?? "N/A", hashType: .tx, target: self, action: #selector(buttonPressed))
         escrowHashLabel.lineBreakMode = .byClipping
         escrowHashLabel.numberOfLines = 0
         escrowHashLabel.sizeToFit()

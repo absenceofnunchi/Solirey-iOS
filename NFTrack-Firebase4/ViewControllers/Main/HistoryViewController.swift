@@ -8,7 +8,6 @@
 import UIKit
 
 class HistoryViewController: UITableViewController {
-    
     var data: [String] {
         var data = [String]()
         for i in 1...50 {
@@ -20,7 +19,6 @@ class HistoryViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
         configureUI()
     }
     
@@ -33,15 +31,11 @@ class HistoryViewController: UITableViewController {
 extension HistoryViewController {
     func configureUI() {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: HistoryCell.identifier)
-//        tableView.isScrollEnabled = false
+        tableView.isScrollEnabled = false
         tableView.rowHeight = CELL_HEIGHT
         tableView.estimatedRowHeight = CELL_HEIGHT
     }
-    
-    func setConstraints() {
-        
-    }
-    
+
     private func calculatePreferredSize() {
         //        let targetSize = CGSize(width: view.bounds.width,
         //                                height: UIView.layoutFittingCompressedSize.height)
@@ -52,6 +46,7 @@ extension HistoryViewController {
         let targetSize = CGSize(width: view.bounds.width, height: vcHeight)
         print("targetSize", targetSize)
         preferredContentSize = targetSize
+//        tableView.frame = CGRect(origin: .zero, size: targetSize)
     }
 }
 

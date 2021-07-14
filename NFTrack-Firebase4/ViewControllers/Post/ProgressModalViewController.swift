@@ -8,18 +8,27 @@
 import UIKit
 
 enum PostProgress: Int, CaseIterable {
+    case estimatGas
     case deployingEscrow
+    case deployingAuction
     case minting
     case images
+    case initializeAuction
     
     func asString() -> String {
         switch self {
+            case .estimatGas:
+                return "Estimating the total gas"
             case .deployingEscrow:
                 return "Deploying the escrow contract"
+            case .deployingAuction:
+                return "Deplying the auction contract"
             case .minting:
                 return "Minting your item on the blockchain"
             case .images:
                 return "Checking for images to upload"
+            case .initializeAuction:
+                return "Initializing the auction contract"
         }
     }
 }
@@ -30,9 +39,11 @@ struct PostProgressData {
     init(postType: PostType) {
         switch postType {
             case .tangible:
-                phases = PostProgress.allCases
-            case .digital:
-                phases = [.minting, .images]
+                phases = [.estimatGas, .deployingEscrow, .images, .minting]
+            case .digital(.onlineDirect):
+                phases = [.estimatGas, .images, .deployingEscrow, .minting]
+            case .digital(.openAuction):
+                phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
         }
     }
     

@@ -10,7 +10,7 @@
 
 import UIKit
 
-class ReviewViewController: ParentListViewController<Post> {
+class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
     internal var segmentedControl: UISegmentedControl!
     final override func viewDidLoad() {
         super.viewDidLoad()

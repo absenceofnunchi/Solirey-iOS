@@ -28,14 +28,7 @@ class SocketDelegate: Web3SocketDelegate {
         self.contractAddress = contractAddress
         configure()
     }
-    
-//    init(contractAddress: String, txResults: [TxResult], promise: @escaping (Result<FirebaseDataPrep, PostingError>) -> Void) {
-//        self.contractAddress = contractAddress
-//        self.txResults = txResults
-//        self.promise = promise
-//        configure()
-//    }
-    
+
     deinit {
         if socketProvider != nil {
             print("websocket disconnected")
@@ -85,7 +78,7 @@ class SocketDelegate: Web3SocketDelegate {
             //0x2fb30cfca4728c7f62d6787ef949fc7943d813f5093ebc6c343c6cc6f3ec1a56
 
         } catch {
-            print("socket error", error)
+            promise(.failure(.generalError(reason: error.localizedDescription)))
         }
     }
 }

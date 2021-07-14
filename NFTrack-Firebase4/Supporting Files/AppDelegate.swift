@@ -279,7 +279,7 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
     
     func parseDocument(document: DocumentSnapshot) -> Post? {
         guard let data = document.data() else { return nil }
-        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type: String!
+        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat: String!
         var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
         var files, savedBy: [String]?
         data.forEach { (item) in
@@ -303,6 +303,8 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
                     mintHash = item.value as? String
                 case "escrowHash":
                     escrowHash = item.value as? String
+                case "auctionHash":
+                    auctionHash = item.value as? String
                 case "itemIdentifier":
                     id = item.value as? String
                 case "transferHash":
@@ -330,12 +332,18 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
                     buyerUserId = item.value as? String
                 case "type":
                     type = item.value as? String
+                case "deliveryMethod":
+                    deliveryMethod = item.value as? String
+                case "paymentMethod":
+                    paymentMethod = item.value as? String
+                case "saleFormat":
+                    saleFormat = item.value as? String
                 default:
                     break
             }
         }
 
-        let post = Post(documentId: document.documentID, title: title, description: description, date: date, files: files, price: price, mintHash: mintHash, escrowHash: escrowHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy, type: type)
+        let post = Post(documentId: document.documentID, title: title, description: description, date: date, files: files, price: price, mintHash: mintHash, escrowHash: escrowHash, auctionHash: auctionHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy, type: type, deliveryMethod: deliveryMethod, paymentMethod: paymentMethod, saleFormat: saleFormat)
         return post
     }
 }

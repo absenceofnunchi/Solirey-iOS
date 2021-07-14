@@ -115,6 +115,7 @@
 		499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9966266C195F00FC6CDE /* AccountCell.swift */; };
 		499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F998D266C8D9700FC6CDE /* ProgressCell.swift */; };
 		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
+		49BFB4BE269E4666008D908F /* AuctionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */; };
 		49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */; };
 		49D59C762663326500107F79 /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D59C752663326500107F79 /* SocketDelegate.swift */; };
 		49DEFF5526841C54004C2DD0 /* ReviewDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */; };
@@ -267,6 +268,7 @@
 		499F9966266C195F00FC6CDE /* AccountCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCell.swift; sourceTree = "<group>"; };
 		499F998D266C8D9700FC6CDE /* ProgressCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCell.swift; sourceTree = "<group>"; };
 		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
+		49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionDetailViewController.swift; sourceTree = "<group>"; };
 		49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		49D59C752663326500107F79 /* SocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
 		49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewDetailViewController.swift; sourceTree = "<group>"; };
@@ -609,6 +611,7 @@
 				496F70012652029F00E4056B /* ListDetailViewController.swift */,
 				49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */,
 				49E75A07266A7FD40064BB34 /* ListDetailViewController + History.swift */,
+				49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */,
 				496F7006265207A700E4056B /* ImagePageViewController.swift */,
 				496F700B265421E200E4056B /* TxDetailViewController.swift */,
 				49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */,
@@ -1055,6 +1058,7 @@
 				49DEFF6026864CA4004C2DD0 /* Document.swift in Sources */,
 				497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */,
 				493333662682860000B8BFC2 /* ReviewCell.swift in Sources */,
+				49BFB4BE269E4666008D908F /* AuctionDetailViewController.swift in Sources */,
 				4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */,
 				499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */,
 				495FD31C268B9DCA00F1D81D /* NewPostViewController.swift in Sources */,
