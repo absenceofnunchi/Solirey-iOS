@@ -99,6 +99,7 @@
 		497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9AEB2655A60300F09CAA /* NFTrackABI.swift */; };
 		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
+		4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */; };
 		499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702A52672E0BA001DD80A /* ToolBarView.swift */; };
 		499702AB2673F75E001DD80A /* MessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AA2673F75E001DD80A /* MessageCell.swift */; };
 		499702B02674533E001DD80A /* ParentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AF2674533E001DD80A /* ParentCell.swift */; };
@@ -127,7 +128,6 @@
 		49E759AD26669ACB0064BB34 /* ParentPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */; };
 		49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759B72666BCCF0064BB34 /* ResellViewController.swift */; };
 		49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E75A02266A7C670064BB34 /* HistoryViewController.swift */; };
-		49E75A08266A7FD40064BB34 /* ListDetailViewController + History.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E75A07266A7FD40064BB34 /* ListDetailViewController + History.swift */; };
 		49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E7D64B267AA73F00E8815A /* ChatViewController1.swift */; };
 		49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E7D650267AA77000E8815A /* MeesageCells1.swift */; };
 		49F694BE265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */; };
@@ -252,6 +252,7 @@
 		497A9AEB2655A60300F09CAA /* NFTrackABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABI.swift; sourceTree = "<group>"; };
 		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecDisplayView.swift; sourceTree = "<group>"; };
 		499702A52672E0BA001DD80A /* ToolBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolBarView.swift; sourceTree = "<group>"; };
 		499702AA2673F75E001DD80A /* MessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCell.swift; sourceTree = "<group>"; };
 		499702AF2674533E001DD80A /* ParentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentCell.swift; sourceTree = "<group>"; };
@@ -280,7 +281,6 @@
 		49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentPostViewController.swift; sourceTree = "<group>"; };
 		49E759B72666BCCF0064BB34 /* ResellViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellViewController.swift; sourceTree = "<group>"; };
 		49E75A02266A7C670064BB34 /* HistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewController.swift; sourceTree = "<group>"; };
-		49E75A07266A7FD40064BB34 /* ListDetailViewController + History.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListDetailViewController + History.swift"; sourceTree = "<group>"; };
 		49E7D64B267AA73F00E8815A /* ChatViewController1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController1.swift; sourceTree = "<group>"; };
 		49E7D650267AA77000E8815A /* MeesageCells1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeesageCells1.swift; sourceTree = "<group>"; };
 		49E7D67A267BE9CF00E8815A /* NFTrack-Firebase4.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "NFTrack-Firebase4.entitlements"; sourceTree = "<group>"; };
@@ -460,6 +460,7 @@
 				499702A52672E0BA001DD80A /* ToolBarView.swift */,
 				4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */,
 				495FD2D726892FDB00F1D81D /* StarRatingView.swift */,
+				4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -610,7 +611,6 @@
 				496F6FF72651AD6300E4056B /* ListViewController.swift */,
 				496F70012652029F00E4056B /* ListDetailViewController.swift */,
 				49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */,
-				49E75A07266A7FD40064BB34 /* ListDetailViewController + History.swift */,
 				49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */,
 				496F7006265207A700E4056B /* ImagePageViewController.swift */,
 				496F700B265421E200E4056B /* TxDetailViewController.swift */,
@@ -985,6 +985,7 @@
 				49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */,
 				496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */,
 				495FD2D826892FDC00F1D81D /* StarRatingView.swift in Sources */,
+				4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */,
 				495FD329268D284E00F1D81D /* MainViewController + SearchBar.swift in Sources */,
 				499F9958266B2ADB00FC6CDE /* WebViewController.swift in Sources */,
 				496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */,
@@ -1049,7 +1050,6 @@
 				49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */,
 				49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */,
 				493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */,
-				49E75A08266A7FD40064BB34 /* ListDetailViewController + History.swift in Sources */,
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
 				499F9953266AED0E00FC6CDE /* ParentDetailViewController.swift in Sources */,

@@ -26,5 +26,13 @@ class BigPreviewViewController: UIViewController, ModalConfigurable {
             imageView.widthAnchor.constraint(equalTo: view.widthAnchor),
             imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor)
         ])
+        
+        let swipe = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
+        swipe.direction = .down
+        view.addGestureRecognizer(swipe)
+    }
+    
+    @objc func swiped() {
+        self.dismiss(animated: true, completion: nil)
     }
 }

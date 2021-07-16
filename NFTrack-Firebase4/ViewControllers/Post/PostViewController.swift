@@ -140,7 +140,7 @@ class PostViewController: ParentPostViewController {
         }
         
         // escrow deployment
-        self.transactionService.prepareTransactionForNewContract(contractABI: purchaseABI2, value: String(price), completion: { [weak self] (transaction, error) in
+        self.transactionService.prepareTransactionForNewContract(contractABI: purchaseABI2, bytecode: purchaseBytecode2, value: String(price), completion: { [weak self] (transaction, error) in
             guard let `self` = self else { return }
             if let error = error {
                 switch error {

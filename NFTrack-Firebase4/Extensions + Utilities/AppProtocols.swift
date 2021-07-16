@@ -83,6 +83,7 @@ extension ModalConfigurable {
         view.addSubview(closeButton)
     }
     
+    
     func setButtonConstraints() {
         NSLayoutConstraint.activate([
             // close button
@@ -453,7 +454,7 @@ protocol UsernameBannerConfigurable where Self: UIViewController {
     var constraints: [NSLayoutConstraint]! { get set }
     func processProfileImage()
     func tapped(_ sender: UITapGestureRecognizer!)
-    func configureNameDisplay<T: Post, U: UIView>(post: T, v: U)
+    func configureNameDisplay<T: Post, U: UIView>(post: T, v: U, callback: (_ profileImageView: UIImageView, _ displayNameLabel: UILabel) -> Void)
 }
 
 extension UsernameBannerConfigurable {
@@ -503,7 +504,7 @@ extension UsernameBannerConfigurable {
         }
     }
     
-    func configureNameDisplay<T: DateConfigurable, U: UIView>(post: T, v: U) {
+    func configureNameDisplay<T: DateConfigurable, U: UIView>(post: T, v: U, callback: (_ profileImageView: UIImageView, _ displayNameLabel: UILabel) -> Void) {
         usernameContainer = UIView()
         usernameContainer.translatesAutoresizingMaskIntoConstraints = false
         v.addSubview(usernameContainer)
@@ -524,14 +525,11 @@ extension UsernameBannerConfigurable {
         profileImageView = UIImageView()
         let profileImage = image.withTintColor(.orange, renderingMode: .alwaysOriginal)
         profileImageView.image = profileImage
-        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
-        profileImageView.addGestureRecognizer(tap)
         profileImageView.tag = 1
         profileImageView.translatesAutoresizingMaskIntoConstraints = false
         usernameContainer.addSubview(profileImageView)
         
         displayNameLabel = UILabel()
-        displayNameLabel.addGestureRecognizer(tap)
         displayNameLabel.tag = 1
         displayNameLabel.text = userInfo?.displayName
         displayNameLabel.lineBreakMode = .byTruncatingTail
@@ -541,6 +539,8 @@ extension UsernameBannerConfigurable {
         underLineView = UnderlineView()
         underLineView.translatesAutoresizingMaskIntoConstraints = false
         usernameContainer.addSubview(underLineView)
+        
+        callback(profileImageView, displayNameLabel)
     }
     
     func setNameDisplayConstraints(topView: UIView) {
@@ -568,11 +568,6 @@ extension UsernameBannerConfigurable {
             underLineView.trailingAnchor.constraint(equalTo: usernameContainer.trailingAnchor),
             underLineView.heightAnchor.constraint(equalToConstant: 0.2)
         ])
-    }
-}
-
-fileprivate extension UIViewController {
-    @objc func tapped(_ sender: UITapGestureRecognizer!) {
     }
 }
 
@@ -780,4 +775,11 @@ extension ButtonPanelConfigurable {
             buttonPanel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         ])
     }
+}
+
+// MARK: - SpecDetail
+/// From parsing the fetched properties from the auction smart contract through Combine (PropertyFetchModel) to displaying the data on the spec detail view (SpecDetailModel)
+protocol SpecDetail {
+    var propertyName: String { get set }
+    var propertyDesc: String? { get set }
 }

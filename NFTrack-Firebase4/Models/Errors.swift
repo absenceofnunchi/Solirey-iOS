@@ -13,6 +13,7 @@ enum GeneralErrors: Error {
     case noPassword
     case wrongPassword
     case decodingError
+    case generalError(String)
 }
 
 enum WalletSavingError: Error {

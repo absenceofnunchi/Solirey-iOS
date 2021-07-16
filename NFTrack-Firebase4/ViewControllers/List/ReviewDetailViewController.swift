@@ -32,7 +32,11 @@ class ReviewDetailViewController: UIViewController {
     override func viewDidLoad() {   
         super.viewDidLoad()
         configureUI()
-        configureNameDisplay(post: post, v: scrollView)
+        configureNameDisplay(post: post, v: scrollView) { (profileImageView, displayNameLabel) in
+            let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+            profileImageView.addGestureRecognizer(tap)
+            displayNameLabel.addGestureRecognizer(tap)
+        }
         configureImageDisplay(post: post, v: scrollView)
         fetchUserData(id: post.reviewerUserId)
         setConstraints()
@@ -108,8 +112,18 @@ extension ReviewDetailViewController: PageVCConfigurable, UsernameBannerConfigur
         NSLayoutConstraint.activate(constraints)
     }
     
-    func tapped(_ sender: UITapGestureRecognizer!) {
-        print("pressed")
+    @objc func tapped(_ sender: UITapGestureRecognizer!) {
+        let tag = sender.view?.tag
+        switch tag {
+            case 1:
+                // tapping on the user profile
+                let profileDetailVC = ProfileDetailViewController()
+                profileDetailVC.userInfo = userInfo
+                profileDetailVC.profileImage = fetchedImage
+                self.navigationController?.pushViewController(profileDetailVC, animated: true)
+            default:
+                break
+        }
     }
 }
 

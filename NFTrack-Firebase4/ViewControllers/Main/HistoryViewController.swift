@@ -7,31 +7,49 @@
 
 import UIKit
 
-class HistoryViewController: UITableViewController {
-    var data: [String] {
-        var data = [String]()
-        for i in 1...50 {
-            data.append("\(i)")
+class HistoryViewController: UITableViewController, PostParseDelegate {
+    private let alert = Alerts()
+    private var data = [Post]()
+    var itemIdentifier: String! {
+        didSet {
+            guard let id = itemIdentifier else { return }
+            FirebaseService.shared.db.collection("post")
+                .whereField("itemIdentifier", isEqualTo: id)
+                .getDocuments { [weak self] (querySnapshot, err) in
+                    if let err = err {
+                        self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
+                    } else {
+                        defer {
+                            DispatchQueue.main.async {
+                                self?.tableView.reloadData()
+                            }
+                        }
+                        
+                        if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                            self?.data = data
+                        }
+                    }
+                }
         }
-        return data
     }
-    private let CELL_HEIGHT: CGFloat = 50
+    private let CELL_HEIGHT: CGFloat = 100
     
-    override func viewDidLoad() {
+    final override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
     }
     
-    override func viewDidLayoutSubviews() {
+    final override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         calculatePreferredSize()
     }
 }
 
 extension HistoryViewController {
-    func configureUI() {
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: HistoryCell.identifier)
+    final func configureUI() {
+        tableView.register(HistoryCell.self, forCellReuseIdentifier: HistoryCell.identifier)
         tableView.isScrollEnabled = false
+        tableView.separatorStyle = .none
         tableView.rowHeight = CELL_HEIGHT
         tableView.estimatedRowHeight = CELL_HEIGHT
     }
@@ -42,23 +60,46 @@ extension HistoryViewController {
         //        print("tableView.systemLayoutSizeFitting(targetSize)", tableView.systemLayoutSizeFitting(targetSize))
         
         let vcHeight: CGFloat = CGFloat(self.data.count) * CELL_HEIGHT
-        print("vcHeight", vcHeight)
         let targetSize = CGSize(width: view.bounds.width, height: vcHeight)
-        print("targetSize", targetSize)
         preferredContentSize = targetSize
-//        tableView.frame = CGRect(origin: .zero, size: targetSize)
     }
 }
 
 extension HistoryViewController {
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    final override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return data.count
     }
     
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: HistoryCell.identifier, for: indexPath)
-        cell.textLabel?.text = data[indexPath.row]
+    final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: HistoryCell.identifier, for: indexPath) as? HistoryCell else {
+            fatalError("Table cell could not be loaded.")
+        }
+        cell.selectionStyle = .none
+        let datum = data[indexPath.row]
+        if let date = datum.date {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .long
+            let formattedDate = formatter.string(from: date)
+            cell.dateLabel.text = formattedDate
+        }
+        cell.hashLabel.text = datum.sellerHash
+        
+        switch indexPath.row {
+            case 0:
+                cell.cellPosition = .first
+            case self.tableView(tableView, numberOfRowsInSection: 0) - 1:
+                cell.cellPosition = .last
+            default:
+                cell.cellPosition = .middle
+        }
         return cell
+    }
+    
+    final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let datum = data[indexPath.row]
+        let historyDetailVC = HistoryDetailViewController()
+        historyDetailVC.post = datum
+        self.navigationController?.pushViewController(historyDetailVC, animated: true)
     }
 }
 
@@ -79,3 +120,11 @@ extension HistoryViewController {
 //
 //        }
 //    }
+
+//var data: [String] {
+//    var data = [String]()
+//    for i in 1...50 {
+//        data.append("\(i)")
+//    }
+//    return data
+//}

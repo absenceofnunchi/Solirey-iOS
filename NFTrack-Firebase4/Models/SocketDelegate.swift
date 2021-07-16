@@ -63,8 +63,12 @@ class SocketDelegate: Web3SocketDelegate {
 //    }
     
     func gotError(error: Error) {
-        print("error", error)
-        promise(.failure(.generalError(reason: error.localizedDescription)))
+        print("socket error", error)
+        if case PostingError.web3Error(let err) = error {
+            promise(.failure(.generalError(reason: err.errorDescription)))
+        } else {
+            promise(.failure(.generalError(reason: error.localizedDescription)))
+        }
     }
     
     func configure() {

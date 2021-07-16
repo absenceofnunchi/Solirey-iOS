@@ -83,7 +83,5 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 auctionDetailVC.post = post
                 self.navigationController?.pushViewController(auctionDetailVC, animated: true)
         }
-        
-
     }
 }

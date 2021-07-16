@@ -27,9 +27,9 @@ class HistoryDetailViewController: ParentDetailViewController {
         if post.status != "ready",
            let _ = post.confirmPurchaseHash,
            let _ = post.confirmReceivedHash {
-            scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: descLabel.bounds.size.height + 1400)
+            scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: descLabel.bounds.size.height + 1700)
         } else {
-            scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: descLabel.bounds.size.height + 1100)
+            scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: descLabel.bounds.size.height + 1400)
         }
     }
 }
@@ -102,7 +102,7 @@ extension HistoryDetailViewController {
         super.setConstraints()
         
         NSLayoutConstraint.activate([
-            ownerTitleHash.topAnchor.constraint(equalTo: idLabel.bottomAnchor, constant: 40),
+            ownerTitleHash.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
             ownerTitleHash.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             ownerTitleHash.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             

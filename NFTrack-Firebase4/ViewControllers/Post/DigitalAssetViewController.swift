@@ -396,7 +396,8 @@ class DigitalAssetViewController: ParentPostViewController {
                                             let fileURLS = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
                                                 return Future<String?, PostingError> { promise in
                                                     self.uploadFileWithPromise(fileURL: previewData.filePath, userId: self.userId, promise: promise)
-                                                }.eraseToAnyPublisher()
+                                                }
+                                                .eraseToAnyPublisher()
                                             }
                                             return Publishers.MergeMany(fileURLS)
                                                 .collect()
@@ -480,6 +481,7 @@ class DigitalAssetViewController: ParentPostViewController {
         guard let index = auctionDuration.firstIndex(of: "d") else { return }
         let newIndex = auctionDuration.index(before: index)
         let newStr = auctionDuration[..<newIndex]
+        print("newStr", newStr)
         guard let numOfDays = NumberFormatter().number(from: String(newStr)) else {
             self.alert.showDetail("Sorry", with: "Could not convert the auction duration into a proper format. Please try again.", for: self)
             return
@@ -489,8 +491,11 @@ class DigitalAssetViewController: ParentPostViewController {
             self.alert.showDetail("Sorry", with: "Could not convert the auction starting price into a proper format. Pleas try again.", for: self)
             return
         }
-        
+
+        print("numOfDays", numOfDays)
         let biddingTime = numOfDays.intValue * 60 * 60 * 24
+        print("biddingTime", biddingTime)
+        print("startingBidInWei", startingBidInWei)
         
         let auctionFunction = Deferred { [weak self] in
             Future<TxPackage, PostingError> { promise in
@@ -535,6 +540,7 @@ class DigitalAssetViewController: ParentPostViewController {
                         self.present(self.progressModal, animated: true, completion: {
                             // prepare the auction deployment contract and the minting contract
                             Publishers.MergeMany([auctionFunction, mintFunction])
+                                .receive(on: DispatchQueue.global(qos: .userInitiated))
                                 .collect()
                                 .eraseToAnyPublisher()
                                 .flatMap { (txPackages) -> AnyPublisher<[TxPackage], PostingError> in
@@ -556,6 +562,7 @@ class DigitalAssetViewController: ParentPostViewController {
                                         .collect()
                                         .eraseToAnyPublisher()
                                 }
+                                .receive(on: DispatchQueue.global(qos: .userInitiated))
                                 // instantiate the socket, parse the receipts, and create the firebase entry as soon as the socket receives the data
                                 // createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
                                 .flatMap { (txResults) -> AnyPublisher<Int, PostingError> in
@@ -667,16 +674,18 @@ class DigitalAssetViewController: ParentPostViewController {
                                             let update: [String: PostProgress] = ["update": .initializeAuction]
                                             NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                             
-                                            self.titleTextField.text?.removeAll()
-                                            self.priceTextField.text?.removeAll()
-                                            self.descTextView.text?.removeAll()
-                                            self.idTextField.text?.removeAll()
-                                            self.saleMethodLabel.text?.removeAll()
-                                            self.auctionDurationLabel.text?.removeAll()
-                                            self.auctionStartingPriceTextField.text?.removeAll()
-                                            self.pickerLabel.text?.removeAll()
-                                            self.tagTextField.tokens.removeAll()
-                                            self.paymentMethodLabel.text?.removeAll()
+                                            DispatchQueue.main.async {
+                                                self.titleTextField.text?.removeAll()
+                                                self.priceTextField.text?.removeAll()
+                                                self.descTextView.text?.removeAll()
+                                                self.idTextField.text?.removeAll()
+                                                self.saleMethodLabel.text?.removeAll()
+                                                self.auctionDurationLabel.text?.removeAll()
+                                                self.auctionStartingPriceTextField.text?.removeAll()
+                                                self.pickerLabel.text?.removeAll()
+                                                self.tagTextField.tokens.removeAll()
+                                                self.paymentMethodLabel.text?.removeAll()
+                                            }
                                             
                                             if self.previewDataArr.count > 0 {
                                                 self.previewDataArr.removeAll()
@@ -733,6 +742,7 @@ enum TxType {
     case mint
     case deploy
     case transferToken
+    case bid
 }
 
 struct TxResult {

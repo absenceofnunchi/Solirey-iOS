@@ -560,3 +560,10 @@ struct InfoText {
     """
 }
 
+// MARK: - ListingDetailModel
+/// To show the listing details like delivery method, payment method, and the sale format.
+/// Shows on ParentDetailVC
+struct SpecDetailModel: SpecDetail {
+    var propertyName: String
+    var propertyDesc: String?
+}

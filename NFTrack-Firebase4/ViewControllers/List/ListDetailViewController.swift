@@ -12,10 +12,10 @@ import FirebaseFirestore
 import BigInt
 
 class ListDetailViewController: ParentDetailViewController {
-    override var post: Post! {
+    final override var post: Post! {
         didSet {
             self.getStatus()
-            self.getHistory()
+//            self.getHistory()
         }
     }
     final var optionsBarItem: UIBarButtonItem!
@@ -27,11 +27,14 @@ class ListDetailViewController: ParentDetailViewController {
     }
     
     // history table view below the status update button
-    final var historyTableViewHeight: CGFloat! = 0
+//    final var historyTableViewHeight: CGFloat! = 0
 //    final var historyTableView: UITableView!
-    final lazy var historyTableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: HistoryCell.self, identifier: HistoryCell.identifier)
-    final var historicData = [Post]()
-    final let CELL_HEIGHT: CGFloat = 100
+//    final lazy var historyTableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: HistoryCell.self, identifier: HistoryCell.identifier)
+//    final var historicData = [Post]()
+//    final let CELL_HEIGHT: CGFloat = 100
+    final var historyVC: HistoryViewController!
+    lazy var historyVCHeightConstraint: NSLayoutConstraint = historyVC.view.heightAnchor.constraint(equalToConstant: 100)
+
     final var isSaved: Bool! = false {
         didSet {
             configureNavigationBar()
@@ -41,42 +44,47 @@ class ListDetailViewController: ParentDetailViewController {
     final var starButtonItem: UIBarButtonItem!
     weak var delegate: RefetchDataDelegate?
     final var observation: NSKeyValueObservation?
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        /// setHistory has to be here because DetailParentVC fetches the userInfo asynchronously
-        /// and the topAnchor of the tableView is against the updateStatusButton
-        setHistoryVC()
-    }
     
-    override func viewDidAppear(_ animated: Bool) {
+    final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if observation != nil {
             observation?.invalidate()
         }
     }
     
-    override func viewDidDisappear(_ animated: Bool) {
+    final override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         if observation != nil {
             observation?.invalidate()
         }
     }
     
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        var contentHeight: CGFloat!
-        if let files = post.files, files.count > 0 {
-            contentHeight = descLabel.bounds.size.height + 800 + historyTableViewHeight + 250
-        } else {
-            contentHeight = descLabel.bounds.size.height + 800 + historyTableViewHeight
+//    final override func viewDidLayoutSubviews() {
+//        super.viewDidLayoutSubviews()
+//        var contentHeight: CGFloat!
+//        if let files = post.files, files.count > 0 {
+//            contentHeight = descLabel.bounds.size.height + 800 + historyTableViewHeight + 250
+//        } else {
+//            contentHeight = descLabel.bounds.size.height + 800 + historyTableViewHeight
+//        }
+//
+//        scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: contentHeight)
+//    }
+    
+    final override func preferredContentSizeDidChange(forChildContentContainer container: UIContentContainer) {
+        if let container = container as? HistoryViewController {
+            historyVCHeightConstraint.constant = container.preferredContentSize.height            
+            if let files = post.files, files.count > 0 {
+                let adjustedSize = CGSize(width: container.preferredContentSize.width, height: container.preferredContentSize.height + descLabel.bounds.size.height + 1000 + 250 )
+                self.scrollView.contentSize =  adjustedSize
+            } else {
+                let adjustedSize = CGSize(width: container.preferredContentSize.width, height: container.preferredContentSize.height + descLabel.bounds.size.height + 1000 )
+                self.scrollView.contentSize =  adjustedSize
+            }
         }
-        
-        scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: contentHeight)
     }
     
-    override func userInfoDidSet() {
+    final override func userInfoDidSet() {
         super.userInfoDidSet()
         if userInfo.uid != userId {
             configureNavigationBar()
@@ -115,7 +123,7 @@ extension ListDetailViewController {
         self.navigationItem.rightBarButtonItems = buttonItemsArr
     }
     
-    override func configureUI() {
+    final override func configureUI() {
         super.configureUI()
         title = post.title
         
@@ -135,12 +143,19 @@ extension ListDetailViewController {
         updateStatusButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
         updateStatusButton.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(updateStatusButton)
+        
+        historyVC = HistoryViewController()
+        historyVC.itemIdentifier = post.id
+        addChild(historyVC)
+        historyVC.view.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(historyVC.view)
+        historyVC.didMove(toParent: self)
     }
     
-    override func setConstraints() {
+    final override func setConstraints() {
         super.setConstraints()
         NSLayoutConstraint.activate([
-            statusTitleLabel.topAnchor.constraint(equalTo: idLabel.bottomAnchor, constant: 40),
+            statusTitleLabel.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
             statusTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             statusTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             
@@ -153,6 +168,11 @@ extension ListDetailViewController {
             updateStatusButton.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             updateStatusButton.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             updateStatusButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            historyVC.view.topAnchor.constraint(equalTo: updateStatusButton.bottomAnchor, constant: 40),
+            historyVC.view.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
+            historyVC.view.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
+            historyVCHeightConstraint,
         ])
     }
 }
@@ -238,7 +258,7 @@ extension ListDetailViewController {
                             case .createTransactionIssue:
                                 self.alert.showDetail("Error", with: "Contract Transaction Issue", for: self)
                             default:
-                                self.alert.showDetail("Error", with: "There was an error minting your token.", for: self)
+                                self.alert.showDetail("Error", with: "There was an error getting your information from the blockchain.", for: self)
                         }
                     }
                     
@@ -345,7 +365,7 @@ extension ListDetailViewController {
 
 extension ListDetailViewController {
     final func updateState(method: String, price: String = "0", status: PostStatus? = nil) {
-        transactionService.prepareTransactionForWriting(method: method, contractAddress: contractAddress, amountString: price) { [weak self](transaction, error) in
+        transactionService.prepareTransactionForWriting(method: method, abi: purchaseABI2, contractAddress: contractAddress, amountString: price) { [weak self](transaction, error) in
             if let error = error {
                 switch error {
                     case .invalidAmountFormat:
@@ -628,7 +648,7 @@ extension ListDetailViewController {
     /// content: the message to be show on the push notification
     /// docID: the ID that'll be used to fetch the firebase entry once the recipient taps on the message
     /// Post is not sent along with the message because 1) it's a class and 2) FCM only allows strings in the properties
-    func sendNotification(sender: String, recipient: String, content: String, docID: String, completion: @escaping (Error?) -> Void) {
+    final func sendNotification(sender: String, recipient: String, content: String, docID: String, completion: @escaping (Error?) -> Void) {
         // build request URL
         guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/sendStatusNotification-sendStatusNotification") else {
             return

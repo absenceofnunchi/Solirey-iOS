@@ -35,6 +35,7 @@ class ParentDetailViewController: UIViewController {
     var descLabel: UILabelPadding!
     var idTitleLabel: UILabel!
     var idLabel: UILabelPadding!
+    var listDetailTitleLabel: UILabel!
     var constraints: [NSLayoutConstraint]!
     var fetchedImage: UIImage!
     var userInfo: UserInfo! {
@@ -45,12 +46,26 @@ class ParentDetailViewController: UIViewController {
     // to refresh after update
     weak var tableViewRefreshDelegate: TableViewRefreshDelegate?
     
+    // listing detail
+    var listingSpecView: SpecDisplayView!
+    lazy var listingDetailArr = [
+        SpecDetailModel(propertyName: "Delivery Method", propertyDesc: post.deliveryMethod),
+        SpecDetailModel(propertyName: "Payment Method", propertyDesc: post.paymentMethod),
+        SpecDetailModel(propertyName: "Sale Format", propertyDesc: post.saleFormat)
+    ]
+    let LIST_DETAIL_HEIGHT: CGFloat = 50
+    
     override func viewDidLoad() {
         super.viewDidLoad()
                 
         configureBackground()
         /// UsernameBannerConfigurable
-        configureNameDisplay(post: post, v: scrollView)
+        configureNameDisplay(post: post, v: scrollView) { (profileImageView, displayNameLabel) in
+            let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+            profileImageView.addGestureRecognizer(tap)
+            displayNameLabel.addGestureRecognizer(tap)
+            
+        }
         fetchUserData(id: post.sellerUserId)
         configureImageDisplay(post: post, v: scrollView)
         configureUI()
@@ -104,6 +119,15 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         idLabel.sizeToFit()
         idLabel.layoutMargins = UIEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
         scrollView.addSubview(idLabel)
+        
+        listDetailTitleLabel = createTitleLabel(text: "Listing Detail")
+        scrollView.addSubview(listDetailTitleLabel)
+        
+        listingSpecView = SpecDisplayView(listingDetailArr: listingDetailArr)
+        listingSpecView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(listingSpecView)
+        
+        
     }
     
 //    // MARK: - configureEditButton
@@ -186,6 +210,15 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
             idLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             idLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             idLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
+            
+            listDetailTitleLabel.topAnchor.constraint(equalTo: idLabel.bottomAnchor, constant: 40),
+            listDetailTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
+            listDetailTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
+            
+            listingSpecView.topAnchor.constraint(equalTo: listDetailTitleLabel.bottomAnchor, constant: 10),
+            listingSpecView.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
+            listingSpecView.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
+            listingSpecView.heightAnchor.constraint(equalToConstant: CGFloat(listingDetailArr.count) * LIST_DETAIL_HEIGHT),
         ])
         
         NSLayoutConstraint.activate(constraints)
@@ -266,3 +299,4 @@ let eventABI = """
         }
         ]
         """
+
