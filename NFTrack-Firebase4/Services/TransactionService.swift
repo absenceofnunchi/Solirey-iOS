@@ -449,11 +449,6 @@ extension TransactionService {
             return
         }
         
-        print("method", method)
-        print("from", myAddress)
-        print("param", param)
-        print("transaction", transaction)
-        
         completion(transaction, nil)
     }
     
@@ -478,6 +473,8 @@ extension TransactionService {
             print("amount", amount)
             
             var options = TransactionOptions.defaultOptions
+            options.callOnBlock = .pending
+            options.nonce = .pending
             options.from = myAddress
             options.value = amount
             options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
@@ -488,10 +485,17 @@ extension TransactionService {
                 return
             }
             
-            guard let transaction = contract.write(method, parameters: param, extraData: Data(), transactionOptions: options) else {
+            guard let transaction = contract.write(method) else {
                 promise(.failure(PostingError.createTransactionIssue))
                 return
             }
+            
+            transaction.transactionOptions.from = myAddress
+            transaction.transactionOptions.value = amount
+//            guard let transaction = contract.write(method, parameters: param, extraData: Data(), transactionOptions: options) else {
+//                promise(.failure(PostingError.createTransactionIssue))
+//                return
+//            }
             
             promise(.success(transaction))
         }

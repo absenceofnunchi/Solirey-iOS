@@ -8,7 +8,6 @@
 import UIKit
 import Combine
 import web3swift
-import BigInt
 
 enum AuctionProperties: String, CaseIterable {
     case startingBid
@@ -44,14 +43,13 @@ class AuctionDetailViewController: ParentDetailViewController {
     final var bidContainer: UIView!
     final var bidTextField: UITextField!
     final var auctionButton: UIButton!
-    final var auctionContractAddress: EthereumAddress!
     final let LIST_DETAIL_MARGIN: CGFloat = 10
-    final var propertiesToRead: [String]!
-    lazy final var auctionDetailArr: [SpecDetailModel] = propertiesToRead.map { SpecDetailModel(propertyName: $0, propertyDesc: "loading...")}
-    
+    final var propertiesToLoad: [String]!
+    lazy final var auctionDetailArr: [SpecDetailModel] = propertiesToLoad.map { SpecDetailModel(propertyName: $0, propertyDesc: "loading...")}
+
     init() {
         super.init(nibName: nil, bundle: nil)
-        self.propertiesToRead = AuctionProperties.allCasesString()
+        self.propertiesToLoad = AuctionProperties.allCasesString()
     }
     
     required init?(coder: NSCoder) {
@@ -175,12 +173,71 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         }
     }
     
+    final func fetchContractAddress(txHash: String) {
+        Future<TransactionReceipt, PostingError> { promise in
+            Web3swiftService.getReceipt(hash: txHash, promise: promise)
+        }
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .failure(.generalError(reason: let msg)):
+                    self?.alert.showDetail("Error", with: msg, for: self)
+                    break
+                case .finished:
+                    print("contract retrieved")
+                    break
+                default:
+                    break
+            }
+        } receiveValue: { [weak self] (receipt) in
+            guard let contractAddress = receipt.contractAddress else { return }
+            self?.contractAddress = contractAddress
+        }
+        .store(in: &storage)
+
+    }
+    
     final func bid() {
+        let bidAmount = "0.000004"
+        
+        guard let bidAmountNumber = NumberFormatter().number(from: bidAmount), bidAmountNumber.doubleValue > 0 else {
+            self.alert.showDetail("Bid Amount Error", with: "The bid amount has to be greater than zero.", for: self)
+            return
+        }
+        
+        Future<WriteTransaction, PostingError> { promise in
+            self.transactionService.prepareTransactionForWriting(method: "bid", abi: auctionABI, contractAddress: self.contractAddress, amountString: bidAmount, promise: promise)
+        }
+        .eraseToAnyPublisher()
+        .flatMap { (transaction) -> Future<TxResult, PostingError> in
+            self.transactionService.executeTransaction(transaction: transaction, password: "111111", type: .deploy)
+        }
+        .sink { (completion) in
+            switch completion {
+                case .failure(let error):
+                    print("error", error)
+                    switch error {
+                        case .generalError(reason: let msg):
+                            self.alert.showDetail("Error", with: msg, for: self)
+                        default:
+                            break
+                    }
+                    break
+                case .finished:
+                    print("finished")
+                    break
+            }
+        } receiveValue: { (txResult) in
+            print("txResult", txResult)
+        }
+        .store(in: &self.storage)
+    }
+    
+    final func bid1() {
         guard let bidAmount = bidTextField.text, !bidAmount.isEmpty else {
             self.alert.showDetail("Bid Amount Error", with: "The bid amount cannot be empty.", for: self)
             return
         }
-        
+
         guard Double(bidAmount) != nil else {
             self.alert.showDetail("Bid Format Error", with: "The bid amount has to be in a numeric form", for: self)
             return
@@ -194,15 +251,18 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
         detailVC.titleString = "Enter your passcode"
         detailVC.buttonAction = { [weak self] vc in
-            guard let `self` = self else { return }
+            guard let self = self else { return }
             if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
                 self.dismiss(animated: true, completion: {
-                    guard let auctionContractAddress = self.auctionContractAddress else {
-                        self.alert.showDetail("Error", with: "Unable to retrieve the address for the auction contract.", for: self)
+                    guard let contractAddress = self.contractAddress else {
+                        guard let auctionHash = self.post.auctionHash else { return }
+                        // in case the address wasn't retrieved from getAuctionInfo()
+                        self.fetchContractAddress(txHash: auctionHash)
+                        self.alert.showDetail("Error", with: "Unable to retrieve the address for the auction contract. Press OK to reload.", for: self)
                         return
                     }
                     
-//                    self.transactionService.prepareTransactionForWriting(method: "bid", abi: auctionABI, contractAddress: auctionContractAddress, amountString: bidAmount) { (transaction, error) in
+//                    self.transactionService.prepareTransactionForWriting(method: "bid", abi: auctionABI, contractAddress: contractAddress, amountString: bidAmount) { (transaction, error) in
 //                        if let error = error {
 //                            self.alert.showDetail("Error", with: error.localizedDescription, for: self)
 //                        }
@@ -219,7 +279,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
 //                        }
 //                    }
                     Future<WriteTransaction, PostingError> { promise in
-                        self.transactionService.prepareTransactionForWriting(method: "bid", abi: auctionABI, contractAddress: auctionContractAddress, amountString: bidAmount, promise: promise)
+                        self.transactionService.prepareTransactionForWriting(method: "bid", abi: auctionABI, contractAddress: contractAddress, amountString: bidAmount, promise: promise)
                     }
                     .eraseToAnyPublisher()
                     .flatMap { (transaction) -> Future<TxResult, PostingError> in
@@ -258,158 +318,27 @@ extension AuctionDetailViewController: UITextFieldDelegate {
 // bid button
 extension AuctionDetailViewController {
     final func getAuctionInfo() {
-        guard let auctionHash = post.auctionHash else {
-            self.alert.showDetail("Error", with: "Could not load the transaction hash for the auction contract deployment.", for: self)
-            return
-        }
+        guard let auctionHash = post.auctionHash else { return }
         
-        Future<TransactionReceipt, PostingError> { promise in
-            Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
-        }
-        .receive(on: DispatchQueue.global(qos: .utility))
-        .eraseToAnyPublisher()
-        .flatMap { [weak self] (receipt) -> AnyPublisher<[PropertyFetchModel], PostingError>  in
-            guard let contractAddress = receipt.contractAddress else {
-                return Fail(error: PostingError.generalError(reason: "Could not obtain the auction contract."))
-                    .eraseToAnyPublisher()
-            }
-
-            guard let `self` = self else {
-                return Fail(error: PostingError.generalError(reason: "Error"))
-                    .eraseToAnyPublisher()
-            }
+        let auctionInfoLoader = PropertyLoader(propertiesToLoad: self.propertiesToLoad, deploymentHash: auctionHash)
+        auctionInfoLoader.initiateLoadSequence()
+            .sink { (completion) in
+                switch completion {
+                    case .failure(let error):
+                        print("error", error)
+                    case .finished:
+                        print("finished")
+                }
+            } receiveValue: { [weak self] (propertyFetchModels: [PropertyFetchModel]) in
+                DispatchQueue.main.async {
+                    if self?.propertiesToLoad.count == propertyFetchModels.count  {
+                        self?.auctionSpecView.fetchedDataArr = propertyFetchModels
+                    }
+                }
                 
-            self.auctionContractAddress = contractAddress
-            guard let propertiesToRead = self.propertiesToRead else {
-                return Fail(error: PostingError.generalError(reason: "Unable to load the properties to read"))
-                    .eraseToAnyPublisher()
+                // contract address for bidding
+                self?.contractAddress = auctionInfoLoader.contractAddress
             }
-            
-            let listOfPrepPublishers = propertiesToRead.map { (propertyToRead) in
-                return Future<PropertyFetchModel, PostingError> { promise in
-                    self.transactionService.prepareTransactionForReading(method: propertyToRead, abi: auctionABI, contractAddress: contractAddress, promise: promise)
-                }
-                .receive(on: DispatchQueue.global(qos: .utility))
-            }
-            return Publishers.MergeMany(listOfPrepPublishers)
-                .collect()
-                .eraseToAnyPublisher()
-        }
-        .flatMap { [weak self] (propertyFetchModels) -> AnyPublisher<[PropertyFetchModel], PostingError> in
-            let listOfReadPublishers = propertyFetchModels.map { (propertyFetchModel) in
-                return Future<PropertyFetchModel, PostingError> { promise in
-                    var mutableModel = propertyFetchModel
-                    self?.executeReadTransaction(propertyFetchModel: &mutableModel, promise: promise)
-                }
-                .receive(on: DispatchQueue.global(qos: .utility))
-                .eraseToAnyPublisher()
-            }
-            return Publishers.MergeMany(listOfReadPublishers)
-                .collect()
-                .eraseToAnyPublisher()
-        }
-        .tryMap ({ [weak self] (propertyFetchModels) -> [PropertyFetchModel] in
-            print("self?.propertiesToRead.count", self?.propertiesToRead.count as Any)
-            print("propertyFetchModels.count", propertyFetchModels.count)
-            if propertyFetchModels.count != self?.propertiesToRead.count {
-                throw PostingError.generalError(reason: "Couldn't fetch the auction properties.")
-            } else {
-                return propertyFetchModels
-            }
-        })
-        .retryWithDelay(retries: 5, delay: 1, scheduler: DispatchQueue.global())
-        .sink { (completion) in
-            switch completion {
-                case .failure(let error):
-                    print("error", error)
-                    break
-                case .finished:
-                    print("finished")
-                    break
-            }
-        } receiveValue: { [weak self] (propertyFetchModels) in
-            DispatchQueue.main.async {
-                if self?.propertiesToRead.count == propertyFetchModels.count  {
-                    self?.auctionSpecView.fetchedDataArr = propertyFetchModels
-                }
-            }
-        }
-        .store(in: &storage)
-    }
-
-    final func executeReadTransaction(propertyFetchModel: inout PropertyFetchModel, promise: (Result<PropertyFetchModel, PostingError>) -> Void) {
-        do {
-            let result: [String: Any] = try propertyFetchModel.transaction.call()
-            switch AuctionProperties(rawValue: propertyFetchModel.propertyName) {
-                case .startingBid:
-                    if let startingBid = result["0"] as? BigUInt,
-                       var bidInEth = Web3.Utils.formatToEthereumUnits(startingBid, toUnits: .eth, decimals: 8) {
-
-                        var index = bidInEth.index(before: bidInEth.endIndex)
-                        while bidInEth[index] == "0" {
-                            bidInEth.removeLast()
-                            index = bidInEth.index(before: bidInEth.endIndex)
-                        }
-                                                
-                        propertyFetchModel.propertyDesc = "\(bidInEth.description) ETH"
-                    }
-                case .auctionEndTime:
-                    if let auctionEndTime = result["0"] as? BigUInt {
-                        
-                        let date = Date(timeIntervalSince1970: Double(auctionEndTime))
-                        
-                        let formatter = DateFormatter()
-                        formatter.timeStyle = .short
-                        formatter.dateStyle = .short
-                        formatter.timeZone = .current
-                        let formattedDate = formatter.string(from: date)
-                        propertyFetchModel.propertyDesc = formattedDate
-                    }
-                case .highestBid:
-                    if let startingBid = result["0"] as? BigUInt,
-                       let bidInEth = Web3.Utils.parseToBigUInt(startingBid.description, units: .eth) {
-                        
-                        propertyFetchModel.propertyDesc = "\(bidInEth.description) ETH"
-                    }
-                case .highestBidder:
-                    if let propertyDesc = result["0"] as? EthereumAddress {
-                        propertyFetchModel.propertyDesc = propertyDesc.address
-                    }
-                default:
-                    break
-            }
-            
-            promise(.success(propertyFetchModel))
-        } catch {
-            promise(.failure(.generalError(reason: "Could not read the properties from the blockchain.")))
-        }
+            .store(in: &self.storage)
     }
 }
-
-extension Publisher {
-    func retryWithDelay<S>(
-        retries: Int,
-        delay: S.SchedulerTimeType.Stride,
-        scheduler: S
-    ) -> AnyPublisher<Output, Failure> where S: Scheduler {
-        self
-            .delayIfFailure(for: delay, scheduler: scheduler)
-            .retry(retries)
-            .eraseToAnyPublisher()
-    }
-    
-    private func delayIfFailure<S>(
-        for delay: S.SchedulerTimeType.Stride,
-        scheduler: S
-    ) -> AnyPublisher<Output, Failure> where S: Scheduler {
-        self.catch { error in
-            Future { completion in
-                scheduler.schedule(after: scheduler.now.advanced(by: delay)) {
-                    completion(.failure(error))
-                }
-            }
-        }
-        .eraseToAnyPublisher()
-    }
-}
-

@@ -100,6 +100,7 @@
 		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
 		4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */; };
+		4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */; };
 		499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702A52672E0BA001DD80A /* ToolBarView.swift */; };
 		499702AB2673F75E001DD80A /* MessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AA2673F75E001DD80A /* MessageCell.swift */; };
 		499702B02674533E001DD80A /* ParentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AF2674533E001DD80A /* ParentCell.swift */; };
@@ -253,6 +254,7 @@
 		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecDisplayView.swift; sourceTree = "<group>"; };
+		4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyLoader.swift; sourceTree = "<group>"; };
 		499702A52672E0BA001DD80A /* ToolBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolBarView.swift; sourceTree = "<group>"; };
 		499702AA2673F75E001DD80A /* MessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCell.swift; sourceTree = "<group>"; };
 		499702AF2674533E001DD80A /* ParentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentCell.swift; sourceTree = "<group>"; };
@@ -542,6 +544,7 @@
 				4964E56C2649694A005B3268 /* CoreDataServices.swift */,
 				493BF9DB264C515C00B9C9D2 /* TransactionService.swift */,
 				496F6FF2264EA3D100E4056B /* FirebaseService.swift */,
+				4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -975,6 +978,7 @@
 				49333361268281B800B8BFC2 /* ProfilePostingsViewController.swift in Sources */,
 				49409A75265946870060193C /* SearchResultsViewController.swift in Sources */,
 				4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */,
+				4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */,
 				496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */,
 				493BF9D7264C4DE100B9C9D2 /* BackgroundView2.swift in Sources */,
 				495FD333268D402900F1D81D /* FilterCell.swift in Sources */,
