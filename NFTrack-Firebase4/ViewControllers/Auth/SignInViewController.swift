@@ -257,24 +257,12 @@ extension SignInViewController: UITextFieldDelegate {
 extension SignInViewController {
     func didTapEmailLogin() {
         guard let email = emailTextField.text, !email.isEmpty else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Sorry!"
-            detailVC.message = "Email can't be empty"
-            detailVC.buttonAction = { [weak self]vc in
-                self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            alert.showDetail("Missing Info", with: "Email can't be empty", height: 250, alignment: .center, for: self)
             return
         }
         
         guard let password = passwordTextField.text, !password.isEmpty else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Sorry!"
-            detailVC.message = "Password can't be empty"
-            detailVC.buttonAction = { [weak self]vc in
-                self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            alert.showDetail("Missing Info", with: "Password can't be empty", height: 250, alignment: .center, for: self)
             return
         }
         
@@ -320,13 +308,7 @@ extension SignInViewController {
                                 }
                             })
                         } else {
-                            let detailVC = DetailViewController(height: 250)
-                            detailVC.titleString = "Sorry!"
-                            detailVC.message = error.localizedDescription
-                            detailVC.buttonAction = { [weak self]vc in
-                                self?.dismiss(animated: true, completion: nil)
-                            }
-                            strongSelf.present(detailVC, animated: true, completion: nil)
+                            strongSelf.alert.showDetail("Authentication Error", with: error.localizedDescription, for: self)
                             return
                         }
                     }

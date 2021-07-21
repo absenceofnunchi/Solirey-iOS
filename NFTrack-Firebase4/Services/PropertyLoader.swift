@@ -21,12 +21,12 @@ class PropertyLoader {
         self.deploymentHash = deploymentHash
     }
     
-    private func loadInfo(propertiesToLoad: [String], deploymentHash: String) -> AnyPublisher<[PropertyFetchModel], PostingError> {
+    private func loadInfo(propertiesToLoad: [String], deploymentHash: String) -> AnyPublisher<[SmartContractProperty], PostingError> {
         return Future<TransactionReceipt, PostingError> { promise in
             Web3swiftService.getReceipt(hash: deploymentHash, promise: promise)
         }
         .eraseToAnyPublisher()
-        .flatMap { [weak self] (receipt) -> AnyPublisher<[PropertyFetchModel], PostingError>  in
+        .flatMap { [weak self] (receipt) -> AnyPublisher<[SmartContractProperty], PostingError>  in
             guard let contractAddress = receipt.contractAddress else {
                 return Fail(error: PostingError.generalError(reason: "Could not obtain the auction contract."))
                     .eraseToAnyPublisher()
@@ -34,7 +34,7 @@ class PropertyLoader {
             
             self?.contractAddress = contractAddress
             let listOfPrepPublishers = propertiesToLoad.map { (propertyToRead) in
-                return Future<PropertyFetchModel, PostingError> { promise in
+                return Future<SmartContractProperty, PostingError> { promise in
                     self?.transactionService.prepareTransactionForReading(method: propertyToRead, abi: auctionABI, contractAddress: contractAddress, promise: promise)
                 }
             }
@@ -42,9 +42,9 @@ class PropertyLoader {
                 .collect()
                 .eraseToAnyPublisher()
         }
-        .flatMap { [weak self] (propertyFetchModels) -> AnyPublisher<[PropertyFetchModel], PostingError> in
+        .flatMap { [weak self] (propertyFetchModels) -> AnyPublisher<[SmartContractProperty], PostingError> in
             let listOfReadPublishers = propertyFetchModels.map { (propertyFetchModel) in
-                return Future<PropertyFetchModel, PostingError> { promise in
+                return Future<SmartContractProperty, PostingError> { promise in
                     var mutableModel = propertyFetchModel
                     self?.executeReadTransaction(propertyFetchModel: &mutableModel, promise: promise)
                 }
@@ -56,11 +56,11 @@ class PropertyLoader {
         .eraseToAnyPublisher()
     }
     
-    func initiateLoadSequence() -> AnyPublisher<[PropertyFetchModel], PostingError> {
+    func initiateLoadSequence() -> AnyPublisher<[SmartContractProperty], PostingError> {
         if #available(iOS 14.0, *) {
             let propertyArrayPublisher = CurrentValueSubject<[String], Never>(propertiesToLoad)
             return propertyArrayPublisher
-                .flatMap { (properties) -> AnyPublisher<[PropertyFetchModel], PostingError> in
+                .flatMap { (properties) -> AnyPublisher<[SmartContractProperty], PostingError> in
                     //                    guard let propertiesToLoad = self?.propertiesToLoad,
                     //                          let deploymentHash = self?.deploymentHash else {
                     //                        return Fail(error: PostingError.generalError(reason: "Could not fetch properties."))
@@ -68,7 +68,7 @@ class PropertyLoader {
                     //                    }
                     return self.loadInfo(propertiesToLoad: self.propertiesToLoad, deploymentHash: self.deploymentHash)
                 }
-                .handleEvents(receiveOutput: { (response: [PropertyFetchModel]) in
+                .handleEvents(receiveOutput: { (response: [SmartContractProperty]) in
                     let unretrievedProperties = response.compactMap { (model) -> String? in
                         if model.propertyDesc == nil {
                             return model.propertyName
@@ -83,14 +83,14 @@ class PropertyLoader {
                         propertyArrayPublisher.send(unretrievedProperties)
                     }
                 })
-                .reduce([PropertyFetchModel](), { allModels, response in
+                .reduce([SmartContractProperty](), { allModels, response in
                     return allModels + response
                 })
                 .eraseToAnyPublisher()
         } else {
             // Fallback on earlier versions
             return self.loadInfo(propertiesToLoad: self.propertiesToLoad, deploymentHash: self.deploymentHash)
-                .tryMap ({ [weak self] (propertyFetchModels) -> [PropertyFetchModel] in
+                .tryMap ({ [weak self] (propertyFetchModels) -> [SmartContractProperty] in
                     print("self?.propertiesToLoad.count", self?.propertiesToLoad.count as Any)
                     print("propertyFetchModels.count", propertyFetchModels.count)
                     // the stackview in the spec view will go out of bound if the count is different
@@ -107,9 +107,14 @@ class PropertyLoader {
         }
     }
     
-    private final func executeReadTransaction(propertyFetchModel: inout PropertyFetchModel, promise: (Result<PropertyFetchModel, PostingError>) -> Void) {
+    private final func executeReadTransaction(propertyFetchModel: inout SmartContractProperty, promise: (Result<SmartContractProperty, PostingError>) -> Void) {
         do {
-            let result: [String: Any] = try propertyFetchModel.transaction.call()
+            guard let transaction = propertyFetchModel.transaction else {
+                promise(.failure(.generalError(reason: "Unable to create a transaction.")))
+                return
+            }
+            
+            let result: [String: Any] = try transaction.call()
             switch AuctionProperties(rawValue: propertyFetchModel.propertyName) {
                 case .startingBid:
                     if let startingBid = result["0"] as? BigUInt,
@@ -126,13 +131,15 @@ class PropertyLoader {
                     }
                 case .auctionEndTime:
                     if let auctionEndTime = result["0"] as? BigUInt {
+//                        propertyFetchModel.propertyDesc = auctionEndTime.description
                         let date = Date(timeIntervalSince1970: Double(auctionEndTime))
-                        let formatter = DateFormatter()
-                        formatter.timeStyle = .short
-                        formatter.dateStyle = .short
-                        formatter.timeZone = .current
-                        let formattedDate = formatter.string(from: date)
-                        propertyFetchModel.propertyDesc = formattedDate
+                        propertyFetchModel.propertyDesc = date
+//                        let formatter = DateFormatter()
+//                        formatter.timeStyle = .short
+//                        formatter.dateStyle = .short
+//                        formatter.timeZone = .current
+//                        let formattedDate = formatter.string(from: date)
+//                        propertyFetchModel.propertyDesc = formattedDate
                     }
                 case .highestBid:
                     if let startingBid = result["0"] as? BigUInt,
@@ -141,7 +148,11 @@ class PropertyLoader {
                     }
                 case .highestBidder:
                     if let propertyDesc = result["0"] as? EthereumAddress {
-                        propertyFetchModel.propertyDesc = propertyDesc.address
+                        if propertyDesc.address == "0x0000000000000000000000000000000000000000" {
+                            propertyFetchModel.propertyDesc = "No Bidder"
+                        } else {
+                            propertyFetchModel.propertyDesc = propertyDesc.address
+                        }
                     }
                 default:
                     break

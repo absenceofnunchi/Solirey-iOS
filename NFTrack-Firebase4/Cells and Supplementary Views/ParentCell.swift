@@ -27,11 +27,12 @@ class ParentTableCell<T>: UITableViewCell {
     var loadingIndicator = UIActivityIndicatorView()
     
     func updateAppearanceFor(_ status: ImageFetchStatus<T>) {
-        DispatchQueue.main.async { [unowned self] in
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             switch status {
                 case .fetched(let image):
                     self.thumbImageView.image = image
-                    loadingIndicator.stopAnimating()
+                    self.loadingIndicator.stopAnimating()
                 case .pending(let post):
                     self.configure(post)
             }

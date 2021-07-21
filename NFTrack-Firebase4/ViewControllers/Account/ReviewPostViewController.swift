@@ -292,13 +292,12 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
                     break
             }
         } else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Upload Limit"
-            detailVC.message = "There is a limit of 6 files per post."
-            detailVC.buttonAction = { [weak self]vc in
-                self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            self.alert.showDetail(
+                "Upload Limit",
+                with: "There is a limit of 3 files per review.",
+                for: self) {
+                print("something")
+            } completion:  {}
         }
     }
     
@@ -354,32 +353,36 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
             return
         }
         
-        let detailVC = DetailViewController(titleAlignment: .left, messageTextAlignment: .left, detailVCStyle: .withCancelButton)
-        detailVC.titleString = "Are you sure you want to submit this review?"
-        detailVC.message = "Your review cannot be modified or deleted once submitted."
-        detailVC.buttonAction = { [weak self] _ in
+        self.alert.showDetail(
+            "Are you sure you want to submit this review?",
+            with: "Your review cannot be modified or deleted once submitted.",
+            for: self,
+            alertStyle: .withCancelButton
+        ) { [weak self] in
             self?.dismiss(animated: true, completion: {
                 /// batch commit
                 /// 1. update the post's isReviewed field to true
                 /// 2. create a new review post
-                                
+                
                 self?.showSpinner {
                     self?.batchUpdate(reviewText: textView.text, numOfStars: numOfStars, revieweeUserId: revieweeUserId, reviewerUserId: reviewerUserId, reviewerDisplayName: reviewerDisplayName)
                     if let pdr = self?.previewDataArr, pdr.count > 0 {
                         self?.uploadFiles()
                     } else {
-                        self?.alert.showDetail("Success!", with: "Thank you for providing your review.", for: self) {
+                        self?.alert.showDetail(
+                            "Success!",
+                            with: "Thank you for providing your review.",
+                            for: self) {
                             DispatchQueue.main.async { [weak self] in
                                 self?.imagePreviewVC.collectionView.reloadData()
                                 self?.navigationController?.popViewController(animated: true)
                                 self?.delegate?.didRefreshTableView(index: self?.reviewerInfo?.uid == self?.post.sellerUserId ? 1 : 0)
                             }
-                        }
+                        } completion: {}
                     }
                 }
             })
-        }
-        present(detailVC, animated: true, completion: nil)
+        } completion:  {}
     }
     
     override func configureCustomProfileImage(from url: String) {

@@ -32,7 +32,7 @@ class SpecDisplayView: UIView {
     }
     
     private var storage = Set<AnyCancellable>()
-    var fetchedDataArr: [SpecDetail]! {
+    var fetchedDataArr: [SmartContractProperty]! {
         didSet {
             stackView.arrangedSubviews.enumerated().forEach { (index, element) in
                 let specDetail = fetchedDataArr[index]
@@ -41,28 +41,32 @@ class SpecDisplayView: UIView {
                         case 1:
                             subview.text = specDetail.propertyName
                         case 2:
-                            subview.text = specDetail.propertyDesc
+                            // parse according to the type of the instance property's value
+                            switch specDetail.propertyDesc {
+                                case is String:
+                                    subview.text = specDetail.propertyDesc as? String
+                                case is Date:
+                                    guard let propDesc = specDetail.propertyDesc as? Date else { return }
+                                    let formatter = DateFormatter()
+                                    formatter.timeStyle = .short
+                                    formatter.dateStyle = .short
+                                    formatter.timeZone = .current
+                                    let formattedDate = formatter.string(from: propDesc)
+                                    subview.text = formattedDate
+                                default:
+                                    break
+                            }
                         default:
                             break
                     }
                 }
             }
-//            let _ = Just(
-//                stackView.arrangedSubviews.forEach { [weak self] (sv) in
-//                    self?.stackView.removeArrangedSubview(sv)
-//                    sv.removeFromSuperview()
-//                }
-//            )
-//            .map { [weak self] (_) -> Bool in
-//                self?.listingDetailArr = self?.fetchedDataArr
-//                return true
-//            }
         }
     }
-    private var listingDetailArr: [SpecDetail]!
+    private var listingDetailArr: [SmartContractProperty]!
     private var stackView: UIStackView!
     
-    init(listingDetailArr: [SpecDetail]) {
+    init(listingDetailArr: [SmartContractProperty]) {
         super.init(frame: .zero)
         
         self.listingDetailArr = listingDetailArr
@@ -79,7 +83,7 @@ private extension SpecDisplayView {
         self.layer.cornerRadius = 5
         self.layer.borderWidth = 0.5
         self.layer.borderColor = UIColor.lightGray.cgColor
-
+        
         stackView = UIStackView()
         stackView.isLayoutMarginsRelativeArrangement = true
         stackView.layoutMargins = UIEdgeInsets(top: 5, left: 0, bottom: 5, right: 0)
@@ -103,7 +107,7 @@ private extension SpecDisplayView {
             
             let descLabel = UILabel()
             descLabel.tag = 2
-            descLabel.text = detail.propertyDesc
+            descLabel.text = (detail.propertyDesc as? String) ?? "Loading..."
             descLabel.font = UIFont.rounded(ofSize: 14, weight: .medium)
             descLabel.sizeToFit()
             descLabel.translatesAutoresizingMaskIntoConstraints = false

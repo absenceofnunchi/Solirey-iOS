@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import web3swift
 
 // MARK: - WalletCreationType
 enum WalletCreationType {
@@ -517,7 +518,7 @@ struct InfoText {
     The method of payment is escrow for shipping and a direct account-to-account transfer for the in-person pickup. The method cannot be modified after the item has been posted.
     """
     static let transferPending = """
-    You're almost there!. Currently waiting for the owner to transfer the ownership on the blockchain so hang tight!
+    You're almost there! Currently waiting for the owner to transfer the ownership on the blockchain so hang tight!
     """
     
     static let escrow = """
@@ -560,10 +561,20 @@ struct InfoText {
     """
 }
 
-// MARK: - ListingDetailModel
-/// To show the listing details like delivery method, payment method, and the sale format.
-/// Shows on ParentDetailVC
-struct SpecDetailModel: SpecDetail {
-    var propertyName: String
-    var propertyDesc: String?
+// MARK: - SmartContractProperty
+struct SmartContractProperty {
+    let propertyName: String
+    var propertyDesc: Any? = nil
+    var transaction: ReadTransaction? = nil
+}
+
+// MARK: - AlertModalDictionary
+/// the keys of the dictionary for displaying the alert modal as well as parsing the user input from the modal
+struct AlertModalDictionary {
+    static let passwordTitle = "Password"
+    static let emailSubtitle = "Please Enter the email of your account"
+    static let passwordSubtitle = "Please Enter Your Password"
+    static let gasLimit = "Gas Limit"
+    static let gasPrice = "Gas Price"
+    static let nonce = "Nonce"
 }

@@ -45,7 +45,7 @@ class SocketDelegate: Web3SocketDelegate {
     
     // Protocol method, here will be messages, received from WebSocket server
     func received(message: Any) {
-//        print("message", message)
+        print("message", message)
         if let dict = message as? [String: Any],
            let topics = dict["topics"] as? [String],
            let promise = promise {

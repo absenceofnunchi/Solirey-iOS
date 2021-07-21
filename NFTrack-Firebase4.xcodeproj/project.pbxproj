@@ -14,6 +14,9 @@
 		49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B7D2670FA190031A756 /* ParentListViewController.swift */; };
 		49221B892670FC2F0031A756 /* TempViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B882670FC2F0031A756 /* TempViewController.swift */; };
 		49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B90267112200031A756 /* ParentProfileViewController.swift */; };
+		492A007D26A3AE44008B9B34 /* PaginatedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A007C26A3AE44008B9B34 /* PaginatedViewController.swift */; };
+		492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */; };
+		492A00B326A4AA7B008B9B34 /* AlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A00B226A4AA7B008B9B34 /* AlertViewController.swift */; };
 		49314F5F4CF8EC19FC270279 /* Pods_NFTrack_Firebase4Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */; };
 		4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933332C268033D900B8BFC2 /* ReviewViewController.swift */; };
 		493333322681116F00B8BFC2 /* ReviewPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493333312681116F00B8BFC2 /* ReviewPostViewController.swift */; };
@@ -163,6 +166,9 @@
 		49221B7D2670FA190031A756 /* ParentListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentListViewController.swift; sourceTree = "<group>"; };
 		49221B882670FC2F0031A756 /* TempViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempViewController.swift; sourceTree = "<group>"; };
 		49221B90267112200031A756 /* ParentProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentProfileViewController.swift; sourceTree = "<group>"; };
+		492A007C26A3AE44008B9B34 /* PaginatedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginatedViewController.swift; sourceTree = "<group>"; };
+		492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardAlertViewController.swift; sourceTree = "<group>"; };
+		492A00B226A4AA7B008B9B34 /* AlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertViewController.swift; sourceTree = "<group>"; };
 		4933332C268033D900B8BFC2 /* ReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewController.swift; sourceTree = "<group>"; };
 		493333312681116F00B8BFC2 /* ReviewPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPostViewController.swift; sourceTree = "<group>"; };
 		4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSegmentedControl.swift; sourceTree = "<group>"; };
@@ -347,6 +353,16 @@
 			path = Chat;
 			sourceTree = "<group>";
 		};
+		492A008126A3B0B1008B9B34 /* Pop Up */ = {
+			isa = PBXGroup;
+			children = (
+				4964E4FF26445EDB005B3268 /* DetailViewController.swift */,
+				492A00B226A4AA7B008B9B34 /* AlertViewController.swift */,
+				492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */,
+			);
+			path = "Pop Up";
+			sourceTree = "<group>";
+		};
 		493BF9B3264AC16F00B9C9D2 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
@@ -408,6 +424,7 @@
 				493BF9BE264B6CBE00B9C9D2 /* Background Views */,
 				493BF9B3264AC16F00B9C9D2 /* Controllers */,
 				4964E4FB26445EB1005B3268 /* ViewControllers */,
+				492A008126A3B0B1008B9B34 /* Pop Up */,
 				4964E5382648C8DD005B3268 /* Services */,
 				4964E52A2648B055005B3268 /* Presentation Controllers */,
 				4964E4E32643685E005B3268 /* Animators */,
@@ -565,7 +582,6 @@
 		499F996E266C68CD00FC6CDE /* Wallet */ = {
 			isa = PBXGroup;
 			children = (
-				4964E4FF26445EDB005B3268 /* DetailViewController.swift */,
 				4964E5332648C68A005B3268 /* WalletViewController.swift */,
 				4964E57626499D74005B3268 /* RegisteredWalletViewController.swift */,
 				4964E57B26499FBE005B3268 /* UnregisteredWalletViewController.swift */,
@@ -670,6 +686,7 @@
 			isa = PBXGroup;
 			children = (
 				4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */,
+				492A007C26A3AE44008B9B34 /* PaginatedViewController.swift */,
 				4964E5942649B6FA005B3268 /* PageViewController.swift */,
 				499F9961266C061A00FC6CDE /* ParentNavViewController.swift */,
 			);
@@ -984,11 +1001,13 @@
 				495FD333268D402900F1D81D /* FilterCell.swift in Sources */,
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
 				495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */,
+				492A007D26A3AE44008B9B34 /* PaginatedViewController.swift in Sources */,
 				49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */,
 				493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */,
 				49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */,
 				496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */,
 				495FD2D826892FDC00F1D81D /* StarRatingView.swift in Sources */,
+				492A00B326A4AA7B008B9B34 /* AlertViewController.swift in Sources */,
 				4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */,
 				495FD329268D284E00F1D81D /* MainViewController + SearchBar.swift in Sources */,
 				499F9958266B2ADB00FC6CDE /* WebViewController.swift in Sources */,
@@ -1052,6 +1071,7 @@
 				49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */,
 				49D59C762663326500107F79 /* SocketDelegate.swift in Sources */,
 				49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */,
+				492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */,
 				49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */,
 				493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */,
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,

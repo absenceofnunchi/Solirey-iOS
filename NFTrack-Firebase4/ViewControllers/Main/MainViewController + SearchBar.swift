@@ -109,7 +109,6 @@ extension MainViewController: RefetchDataDelegate, PostParseDelegate {
         
         first?.getDocuments {[weak self] (querySnapshot, error) in
             guard let querySnapshot = querySnapshot else {
-                print("snapshot error", error)
                 self?.alert.showDetail("Sorry", with: error?.localizedDescription, for: self)
                 return
             }

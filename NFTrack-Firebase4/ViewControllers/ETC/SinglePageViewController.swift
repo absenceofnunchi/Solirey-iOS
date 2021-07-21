@@ -42,7 +42,6 @@ class SinglePageViewController: UIViewController {
         super.viewDidLoad()
         
         configure()
-        setConstraints()
         
         if gallery == "1" {
             configureCreateWallet()
@@ -64,13 +63,7 @@ extension SinglePageViewController {
         containerView.fill(inset: 30)
         
     }
-    
-    func setConstraints() {
-        NSLayoutConstraint.activate([
-            
-        ])
-    }
-    
+
     func configureCreateWallet() {
         // passwords don't match label
         passwordsDontMatch = UILabel()
@@ -377,24 +370,16 @@ extension SinglePageViewController {
     // MARK: - createWallet
     func createWallet() {
         guard let password = passwordTextField.text, !password.isEmpty else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Warning"
-            detailVC.message = "The password cannot be empty"
-            detailVC.buttonAction = { [weak self]vc in
+            alert.showDetail("Empty Password", with: "The password cannot be empty", height: 250, alignment: .center, for: self) { [weak self] in
                 self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            } completion: {}
             return
         }
         
         guard let repeatPassword = repeatPasswordTextField.text, !repeatPassword.isEmpty else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Warning"
-            detailVC.message = "Repeat password cannot be empty"
-            detailVC.buttonAction = { [weak self]vc in
+            alert.showDetail("Empty Password", with: "Repeat password cannot be empty", height: 250, alignment: .center, for: self) { [weak self] in
                 self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            } completion: {}
             return
         }
         
@@ -407,13 +392,9 @@ extension SinglePageViewController {
         
         walletController.createWallet(with: mode, password: passwordTextField.text, key: nil) { [weak self](error) in
             guard error == nil else {
-                let detailVC = DetailViewController(height: 250)
-                detailVC.titleString = "Wallet Creation Error"
-                detailVC.message = error?.localizedDescription
-                detailVC.buttonAction = { _ in
+                self?.alert.showDetail("Wallet Creation Error", with: error?.localizedDescription, alignment: .center, for: self) { [weak self] in
                     self?.dismiss(animated: true, completion: nil)
-                }
-                self?.present(detailVC, animated: true, completion: nil)
+                } completion: {}
                 return
             }
 

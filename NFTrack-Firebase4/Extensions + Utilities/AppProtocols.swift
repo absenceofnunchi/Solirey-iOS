@@ -776,10 +776,3 @@ extension ButtonPanelConfigurable {
         ])
     }
 }
-
-// MARK: - SpecDetail
-/// From parsing the fetched properties from the auction smart contract through Combine (PropertyFetchModel) to displaying the data on the spec detail view (SpecDetailModel)
-protocol SpecDetail {
-    var propertyName: String { get set }
-    var propertyDesc: String? { get set }
-}

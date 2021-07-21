@@ -302,14 +302,26 @@ extension SendViewController: UITextFieldDelegate {
                     }
                     
                     if let transaction = transaction {
+                        let content = [
+                            StandardAlertContent(
+                                titleString: AlertModalDictionary.passwordSubtitle,
+                                body: ["": ""],
+                                isEditable: true,
+                                messageTextAlignment: .left,
+                                alertStyle: .withCancelButton
+                            )
+                        ]
                         
-                        let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
-                        detailVC.titleString = "Sorry!"
-                        detailVC.message = "Email can't be empty"
-                        detailVC.buttonAction = { [weak self]_ in
-                            self?.dismiss(animated: true, completion: nil)
+                        let alertVC = AlertViewController(standardAlertContent: content)
+                        alertVC.action = { [weak self] (modal, mainVC) in
+                            guard  let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                                   !password.isEmpty else {
+                                self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                                return
+                            }
                         }
-                        self?.present(detailVC, animated: true, completion: nil)
+                        self?.present(alertVC, animated: true, completion: nil)
+     
                         
 //                        self?.alert.withPassword(title: "Send Ether", delegate: self!, controller: self!) { (password) in
 //                            DispatchQueue.global().async {

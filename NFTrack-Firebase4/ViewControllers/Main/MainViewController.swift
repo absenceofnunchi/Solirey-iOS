@@ -143,15 +143,16 @@ extension MainViewController {
     }
     
     @objc private func menuHandler(action: UIAction) {
-        switch action.title {
-            case "Saved Items":
-                let savedVC = SavedViewController()
-                self.navigationController?.pushViewController(savedVC, animated: true)
-            case "Quick UI Check":
-                let checkVC = QuickUICheckViewController()
-                self.navigationController?.pushViewController(checkVC, animated: true)
-            default:
-                break
-        }
+        
+//        switch action.title {
+//            case "Saved Items":
+//                let savedVC = SavedViewController()
+//                self.navigationController?.pushViewController(savedVC, animated: true)
+//            case "Quick UI Check":
+//                let checkVC = QuickUICheckViewController()
+//                self.navigationController?.pushViewController(checkVC, animated: true)
+//            default:
+//                break
+//        }
     }
 }

@@ -99,7 +99,7 @@ extension UIViewController {
     }
     
     // MARK: - createTextField
-    func createTextField(placeHolder: String? = nil, content: String? = nil, delegate: UITextFieldDelegate) -> UITextField {
+    func createTextField(placeHolder: String? = nil, content: String? = nil, borderColor: CGColor = UIColor.lightGray.cgColor ,delegate: UITextFieldDelegate) -> UITextField {
         let textField = UITextField()
         textField.setLeftPaddingPoints(10)
         textField.delegate = delegate
@@ -112,7 +112,7 @@ extension UIViewController {
         
         textField.layer.borderWidth = 0.7
         textField.layer.cornerRadius = 5
-        textField.layer.borderColor = UIColor.lightGray.cgColor
+        textField.layer.borderColor = borderColor
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }
@@ -351,6 +351,7 @@ extension UISearchController {
 extension Notification.Name {
     static let didUpdateProgress = Notification.Name("didUpdateProgress")
     static let willDismiss = Notification.Name("willDismiss")
+    static let combineNotification = Notification.Name("CombineNotification")
 }
 
 extension UIImageView {

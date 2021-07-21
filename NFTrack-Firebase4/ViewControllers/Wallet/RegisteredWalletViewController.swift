@@ -9,17 +9,19 @@ import UIKit
 import web3swift
 
 class RegisteredWalletViewController: UIViewController {
-    var closeButton: UIButton!
-    var deleteWalletButton: UIButton!
-    var privateKeyButton: UIButton!
-    var resetPassword: UIButton!
+    private var closeButton: UIButton!
     weak var delegate: WalletDelegate?
-    var lowerContainer: BackgroundView!
-    var upperContainer: UIView!
-    var balanceLabel: UILabel!
-    var sendButton: WalletButtonView!
-    var receiveButton: WalletButtonView!
-    var refreshButton: UIButton!
+    private var lowerContainer: BackgroundView!
+    private var upperContainer: UIView!
+    private var balanceLabel: UILabel!
+    private var sendButton: WalletButtonView!
+    private var receiveButton: WalletButtonView!
+    private var refreshButton: UIButton!
+    private var stackView: UIStackView!
+    private var historyButton: UIButton!
+    private var deleteWalletButton: UIButton!
+    private var privateKeyButton: UIButton!
+    private var resetPassword: UIButton!
     
     private let localDatabase = LocalDatabase()
     private let keyService = KeysService()
@@ -105,6 +107,24 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         lowerContainer.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(lowerContainer)
         
+        stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fillEqually
+        stackView.spacing = 20
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(stackView)
+        
+        historyButton = UIButton()
+        historyButton.dropShadow()
+        historyButton.setTitle("Transaction History", for: .normal)
+        historyButton.setTitleColor(.black, for: .normal)
+        historyButton.addTarget(self, action: #selector(buttonHandler), for: .touchUpInside)
+        historyButton.backgroundColor = .white
+        historyButton.layer.cornerRadius = 10
+        historyButton.tag = 6
+        historyButton.translatesAutoresizingMaskIntoConstraints = false
+        stackView.addArrangedSubview(historyButton)
+        
         resetPassword = UIButton()
         resetPassword.dropShadow()
         resetPassword.setTitle("Reset Password", for: .normal)
@@ -114,7 +134,7 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         resetPassword.layer.cornerRadius = 10
         resetPassword.tag = 3
         resetPassword.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(resetPassword)
+        stackView.addArrangedSubview(resetPassword)
         
         privateKeyButton = UIButton()
         privateKeyButton.dropShadow()
@@ -125,7 +145,7 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         privateKeyButton.layer.cornerRadius = 10
         privateKeyButton.tag = 2
         privateKeyButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(privateKeyButton)
+        stackView.addArrangedSubview(privateKeyButton)
         
         deleteWalletButton = UIButton()
         deleteWalletButton.dropShadow()
@@ -136,18 +156,18 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         deleteWalletButton.layer.cornerRadius = 10
         deleteWalletButton.tag = 1
         deleteWalletButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(deleteWalletButton)
+        stackView.addArrangedSubview(deleteWalletButton)
     }
     
     @objc func configureWallet() {
         guard let address = Web3swiftService.currentAddress else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Error"
-            detailVC.message = "There was an error obtaining the wallet address"
-            detailVC.buttonAction = { [weak self]vc in
-                self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            let content = [
+                StandardAlertContent(titleString: "Error", body: ["": "There was an error getting the wallet address."], messageTextAlignment: .left, buttonAction: { [weak self](_) in
+                    self?.dismiss(animated: true, completion: nil)
+                })
+            ]
+            let alertVC = AlertViewController(height: 300, standardAlertContent: content)
+            self.present(alertVC, animated: true, completion: nil)
             return
         }
         
@@ -161,13 +181,14 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
                     }
                 }
             } catch {
-                let detailVC = DetailViewController(height: 250)
-                detailVC.titleString = "Error"
-                detailVC.message = "Sorry, there was an error retrieving your balance."
-                detailVC.buttonAction = { [weak self]vc in
-                    self?.dismiss(animated: true, completion: nil)
-                }
-                self.present(detailVC, animated: true, completion: nil)
+                let content = [
+                    StandardAlertContent(titleString: "Error", body: ["": "There was an error getting the wallet address."], messageTextAlignment: .left, buttonAction: { [weak self](_) in
+                        self?.dismiss(animated: true, completion: nil)
+                    })
+                ]
+                
+                let alertVC = AlertViewController(height: 300, standardAlertContent: content)
+                self.present(alertVC, animated: true, completion: nil)
             }
         }
     }
@@ -222,23 +243,29 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
             lowerContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             lowerContainer.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.6),
             
+            // stack view
+            stackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: lowerContainer.centerYAnchor),
+            stackView.heightAnchor.constraint(equalTo: lowerContainer.heightAnchor, multiplier: 0.6),
+            stackView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.6),
+            
             // reset wallet password button
-            resetPassword.bottomAnchor.constraint(equalTo: privateKeyButton.topAnchor, constant: -30),
-            resetPassword.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.6),
-            resetPassword.heightAnchor.constraint(equalToConstant: 60),
-            resetPassword.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            // private key
-            privateKeyButton.centerYAnchor.constraint(equalTo: lowerContainer.centerYAnchor),
-            privateKeyButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.6),
-            privateKeyButton.heightAnchor.constraint(equalToConstant: 60),
-            privateKeyButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            // create wallet button
-            deleteWalletButton.topAnchor.constraint(equalTo: privateKeyButton.bottomAnchor, constant: 30),
-            deleteWalletButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.6),
-            deleteWalletButton.heightAnchor.constraint(equalToConstant: 60),
-            deleteWalletButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//            resetPassword.bottomAnchor.constraint(equalTo: privateKeyButton.topAnchor, constant: -30),
+//            resetPassword.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.6),
+//            resetPassword.heightAnchor.constraint(equalToConstant: 60),
+//            resetPassword.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//
+//            // private key
+//            privateKeyButton.centerYAnchor.constraint(equalTo: lowerContainer.centerYAnchor),
+//            privateKeyButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.6),
+//            privateKeyButton.heightAnchor.constraint(equalToConstant: 60),
+//            privateKeyButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//
+//            // create wallet button
+//            deleteWalletButton.topAnchor.constraint(equalTo: privateKeyButton.bottomAnchor, constant: 30),
+//            deleteWalletButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.6),
+//            deleteWalletButton.heightAnchor.constraint(equalToConstant: 60),
+//            deleteWalletButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         ])
     }
     
@@ -247,19 +274,19 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         switch sender.tag {
             case 1:
                 // delete
-                let detailVC = DetailViewController(height: 250, detailVCStyle: .withCancelButton)
-                detailVC.titleString = "Delete Wallet"
-                detailVC.message = "Are you sure you want to delete your wallet from your local storage?"
-                detailVC.buttonAction = { [weak self] vc in
-                    self?.dismiss(animated: true, completion: nil)
-                    self?.localDatabase.deleteWallet { (error) in
-                        if let error = error {
-                            self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                let content = [
+                    StandardAlertContent(titleString: "Delete Wallet", body: ["": "Are you sure you want to delete your wallet from your local storage?"], messageTextAlignment: .left, alertStyle: .withCancelButton, buttonAction: { [weak self](_) in
+                        self?.dismiss(animated: true, completion: nil)
+                        self?.localDatabase.deleteWallet { (error) in
+                            if let error = error {
+                                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                            }
+                            self?.delegate?.didProcessWallet()
                         }
-                        self?.delegate?.didProcessWallet()
-                    }
-                }
-                self.present(detailVC, animated: true, completion: nil)
+                    })
+                ]
+                let alertVC = AlertViewController(height: 300, standardAlertContent: content)
+                self.present(alertVC, animated: true, completion: nil)
             case 2:
                 // show private key
                 let ac = UIAlertController(title: "Enter the password", message: nil, preferredStyle: .alert)
@@ -272,26 +299,11 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
  
                     do {
                         let privateKey = try self?.keyService.getWalletPrivateKey(password: text)
-                        let detailVC = DetailViewController(height: 250)
-                        detailVC.titleString = "Private Key"
-                        detailVC.message = privateKey
-                        detailVC.buttonAction = { _ in
-                            if privateKey != nil {
-                                let pasteboard = UIPasteboard.general
-                                pasteboard.string = privateKey
-                            }
-                            
-                            self?.dismiss(animated: true, completion: nil)
-                        }
-                        self?.present(detailVC, animated: true, completion: nil)
+                        self?.alert.showDetail("Private Key", with: privateKey, height: 350, for: self, buttonAction:  { [weak self] in
+                            self?.alert.fading(controller: self, toBePasted: privateKey ?? "Not available")
+                        })
                     } catch {
-                        let detailVC = DetailViewController(height: 250)
-                        detailVC.titleString = "Error"
-                        detailVC.message = "Wrong password."
-                        detailVC.buttonAction = { [weak self]vc in
-                            self?.dismiss(animated: true, completion: nil)
-                        }
-                        self?.present(detailVC, animated: true, completion: nil)
+                        self?.alert.showDetail("Error", with: "Wrong password", alignment: .center, for: self)
                     }
                 }
                 
@@ -313,43 +325,19 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
                             if let error = error {
                                 switch error {
                                     case .failureToFetchOldPassword:
-                                        let detailVC = DetailViewController(height: 250)
-                                        detailVC.titleString = "Error"
-                                        detailVC.message = "Sorry, the old password couldn't be fetched"
-                                        detailVC.buttonAction = { [weak self]vc in
-                                            self?.dismiss(animated: true, completion: nil)
-                                        }
-                                        self?.present(detailVC, animated: true, completion: nil)
+                                        self?.alert.showDetail("Error", with: "Sorry, the old password couldn't be fetched", alignment: .center, for: self)
                                     case .failureToRegeneratePassword:
-                                        let detailVC = DetailViewController(height: 250)
-                                        detailVC.titleString = "Error"
-                                        detailVC.message = "Sorry, a new password couldn't be generated"
-                                        detailVC.buttonAction = { [weak self]vc in
-                                            self?.dismiss(animated: true, completion: nil)
-                                        }
-                                        self?.present(detailVC, animated: true, completion: nil)
+                                        self?.alert.showDetail("Error", with: "Sorry, a new password couldn't be generated", alignment: .left, for: self)
                                 }
                             }
 
                             if let wallet = wallet {
                                 self?.localDatabase.saveWallet(isRegistered: false, wallet: wallet) { (error) in
                                     if let _ = error {
-                                        let detailVC = DetailViewController(height: 250)
-                                        detailVC.titleString = "Error"
-                                        detailVC.message = "Sorry, there was an error generating a new password. Check to see if you're using the correct password."
-                                        detailVC.buttonAction = { [weak self]vc in
-                                            self?.dismiss(animated: true, completion: nil)
-                                        }
-                                        self?.present(detailVC, animated: true, completion: nil)
+                                        self?.alert.showDetail("Error", with: "Sorry, there was an error generating a new password. Check to see if you're using the correct password.", alignment: .left, for: self)
                                     }
 
-                                    let detailVC = DetailViewController(height: 250)
-                                    detailVC.titleString = "Success"
-                                    detailVC.message = "A new password has been generated!"
-                                    detailVC.buttonAction = { [weak self]vc in
-                                        self?.dismiss(animated: true, completion: nil)
-                                    }
-                                    self?.present(detailVC, animated: true, completion: nil)
+                                    self?.alert.showDetail("Success", with: "A new password has been generated!", alignment: .center, for: self)
                                 }
                             }
                         }
@@ -360,6 +348,16 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
                 configureWallet()
             case 5:
                 self.view.window?.rootViewController?.dismiss(animated: true, completion: nil)
+            case 6:
+                guard let walletAddress = Web3swiftService.currentAddressString else {
+                    self.alert.showDetail("Error", with: "Could not retrieve the wallet address.", for: self)
+                    return
+                }
+                
+                let webVC = WebViewController()
+                let hashType = "address"
+                webVC.urlString = "https://rinkeby.etherscan.io/\(hashType)/\(walletAddress)"
+                self.present(webVC, animated: true, completion: nil)
             default:
                 break
         }

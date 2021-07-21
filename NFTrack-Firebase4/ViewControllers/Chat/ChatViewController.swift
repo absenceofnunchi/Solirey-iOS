@@ -205,9 +205,9 @@ extension ChatViewController {
         if self.messages.count == 0 {
             /// docId is the hashedId that corresponds to the unique ID of the chat room
             guard let sellerUserId = userInfo.uid else {
-                self.alert.showDetail("Sorry", with: "Unable to retrieve the seller's info. Please try again", for: self) {
+                self.alert.showDetail("Sorry", with: "Unable to retrieve the seller's info. Please try again", for: self, completion:  {
                     self.navigationController?.popViewController(animated: true)
-                }
+                })
                 return
             }
 

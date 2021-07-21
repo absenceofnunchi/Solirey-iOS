@@ -31,17 +31,37 @@ class Alerts {
         //        }
     }
     
-    func showDetail(_ title: String, with message: String?, height: CGFloat = 250, alignment: NSTextAlignment = .center, for controller: UIViewController?, completion: Action? = nil) {
+    func showDetail(
+        _ title: String,
+        with message: String?,
+        height: CGFloat = 350,
+        index: Int = 0,
+        alignment: NSTextAlignment = .left,
+        for controller: UIViewController?,
+        alertStyle: AlertStyle = .oneButton,
+        buttonAction: Action? = nil,
+        completion: Action? = nil) {
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .willDismiss, object: nil, userInfo: nil)
             controller?.hideSpinner {
-                let detailVC = DetailViewController(height: height, messageTextAlignment: alignment)
-                detailVC.titleString = title
-                detailVC.message = message
-                detailVC.buttonAction = { _ in
-                    controller?.dismiss(animated: true, completion: completion)
-                }
-                controller?.present(detailVC, animated: true, completion: nil)
+                controller?.dismiss(animated: true, completion: {
+                    let content = [
+                        StandardAlertContent(
+                            index: index,
+                            titleString: title,
+                            body: ["": message ?? ""],
+                            messageTextAlignment: alignment,
+                            alertStyle: alertStyle,
+                            buttonAction: { (_) in
+                                buttonAction?()
+                                controller?.dismiss(animated: true, completion: nil)
+                            }),
+                    ]
+                    let alertVC = AlertViewController(height: height, standardAlertContent: content)
+                    controller?.present(alertVC, animated: true, completion: {
+                        completion?()
+                    })
+                })
             }
         }
     }
@@ -71,42 +91,53 @@ class Alerts {
     }
     
     // MARK: - fading
-    /// shows for a brief period and disappears e.i "Copied"
-    func fading(controller: UIViewController, toBePasted: String) {
-        let dimmingView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
-        dimmingView.translatesAutoresizingMaskIntoConstraints = false
-        dimmingView.layer.cornerRadius = 10
-        dimmingView.clipsToBounds = true
-        controller.view.addSubview(dimmingView)
-        
-        let label = UILabel()
-        label.text = "Copied!"
-        label.textColor = .white
-        label.textAlignment = .center
-        label.sizeToFit()
-        label.backgroundColor = .clear
-        label.translatesAutoresizingMaskIntoConstraints = false
-        dimmingView.contentView.addSubview(label)
-        
-        if toBePasted != nil {
-            let pasteboard = UIPasteboard.general
-            pasteboard.string = toBePasted
-        }
-        
-        NSLayoutConstraint.activate([
-            dimmingView.centerYAnchor.constraint(equalTo: controller.view.centerYAnchor),
-            dimmingView.centerXAnchor.constraint(equalTo: controller.view.centerXAnchor),
-            dimmingView.widthAnchor.constraint(equalToConstant: 150),
-            dimmingView.heightAnchor.constraint(equalToConstant: 50),
+    /// show a message for a brief period and disappears e.i "Copied"
+    func fading(text: String = "Copied!", controller: UIViewController?, toBePasted: String?, width: CGFloat = 150) {
+        DispatchQueue.main.async {
+            guard let controller = controller else { return }
+            let dimmingView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
+            dimmingView.translatesAutoresizingMaskIntoConstraints = false
+            dimmingView.layer.cornerRadius = 10
+            dimmingView.clipsToBounds = true
+            controller.view.addSubview(dimmingView)
             
-            label.centerXAnchor.constraint(equalTo: dimmingView.contentView.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: dimmingView.contentView.centerYAnchor)
-        ])
-        
-        Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { timer in
-            dimmingView.removeFromSuperview()
-            timer.invalidate()
-            controller.dismiss(animated: true, completion: nil)
+            let label = UILabel()
+            label.text = text
+            label.textColor = .white
+            label.textAlignment = .center
+            label.sizeToFit()
+            label.backgroundColor = .clear
+            label.alpha = 0
+            label.translatesAutoresizingMaskIntoConstraints = false
+            dimmingView.contentView.addSubview(label)
+            
+            if let tbp = toBePasted {
+                let pasteboard = UIPasteboard.general
+                pasteboard.string = tbp
+            }
+            
+            NSLayoutConstraint.activate([
+                dimmingView.centerYAnchor.constraint(equalTo: controller.view.centerYAnchor),
+                dimmingView.centerXAnchor.constraint(equalTo: controller.view.centerXAnchor),
+                dimmingView.widthAnchor.constraint(equalToConstant: width),
+                dimmingView.heightAnchor.constraint(equalToConstant: 150),
+                
+                label.centerXAnchor.constraint(equalTo: dimmingView.contentView.centerXAnchor),
+                label.centerYAnchor.constraint(equalTo: dimmingView.contentView.centerYAnchor)
+            ])
+            
+            UIView.animate(withDuration: 0.3) {
+                label.alpha = 1
+            }
+            
+            Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { timer in
+                UIView.animate(withDuration: 0.3) {
+                    label.alpha = 0
+                }
+                dimmingView.removeFromSuperview()
+                timer.invalidate()
+                //                controller.dismiss(animated: true, completion: nil)
+            }
         }
     }
 }

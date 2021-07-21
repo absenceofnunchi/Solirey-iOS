@@ -49,15 +49,15 @@ class ParentDetailViewController: UIViewController {
     // listing detail
     var listingSpecView: SpecDisplayView!
     lazy var listingDetailArr = [
-        SpecDetailModel(propertyName: "Delivery Method", propertyDesc: post.deliveryMethod),
-        SpecDetailModel(propertyName: "Payment Method", propertyDesc: post.paymentMethod),
-        SpecDetailModel(propertyName: "Sale Format", propertyDesc: post.saleFormat)
+        SmartContractProperty(propertyName: "Delivery Method", propertyDesc: post.deliveryMethod),
+        SmartContractProperty(propertyName: "Payment Method", propertyDesc: post.paymentMethod),
+        SmartContractProperty(propertyName: "Sale Format", propertyDesc: post.saleFormat)
     ]
     let LIST_DETAIL_HEIGHT: CGFloat = 50
     
     override func viewDidLoad() {
         super.viewDidLoad()
-                
+        
         configureBackground()
         /// UsernameBannerConfigurable
         configureNameDisplay(post: post, v: scrollView) { (profileImageView, displayNameLabel) in
@@ -96,7 +96,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
     @objc func configureUI() {
         priceTitleLabel = createTitleLabel(text: "Price")
         scrollView.addSubview(priceTitleLabel)
-
+        
         priceLabel = createLabel(text: "\(post.price!) ETH")
         scrollView.addSubview(priceLabel)
         
@@ -130,48 +130,48 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         
     }
     
-//    // MARK: - configureEditButton
-//    func configureEditButton() {
-//        buttonPanel = UIView()
-//        buttonPanel.translatesAutoresizingMaskIntoConstraints = false
-//        scrollView.addSubview(buttonPanel)
-//
-//        editButton = UIButton()
-//        editButton.tag = 3
-//        editButton.backgroundColor = .blue
-//        editButton.setTitle("Edit", for: .normal)
-//        editButton.layer.cornerRadius = 5
-//        editButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
-//        editButton.translatesAutoresizingMaskIntoConstraints = false
-//        buttonPanel.addSubview(editButton)
-//
-//        deleteButton = UIButton()
-//        deleteButton.tag = 4
-//        deleteButton.backgroundColor = .red
-//        deleteButton.setTitle("Delete", for: .normal)
-//        deleteButton.layer.cornerRadius = 6
-//        deleteButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
-//        deleteButton.translatesAutoresizingMaskIntoConstraints = false
-//        buttonPanel.addSubview(deleteButton)
-//
-//        NSLayoutConstraint.activate([
-//            buttonPanel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
-//            buttonPanel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
-//            buttonPanel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
-//            buttonPanel.heightAnchor.constraint(equalToConstant: 50),
-//
-//            editButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
-//            editButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
-//            editButton.heightAnchor.constraint(equalToConstant: 50),
-//            editButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
-//
-//            deleteButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
-//            deleteButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
-//            deleteButton.heightAnchor.constraint(equalToConstant: 50),
-//            deleteButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4)
-//        ])
-//    }
-//
+    //    // MARK: - configureEditButton
+    //    func configureEditButton() {
+    //        buttonPanel = UIView()
+    //        buttonPanel.translatesAutoresizingMaskIntoConstraints = false
+    //        scrollView.addSubview(buttonPanel)
+    //
+    //        editButton = UIButton()
+    //        editButton.tag = 3
+    //        editButton.backgroundColor = .blue
+    //        editButton.setTitle("Edit", for: .normal)
+    //        editButton.layer.cornerRadius = 5
+    //        editButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+    //        editButton.translatesAutoresizingMaskIntoConstraints = false
+    //        buttonPanel.addSubview(editButton)
+    //
+    //        deleteButton = UIButton()
+    //        deleteButton.tag = 4
+    //        deleteButton.backgroundColor = .red
+    //        deleteButton.setTitle("Delete", for: .normal)
+    //        deleteButton.layer.cornerRadius = 6
+    //        deleteButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+    //        deleteButton.translatesAutoresizingMaskIntoConstraints = false
+    //        buttonPanel.addSubview(deleteButton)
+    //
+    //        NSLayoutConstraint.activate([
+    //            buttonPanel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
+    //            buttonPanel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
+    //            buttonPanel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
+    //            buttonPanel.heightAnchor.constraint(equalToConstant: 50),
+    //
+    //            editButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+    //            editButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
+    //            editButton.heightAnchor.constraint(equalToConstant: 50),
+    //            editButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+    //
+    //            deleteButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+    //            deleteButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
+    //            deleteButton.heightAnchor.constraint(equalToConstant: 50),
+    //            deleteButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4)
+    //        ])
+    //    }
+    //
     // MARK: - setConstraints
     @objc func setConstraints() {
         if let files = post.files, files.count > 0 {
@@ -299,4 +299,3 @@ let eventABI = """
         }
         ]
         """
-

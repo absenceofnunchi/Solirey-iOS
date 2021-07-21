@@ -487,13 +487,12 @@ extension ParentPostViewController {
                     break
             }
         } else {
-            let detailVC = DetailViewController(height: 250)
-            detailVC.titleString = "Upload Limit"
-            detailVC.message = "There is a limit of 3 files per review."
-            detailVC.buttonAction = { [weak self]vc in
-                self?.dismiss(animated: true, completion: nil)
-            }
-            present(detailVC, animated: true, completion: nil)
+            self.alert.showDetail(
+                "Upload Limit",
+                with: "There is a limit of 6 files per review.",
+                for: self) {
+                print("something")
+            } completion:  {}
         }
     }
     
@@ -585,6 +584,14 @@ extension ParentPostViewController {
                     completion(true)
                 }
             }
+    }
+    
+//    @objc func mint() {
+//        self.test()
+//    }
+
+    @objc func test() {
+        
     }
     
     @objc func mint() {
@@ -704,6 +711,7 @@ extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
         getTokenId(topics: topics) { [weak self](_, res) in
             guard let res = res else { return }
             switch res {
+                
 //                case is HTTPStatusCode:
 //                    switch res as! HTTPStatusCode {
 //                        case .badRequest:
@@ -743,8 +751,6 @@ extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
                 default:
                     self?.alert.showDetail("Error in Minting", with: res.localizedDescription, for: self)
             }
-            
-            print("runnnn")
         }
     }
     
@@ -754,7 +760,6 @@ extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
 //        if self.previewDataArr.count > 0 {
 //            for previewData in previewDataArr {
 //                self.uploadFile(fileURL: previewData.filePath, userId: self.userId, promise: promise)
-//                    print("single url", url)
 ////                    guard let strongSelf = self else { return }
 //                    urlStringArr.append("\(url)")
 ////                    strongSelf.db.collection("post").document(strongSelf.documentId).updateData([
@@ -764,7 +769,7 @@ extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
 ////                            strongSelf.alert.showDetail("Error", with: error.localizedDescription, for: self)
 ////                        }
 ////                    })
-//                
+//
 //                fileCount += 1
 //                if fileCount == previewDataArr.count {
 //                    self.previewDataArr.removeAll()

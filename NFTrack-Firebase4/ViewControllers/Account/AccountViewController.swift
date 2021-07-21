@@ -104,11 +104,28 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
 extension AccountViewController {
     //MARK: - didRequestPasswordReset
     func didRequestPasswordReset() {
-        let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
-        detailVC.titleString = "Enter your email of your account"
-        detailVC.buttonAction = { [weak self] vc in
-            if let dvc = vc as? DetailViewController, let email = dvc.textField.text {
-                self?.dismiss(animated: true, completion: {
+        let content = [
+            StandardAlertContent(
+                titleString: AlertModalDictionary.emailSubtitle,
+                body: ["": ""],
+                isEditable: true,
+                fieldViewHeight: 50,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            )
+        ]
+        
+        let alertVC = AlertViewController(height: 400, standardAlertContent: content)
+        alertVC.action = { [weak self] (modal, mainVC) in
+            // responses to the main vc's button
+            mainVC.buttonAction = { _ in
+                guard let email = modal.dataDict[AlertModalDictionary.emailSubtitle],
+                      !email.isEmpty else {
+                    self?.alert.fading(text: "Email cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                    return
+                }
+                
+                self?.dismiss(animated: true) {
                     self?.showSpinner {
                         Auth.auth().sendPasswordReset(withEmail: email) { error in
                             // [START_EXCLUDE]
@@ -117,56 +134,52 @@ extension AccountViewController {
                                     self?.alert.showDetail("Error resetting the password", with: error.localizedDescription, for: self)
                                     return
                                 }
-                                self?.alert.showDetail("Success!", with: "An email has been sent to reset the password", for: self)
+                                self?.alert.showDetail("Success!", with: "An email has been sent to reset the password", height: 300, for: self)
                             }
                             // [END_EXCLUDE]
                         }
                     }
-                })
-            }
-        }
-        self.present(detailVC, animated: true, completion: nil)
+                }
+            } // mainVC
+        } // alertVC
+        self.present(alertVC, animated: true, completion: nil)
     }
     
     // MARK: - didLogout
     func didLogout() {
-        let detailVC = DetailViewController(height: 280, detailVCStyle: .withCancelButton)
-        detailVC.titleString = "Logout"
-        detailVC.message = "Logging out will also delete your wallet from the local storage. Please make sure to remember your password and the private key."
-        detailVC.buttonAction = { [weak self] vc in
+        alert.showDetail("Logout", with: "Logging out will also delete your wallet from the local storage. Please make sure to remember your password and the private key.", for: self, alertStyle: .withCancelButton) { [weak self] in
             self?.dismiss(animated: true, completion: nil)
             self?.showSpinner({
                 self?.localDatabase.deleteWallet { (error) in
                     if let error = error {
+                        self?.hideSpinner {}
                         self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                     } else {
                         let firebaseAuth = Auth.auth()
                         do {
                             try firebaseAuth.signOut()
+                            self?.hideSpinner {}
                         } catch let signOutError as NSError {
+                            self?.hideSpinner {}
                             self?.alert.showDetail("Error", with: "Error signing out: \(signOutError)", for: self)
                         }
                     }
                 }
             })
-        }
-        self.present(detailVC, animated: true, completion: { [weak self] in
-            self?.hideSpinner {}
-        })
+        } completion: {}
     }
     
     // MARK: - didDeleteUser
     func didDeleteUser() {
-        let detailVC = DetailViewController(height: 280, detailVCStyle: .withCancelButton)
-        detailVC.titleString = "Delete Account"
-        detailVC.message = "Are you sure you want to delete your account? Any transaction records on the blockchain will remain intact."
-        detailVC.buttonAction = { [weak self] vc in
+        alert.showDetail("Delete Account", with: "Are you sure you want to delete your account? Any transaction records on the blockchain will remain intact.", for: self, alertStyle: .withCancelButton) { [weak self] in
             self?.dismiss(animated: true, completion: nil)
             self?.showSpinner({
                 self?.localDatabase.deleteWallet { (error) in
                     if let error = error {
+                        self?.hideSpinner {}
                         self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                     } else {
+                        self?.hideSpinner {}
                         let user = Auth.auth().currentUser
                         user?.delete { error in
                             if let error = error {
@@ -178,10 +191,7 @@ extension AccountViewController {
                     }
                 }
             })
-        }
-        self.present(detailVC, animated: true, completion: { [weak self] in
-            self?.hideSpinner {}
-        })
+        } completion: {}
     }
     
     // MARK: - didUpdateProfile

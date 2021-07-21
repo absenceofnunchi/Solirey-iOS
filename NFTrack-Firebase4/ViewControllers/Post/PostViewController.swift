@@ -204,140 +204,171 @@ class PostViewController: ParentPostViewController {
                 
                 // escrow deployment transaction
                 if let transaction = transaction {
-                    self.hideSpinner {
-                        DispatchQueue.main.async {
-                            let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
-                            detailVC.titleString = "Enter your password"
-                            detailVC.buttonAction = { vc in
-                                if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
-                                    self.dismiss(animated: true, completion: {
-                                        self.progressModal = ProgressModalViewController(postType: .tangible)
-                                        self.progressModal.titleString = "Posting In Progress"
-                                        self.present(self.progressModal, animated: true, completion: {
-                                            DispatchQueue.global(qos: .background).async {
-                                                do {
-                                                    // create new contract
-                                                    let result = try transaction.send(password: password, transactionOptions: nil)
-                                                    print("deployment result", result)
-                                                    let update: [String: PostProgress] = ["update": .deployingEscrow]
-                                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                                    
-                                                    // mint transaction
-                                                    if let mintTransaction = mintTransaction {
-                                                        do {
-                                                            let mintResult = try mintTransaction.send(password: password,transactionOptions: nil)
-                                                            print("mintResult", mintResult)
-                                                            
-                                                            // firebase
-                                                            let senderAddress = result.transaction.sender!.address
-                                                            let ref = self.db.collection("post")
-                                                            let id = ref.document().documentID
-                                                            
-                                                            // for deleting photos afterwards
-                                                            self.documentId = id
-                                                            
-                                                            // txHash is either minting or transferring the ownership
-                                                            self.db.collection("post").document(id).setData([
-                                                                "sellerUserId": userId,
-                                                                "senderAddress": senderAddress,
-                                                                "escrowHash": result.hash,
-                                                                "mintHash": mintResult.hash,
-                                                                "date": Date(),
-                                                                "title": itemTitle,
-                                                                "description": desc,
-                                                                "price": price,
-                                                                "category": category,
-                                                                "status": PostStatus.ready.rawValue,
-                                                                "tags": Array(tokensArr),
-                                                                "itemIdentifier": convertedId,
-                                                                "isReviewed": false,
-                                                                "type": "digital",
-                                                                "deliveryMethod": deliveryMethod,
-                                                                "saleFormat": saleFormat,
-                                                                "paymentMethod": paymentMethod
-                                                            ]) { (error) in
-                                                                if let error = error {
-                                                                    self.alert.showDetail("Error", with: error.localizedDescription, for: self)
-                                                                } else {
-                                                                    /// no need for a socket if you don't have images to upload?
-                                                                    /// show the success alert here
-                                                                    /// apply the same for resell
-//                                                                    self.socketDelegate = SocketDelegate(contractAddress: "0x656f9bf02fa8eff800f383e5678e699ce2788c5c")
-//                                                                    self.socketDelegate.delegate = self
-                                                                }
+                    self.hideSpinner {}
+                    let content = [
+                        StandardAlertContent(
+                            index: 0,
+                            titleString: "Password",
+                            body: [AlertModalDictionary.passwordSubtitle: ""],
+                            isEditable: true,
+                            fieldViewHeight: 50,
+                            messageTextAlignment: .left,
+                            alertStyle: .withCancelButton
+                        ),
+                        StandardAlertContent(
+                            index: 1,
+                            titleString: "Details",
+                            body: [
+                                AlertModalDictionary.gasLimit: "",
+                                AlertModalDictionary.gasPrice: "",
+                                AlertModalDictionary.nonce: ""
+                            ],
+                            isEditable: true,
+                            fieldViewHeight: 50,
+                            messageTextAlignment: .left,
+                            alertStyle: .noButton
+                        )
+                    ]
+                    
+                    DispatchQueue.main.async {
+                        let alertVC = AlertViewController(height: 400, standardAlertContent: content)
+                        alertVC.action = { [weak self] (modal, mainVC) in
+                            // responses to the main vc's button
+                            mainVC.buttonAction = { _ in
+                                guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                                      !password.isEmpty else {
+                                    self?.alert.fading(text: "Email cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                                    return
+                                }
+                                
+                                guard let self = self else { return }
+                                self.dismiss(animated: true, completion: {
+                                    self.progressModal = ProgressModalViewController(postType: .tangible)
+                                    self.progressModal.titleString = "Posting In Progress"
+                                    self.present(self.progressModal, animated: true, completion: {
+                                        DispatchQueue.global(qos: .userInitiated).async {
+                                            do {
+                                                // create new contract
+                                                let result = try transaction.send(password: password, transactionOptions: nil)
+                                                print("deployment result", result)
+                                                let update: [String: PostProgress] = ["update": .deployingEscrow]
+                                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                                
+                                                // mint transaction
+                                                if let mintTransaction = mintTransaction {
+                                                    do {
+                                                        let mintResult = try mintTransaction.send(password: password,transactionOptions: nil)
+                                                        print("mintResult", mintResult)
+                                                        
+                                                        // firebase
+                                                        let senderAddress = result.transaction.sender!.address
+                                                        let ref = self.db.collection("post")
+                                                        let id = ref.document().documentID
+                                                        
+                                                        // for deleting photos afterwards
+                                                        self.documentId = id
+                                                        
+                                                        // txHash is either minting or transferring the ownership
+                                                        self.db.collection("post").document(id).setData([
+                                                            "sellerUserId": userId,
+                                                            "senderAddress": senderAddress,
+                                                            "escrowHash": result.hash,
+                                                            "mintHash": mintResult.hash,
+                                                            "date": Date(),
+                                                            "title": itemTitle,
+                                                            "description": desc,
+                                                            "price": price,
+                                                            "category": category,
+                                                            "status": PostStatus.ready.rawValue,
+                                                            "tags": Array(tokensArr),
+                                                            "itemIdentifier": convertedId,
+                                                            "isReviewed": false,
+                                                            "type": "digital",
+                                                            "deliveryMethod": deliveryMethod,
+                                                            "saleFormat": saleFormat,
+                                                            "paymentMethod": paymentMethod
+                                                        ]) { (error) in
+                                                            if let error = error {
+                                                                self.alert.showDetail("Error", with: error.localizedDescription, for: self)
+                                                            } else {
+                                                                /// no need for a socket if you don't have images to upload?
+                                                                /// show the success alert here
+                                                                /// apply the same for resell
+                                                                //                                                                    self.socketDelegate = SocketDelegate(contractAddress: "0x656f9bf02fa8eff800f383e5678e699ce2788c5c")
+                                                                //                                                                    self.socketDelegate.delegate = self
                                                             }
-                                                        } catch Web3Error.nodeError(let desc) {
-                                                            if let index = desc.firstIndex(of: ":") {
-                                                                let newIndex = desc.index(after: index)
-                                                                let newStr = desc[newIndex...]
-                                                                DispatchQueue.main.async {
-                                                                    self.alert.showDetail("Alert", with: String(newStr), for: self)
-                                                                }
-                                                            }
-                                                        } catch Web3Error.transactionSerializationError {
-                                                            DispatchQueue.main.async {
-                                                                self.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
-                                                            }
-                                                        } catch Web3Error.connectionError {
-                                                            DispatchQueue.main.async {
-                                                                self.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
-                                                            }
-                                                        } catch Web3Error.dataError {
-                                                            DispatchQueue.main.async {
-                                                                self.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
-                                                            }
-                                                        } catch Web3Error.inputError(_) {
-                                                            DispatchQueue.main.async {
-                                                                self.alert.showDetail("Alert", with: "Failed to sign the transaction. \n\nPlease try logging out of your wallet (not the Buroku account) and logging back in. \n\nEnsure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
-                                                            }
-                                                        } catch Web3Error.processingError(let desc) {
-                                                            DispatchQueue.main.async {
-                                                                self.alert.showDetail("Alert", with: desc, height: 320, for: self)
-                                                            }
-                                                        } catch {
-                                                            self.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                         }
-                                                    }
-                                                    
-                                                } catch Web3Error.nodeError(let desc) {
-                                                    if let index = desc.firstIndex(of: ":") {
-                                                        let newIndex = desc.index(after: index)
-                                                        let newStr = desc[newIndex...]
+                                                    } catch Web3Error.nodeError(let desc) {
+                                                        if let index = desc.firstIndex(of: ":") {
+                                                            let newIndex = desc.index(after: index)
+                                                            let newStr = desc[newIndex...]
+                                                            DispatchQueue.main.async {
+                                                                self.alert.showDetail("Alert", with: String(newStr), for: self)
+                                                            }
+                                                        }
+                                                    } catch Web3Error.transactionSerializationError {
                                                         DispatchQueue.main.async {
-                                                            self.alert.showDetail("Alert", with: String(newStr), for: self)
+                                                            self.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
                                                         }
+                                                    } catch Web3Error.connectionError {
+                                                        DispatchQueue.main.async {
+                                                            self.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
+                                                        }
+                                                    } catch Web3Error.dataError {
+                                                        DispatchQueue.main.async {
+                                                            self.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
+                                                        }
+                                                    } catch Web3Error.inputError(_) {
+                                                        DispatchQueue.main.async {
+                                                            self.alert.showDetail("Alert", with: "Failed to sign the transaction. \n\nPlease try logging out of your wallet (not the Buroku account) and logging back in. \n\nEnsure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
+                                                        }
+                                                    } catch Web3Error.processingError(let desc) {
+                                                        DispatchQueue.main.async {
+                                                            self.alert.showDetail("Alert", with: desc, height: 320, for: self)
+                                                        }
+                                                    } catch {
+                                                        self.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                     }
-                                                } catch Web3Error.transactionSerializationError {
-                                                    DispatchQueue.main.async {
-                                                        self.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
-                                                    }
-                                                } catch Web3Error.connectionError {
-                                                    DispatchQueue.main.async {
-                                                        self.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
-                                                    }
-                                                } catch Web3Error.dataError {
-                                                    DispatchQueue.main.async {
-                                                        self.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
-                                                    }
-                                                } catch Web3Error.inputError(_) {
-                                                    DispatchQueue.main.async {
-                                                        self.alert.showDetail("Alert", with: "Failed to sign the transaction. \n\nPlease try logging out of your wallet (not the Buroku account) and logging back in. \n\nEnsure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
-                                                    }
-                                                } catch Web3Error.processingError(let desc) {
-                                                    DispatchQueue.main.async {
-                                                        self.alert.showDetail("Alert", with: desc, height: 320, for: self)
-                                                    }
-                                                } catch {
-                                                    self.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                                 }
-                                            } // DispatchQueue.global background
-                                        }) // end of self.present completion for ProgressModalVC
-                                    }) // end of self.dismiss completion
-                                } // end of let password = dvc.textField.text
-                            } // detailVC.buttonAction
-                            self.present(detailVC, animated: true, completion: nil)
-                        } // hide spinner
-                    } // DispathQueue.main.asyc
+                                                
+                                            } catch Web3Error.nodeError(let desc) {
+                                                if let index = desc.firstIndex(of: ":") {
+                                                    let newIndex = desc.index(after: index)
+                                                    let newStr = desc[newIndex...]
+                                                    DispatchQueue.main.async {
+                                                        self.alert.showDetail("Alert", with: String(newStr), for: self)
+                                                    }
+                                                }
+                                            } catch Web3Error.transactionSerializationError {
+                                                DispatchQueue.main.async {
+                                                    self.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
+                                                }
+                                            } catch Web3Error.connectionError {
+                                                DispatchQueue.main.async {
+                                                    self.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
+                                                }
+                                            } catch Web3Error.dataError {
+                                                DispatchQueue.main.async {
+                                                    self.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
+                                                }
+                                            } catch Web3Error.inputError(_) {
+                                                DispatchQueue.main.async {
+                                                    self.alert.showDetail("Alert", with: "Failed to sign the transaction. \n\nPlease try logging out of your wallet (not the Buroku account) and logging back in. \n\nEnsure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
+                                                }
+                                            } catch Web3Error.processingError(let desc) {
+                                                DispatchQueue.main.async {
+                                                    self.alert.showDetail("Alert", with: desc, height: 320, for: self)
+                                                }
+                                            } catch {
+                                                self.alert.showDetail("Error", with: error.localizedDescription, for: self)
+                                            }
+                                        } // DispatchQueue.global background
+                                    }) // end of self.present completion for ProgressModalVC
+                                }) // end of self.dismiss completion
+                            } // mainVC
+                        } // alertVC
+                        self.present(alertVC, animated: true, completion: nil)
+                    }
                 } // transaction
             } // end of prepareTransactionForMinting
         }) // end of prepareTransactionForNewContract
