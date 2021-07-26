@@ -8,6 +8,7 @@
 import UIKit
 import Combine
 import web3swift
+import BigInt
 
 enum AuctionProperties: String, CaseIterable {
     case startingBid
@@ -78,6 +79,7 @@ class AuctionDetailViewController: ParentDetailViewController {
             }
         }
     }
+    final var socketDelegate: SocketDelegate!
     
     init() {
         super.init(nibName: nil, bundle: nil)
@@ -104,10 +106,19 @@ class AuctionDetailViewController: ParentDetailViewController {
             self.scrollView.contentSize =  adjustedSize
         }
     }
-    
-    final override func viewDidLoad() {
-        super.viewDidLoad()
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         getAuctionInfo()
+        addKeyboardObserver()
+    }
+    
+    final override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if socketDelegate != nil {
+            socketDelegate.disconnectSocket()
+        }
+        removeKeyboardObserver()
     }
 }
 
@@ -134,6 +145,9 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         auctionDetailTitleLabel.addSubview(auctionDetailRefreshButton)
         
         auctionSpecView = SpecDisplayView(listingDetailArr: auctionDetailArr)
+        auctionSpecView.tag = 2
+        let auctionSpecTap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+        auctionSpecView.addGestureRecognizer(auctionSpecTap)
         auctionSpecView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(auctionSpecView)
         
@@ -208,6 +222,22 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         }
     }
     
+    @objc override func tapped(_ sender: UITapGestureRecognizer!) {
+        super.tapped(sender)
+        let tag = sender.view?.tag
+
+        switch tag {
+            case 2:
+                guard let auctionContractAddress = contractAddress else { return }
+                
+                let webVC = WebViewController()
+                webVC.urlString = "https://rinkeby.etherscan.io/address/\(auctionContractAddress.address)"
+                self.navigationController?.pushViewController(webVC, animated: true)
+            default:
+                break
+        }
+    }
+    
     final func fetchContractAddress(txHash: String) {
         Future<TransactionReceipt, PostingError> { promise in
             Web3swiftService.getReceipt(hash: txHash, promise: promise)
@@ -228,67 +258,9 @@ extension AuctionDetailViewController: UITextFieldDelegate {
             self?.contractAddress = contractAddress
         }
         .store(in: &storage)
-
     }
     
     final func bid() {
-        guard isAuctionEnded == false else {
-            self.alert.showDetail("Sorry", with: "The auction has already ended", for: self)
-            return
-        }
-        
-        let bidAmount = "0.000004"
-//        self.transactionService.prepareTransactionForWriting(method: "bid", abi: auctionABI, contractAddress: self.contractAddress, amountString: bidAmount) { (transaction, error) in
-//            if let error = error {
-//                print("test error", error)
-//            }
-//
-//            if let transaction = transaction {
-//                DispatchQueue.global().async {
-//                    do {
-//                        let result = try transaction.send(password: "111111")
-//                        print("result", result)
-//                    } catch {
-//                        print("transaction error", error)
-//                    }
-//                }
-//            }
-//        }
-        Future<WriteTransaction, PostingError> { promise in
-            self.transactionService.prepareTransactionForWriting(
-                method: "bid",
-                abi: auctionABI,
-                contractAddress: EthereumAddress("0xa6494b7e149c6e00c42889e2bbda5e9fedb36822")!,
-                amountString: bidAmount,
-                promise: promise
-            )
-        }
-        .eraseToAnyPublisher()
-        .flatMap { (transaction) -> Future<TxResult, PostingError> in
-            self.transactionService.executeTransaction(transaction: transaction, password: "111111", type: .deploy)
-        }
-        .sink { (completion) in
-            switch completion {
-                case .failure(let error):
-                    print("error", error)
-                    switch error {
-                        case .generalError(reason: let msg):
-                            self.alert.showDetail("Error", with: msg, for: self)
-                        default:
-                            break
-                    }
-                    break
-                case .finished:
-                    print("finished")
-                    break
-            }
-        } receiveValue: { (txResult) in
-            print("txResult", txResult)
-        }
-        .store(in: &self.storage)
-    }
-    
-    final func bid1() {
         guard isAuctionEnded == false else {
             self.alert.showDetail("Sorry", with: "The auction has already ended", for: self)
             return
@@ -315,7 +287,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                 titleString: "Password",
                 body: [AlertModalDictionary.passwordSubtitle: ""],
                 isEditable: true,
-                fieldViewHeight: 50,
+                fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .withCancelButton
             ),
@@ -328,13 +300,13 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                     AlertModalDictionary.nonce: ""
                 ],
                 isEditable: true,
-                fieldViewHeight: 50,
+                fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
             )
         ]
         
-        let alertVC = AlertViewController(height: 400, standardAlertContent: content)
+        let alertVC = AlertViewController(height: 350, standardAlertContent: content)
         alertVC.action = { [weak self] (modal, mainVC) in
             // responses to the main vc's button
             mainVC.buttonAction = { _ in
@@ -354,42 +326,38 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                         return
                     }
                     
-                    //                    self.transactionService.prepareTransactionForWriting(method: "bid", abi: auctionABI, contractAddress: contractAddress, amountString: bidAmount) { (transaction, error) in
-                    //                        if let error = error {
-                    //                            self.alert.showDetail("Error", with: error.localizedDescription, for: self)
-                    //                        }
-                    //
-                    //                        if let transaction = transaction {
-                    //                            DispatchQueue.global(qos: .utility).async {
-                    //                                do {
-                    //                                    let result = try transaction.send(password: password, transactionOptions: nil)
-                    //                                    print("result", result)
-                    //                                } catch {
-                    //                                    self.alert.showDetail("Transaction Error", with: error.localizedDescription, for: self)
-                    //                                }
-                    //                            }
-                    //                        }
-                    //                    }
                     Future<WriteTransaction, PostingError> { promise in
-                        self.transactionService.prepareTransactionForWriting(method: "bid", abi: auctionABI, contractAddress: contractAddress, amountString: bidAmount, promise: promise)
+                        self.transactionService.prepareTransactionForWriting(
+                            method: "bid",
+                            abi: auctionABI,
+                            contractAddress: contractAddress,
+                            amountString: bidAmount,
+                            promise: promise
+                        )
                     }
                     .eraseToAnyPublisher()
                     .flatMap { (transaction) -> Future<TxResult, PostingError> in
-                        self.transactionService.executeTransaction(transaction: transaction, password: password, type: .deploy)
+                        self.transactionService.executeTransaction(
+                            transaction: transaction,
+                            password: password,
+                            type: .deploy
+                        )
                     }
-                    .sink { (completion) in
+                    .sink { [weak self] (completion) in
                         switch completion {
                             case .failure(let error):
                                 print("error", error)
                                 switch error {
                                     case .generalError(reason: let msg):
-                                        self.alert.showDetail("Error", with: msg, for: self)
+                                        self?.alert.showDetail("Transaction Error", with: msg, for: self)
                                     default:
                                         break
                                 }
                                 break
                             case .finished:
-                                print("finished")
+                                self?.alert.showDetail("Bid Success!", with: "You have made a successful bid. It'll take a few moment to be reflected on the blockchain.", for: self, completion:  {
+                                    self?.bidTextField.text?.removeAll()
+                                })
                                 break
                         }
                     } receiveValue: { (txResult) in
@@ -409,7 +377,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                 titleString: "Password",
                 body: [AlertModalDictionary.passwordSubtitle: ""],
                 isEditable: true,
-                fieldViewHeight: 50,
+                fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .withCancelButton
             ),
@@ -422,13 +390,13 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                     AlertModalDictionary.nonce: ""
                 ],
                 isEditable: true,
-                fieldViewHeight: 50,
+                fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
             )
         ]
         
-        let alertVC = AlertViewController(height: 400, standardAlertContent: content)
+        let alertVC = AlertViewController(height: 350, standardAlertContent: content)
         alertVC.action = { [weak self] (modal, mainVC) in
             // responses to the main vc's button
             mainVC.buttonAction = { _ in
@@ -445,10 +413,19 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                             promise(.failure(.generalError(reason: "Unable to load the address for the auction contract.")))
                             return
                         }
-                        self.transactionService.prepareTransactionForWriting(method: method, abi: auctionABI, contractAddress: contractAddress, promise: promise)
+                        self.transactionService.prepareTransactionForWriting(
+                            method: method,
+                            abi: auctionABI,
+                            contractAddress: contractAddress,
+                            promise: promise
+                        )
                     }
                     .flatMap { (transaction) -> Future<TxResult, PostingError> in
-                        self.transactionService.executeTransaction(transaction: transaction, password: password, type: .endAuction)
+                        self.transactionService.executeTransaction(
+                            transaction: transaction,
+                            password: password,
+                            type: .endAuction
+                        )
                     }
                     .sink { (completion) in
                         switch completion {
@@ -462,7 +439,6 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                 }
                                 break
                             case .finished:
-                                print("finished")
                                 break
                         }
                     } receiveValue: { (txResult) in
@@ -484,14 +460,18 @@ extension AuctionDetailViewController {
     final func getAuctionInfo() {
         guard let auctionHash = post.auctionHash else { return }
         
-        let auctionInfoLoader = PropertyLoader(propertiesToLoad: self.propertiesToLoad, deploymentHash: auctionHash)
+        let auctionInfoLoader = PropertyLoader(
+            propertiesToLoad: self.propertiesToLoad,
+            deploymentHash: auctionHash
+        )
+        
         auctionInfoLoader.initiateLoadSequence()
             .sink { (completion) in
                 switch completion {
                     case .failure(let error):
                         print("auctionInfoLoader error", error)
                     case .finished:
-                        print("finished")
+                        print("get auction info finished")
                 }
             } receiveValue: { [weak self] (propertyFetchModels: [SmartContractProperty]) in
                 DispatchQueue.main.async {
@@ -499,8 +479,15 @@ extension AuctionDetailViewController {
                     if self?.propertiesToLoad.count == propertyFetchModels.count  {
                         self?.auctionSpecView.fetchedDataArr = propertyFetchModels
                     }
+                    
+                    // contract address for bidding
+                    self?.contractAddress = auctionInfoLoader.contractAddress
+                    
+                    // socket to receive topics so that the auction specs could be re-updated
+                    // needs to be in the main thread, otherwise won't work
+                    self?.createSocket(for: auctionInfoLoader.contractAddress)
                 }
-                
+                                
                 // check the auction end time to see if the auction is still active
                 // present the bid button accordingly
                 for case let model in propertyFetchModels where model.propertyName == AuctionProperties.auctionEndTime.rawValue {
@@ -509,10 +496,124 @@ extension AuctionDetailViewController {
                         self?.isAuctionEnded = auctionEndDate < Date()
                     }
                 }
-                
-                // contract address for bidding
-                self?.contractAddress = auctionInfoLoader.contractAddress
             }
             .store(in: &self.storage)
+    }
+    
+    func createSocket(for auctionContractAddress: EthereumAddress, topics: [String]? = nil) {
+        guard socketDelegate == nil else { return }
+        socketDelegate = SocketDelegate(contractAddress: auctionContractAddress, topics: topics)
+        Future<[String], PostingError> { [weak self] promise in
+            guard let self = self else { return }
+            self.socketDelegate.promise = promise
+        }
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .failure(let err):
+                    self?.alert.showDetail("Auction Detail Fetch Error", with: err.localizedDescription, for: self)
+                case .finished:
+                    break
+            }
+        } receiveValue: { (topics) in
+            switch topics {
+                case _ where topics.contains(Topics.HighestBidIncreased):
+                    print("HighestBidIncreased")
+                default:
+                    print("other events")
+            }
+        }
+        .store(in: &storage)
+    }
+    
+    func createEventListener() {
+        guard let auctionHash = post.auctionHash else { return }
+        Future<TransactionReceipt, PostingError> { promise in
+            Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
+        }
+        .flatMap({ (receipt) -> AnyPublisher<[EventParserResultProtocol], PostingError> in
+            return Future<[EventParserResultProtocol], PostingError> { promise in
+                let web3 = Web3swiftService.web3instance
+                guard let auctionContractAddress = receipt.contractAddress else {
+                    return promise(.failure(.generalError(reason: "Unable to retrieve the auction contract")))
+                }
+                
+                let contract = web3.contract(auctionABI, at: auctionContractAddress, abiVersion: 2)
+                
+//                var filter = EventFilter()
+//                filter.fromBlock = .blockNumber(0)
+//                filter.toBlock = .latest
+                
+                let eventParser = contract?.createEventParser("HighestBidIncreased", filter: nil)
+                
+                var blockNumber: BigUInt!
+                do {
+                    blockNumber = try web3.eth.getBlockNumber()
+                } catch {
+                    promise(.failure(.generalError(reason: "Unable to get the block number.")))
+                }
+
+                do {
+                    if let event = try eventParser?.parseBlockByNumber(UInt64(blockNumber)) {
+                        print("event parser", event)
+                        promise(.success(event))
+                    } else {
+                        promise(.failure(.generalError(reason: "No event.")))
+                    }
+                } catch {
+                    promise(.failure(.generalError(reason: "Unable to parse event.")))
+                }
+            }
+            .eraseToAnyPublisher()
+        })
+        .sink { (completion) in
+            switch completion {
+                case .finished:
+                    break
+                case .failure(let err):
+                    print(err)
+            }
+        } receiveValue: { (event) in
+            print("final event", event)
+        }
+        .store(in: &storage)
+    }
+}
+
+extension AuctionDetailViewController {
+    // MARK: - addKeyboardObserver
+    private func addKeyboardObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
+    // MARK: - removeKeyboardObserver
+    private func removeKeyboardObserver(){
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
+    @objc private func keyboardWillShow(notification: NSNotification) {
+        //Need to calculate keyboard exact size due to Apple suggestions
+        let info = notification.userInfo!
+        let keyboardSize = (info[UIResponder.keyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.size
+        let contentInsets : UIEdgeInsets = UIEdgeInsets(top: 0.0, left: 0.0, bottom: keyboardSize!.height, right: 0.0)
+        
+        self.scrollView.contentInset = contentInsets
+        self.scrollView.scrollIndicatorInsets = contentInsets
+        
+        var aRect : CGRect = self.view.frame
+        aRect.size.height -= keyboardSize!.height
+        if let activeField = self.bidTextField {
+            if (!aRect.contains(activeField.frame.origin)){
+                self.scrollView.scrollRectToVisible(activeField.frame, animated: true)
+            }
+        }
+    }
+    
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        //Once keyboard disappears, restore original positions
+        self.scrollView.contentInset = .zero
+        self.scrollView.scrollIndicatorInsets = .zero
+        self.view.endEditing(true)
     }
 }

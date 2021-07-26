@@ -77,7 +77,7 @@ extension ChatViewController {
         } else {
             self.alert.showDetail("Sorry", with: "Unable to retrieve your profile. Please try again.", for: self) {
                 self.navigationController?.popViewController(animated: true)
-            }
+            } completion: {}
         }
     }
     
@@ -148,7 +148,7 @@ extension ChatViewController {
         guard let buyerUid = userId else {
             self.alert.showDetail("Sorry", with: "You're currently not logged in. Please log in and try again.", for: self) {
                 self.navigationController?.popViewController(animated: true)
-            }
+            } completion: {}
             return
         }
         
@@ -269,7 +269,7 @@ extension ChatViewController {
             guard let sellerUserId = userInfo.uid else {
                 self.alert.showDetail("Sorry", with: "Unable to retrieve the seller's info. Please try again", for: self) {
                     self.navigationController?.popViewController(animated: true)
-                }
+                } completion: {}
                 return
             }
             
@@ -307,7 +307,7 @@ extension ChatViewController {
                     if let imageName = self?.imageName {
                         self?.deleteFile(fileName: imageName)
                     }
-                }
+                } completion: {}
             }
         }
     }
@@ -492,17 +492,17 @@ extension ChatViewController: TableViewConfigurable, UITableViewDataSource {
 extension ChatViewController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
-        
-        guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else {
-            print("No image found")
-            return
-        }
-        
-        imageName = UUID().uuidString
-        saveImage(imageName: imageName, image: image)
-        uploadFile(fileName: imageName, userId: userId) { [weak self] (url) in
-            self?.sendImage(url: url)
-        }
+//        
+//        guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else {
+//            print("No image found")
+//            return
+//        }
+//        
+//        imageName = UUID().uuidString
+//        saveImage(imageName: imageName, image: image)
+//        uploadFile(fileName: imageName, userId: userId) { [weak self] (url) in
+//            self?.sendImage(url: url)
+//        }
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {

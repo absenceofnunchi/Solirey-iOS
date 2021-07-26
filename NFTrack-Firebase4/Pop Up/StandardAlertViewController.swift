@@ -124,6 +124,7 @@ extension StandardAlertViewController: UITextFieldDelegate {
             messageTextView.layer.cornerRadius = 5
             messageTextView.contentInset = UIEdgeInsets(top: 0, left: 5, bottom: 0, right: 5)
             messageTextView.clipsToBounds = true
+            messageTextView.showsVerticalScrollIndicator = true
             messageTextView.isScrollEnabled = true
             messageTextView.font = UIFont.rounded(ofSize: 20, weight: .medium)
             messageTextView.translatesAutoresizingMaskIntoConstraints = false

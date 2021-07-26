@@ -5,6 +5,13 @@
 //  Created by J C on 2021-07-16.
 //
 
+/*
+ Abstract:
+ Fetches the values of the properties from a smart contract.
+ Recursively fetches as some fetch requests can fail.
+ Currently designed for the auction contract, but can swap out executeReadTransaction modularly for other contracts when needed.
+ */
+
 import Foundation
 import Combine
 import web3swift
@@ -66,7 +73,10 @@ class PropertyLoader {
                     //                        return Fail(error: PostingError.generalError(reason: "Could not fetch properties."))
                     //                            .eraseToAnyPublisher()
                     //                    }
-                    return self.loadInfo(propertiesToLoad: self.propertiesToLoad, deploymentHash: self.deploymentHash)
+                    return self.loadInfo(
+                        propertiesToLoad: self.propertiesToLoad,
+                        deploymentHash: self.deploymentHash
+                    )
                 }
                 .handleEvents(receiveOutput: { (response: [SmartContractProperty]) in
                     let unretrievedProperties = response.compactMap { (model) -> String? in
@@ -107,7 +117,10 @@ class PropertyLoader {
         }
     }
     
-    private final func executeReadTransaction(propertyFetchModel: inout SmartContractProperty, promise: (Result<SmartContractProperty, PostingError>) -> Void) {
+    private final func executeReadTransaction(
+        propertyFetchModel: inout SmartContractProperty,
+        promise: (Result<SmartContractProperty, PostingError>) -> Void
+    ) {
         do {
             guard let transaction = propertyFetchModel.transaction else {
                 promise(.failure(.generalError(reason: "Unable to create a transaction.")))
@@ -118,16 +131,11 @@ class PropertyLoader {
             switch AuctionProperties(rawValue: propertyFetchModel.propertyName) {
                 case .startingBid:
                     if let startingBid = result["0"] as? BigUInt,
-                       var bidInEth = Web3.Utils.formatToEthereumUnits(startingBid, toUnits: .eth, decimals: 8) {
+                       let bidInEth = Web3.Utils.formatToEthereumUnits(startingBid, toUnits: .eth, decimals: 9) {
                         
                         // remove the unnecessary zeros in the decimal
-                        var index = bidInEth.index(before: bidInEth.endIndex)
-                        while bidInEth[index] == "0" {
-                            bidInEth.removeLast()
-                            index = bidInEth.index(before: bidInEth.endIndex)
-                        }
-                        
-                        propertyFetchModel.propertyDesc = "\(bidInEth.description) ETH"
+                        let trimmed = self.transactionService.stripZeros(bidInEth.description)
+                        propertyFetchModel.propertyDesc = "\(trimmed) ETH"
                     }
                 case .auctionEndTime:
                     if let auctionEndTime = result["0"] as? BigUInt {
@@ -142,9 +150,11 @@ class PropertyLoader {
 //                        propertyFetchModel.propertyDesc = formattedDate
                     }
                 case .highestBid:
-                    if let startingBid = result["0"] as? BigUInt,
-                       let bidInEth = Web3.Utils.parseToBigUInt(startingBid.description, units: .eth) {
-                        propertyFetchModel.propertyDesc = "\(bidInEth.description) ETH"
+                    if let startingBid = result["0"] as? BigUInt {
+                        if let converted = Web3.Utils.formatToEthereumUnits(startingBid, toUnits: .eth, decimals: 9) {
+                            let trimmed = transactionService.stripZeros(converted)
+                            propertyFetchModel.propertyDesc = "\(trimmed) ETH"
+                        }
                     }
                 case .highestBidder:
                     if let propertyDesc = result["0"] as? EthereumAddress {

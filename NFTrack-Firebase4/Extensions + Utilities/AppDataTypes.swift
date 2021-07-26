@@ -7,6 +7,7 @@
 
 import UIKit
 import web3swift
+import BigInt
 
 // MARK: - WalletCreationType
 enum WalletCreationType {
@@ -577,4 +578,37 @@ struct AlertModalDictionary {
     static let gasLimit = "Gas Limit"
     static let gasPrice = "Gas Price"
     static let nonce = "Nonce"
+}
+
+enum TxType {
+    case mint
+    case deploy
+    case transferToken
+    case bid
+    case endAuction
+}
+
+struct TxResult {
+    let senderAddress: String
+    let txHash: String
+    let txType: TxType
+}
+
+struct TxResult2 {
+    let senderAddress: String
+    let txResult: TransactionSendingResult
+    let txType: TxType
+}
+
+struct TxPackage {
+    let transaction: WriteTransaction
+    let gasEstimate: BigUInt
+    let price: String?
+    let type: TxType
+    var nonce: BigUInt? = nil
+}
+
+// MARK: - Topics
+struct Topics {
+    static let HighestBidIncreased = "0xf4757a49b326036464bec6fe419a4ae38c8a02ce3e68bf0809674f6aab8ad300"
 }

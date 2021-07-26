@@ -2656,3 +2656,178 @@
 //        }
 //    }
 //}
+
+//
+//  SocketDelegate.swift
+//  NFTrack-Firebase4
+//
+//  Created by J C on 2021-05-29.
+//
+
+//import UIKit
+//import web3swift
+//
+//class TestSocketDelegate: Web3SocketDelegate {
+//    var socketProvider0: InfuraWebsocketProvider? = nil
+//    var socketProvider1: InfuraWebsocketProvider? = nil
+//    var socketProvider2: InfuraWebsocketProvider? = nil
+//    var socketProvider3: InfuraWebsocketProvider? = nil
+//    var socketProvider4: InfuraWebsocketProvider? = nil
+//    var socketProvider5: InfuraWebsocketProvider? = nil
+//    var socketProvider6: InfuraWebsocketProvider? = nil
+//    var socketProvider7: InfuraWebsocketProvider? = nil
+//    var socketProvider8: InfuraWebsocketProvider? = nil
+//    var socketProvider9: InfuraWebsocketProvider? = nil
+//    
+//    weak var delegate: SocketMessageDelegate?
+//    var didReceiveTopics: (([String]) -> Void)?
+//    var promise: ((Result<[String], PostingError>) -> Void)!
+//    
+//    init(contractAddress: EthereumAddress) {
+//        configure(contractAddress)
+//    }
+//    //
+//    //        deinit {
+//    //            if socketProvider != nil {
+//    //                print("websocket disconnected")
+//    //                socketProvider!.disconnectSocket()
+//    //            }
+//    //        }
+//    //
+//    //        func disconnectSocket() {
+//    //            if socketProvider != nil {
+//    //                print("websocket disconnected")
+//    //                socketProvider!.disconnectSocket()
+//    //            }
+//    //        }
+//    
+//    // Protocol method, here will be messages, received from WebSocket server
+//    func received(message: Any) {
+//        print("message", message)
+//        //        if let dict = message as? [String: Any],
+//        //           let topics = dict["topics"] as? [String],
+//        //           let promise = promise {
+//        //            promise(.success(topics))
+//        //        }
+//    }
+//    
+//    //    func received(message: Any) {
+//    //        if let dict = message as? [String: Any], let topics = dict["topics"] as? [String] {
+//    //            delegate?.didReceiveMessage(topics: topics)
+//    //            if let didReceiveTopics = didReceiveTopics {
+//    //                didReceiveTopics(topics)
+//    //            }
+//    //        }
+//    //    }
+//    
+//    func gotError(error: Error) {
+//        print("socket error", error)
+//        if case PostingError.web3Error(let err) = error {
+//            promise(.failure(.generalError(reason: err.errorDescription)))
+//        } else {
+//            promise(.failure(.generalError(reason: error.localizedDescription)))
+//        }
+//    }
+//    
+//    func configure(_ contractAddress: EthereumAddress) {
+//        self.socketProvider0 = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
+//        self.socketProvider0?.connectSocket()
+//        
+//        self.socketProvider1 = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
+//        self.socketProvider1?.connectSocket()
+//        
+//        self.socketProvider2 = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
+//        self.socketProvider2?.connectSocket()
+//        
+//        self.socketProvider3 = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
+//        self.socketProvider3?.connectSocket()
+//        
+//        self.socketProvider4 = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
+//        self.socketProvider4?.connectSocket()
+//        
+//        self.socketProvider5 = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
+//        self.socketProvider5?.connectSocket()
+//        
+//        self.socketProvider6 = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
+//        self.socketProvider6?.connectSocket()
+//        
+//        self.socketProvider7 = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
+//        self.socketProvider7?.connectSocket()
+//        
+//        self.socketProvider8 = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
+//        self.socketProvider8?.connectSocket()
+//        
+//        self.socketProvider9 = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
+//        self.socketProvider9?.connectSocket()
+//        
+//        //0xf4757a49b326036464bec6fe419a4ae38c8a02ce3e68bf0809674f6aab8ad300
+//        
+//        do {
+//            try self.socketProvider0!.subscribeOnLogs(addresses: [contractAddress], topics: ["0xf4757a49b326036464bec6fe419a4ae38c8a02ce3e68bf0809674f6aab8ad300"])
+//        } catch {
+//            print("socket error0", error)
+//        }
+//        
+//        do {
+//            try self.socketProvider1!.setFilterAndGetLogs(method: .getFilterLogs, address: contractAddress, fromBlock: .earliest, toBlock: .latest, topics: ["0xf4757a49b326036464bec6fe419a4ae38c8a02ce3e68bf0809674f6aab8ad300"])
+//        } catch {
+//            print("socket error1", error)
+//        }
+//        
+//        do {
+//            try self.socketProvider2!.setFilterAndGetLogs(method: .newBlockFilter)
+//        } catch {
+//            print("socket error2", error)
+//        }
+//        
+//        do {
+//            try self.socketProvider3!.setFilterAndGetLogs(method: .newPendingTransactionFilter)
+//        } catch {
+//            print("socket error3", error)
+//        }
+//        
+//        do {
+//            try self.socketProvider4!.setFilterAndGetLogs(method: .newFilter, address: contractAddress, fromBlock: nil, toBlock: nil, topics: ["0xf4757a49b326036464bec6fe419a4ae38c8a02ce3e68bf0809674f6aab8ad300"])
+//        } catch {
+//            print("socket error4", error)
+//        }
+//        
+//        do {
+//            try self.socketProvider5!.getFilterChanges()
+//        } catch {
+//            print("socket error4", error)
+//        }
+//        
+//        do {
+//            try self.socketProvider6!.getFilterLogs()
+//        } catch {
+//            print("socket error4", error)
+//        }
+//        
+//        do {
+//            try self.socketProvider7!.getFilterChanges()
+//        } catch {
+//            print("socket error4", error)
+//        }
+//        
+//        do {
+//            try self.socketProvider8!.getFilterLogs(address: contractAddress, fromBlock: .earliest, toBlock: .latest, topics: [])
+//        } catch {
+//            print("socket error4", error)
+//        }
+//        
+//        do {
+//            try self.socketProvider9!.subscribeOnNewPendingTransactions()
+//        } catch {
+//            print("socket error4", error)
+//        }
+//    }
+//}
+//
+//
+////"hexString": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+////"topics": [
+////"0x0000000000000000000000000000000000000000000000000000000000000000",
+////"0x0000000000000000000000006879f0a123056b5bb56c7e787cf64a67f3a16a71",
+////"0x0000000000000000000000000000000000000000000000000000000000000030"
+////]

@@ -37,6 +37,8 @@ class SpecDisplayView: UIView {
             stackView.arrangedSubviews.enumerated().forEach { (index, element) in
                 let specDetail = fetchedDataArr[index]
                 for case let subview as UILabel in element.subviews {
+                    /// tag 1 refers to the property name such as "Highest Bid"
+                    /// tag 2 refers to the property value such as "2 ether"
                     switch subview.tag {
                         case 1:
                             subview.text = specDetail.propertyName

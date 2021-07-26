@@ -167,7 +167,7 @@ extension ProfileViewController: UIImagePickerControllerDelegate & UINavigationC
         profileImageButton.imageView?.contentMode = .scaleToFill
         
         profileImageName = UUID().uuidString
-        saveImage(imageName: profileImageName, image: image)
+        let _ = saveImage(imageName: profileImageName, image: image)
         
         if deleteImageButton == nil {
             guard let deleteImage = UIImage(systemName: "minus.circle.fill") else {
@@ -217,7 +217,7 @@ extension ProfileViewController: FileUploadable {
                             self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
                                 self?.deleteFile(fileName: self!.profileImageName)
                                 self?.dismiss(animated: true, completion: nil)
-                            }
+                            } completion: {}
                         }
                         
                         if self?.userInfo.email != email {
@@ -226,19 +226,19 @@ extension ProfileViewController: FileUploadable {
                                     self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
                                         self?.deleteFile(fileName: self!.profileImageName)
                                         self?.dismiss(animated: true, completion: nil)
-                                    }
+                                    } completion: {}
                                 } else {
                                     self?.updateUser(displayName: displayName, photoURL: "\(url)", completion: { (error) in
                                         if let error = error {
                                             self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
                                                 self?.deleteFile(fileName: self!.profileImageName)
                                                 self?.dismiss(animated: true, completion: nil)
-                                            }
+                                            } completion: {}
                                         } else {
                                             self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self) {
                                                 self?.deleteFile(fileName: self!.profileImageName)
                                                 self?.dismiss(animated: true, completion: nil)
-                                            }
+                                            } completion: {}
                                         }
                                     })
                                 }
@@ -249,12 +249,12 @@ extension ProfileViewController: FileUploadable {
                                     self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
                                         self?.deleteFile(fileName: self!.profileImageName)
                                         self?.dismiss(animated: true, completion: nil)
-                                    }
+                                    } completion: {}
                                 } else {
                                     self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self) {
                                         self?.deleteFile(fileName: self!.profileImageName)
                                         self?.dismiss(animated: true, completion: nil)
-                                    }
+                                    } completion: {}
                                 }
                             })
                         }
@@ -281,7 +281,7 @@ extension ProfileViewController: FileUploadable {
                                 } else {
                                     self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self) {
                                         self?.dismiss(animated: true, completion: nil)
-                                    }
+                                    } completion: {}
                                 }
                             })
                         }
@@ -292,7 +292,7 @@ extension ProfileViewController: FileUploadable {
                             } else {
                                 self?.alert.showDetail("Success!", with: "Your profile has been successfully updated", for: self) {
                                     self?.dismiss(animated: true, completion: nil)
-                                }
+                                } completion: {}
                             }
                         })
                     }
@@ -313,7 +313,7 @@ extension ProfileViewController: FileUploadable {
             self.profileImageButton.setImage(configuredImage, for: .normal)
             self.deleteImageButton.isHidden = true
             self.profileImageName = nil
-        }
+        } completion: {}
     }
 }
 

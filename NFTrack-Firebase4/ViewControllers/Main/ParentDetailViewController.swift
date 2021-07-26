@@ -64,7 +64,6 @@ class ParentDetailViewController: UIViewController {
             let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
             profileImageView.addGestureRecognizer(tap)
             displayNameLabel.addGestureRecognizer(tap)
-            
         }
         fetchUserData(id: post.sellerUserId)
         configureImageDisplay(post: post, v: scrollView)

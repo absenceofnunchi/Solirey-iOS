@@ -72,7 +72,6 @@ extension AlertViewController: DataFetchDelegate {
         dataSource = self
         delegate = self
         
-        print("contentArray", contentArray.count)
         if contentArray.count != 1 {
             let pageControl = UIPageControl.appearance()
             pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)

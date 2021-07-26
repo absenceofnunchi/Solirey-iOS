@@ -657,7 +657,7 @@ extension ParentPostViewController {
             
             self?.checkExistingId(id: convertedId) { (isDuplicate) in
                 if isDuplicate {
-                    self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 300, for: self)
+                    self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
                 } else {
                     // add both the tokens and the title to the tokens field
                     var tokensArr = Set<String>()

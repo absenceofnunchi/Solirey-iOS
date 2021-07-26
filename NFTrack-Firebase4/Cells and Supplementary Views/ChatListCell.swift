@@ -89,8 +89,8 @@ class ChatListCell: ParentTableCell<ChatListModel> {
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(dateLabel)
         
-        formatter.dateFormat = "HH:mm"
-        let formattedTime = formatter.string(from: post.date)
+//        formatter.dateFormat = "HH:mm"
+//        let formattedTime = formatter.string(from: post.date)
         
         timeLabel = UILabel()
         timeLabel.text = ""

@@ -50,6 +50,8 @@ class Web3swiftService {
         return false
     }
     
+    // uses the transaction hash to get the contract address
+    // ex) uses the auction contract deployment transaction hash to get the contract address of the auction contract
     static func getReceipt(hash: String, promise: @escaping (Result<TransactionReceipt, PostingError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             do {
@@ -64,6 +66,16 @@ class Web3swiftService {
                     promise(.failure(.generalError(reason: error.localizedDescription)))
                 }
             }
+        }
+    }
+    
+    static func getBlock(_ promise: @escaping (Result<BigUInt, PostingError>) -> Void) {
+        do {
+            let currentBlock = try Web3swiftService.web3instance.eth.getBlockNumber()
+            promise(.success(currentBlock))
+            //            return receipt.blockNumber == nil ? 0 : currentBlock.number - receipt.blockNumber
+        } catch {
+            promise(.failure(PostingError.generalError(reason: "Unable to get the current block.")))
         }
     }
 }

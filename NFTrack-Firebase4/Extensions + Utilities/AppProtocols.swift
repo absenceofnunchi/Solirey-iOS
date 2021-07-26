@@ -221,7 +221,7 @@ extension FileUploadable {
     }
     
     func uploadFileWithPromise(fileURL: URL, userId: String, promise: @escaping (Result<String?, PostingError>) -> Void) {
-        FirebaseService.shared.uploadFile(fileURL: fileURL, userId: userId) { [weak self](uploadTask, fileUploadError) in
+        FirebaseService.shared.uploadFile(fileURL: fileURL, userId: userId) { (uploadTask, fileUploadError) in
             if let error = fileUploadError {
                 switch error {
                     case .fileNotAvailable:

@@ -141,7 +141,7 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
             } else {
                 self?.alert.showDetail("Sorry", with: "User data could not be fetched", for: self) {
                     self?.navigationController?.popViewController(animated: true)
-                }
+                } completion: {}
             }
         }
     }
@@ -528,7 +528,10 @@ extension ReviewPostViewController: FileUploadable {
                             self?.navigationController?.popViewController(animated: true)
                             self?.delegate?.didRefreshTableView(index: self?.reviewerInfo?.uid == self?.post.sellerUserId ? 1 : 0)
                         }
+                    } completion: {
+                        
                     }
+
                 }
             }
         }

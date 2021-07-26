@@ -366,5 +366,9 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
 }
 
 // private key
+// 2
 // a9420edb3ac5a4eaece8dfa7c5fdd37b0358d7a7d51b1579b5ae94be9cce0842
+
+// some
 // 650ab63c9923856efde6471bb1249df2e5b0995e7a84826f4374feb7ad605079
+

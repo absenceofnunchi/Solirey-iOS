@@ -8,24 +8,13 @@
 import UIKit
 import web3swift
 
-class SocketDelegate: Web3SocketDelegate {
-    final var socketProvider: InfuraWebsocketProvider? = nil
-    final weak var delegate: SocketMessageDelegate?
-    final var didReceiveTopics: (([String]) -> Void)?
-    final var promise: ((Result<[String], PostingError>) -> Void)!
+class TestSocketDelegate: Web3SocketDelegate {
+    var socketProvider: InfuraWebsocketProvider? = nil
+    weak var delegate: SocketMessageDelegate?
+    var didReceiveTopics: (([String]) -> Void)?
+    var promise: ((Result<[String], PostingError>) -> Void)!
     
-    init(contractAddress: EthereumAddress, topics: [String]? = nil) {
-        connectSocket(contractAddress: contractAddress, topics: topics)
-    }
-        
-    deinit {
-        if socketProvider != nil {
-            print("websocket disconnected")
-            socketProvider!.disconnectSocket()
-        }
-    }
-    
-    func connectSocket(contractAddress: EthereumAddress, topics: [String]? = nil) {
+    init(contractAddress: EthereumAddress, topics: [String] = []) {
         self.socketProvider = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
         self.socketProvider?.connectSocket()
         
@@ -40,6 +29,15 @@ class SocketDelegate: Web3SocketDelegate {
         }
     }
     
+    // topics "0xf4757a49b326036464bec6fe419a4ae38c8a02ce3e68bf0809674f6aab8ad300"
+
+    deinit {
+        if socketProvider != nil {
+            print("websocket disconnected")
+            socketProvider!.disconnectSocket()
+        }
+    }
+
     func disconnectSocket() {
         if socketProvider != nil {
             print("websocket disconnected")
@@ -53,7 +51,6 @@ class SocketDelegate: Web3SocketDelegate {
         if let dict = message as? [String: Any],
            let topics = dict["topics"] as? [String],
            let promise = promise {
-            
             promise(.success(topics))
         }
     }

@@ -99,6 +99,7 @@
 		496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F70012652029F00E4056B /* ListDetailViewController.swift */; };
 		496F7007265207A700E4056B /* ImagePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F7006265207A700E4056B /* ImagePageViewController.swift */; };
 		496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F700B265421E200E4056B /* TxDetailViewController.swift */; };
+		49765A5226ADEE850094A8EC /* TestSocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49765A5126ADEE850094A8EC /* TestSocketDelegate.swift */; };
 		497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9AEB2655A60300F09CAA /* NFTrackABI.swift */; };
 		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
@@ -256,6 +257,7 @@
 		496F70012652029F00E4056B /* ListDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailViewController.swift; sourceTree = "<group>"; };
 		496F7006265207A700E4056B /* ImagePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePageViewController.swift; sourceTree = "<group>"; };
 		496F700B265421E200E4056B /* TxDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TxDetailViewController.swift; sourceTree = "<group>"; };
+		49765A5126ADEE850094A8EC /* TestSocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSocketDelegate.swift; sourceTree = "<group>"; };
 		497A9AEB2655A60300F09CAA /* NFTrackABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABI.swift; sourceTree = "<group>"; };
 		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
@@ -572,6 +574,7 @@
 				4964E567264968A7005B3268 /* Errors.swift */,
 				496D56CF265AEDAB00C3E7FD /* ImageDataStore.swift */,
 				49D59C752663326500107F79 /* SocketDelegate.swift */,
+				49765A5126ADEE850094A8EC /* TestSocketDelegate.swift */,
 				49DEFF5A268649A2004C2DD0 /* DocumentPicker.swift */,
 				49DEFF5F26864CA4004C2DD0 /* Document.swift */,
 				495FD2CD2687B33600F1D81D /* CustomPreviewItem.swift */,
@@ -1085,6 +1088,7 @@
 				49BFB4BE269E4666008D908F /* AuctionDetailViewController.swift in Sources */,
 				4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */,
 				499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */,
+				49765A5226ADEE850094A8EC /* TestSocketDelegate.swift in Sources */,
 				495FD31C268B9DCA00F1D81D /* NewPostViewController.swift in Sources */,
 				499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */,
 				49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */,

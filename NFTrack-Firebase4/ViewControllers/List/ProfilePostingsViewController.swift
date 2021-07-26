@@ -54,7 +54,7 @@ class ProfilePostingsViewController: ProfileListViewController<Post>, PaginateFe
         }
         
         if let data = data {
-            self.postArr.append(contentsOf:postArr)
+            self.postArr.append(contentsOf:data)
         }
     }
 }

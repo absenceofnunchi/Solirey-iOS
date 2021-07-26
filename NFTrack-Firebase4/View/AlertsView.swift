@@ -35,6 +35,7 @@ class Alerts {
         _ title: String,
         with message: String?,
         height: CGFloat = 350,
+        fieldViewHeight: CGFloat = 150,
         index: Int = 0,
         alignment: NSTextAlignment = .left,
         for controller: UIViewController?,
@@ -50,6 +51,7 @@ class Alerts {
                             index: index,
                             titleString: title,
                             body: ["": message ?? ""],
+                            fieldViewHeight: fieldViewHeight,
                             messageTextAlignment: alignment,
                             alertStyle: alertStyle,
                             buttonAction: { (_) in

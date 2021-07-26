@@ -571,7 +571,13 @@ extension ListDetailViewController {
                 }
                 
                 let param: [AnyObject] = [fromAddress, toAddress, ti] as [AnyObject]
-                self?.transactionService.prepareTransactionForWriting(method: "transferFrom", abi: NFTrackABI, param: param, contractAddress: erc721ContractAddress, completion: { (transaction, error) in
+                self?.transactionService.prepareTransactionForWriting(
+                    method: "transferFrom",
+                    abi: NFTrackABI,
+                    param: param,
+                    contractAddress: erc721ContractAddress,
+                    completion: { (transaction, error) in
+                        
                     if let error = error {
                         switch error {
                             case .invalidAmountFormat:

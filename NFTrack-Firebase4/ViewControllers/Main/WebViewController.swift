@@ -13,13 +13,13 @@ class WebViewController: UIViewController {
     private var webView: WKWebView!
     private let alert = Alerts()
     
-    override func loadView() {
+    final override func loadView() {
         webView = WKWebView()
         webView.navigationDelegate = self
         view = webView
     }
     
-    override func viewDidLoad() {
+    final override func viewDidLoad() {
         super.viewDidLoad()
         configureWebView()
     }
@@ -28,7 +28,7 @@ class WebViewController: UIViewController {
 
 // MARK: - Configure web view
 extension WebViewController {
-    func configureWebView() {
+    private func configureWebView() {
         if let url = URL(string: urlString) {
             webView.load(URLRequest(url: url))
             webView.allowsBackForwardNavigationGestures = true

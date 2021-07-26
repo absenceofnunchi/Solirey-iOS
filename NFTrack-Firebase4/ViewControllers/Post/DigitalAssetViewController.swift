@@ -369,7 +369,7 @@ class DigitalAssetViewController: ParentPostViewController {
             self.alert.showDetail("Sorry", with: "There was an error loading the contract address.", for: self)
             return
         }
-        self.socketDelegate = SocketDelegate(contractAddress: contractAddress)
+//        self.socketDelegate = SocketDelegate(contractAddress: contractAddress)
         
         let content = [
             StandardAlertContent(
@@ -534,7 +534,7 @@ class DigitalAssetViewController: ParentPostViewController {
                                                     case .createTransactionIssue:
                                                         self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
                                                     case .insufficientFund(let msg):
-                                                        self.alert.showDetail("Error", with: msg, height: 500, alignment: .left, for: self)
+                                                        self.alert.showDetail("Error", with: msg, height: 500, fieldViewHeight: 300, alignment: .left, for: self)
                                                     case .emptyAmount:
                                                         self.alert.showDetail("Error", with: "The ETH value cannot be blank for the transaction.", for: self)
                                                     case .invalidAmountFormat:
@@ -585,101 +585,6 @@ class DigitalAssetViewController: ParentPostViewController {
             } // dispatchqueue
         } // hideSpinner
     }
-        
-    override func test() {
-        print("test")
-        guard let startingBidInWei = Web3.Utils.parseToBigUInt("0.00002", units: .eth),
-              let startingBid = NumberFormatter().number(from: startingBidInWei.description) else {
-            self.alert.showDetail("Sorry", with: "Could not convert the auction starting price into a proper format. Pleas try again.", for: self)
-            return
-        }
-        
-        guard let NFTrackAddress = NFTrackAddress else {
-            self.alert.showDetail("Sorry", with: "There was an error loading the contract address.", for: self)
-            return
-        }
-        self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress.address)
-        
-        let parameters: [AnyObject] = [200, startingBid] as [AnyObject]
-        var txPackageArr = [TxPackage]()
-        print("1")
-        Future<TxPackage, PostingError> { promise in
-            self.transactionService.createMintTransaction(promise)
-        }
-        .flatMap({ (txPackage) -> AnyPublisher<BigUInt, PostingError> in
-            txPackageArr.append(txPackage)
-            guard let contractAddress = Web3swiftService.currentAddress else {
-                return Fail(error: PostingError.retrievingCurrentAddressError)
-                    .eraseToAnyPublisher()
-            }
-            return Future<BigUInt, PostingError> { promise in
-                do {
-                    let nonce = try Web3swiftService.web3instance.eth.getTransactionCount(address: contractAddress)
-                    promise(.success(nonce))
-                } catch {
-//                    promise(.failure(.generalError(error.local)))
-                }
-            }
-            .eraseToAnyPublisher()
-        })
-        .flatMap { (nonce) -> AnyPublisher<TxPackage, PostingError> in
-            print("nonce", nonce)
-            print("advance", nonce.advanced(by: 1))
-            
-            return Future<TxPackage, PostingError> { promise in
-                self.transactionService.prepareTransactionForNewContractWithGasEstimate(
-                    contractABI: auctionABI,
-                    bytecode: auctionBytcode,
-                    parameters: parameters,
-                    nonce: nonce.advanced(by: 1),
-                    promise: promise
-                )
-            }
-            .eraseToAnyPublisher()
-        }
-        .flatMap { (txPackage2) -> AnyPublisher<[TxPackage], PostingError> in
-            txPackageArr.append(txPackage2)
-            return Future<[TxPackage], PostingError> { promise in
-                print("1")
-                let estimatedGasForTransferringToken: BigUInt = 64000
-                self.transactionService.calculateTotalGasCost(with: txPackageArr, plus: estimatedGasForTransferringToken, promise: promise)
-                let update: [String: PostProgress] = ["update": .estimatGas]
-                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-            }
-            .eraseToAnyPublisher()
-        }
-        // execute the transactions and get the receipts in an array
-        .flatMap { (txPackages) -> AnyPublisher<[TxResult], PostingError> in
-            let update: [String: PostProgress] = ["update": .images]
-            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-
-            print("2")
-            let results = txPackages.map { self.transactionService.executeTransaction(transaction: $0.transaction, password: "111111", type: $0.type) }
-            return Publishers.MergeMany(results)
-                .collect()
-                .eraseToAnyPublisher()
-        }
-        // instantiate the socket, parse the receipts, and create the firebase entry as soon as the socket receives the data
-        // createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
-        .flatMap { (txResults) -> AnyPublisher<[String], PostingError> in
-            return Future<[String], PostingError> { promise in
-                print("3")
-                self.socketDelegate.promise = promise
-            }
-            .eraseToAnyPublisher()
-        }
-        .sink { (completion) in
-            switch completion {
-                case .failure(let err):
-                    print("err", err)
-                case .finished:
-                    print("finished")
-            }
-        } receiveValue: { (finalValue) in
-            print("finalValue", finalValue)
-        }
-        .store(in: &self.storage)
-    }
     
     // MARK: - auction mint
     final func auction(
@@ -710,21 +615,14 @@ class DigitalAssetViewController: ParentPostViewController {
             self.alert.showDetail("Sorry", with: "Could not convert the auction starting price into a proper format. Pleas try again.", for: self)
             return
         }
-
-        print("startingBidInWei.description", startingBidInWei.description)
-        print("startingBid", startingBid)
-//        let biddingTime = numOfDays.intValue * 60 * 60 * 24
-        let biddingTime = 200
+        
+        let biddingTime = numOfDays.intValue * 60 * 60 * 24
+//        let biddingTime = 200
       
         guard let NFTrackAddress = NFTrackAddress else {
             self.alert.showDetail("Sorry", with: "There was an error loading the minting contract address.", for: self)
             return
         }
-        self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress.address)
-        
-        // to be used for getting the contract address so that the token can be transferred
-        var auctionHash: String!
-        
         /// 1. obtain the password
         /// 2. prepare the auction deployment and minting transactions
         /// 3. execute the transactions and get the receipts in an array
@@ -738,7 +636,7 @@ class DigitalAssetViewController: ParentPostViewController {
                 titleString: "",
                 body: [AlertModalDictionary.passwordSubtitle: ""],
                 isEditable: true,
-                fieldViewHeight: 50,
+                fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .withCancelButton
             ),
@@ -746,14 +644,14 @@ class DigitalAssetViewController: ParentPostViewController {
                 titleString: "Transaction Options",
                 body: [AlertModalDictionary.gasLimit: "", AlertModalDictionary.gasPrice: "", AlertModalDictionary.nonce: ""],
                 isEditable: true,
-                fieldViewHeight: 50,
+                fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
             )]
         
         self.hideSpinner {
             DispatchQueue.main.async {
-                let alertVC = AlertViewController(height: 400, standardAlertContent: content)
+                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
                 alertVC.action = { [weak self] (modal, mainVC) in
                     mainVC.buttonAction = { _ in
                         guard let self = self else { return }
@@ -762,194 +660,195 @@ class DigitalAssetViewController: ParentPostViewController {
                             self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
                             return
                         }
-                        
-                        let parameters: [AnyObject] = [biddingTime, startingBid] as [AnyObject]
-//                        let auctionFunction = Deferred { [weak self] in
-//                            Future<TxPackage, PostingError> { promise in
-//                                self?.transactionService.prepareTransactionForNewContractWithGasEstimate(
-//                                    contractABI: auctionABI,
-//                                    bytecode: auctionBytcode,
-//                                    parameters: parameters,
-//                                    promise: promise
-//                                )
-//                            }
-//                            .eraseToAnyPublisher()
-//                        }
-//
-//                        let mintFunction = Deferred { [weak self] in
-//                            Future<TxPackage, PostingError> { promise in
-//                                self?.transactionService.createMintTransaction(promise)
-//                            }
-//                            .eraseToAnyPublisher()
-//                        }
-                        
+                                                
                         self.dismiss(animated: true, completion: {
                             self.progressModal = ProgressModalViewController(postType: .digital(.openAuction))
                             self.progressModal.titleString = "Posting In Progress"
                             self.present(self.progressModal, animated: true, completion: {
+
+                                self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress)
+                                let parameters: [AnyObject] = [biddingTime, startingBid] as [AnyObject]
+
+                                // to be used for getting the contract address so that the token can be transferred
+                                var auctionHash: String!
                                 var txPackageArr = [TxPackage]()
-                                print("1")
+                                var txResultArr: [TxResult2]!
+                                var topicsRetainer: [String]!
+                                
+                                print("STEP 1")
+                                // prepare the deployment transaction of the auction contract
                                 Future<TxPackage, PostingError> { promise in
-                                    self.transactionService.createMintTransaction(promise)
+                                    self.transactionService.prepareTransactionForNewContractWithGasEstimate(
+                                        contractABI: auctionABI,
+                                        bytecode: auctionBytcode,
+                                        parameters: parameters,
+                                        promise: promise
+                                    )
                                 }
-                                .flatMap({ (txPackage) -> AnyPublisher<BigUInt, PostingError> in
+                                .flatMap { (txPackage) -> AnyPublisher<[TxPackage], PostingError> in
+                                    // TxPackage array is needed because calculateTotalGasCost can calculate multiple transactions' gas.
+                                    // In this case, there is only one transaction to be calculated.
+                                    // The minting transaction can't be calculated because it requires the auction contract's address.
                                     txPackageArr.append(txPackage)
-                                    guard let contractAddress = Web3swiftService.currentAddress else {
-                                        return Fail(error: PostingError.retrievingCurrentAddressError)
-                                            .eraseToAnyPublisher()
-                                    }
-                                    return Future<BigUInt, PostingError> { promise in
-                                        do {
-                                            let nonce = try Web3swiftService.web3instance.eth.getTransactionCount(address: contractAddress)
-                                            promise(.success(nonce))
-                                        } catch {
-                                            promise(.failure(.generalError(reason: error.localizedDescription)))
-                                        }
-                                    }
-                                    .eraseToAnyPublisher()
-                                })
-                                .flatMap { (nonce) -> AnyPublisher<TxPackage, PostingError> in
-                                    print("nonce", nonce)
-                                    print("advance", nonce.advanced(by: 1))
-                                    
-                                    return Future<TxPackage, PostingError> { promise in
-                                        self.transactionService.prepareTransactionForNewContractWithGasEstimate(
-                                            contractABI: auctionABI,
-                                            bytecode: auctionBytcode,
-                                            parameters: parameters,
-                                            nonce: nonce.advanced(by: 1),
+                                    return Future<[TxPackage], PostingError> { promise in
+                                        print("STEP 2")
+                                        let gasEstimateToMintAndTransferAToken: BigUInt = 80000
+                                        self.transactionService.calculateTotalGasCost(
+                                            with: txPackageArr,
+                                            plus: gasEstimateToMintAndTransferAToken,
                                             promise: promise
                                         )
-                                    }
-                                    .eraseToAnyPublisher()
-                                }
-                                .flatMap { (txPackage2) -> AnyPublisher<[TxPackage], PostingError> in
-                                    txPackageArr.append(txPackage2)
-                                    return Future<[TxPackage], PostingError> { promise in
-                                        print("1")
-                                        let estimatedGasForTransferringToken: BigUInt = 64000
-                                        self.transactionService.calculateTotalGasCost(with: txPackageArr, plus: estimatedGasForTransferringToken, promise: promise)
                                         let update: [String: PostProgress] = ["update": .estimatGas]
                                         NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                     }
                                     .eraseToAnyPublisher()
                                 }
-                                // execute the transactions and get the receipts in an array
-                                .flatMap { (txPackages) -> AnyPublisher<[TxResult], PostingError> in
+                                // execute the deployment transaction and get the receipts in an array
+                                .flatMap { (txPackages) -> AnyPublisher<[TxResult2], PostingError> in
                                     let update: [String: PostProgress] = ["update": .images]
                                     NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                     
-                                    print("2")
-                                    let results = txPackages.map { self.transactionService.executeTransaction(transaction: $0.transaction, password: password, type: $0.type) }
+                                    print("STEP 3")
+                                    let results = txPackages.map { self.transactionService.executeTransaction2(
+                                        transaction: $0.transaction,
+                                        password: password,
+                                        type: $0.type
+                                    )}
                                     return Publishers.MergeMany(results)
                                         .collect()
                                         .eraseToAnyPublisher()
                                 }
-                                // instantiate the socket, parse the receipts, and create the firebase entry as soon as the socket receives the data
-                                // createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
-                                .flatMap { (txResults) -> AnyPublisher<Int, PostingError> in
-                                    var topicsRetainer: [String]!
-                                    return Future<[String], PostingError> { promise in
-                                        print("3")
-                                        self.socketDelegate.promise = promise
+                                // confirm that the block has been added to the chain
+                                .flatMap({ (txResults) -> AnyPublisher<BigUInt, PostingError> in
+                                    txResultArr = txResults
+                                    guard let txResult = txResults.first else {
+                                        return Fail(error: PostingError.generalError(reason: "Parsing the transaction result error."))
+                                            .eraseToAnyPublisher()
                                     }
-                                    .flatMap({ (topics) -> AnyPublisher<[String?], PostingError> in
-                                        topicsRetainer = topics
-                                        // upload images/files to the Firebase Storage and get the array of URLs
-                                        if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
-                                            print("4")
-                                            let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
-                                                return Future<String?, PostingError> { promise in
-                                                    self.uploadFileWithPromise(
-                                                        fileURL: previewData.filePath,
-                                                        userId: self.userId,
-                                                        promise: promise
-                                                    )
-                                                }.eraseToAnyPublisher()
-                                            }
-                                            return Publishers.MergeMany(fileURLs)
-                                                .collect()
+                                    print("STEP 4")
+                                    return self.confirmEtherTransactions(txHash: txResult.txResult.hash)
+                                })
+                                .eraseToAnyPublisher()
+                                // mint a token and transfer it to the address of the newly deployed auction contract
+                                .flatMap({ (currentBlock) -> AnyPublisher<WriteTransaction, PostingError> in
+                                    print("STEP 5")
+                                    
+                                    let update: [String: PostProgress] = ["update": .deployingAuction]
+                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                    
+                                    guard let txResult = txResultArr.first else {
+                                        return Fail(error: PostingError.generalError(reason: "Parsing the transaction result error."))
+                                            .eraseToAnyPublisher()
+                                    }
+                                    
+                                    // get the receipt of the auction contract deployment so that we can get the contract address for the token transfer
+                                    return Future<TransactionReceipt, PostingError> { promise in
+                                        Web3swiftService.getReceipt(hash: txResult.txResult.hash, promise: promise)
+                                    }
+                                    .eraseToAnyPublisher()
+                                    .flatMap { (receipt) -> AnyPublisher<WriteTransaction, PostingError> in
+                                        guard let auctionContractAddress = receipt.contractAddress else {
+                                            return Fail(error: PostingError.generalError(reason: "Failed to obtain the auction contract address."))
                                                 .eraseToAnyPublisher()
-                                        } else {
-                                            // if there are none to upload, return an empty array
-                                            return Result.Publisher([] as [String]).eraseToAnyPublisher()
                                         }
-                                    })
-                                    // upload the details to Firestore
-                                    .flatMap { (urlStrings) -> AnyPublisher<Int, PostingError> in
-                                        var mintHash: String!
-                                        var senderAddress: String!
-                                        for txResult in txResults {
-                                            if txResult.txType == .deploy {
-                                                auctionHash = txResult.txHash
-                                            } else {
-                                                mintHash = txResult.txHash
-                                            }
-                                            senderAddress = txResult.senderAddress
-                                        }
-                                        print("5")
-                                        return Future<Int, PostingError> { promise in
-                                            self.transactionService.createFireStoreEntry(
-                                                documentId: &self.documentId,
-                                                senderAddress: senderAddress,
-                                                escrowHash: "N/A",
-                                                auctionHash: auctionHash,
-                                                mintHash: mintHash,
-                                                itemTitle: itemTitle,
-                                                desc: desc,
-                                                price: price,
-                                                category: category,
-                                                tokensArr: tokensArr,
-                                                convertedId: convertedId,
-                                                deliveryMethod: deliveryMethod,
-                                                saleFormat: saleFormat,
-                                                paymentMethod: paymentMethod,
-                                                topics: topicsRetainer,
-                                                urlStrings: urlStrings,
+                                        
+                                        // prepare the transaction to mint and transfer the token
+                                        return Future<WriteTransaction, PostingError> { promise in
+                                            self.transactionService.prepareTransactionForMinting(
+                                                receiverAddress: auctionContractAddress,
                                                 promise: promise
                                             )
                                         }
                                         .eraseToAnyPublisher()
                                     }
                                     .eraseToAnyPublisher()
-                                }
-                                // get the address of the deployed Auction contract using the deployment transaction hash
-                                .flatMap{ (tokenId) -> AnyPublisher<WriteTransaction, PostingError> in
-                                    let update: [String: PostProgress] = ["update": .deployingAuction]
-                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                })
+                                // execute the mint transaction
+                                .flatMap { (transaction) -> AnyPublisher<[TxResult2], PostingError> in
+                                    print("STEP 6")
                                     
-                                    let mintUpdate: [String: PostProgress] = ["update": .minting]
-                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: mintUpdate)
-                                    return Future<TransactionReceipt, PostingError> { promise in
-                                        Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
-                                    }
-                                    // prepare the transfer the newly minted token into the auction contract
-                                    .flatMap { (receipt) -> AnyPublisher<WriteTransaction, PostingError> in
-                                        return Future<WriteTransaction, PostingError> { promise in
-                                            guard let fromAddress = Web3swiftService.currentAddress else {
-                                                promise(.failure(.generalError(reason: "Failed to fetched the address of your wallet")))
-                                                return
-                                            }
-
-                                            guard let auctionContractAddress = receipt.contractAddress?.address else {
-                                                promise(.failure(.generalError(reason: "Failed to obtain the auction contract address.")))
-                                                return
-                                            }
-                                            print("6")
-                                            let parameters: [AnyObject] = [fromAddress, auctionContractAddress, tokenId] as [AnyObject]
-                                            self.transactionService.prepareTransactionForWriting(method: "transferFrom", abi: NFTrackABI, param: parameters, contractAddress: NFTrackAddress, promise: promise)
-                                        }
-                                        .eraseToAnyPublisher()
-                                    }
-                                    .eraseToAnyPublisher()
-                                }
-                                // execute the transfer of the token into the auction
-                                .flatMap { (transaction) -> AnyPublisher<[TxResult], PostingError> in
-                                    print("7")
-                                    let results = self.transactionService.executeTransaction(transaction: transaction, password: password, type: .transferToken)
+                                    let results = self.transactionService.executeTransaction2(
+                                        transaction: transaction,
+                                        password: password,
+                                        type: .mint
+                                    )
+                                    
                                     return Publishers.MergeMany(results)
                                         .collect()
                                         .eraseToAnyPublisher()
+                                }
+                                // get the topics from the socket delegate
+                                .flatMap { (txResult) -> AnyPublisher<[String], PostingError> in
+                                    // retain the mint transaction details for FireStore
+                                    txResultArr.append(contentsOf: txResult)
+                                    return Future<[String], PostingError> { promise in
+                                        print("STEP 7")
+                                        self.socketDelegate.promise = promise
+                                    }
+                                    .eraseToAnyPublisher()
+                                }
+                                // instantiate the socket, parse the receipts, and create the firebase entry as soon as the socket delegate receives the data
+                                // createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
+                                .flatMap({ (topics) -> AnyPublisher<[String?], PostingError> in
+                                    let update: [String: PostProgress] = ["update": .minting]
+                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                    
+                                    topicsRetainer = topics
+                                    // upload images/files to the Firebase Storage and get the array of URLs
+                                    if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
+                                        let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+                                            return Future<String?, PostingError> { promise in
+                                                self.uploadFileWithPromise(
+                                                    fileURL: previewData.filePath,
+                                                    userId: self.userId,
+                                                    promise: promise
+                                                )
+                                            }.eraseToAnyPublisher()
+                                        }
+                                        return Publishers.MergeMany(fileURLs)
+                                            .collect()
+                                            .eraseToAnyPublisher()
+                                    } else {
+                                        // if there are none to upload, return an empty array
+                                        return Result.Publisher([] as [String]).eraseToAnyPublisher()
+                                    }
+                                })
+                                // upload the details to Firestore
+                                .flatMap { (urlStrings) -> AnyPublisher<Int, PostingError> in
+                                    var mintHash: String!
+                                    var senderAddress: String!
+                                    for txResult in txResultArr {
+                                        if txResult.txType == .deploy {
+                                            auctionHash = txResult.txResult.hash
+                                        } else {
+                                            mintHash = txResult.txResult.hash
+                                        }
+                                        senderAddress = txResult.senderAddress
+                                    }
+                                    print("STEP 8")
+                                    
+                                    return Future<Int, PostingError> { promise in
+                                        self.transactionService.createFireStoreEntry(
+                                            documentId: &self.documentId,
+                                            senderAddress: senderAddress,
+                                            escrowHash: "N/A",
+                                            auctionHash: auctionHash,
+                                            mintHash: mintHash,
+                                            itemTitle: itemTitle,
+                                            desc: desc,
+                                            price: "N/A",
+                                            category: category,
+                                            tokensArr: tokensArr,
+                                            convertedId: convertedId,
+                                            deliveryMethod: deliveryMethod,
+                                            saleFormat: saleFormat,
+                                            paymentMethod: paymentMethod,
+                                            topics: topicsRetainer,
+                                            urlStrings: urlStrings,
+                                            promise: promise
+                                        )
+                                    }
+                                    .eraseToAnyPublisher()
                                 }
                                 .sink { (completion) in
                                     switch completion {
@@ -968,7 +867,7 @@ class DigitalAssetViewController: ParentPostViewController {
                                                 case .createTransactionIssue:
                                                     self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
                                                 case .insufficientFund(let msg):
-                                                    self.alert.showDetail("Error", with: msg, height: 500, alignment: .left, for: self)
+                                                    self.alert.showDetail("Error", with: msg, height: 500, fieldViewHeight: 300, alignment: .left, for: self)
                                                 case .emptyAmount:
                                                     self.alert.showDetail("Error", with: "The ETH value cannot be blank for the transaction.", for: self)
                                                 case .invalidAmountFormat:
@@ -1003,10 +902,13 @@ class DigitalAssetViewController: ParentPostViewController {
                                                 }
                                             }
                                             
-                                            self.socketDelegate.disconnectSocket()
+                                            if self.socketDelegate != nil {
+                                                self.socketDelegate.disconnectSocket()
+                                            }
                                     }
                                 } receiveValue: { (receivedValue) in
-                                    print("receivedValue", receivedValue)
+                                    print("-------------------------------------------------------------------------------------------------------------------------")
+                                    print("receivedValue!!!", receivedValue)
                                 }
                                 .store(in: &self.storage)
                             }) // present for progressModal
@@ -1016,194 +918,6 @@ class DigitalAssetViewController: ParentPostViewController {
                 self.present(alertVC, animated: true, completion: nil)
             } // DispatchQueue
         } // hideSpinner
-
-        
-//        self.hideSpinner { [weak self] in
-//            guard let `self` = self else { return }
-//            let detailVC = DetailViewController(height: 250, detailVCStyle: .withTextField)
-//            detailVC.titleString = "Enter your password"
-//            detailVC.buttonAction = { vc in
-//                // get the password
-//                if let dvc = vc as? DetailViewController, let password = dvc.textField.text {
-//                    self.dismiss(animated: true, completion: {
-//                        self.progressModal = ProgressModalViewController(height: 400, postType: .digital(.openAuction))
-//                        self.progressModal.titleString = "Posting In Progress"
-//                        self.present(self.progressModal, animated: true, completion: {
-//                            // prepare the auction deployment contract and the minting contract
-//                            Publishers.MergeMany([auctionFunction, mintFunction])
-//                                .receive(on: DispatchQueue.global(qos: .userInitiated))
-//                                .collect()
-//                                .eraseToAnyPublisher()
-//                                .flatMap { (txPackages) -> AnyPublisher<[TxPackage], PostingError> in
-//                                    return Future<[TxPackage], PostingError> { promise in
-//                                        print("1")
-//                                        let estimatedGasForTransferringToken: BigUInt = 64000
-//                                        self.transactionService.calculateTotalGasCost(with: txPackages, plus: estimatedGasForTransferringToken, promise: promise)
-//                                        let update: [String: PostProgress] = ["update": .estimatGas]
-//                                        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//                                    }
-//                                    .eraseToAnyPublisher()
-//                                }
-//                                // execute the transactions and get the receipts in an array
-//                                .flatMap { (txPackages) -> AnyPublisher<[TxResult], PostingError> in
-//                                    let update: [String: PostProgress] = ["update": .images]
-//                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//
-//                                    print("2")
-//                                    let results = txPackages.map { self.transactionService.executeTransaction(transaction: $0.transaction, password: password, type: $0.type) }
-//                                    return Publishers.MergeMany(results)
-//                                        .collect()
-//                                        .eraseToAnyPublisher()
-//                                }
-//                                // instantiate the socket, parse the receipts, and create the firebase entry as soon as the socket receives the data
-//                                // createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
-//                                .flatMap { (txResults) -> AnyPublisher<Int, PostingError> in
-//                                    var topicsRetainer: [String]!
-//                                    return Future<[String], PostingError> { promise in
-//                                        print("3")
-//                                        self.socketDelegate.promise = promise
-//                                    }
-//                                    .flatMap({ (topics) -> AnyPublisher<[String?], PostingError> in
-//                                        topicsRetainer = topics
-//                                        // upload images/files to the Firebase Storage and get the array of URLs
-//                                        if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
-//                                            print("4")
-//                                            let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
-//                                                return Future<String?, PostingError> { promise in
-//                                                    self.uploadFileWithPromise(fileURL: previewData.filePath, userId: self.userId, promise: promise)
-//                                                }.eraseToAnyPublisher()
-//                                            }
-//                                            return Publishers.MergeMany(fileURLs)
-//                                                .collect()
-//                                                .eraseToAnyPublisher()
-//                                        } else {
-//                                            // if there are none to upload, return an empty array
-//                                            return Result.Publisher([] as [String]).eraseToAnyPublisher()
-//                                        }
-//                                    })
-//                                    // upload the details to Firestore
-//                                    .flatMap { (urlStrings) -> AnyPublisher<Int, PostingError> in
-//                                        var mintHash: String!
-//                                        var senderAddress: String!
-//                                        for txResult in txResults {
-//                                            if txResult.txType == .deploy {
-//                                                auctionHash = txResult.txHash
-//                                            } else {
-//                                                mintHash = txResult.txHash
-//                                            }
-//                                            senderAddress = txResult.senderAddress
-//                                        }
-//                                        print("5")
-//                                        return Future<Int, PostingError> { promise in
-//                                            self.transactionService.createFireStoreEntry(documentId: &self.documentId, senderAddress: senderAddress, escrowHash: "N/A", auctionHash: auctionHash, mintHash: mintHash, itemTitle: itemTitle, desc: desc, price: price, category: category, tokensArr: tokensArr, convertedId: convertedId, deliveryMethod: deliveryMethod, saleFormat: saleFormat, paymentMethod: paymentMethod, topics: topicsRetainer, urlStrings: urlStrings, promise: promise)
-//                                        }
-//                                        .eraseToAnyPublisher()
-//                                    }
-//                                    .eraseToAnyPublisher()
-//                                }
-//                                // get the address of the deployed Auction contract using the deployment transaction hash
-//                                .flatMap{ (tokenId) -> AnyPublisher<WriteTransaction, PostingError> in
-//                                    return Future<TransactionReceipt, PostingError> { promise in
-//                                        Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
-//                                    }
-//                                    // transfer the newly minted token into the auction contract
-//                                    .flatMap { (receipt) -> AnyPublisher<WriteTransaction, PostingError> in
-//                                        return Future<WriteTransaction, PostingError> { promise in
-//                                            guard let fromAddress = Web3swiftService.currentAddress else {
-//                                                promise(.failure(.generalError(reason: "Failed to fetched the address of your wallet")))
-//                                                return
-//                                            }
-//
-//                                            guard let auctionContractAddress = receipt.contractAddress?.address else {
-//                                                promise(.failure(.generalError(reason: "Failed to obtain the auction contract address.")))
-//                                                return
-//                                            }
-//                                            print("6")
-//                                            let parameters: [AnyObject] = [fromAddress, auctionContractAddress, tokenId] as [AnyObject]
-//                                            self.transactionService.prepareTransactionForWriting(method: "transferFrom", abi: NFTrackABI, param: parameters, contractAddress: NFTrackAddress, promise: promise)
-//                                        }
-//                                        .eraseToAnyPublisher()
-//                                    }
-//                                    .eraseToAnyPublisher()
-//                                }
-////                                .receive(on: DispatchQueue.global(qos: .userInitiated))
-//                                .flatMap { (transaction) -> AnyPublisher<[TxResult], PostingError> in
-//                                    let update: [String: PostProgress] = ["update": .deployingAuction]
-//                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//
-//                                    let mintUpdate: [String: PostProgress] = ["update": .minting]
-//                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: mintUpdate)
-//
-//                                    print("7")
-//                                    let results = self.transactionService.executeTransaction(transaction: transaction, password: password, type: .transferToken)
-//                                    return Publishers.MergeMany(results)
-//                                        .collect()
-//                                        .eraseToAnyPublisher()
-//                                }
-//                                .sink { (completion) in
-//                                    switch completion {
-//                                        case .failure(let error):
-//                                            switch error {
-//                                                case .fileUploadError(.fileNotAvailable):
-//                                                    self.alert.showDetail("Error", with: "No image file was found.", for: self)
-//                                                case .retrievingEstimatedGasError:
-//                                                    self.alert.showDetail("Error", with: "There was an error retrieving the gas estimation.", for: self)
-//                                                case .retrievingGasPriceError:
-//                                                    self.alert.showDetail("Error", with: "There was an error retrieving the current gas price.", for: self)
-//                                                case .contractLoadingError:
-//                                                    self.alert.showDetail("Error", with: "There was an error loading your contract ABI.", for: self)
-//                                                case .retrievingCurrentAddressError:
-//                                                    self.alert.showDetail("Error", with: "There was an error retrieving your current account address.", for: self)
-//                                                case .createTransactionIssue:
-//                                                    self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
-//                                                case .insufficientFund(let msg):
-//                                                    self.alert.showDetail("Error", with: msg, height: 500, alignment: .left, for: self)
-//                                                case .emptyAmount:
-//                                                    self.alert.showDetail("Error", with: "The ETH value cannot be blank for the transaction.", for: self)
-//                                                case .invalidAmountFormat:
-//                                                    self.alert.showDetail("Error", with: "The ETH value is in an incorrect format.", for: self)
-//                                                case .generalError(reason: let msg):
-//                                                    self.alert.showDetail("Error", with: msg, for: self)
-//                                                default:
-//                                                    self.alert.showDetail("Error", with: "There was an error creating your post.", for: self)
-//                                            }
-//                                        case .finished:
-//                                            let update: [String: PostProgress] = ["update": .initializeAuction]
-//                                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//
-//                                            DispatchQueue.main.async {
-//                                                self.titleTextField.text?.removeAll()
-//                                                self.priceTextField.text?.removeAll()
-//                                                self.descTextView.text?.removeAll()
-//                                                self.idTextField.text?.removeAll()
-//                                                self.saleMethodLabel.text?.removeAll()
-//                                                self.auctionDurationLabel.text?.removeAll()
-//                                                self.auctionStartingPriceTextField.text?.removeAll()
-//                                                self.pickerLabel.text?.removeAll()
-//                                                self.tagTextField.tokens.removeAll()
-//                                                self.paymentMethodLabel.text?.removeAll()
-//                                            }
-//
-//                                            if self.previewDataArr.count > 0 {
-//                                                self.previewDataArr.removeAll()
-//                                                self.imagePreviewVC.data.removeAll()
-//                                                DispatchQueue.main.async {
-//                                                    self.imagePreviewVC.collectionView.reloadData()
-//                                                }
-//                                            }
-//
-//                                            self.socketDelegate.disconnectSocket()
-//                                    }
-//                                } receiveValue: { (receivedValue) in
-//                                    print("receivedValue", receivedValue)
-//                                }
-//                                .store(in: &self.storage)
-//                        }) // progress modal
-//                    }) // dismiss
-//                } // dvc textfield
-//            }
-//            self.present(detailVC, animated: true, completion: nil)
-//        } // spinner
     }
 }
 
@@ -1235,63 +949,60 @@ extension DigitalAssetViewController {
     }
 }
 
-enum TxType {
-    case mint
-    case deploy
-    case transferToken
-    case bid
-    case endAuction
+// MARK: - confirmEtherTransactions
+extension DigitalAssetViewController {
+    final func confirmEtherTransactions(txHash: String, confirmations: Int = 5) -> AnyPublisher<BigUInt, PostingError> {
+        var blockNumber: BigUInt!
+        var cycleCount: Int = 0
+        let hashPublisher = CurrentValueSubject<String, Never>(txHash)
+        return hashPublisher
+            .setFailureType(to: PostingError.self)
+            .debounce(for: .seconds(5), scheduler: RunLoop.main)
+            .flatMap { (txHash) -> AnyPublisher<TransactionReceipt, PostingError> in
+                Future<TransactionReceipt, PostingError> { promise in
+                    Web3swiftService.getReceipt(hash: txHash, promise: promise)
+                }
+                .eraseToAnyPublisher()
+            }
+            //            .retryWithDelay(retries: 5, delay: .seconds(10), scheduler: DispatchQueue.global())
+            .retry(times: 5, if: { (error) -> Bool in
+                print("error", error)
+                if case let PostingError.generalError(reason: msg) = error,
+                   msg == "Invalid value from Ethereum node" {
+                    print("yes")
+                    return true
+                }
+                print("no")
+                return false
+            })
+            .flatMap { (receipt) -> AnyPublisher<BigUInt, PostingError> in
+                blockNumber = receipt.blockNumber
+                return Future<BigUInt, PostingError> { promise in
+                    Web3swiftService.getBlock(promise)
+                }
+                .eraseToAnyPublisher()
+            }
+            .debounce(for: .seconds(10), scheduler: RunLoop.main)
+            .handleEvents(receiveOutput: { (currentBlock) in
+                let txConfirmations = currentBlock - blockNumber
+                print("currentBlock", currentBlock)
+                print("blockNumber", blockNumber as Any)
+                print("txConfirmations", txConfirmations)
+                if txConfirmations >= confirmations {
+                    print("Transaction with hash \(txHash) has been successfully confirmed.")
+                    hashPublisher.send(completion: .finished)
+                } else {
+                    cycleCount += 1
+                    print("cycle count", cycleCount)
+                    hashPublisher.send(txHash)
+                }
+            })
+            .reduce(BigUInt.init(), { allModels, response in
+                return allModels + response
+            })
+            .eraseToAnyPublisher()
+    }
 }
-
-struct TxResult {
-    let senderAddress: String
-    let txHash: String
-    let txType: TxType
-}
-
-struct TxPackage {
-    let transaction: WriteTransaction
-    let gasEstimate: BigUInt
-    let price: String?
-    let type: TxType
-    var nonce: BigUInt? = nil
-}
-
-//let auctionFunction = Future<WriteTransaction, PostingError> { [weak self] promise in
-//    self?.transactionService.prepareTransactionForNewContract(contractABI: auctionABI, bytecode: auctionBytcode, value: "0", parameters: [biddingTime, startingBidInWei] as [AnyObject], promise: promise)
-//}
-//
-//let mintFunction = Future<WriteTransaction, PostingError> { [weak self] promise in
-//    self?.transactionService.prepareTransactionForMinting(promise: promise)
-//}
-//Publishers.MergeMany([auctionFunction, mintFunction])
-//    .collect()
-//    .eraseToAnyPublisher()
-//    .flatMap({ (transactions) -> AnyPublisher<[BigUInt], PostingError> in
-//        let gasEstimates = transactions.map { (transaction) -> AnyPublisher<BigUInt, PostingError> in
-//            return Future<BigUInt, PostingError> { promise in
-//                var gasEstimate: BigUInt!
-//                do {
-//                    gasEstimate = try transaction.estimateGas()
-//                    promise(.success(gasEstimate))
-//                } catch {
-//                    promise(.failure(.retrievingEstimatedGasError))
-//                }
-//            }
-//            .eraseToAnyPublisher()
-//        }
-//        return Publishers.MergeMany(gasEstimates)
-//            .collect()
-//            .eraseToAnyPublisher()
-//            .flatMap { (gasEsimates) -> AnyPublisher<Bool, PostingError>  in
-//                let estimatedGasForTransferringToken: BigUInt = 64000
-//                self.calculateTotalGasCost(with: gasEstimates, price: price, plus: estimatedGasForTransferringToken, promise: promise)
-//            }
-//            .flatMap { (_) -> Publisher in
-//                <#code#>
-//            }
-//    })
-
 
 //self.hideSpinner { [weak self] in
 //    guard let `self` = self else { return }
@@ -1420,3 +1131,245 @@ struct TxPackage {
 //    }
 //    self.present(detailVC, animated: true, completion: nil)
 //}
+
+//var txPackageArr = [TxPackage]()
+//print("1")
+//Future<TxPackage, PostingError> { promise in
+//    self.transactionService.createMintTransaction(promise)
+//}
+//.flatMap({ (txPackage) -> AnyPublisher<BigUInt, PostingError> in
+//    txPackageArr.append(txPackage)
+//    guard let contractAddress = Web3swiftService.currentAddress else {
+//        return Fail(error: PostingError.retrievingCurrentAddressError)
+//            .eraseToAnyPublisher()
+//    }
+//    return Future<BigUInt, PostingError> { promise in
+//        do {
+//            // get the current nonce so that we can increment it manually
+//            // the rapid creation of transactions back to back results in the same nonce
+//            // this is true even if nonce is set to .pending
+//            let nonce = try Web3swiftService.web3instance.eth.getTransactionCount(address: contractAddress)
+//            promise(.success(nonce))
+//        } catch {
+//            promise(.failure(.generalError(reason: error.localizedDescription)))
+//        }
+//    }
+//    .eraseToAnyPublisher()
+//})
+//.flatMap { (nonce) -> AnyPublisher<TxPackage, PostingError> in
+//    print("nonce", nonce)
+//    print("advance", nonce.advanced(by: 1))
+//
+//    return Future<TxPackage, PostingError> { promise in
+//        self.transactionService.prepareTransactionForNewContractWithGasEstimate(
+//            contractABI: auctionABI,
+//            bytecode: auctionBytcode,
+//            parameters: parameters,
+//            promise: promise
+//        )
+//    }
+//    .eraseToAnyPublisher()
+//}
+//.flatMap { (txPackage2) -> AnyPublisher<[TxPackage], PostingError> in
+//    txPackageArr.append(txPackage2)
+//    return Future<[TxPackage], PostingError> { promise in
+//        print("1")
+//        let estimatedGasForTransferringToken: BigUInt = 64000
+//        self.transactionService.calculateTotalGasCost(with: txPackageArr, plus: estimatedGasForTransferringToken, promise: promise)
+//        let update: [String: PostProgress] = ["update": .estimatGas]
+//        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//    }
+//    .eraseToAnyPublisher()
+//}
+//// execute the transactions and get the receipts in an array
+//.flatMap { (txPackages) -> AnyPublisher<[TxResult], PostingError> in
+//    let update: [String: PostProgress] = ["update": .images]
+//    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//
+//    print("2")
+//    let results = txPackages.map { self.transactionService.executeTransaction(transaction: $0.transaction, password: password, type: $0.type) }
+//    return Publishers.MergeMany(results)
+//        .collect()
+//        .eraseToAnyPublisher()
+//}
+//// instantiate the socket, parse the receipts, and create the firebase entry as soon as the socket receives the data
+//// createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
+//.flatMap { (txResults) -> AnyPublisher<Int, PostingError> in
+//    var topicsRetainer: [String]!
+//    return Future<[String], PostingError> { promise in
+//        print("3")
+//        self.socketDelegate.promise = promise
+//    }
+//    .flatMap({ (topics) -> AnyPublisher<[String?], PostingError> in
+//        topicsRetainer = topics
+//        // upload images/files to the Firebase Storage and get the array of URLs
+//        if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
+//            print("4")
+//            let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+//                return Future<String?, PostingError> { promise in
+//                    self.uploadFileWithPromise(
+//                        fileURL: previewData.filePath,
+//                        userId: self.userId,
+//                        promise: promise
+//                    )
+//                }.eraseToAnyPublisher()
+//            }
+//            return Publishers.MergeMany(fileURLs)
+//                .collect()
+//                .eraseToAnyPublisher()
+//        } else {
+//            // if there are none to upload, return an empty array
+//            return Result.Publisher([] as [String]).eraseToAnyPublisher()
+//        }
+//    })
+//    // upload the details to Firestore
+//    .flatMap { (urlStrings) -> AnyPublisher<Int, PostingError> in
+//        var mintHash: String!
+//        var senderAddress: String!
+//        for txResult in txResults {
+//            if txResult.txType == .deploy {
+//                auctionHash = txResult.txHash
+//            } else {
+//                mintHash = txResult.txHash
+//            }
+//            senderAddress = txResult.senderAddress
+//        }
+//        print("5")
+//        return Future<Int, PostingError> { promise in
+//            self.transactionService.createFireStoreEntry(
+//                documentId: &self.documentId,
+//                senderAddress: senderAddress,
+//                escrowHash: "N/A",
+//                auctionHash: auctionHash,
+//                mintHash: mintHash,
+//                itemTitle: itemTitle,
+//                desc: desc,
+//                price: price,
+//                category: category,
+//                tokensArr: tokensArr,
+//                convertedId: convertedId,
+//                deliveryMethod: deliveryMethod,
+//                saleFormat: saleFormat,
+//                paymentMethod: paymentMethod,
+//                topics: topicsRetainer,
+//                urlStrings: urlStrings,
+//                promise: promise
+//            )
+//        }
+//        .eraseToAnyPublisher()
+//    }
+//    .eraseToAnyPublisher()
+//}
+//// get the address of the deployed Auction contract using the deployment transaction hash
+//.flatMap{ (tokenId) -> AnyPublisher<WriteTransaction, PostingError> in
+//    let update: [String: PostProgress] = ["update": .deployingAuction]
+//    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//
+//    let mintUpdate: [String: PostProgress] = ["update": .minting]
+//    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: mintUpdate)
+//    return Future<TransactionReceipt, PostingError> { promise in
+//        Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
+//    }
+//    // prepare the transfer of the newly minted token into the auction contract
+//    .flatMap { (receipt) -> AnyPublisher<WriteTransaction, PostingError> in
+//        return Future<WriteTransaction, PostingError> { promise in
+//            guard let fromAddress = Web3swiftService.currentAddressString else {
+//                promise(.failure(.generalError(reason: "Failed to fetched the address of your wallet")))
+//                return
+//            }
+//
+//            guard let auctionContractAddress = receipt.contractAddress?.address else {
+//                promise(.failure(.generalError(reason: "Failed to obtain the auction contract address.")))
+//                return
+//            }
+//            print("6")
+//            //                                            guard let convertedTokenId = NumberFormatter().number(from: tokenId) else {
+//            //                                                promise(.failure(.generalError(reason: "Unable to convert the token ID to a proper format.")))
+//            //                                                return
+//            //                                            }
+//
+//
+//            let parameters: [AnyObject] = [fromAddress, auctionContractAddress, String(tokenId)] as [AnyObject]
+//            self.transactionService.prepareTransactionForWriting(
+//                method: "safeTransferFrom",
+//                abi: NFTrackABI,
+//                param: parameters,
+//                contractAddress: NFTrackAddress,
+//                //                                                to: auctionContractAddress,
+//                promise: promise
+//            )
+//        }
+//        .eraseToAnyPublisher()
+//    }
+//    .eraseToAnyPublisher()
+//}
+//// execute the transfer of the token into the auction
+////                                .flatMap { (transaction) -> AnyPublisher<[TxResult], PostingError> in
+////                                    print("7")
+////                                    let results = self.transactionService.executeTransaction(transaction: transaction, password: password, type: .transferToken)
+////                                    return Publishers.MergeMany(results)
+////                                        .collect()
+////                                        .eraseToAnyPublisher()
+////                                }
+//.handleEvents(receiveOutput: { (transaction) in
+//    print("7")
+//    return self.transactionService.transferToken(transaction: transaction)
+//})
+//.sink { (completion) in
+//    switch completion {
+//        case .failure(let error):
+//            switch error {
+//                case .fileUploadError(.fileNotAvailable):
+//                    self.alert.showDetail("Error", with: "No image file was found.", for: self)
+//                case .retrievingEstimatedGasError:
+//                    self.alert.showDetail("Error", with: "There was an error retrieving the gas estimation.", for: self)
+//                case .retrievingGasPriceError:
+//                    self.alert.showDetail("Error", with: "There was an error retrieving the current gas price.", for: self)
+//                case .contractLoadingError:
+//                    self.alert.showDetail("Error", with: "There was an error loading your contract ABI.", for: self)
+//                case .retrievingCurrentAddressError:
+//                    self.alert.showDetail("Error", with: "There was an error retrieving your current account address.", for: self)
+//                case .createTransactionIssue:
+//                    self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
+//                case .insufficientFund(let msg):
+//                    self.alert.showDetail("Error", with: msg, height: 500, alignment: .left, for: self)
+//                case .emptyAmount:
+//                    self.alert.showDetail("Error", with: "The ETH value cannot be blank for the transaction.", for: self)
+//                case .invalidAmountFormat:
+//                    self.alert.showDetail("Error", with: "The ETH value is in an incorrect format.", for: self)
+//                case .generalError(reason: let msg):
+//                    self.alert.showDetail("Error", with: msg, for: self)
+//                default:
+//                    self.alert.showDetail("Error", with: "There was an error creating your post.", for: self)
+//            }
+//        case .finished:
+//            let update: [String: PostProgress] = ["update": .initializeAuction]
+//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//
+//            DispatchQueue.main.async {
+//                self.titleTextField.text?.removeAll()
+//                self.priceTextField.text?.removeAll()
+//                self.descTextView.text?.removeAll()
+//                self.idTextField.text?.removeAll()
+//                self.saleMethodLabel.text?.removeAll()
+//                self.auctionDurationLabel.text?.removeAll()
+//                self.auctionStartingPriceTextField.text?.removeAll()
+//                self.pickerLabel.text?.removeAll()
+//                self.tagTextField.tokens.removeAll()
+//                self.paymentMethodLabel.text?.removeAll()
+//            }
+//
+//            if self.previewDataArr.count > 0 {
+//                self.previewDataArr.removeAll()
+//                self.imagePreviewVC.data.removeAll()
+//                DispatchQueue.main.async {
+//                    self.imagePreviewVC.collectionView.reloadData()
+//                }
+//            }
+//
+//            self.socketDelegate.disconnectSocket()
+//    }
+//} receiveValue: { (receivedValue) in
+//    print("receivedValue", receivedValue)
+//}
+//.store(in: &self.storage)
