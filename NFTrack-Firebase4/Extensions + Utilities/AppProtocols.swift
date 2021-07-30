@@ -480,11 +480,17 @@ extension UsernameBannerConfigurable {
     
     func processProfileImage() {
         displayNameLabel.text = userInfo.displayName
-        if let info = self.userInfo, info.photoURL != "NA" {
-            FirebaseService.shared.downloadImage(urlString: self.userInfo.photoURL!) { [weak self] (image, error) in
+        if let info = self.userInfo,
+           info.photoURL != "NA",
+           let photoURL = self.userInfo.photoURL {
+            FirebaseService.shared.downloadImage(urlString: photoURL) { [weak self] (image, error) in
                 guard let strongSelf = self else { return }
-                if let error = error {
-                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
+                if let _ = error {
+                    // if there is a discrepency between the photoURL of the "user" collection
+                    // and the data in Firebase Storage, this error will occur
+                    strongSelf.profileImageView.isUserInteractionEnabled = true
+                    strongSelf.displayNameLabel.isUserInteractionEnabled = true
+                    return
                 }
                 
                 if let image = image {
@@ -519,7 +525,6 @@ extension UsernameBannerConfigurable {
         usernameContainer.addSubview(dateLabel)
         
         guard let image = UIImage(systemName: "person.crop.circle.fill") else {
-            self.dismiss(animated: true, completion: nil)
             return
         }
         profileImageView = UIImageView()

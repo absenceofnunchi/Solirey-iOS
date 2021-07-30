@@ -365,10 +365,16 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
 
 }
 
-// private key
 // 2
+// 123456@email.com (mclovin)
+// 123456
 // a9420edb3ac5a4eaece8dfa7c5fdd37b0358d7a7d51b1579b5ae94be9cce0842
 
-// some
+// posting
+// 10
+// 99@email.com (tasmanian)
 // 650ab63c9923856efde6471bb1249df2e5b0995e7a84826f4374feb7ad605079
 
+// test@email.com (N/A)
+// 123456
+//a3bf8a54341153d2890ece27123ec51438b1a5fe014ea71da7ee2422567c74b6

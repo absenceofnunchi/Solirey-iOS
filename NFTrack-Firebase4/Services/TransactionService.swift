@@ -871,7 +871,8 @@ extension TransactionService {
             "deliveryMethod": deliveryMethod,
             "saleFormat": saleFormat,
             "files": urlStrings,
-            "paymentMethod": paymentMethod
+            "paymentMethod": paymentMethod,
+            "bidderTokens": []
         ]) { (error) in
             if let error = error {
                 promise(.failure(.generalError(reason: error.localizedDescription)))
@@ -879,6 +880,131 @@ extension TransactionService {
                 return FirebaseService.shared.getTokenId1(topics: topics, documentId: id, promise: promise)
             }
         }
+    }
+    
+    // MARK: - confirmEtherTransactions
+    final func confirmEtherTransactions(
+        txHash: String,
+        confirmations: Int = 5
+    ) -> AnyPublisher<BigUInt, PostingError> {
+        var blockNumber: BigUInt!
+        var cycleCount: Int = 0
+        let hashPublisher = CurrentValueSubject<String, Never>(txHash)
+        return hashPublisher
+            .setFailureType(to: PostingError.self)
+            .debounce(for: .seconds(5), scheduler: RunLoop.main)
+            .flatMap { (txHash) -> AnyPublisher<TransactionReceipt, PostingError> in
+                Future<TransactionReceipt, PostingError> { promise in
+                    Web3swiftService.getReceipt(hash: txHash, promise: promise)
+                }
+                .eraseToAnyPublisher()
+            }
+            //            .retryWithDelay(retries: 5, delay: .seconds(10), scheduler: DispatchQueue.global())
+            .retry(times: 5, if: { (error) -> Bool in
+                print("error", error)
+                if case let PostingError.generalError(reason: msg) = error,
+                   msg == "Invalid value from Ethereum node" {
+                    print("yes")
+                    return true
+                }
+                print("no")
+                return false
+            })
+            .flatMap { (receipt) -> AnyPublisher<BigUInt, PostingError> in
+                blockNumber = receipt.blockNumber
+                return Future<BigUInt, PostingError> { promise in
+                    Web3swiftService.getBlock(promise)
+                }
+                .eraseToAnyPublisher()
+            }
+            .debounce(for: .seconds(10), scheduler: RunLoop.main)
+            .handleEvents(receiveOutput: { (currentBlock) in
+                let txConfirmations = currentBlock - blockNumber
+                print("currentBlock", currentBlock)
+                print("blockNumber", blockNumber as Any)
+                print("txConfirmations", txConfirmations)
+                if txConfirmations >= confirmations {
+                    print("Transaction with hash \(txHash) has been successfully confirmed.")
+                    hashPublisher.send(completion: .finished)
+                } else {
+                    cycleCount += 1
+                    print("cycle count", cycleCount)
+                    hashPublisher.send(txHash)
+                }
+            })
+            .reduce(BigUInt.init(), { allModels, response in
+                return allModels + response
+            })
+            .eraseToAnyPublisher()
+    }
+    
+    // only delay to fetch of the receipt if there is an error
+    // "no delay" because it doesn't debounce right away
+    final func confirmEtherTransactionsNoDelay(
+        txHash: String,
+        confirmations: Int = 5
+    ) -> AnyPublisher<[TransactionReceipt], PostingError> {
+        var receiptRetainer: TransactionReceipt!
+        var cycleCount: Int = 0
+        let hashPublisher = CurrentValueSubject<String, Never>(txHash)
+        return hashPublisher
+            .setFailureType(to: PostingError.self)
+            .flatMap { (txHash) -> AnyPublisher<TransactionReceipt, PostingError> in
+                return Future<TransactionReceipt, PostingError> { promise in
+                    Web3swiftService.getReceipt(hash: txHash, promise: promise)
+                }
+                .eraseToAnyPublisher()
+            }
+            // the tx hash returns no receipt right after the transaction
+            // retry if none returns, but with delay
+            .retryIfWithDelay(
+                retries: 5,
+                delay: .seconds(5),
+                scheduler: RunLoop.main
+            ) { (error) -> Bool in
+                print("error", error)
+                if case let PostingError.generalError(reason: msg) = error,
+                   msg == "Invalid value from Ethereum node" {
+                    print("yes")
+                    return true
+                }
+                print("no")
+                return false
+            }
+            .flatMap { (receipt) -> AnyPublisher<BigUInt, PostingError> in
+                print("receipt", receipt)
+                receiptRetainer = receipt
+                return Future<BigUInt, PostingError> { promise in
+                    Web3swiftService.getBlock(promise)
+                }
+                .eraseToAnyPublisher()
+            }
+            .handleEvents(receiveOutput: { [weak self] (currentBlock) in
+                let txConfirmations = currentBlock - receiptRetainer.blockNumber
+                print("currentBlock: ", currentBlock)
+                print("blockNumber: ", receiptRetainer.blockNumber as Any)
+                print("txConfirmations", txConfirmations)
+                if txConfirmations >= confirmations {
+                    print("Transaction with hash \(txHash) has been successfully confirmed.")
+                    hashPublisher.send(completion: .finished)
+                } else {
+                    cycleCount += 1
+                    print("cycle count: ", cycleCount)
+                    self?.delay(10) {
+                        hashPublisher.send(txHash)
+                    }
+                }
+            })
+            .map { (value) -> TransactionReceipt in
+                return receiptRetainer
+            }
+            .collect()
+            .eraseToAnyPublisher()
+    }
+
+    func delay(_ delay:Double, closure:@escaping ()->()) {
+        let when = DispatchTime.now() + delay
+        DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
     }
 }
 

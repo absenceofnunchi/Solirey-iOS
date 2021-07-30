@@ -7,6 +7,7 @@
 
 import UIKit
 import Firebase
+import FirebaseAuth
 
 class ProfileViewController: ParentProfileViewController, ModalConfigurable {
     var closeButton: UIButton!
@@ -125,8 +126,15 @@ extension ProfileViewController {
         loadingIndicator.startAnimating()
         FirebaseService.shared.downloadImage(urlString: url) { [weak self] (image, error) in
             guard let strongSelf = self else { return }
-            if let error = error {
-                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
+            if let _ = error {
+                loadingIndicator.stopAnimating()
+                guard let image = UIImage(systemName: "person.crop.circle.fill") else {
+                    strongSelf.dismiss(animated: true, completion: nil)
+                    return
+                }
+                let configuration = UIImage.SymbolConfiguration(pointSize: 60, weight: .bold, scale: .large)
+                let configuredImage = image.withTintColor(.orange, renderingMode: .alwaysOriginal).withConfiguration(configuration)
+                strongSelf.profileImageButton.setImage(configuredImage, for: .normal)
             }
             
             if let image = image {
@@ -186,6 +194,10 @@ extension ProfileViewController: UIImagePickerControllerDelegate & UINavigationC
             ])
         } else {
             deleteImageButton.isHidden = false
+        }
+        
+        delay(1) { [weak self] in
+            self?.alert.fading(text: "Press update to finalize\nthe image change.", controller: self, toBePasted: nil, width: 250)
         }
     }
     

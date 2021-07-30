@@ -70,6 +70,7 @@ class DigitalAssetViewController: ParentPostViewController {
     
     final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
         saleFormatObserver = saleMethodLabel.observe(\.text) { [weak self] (label, observedChange) in
             guard let text = label.text, let saleFormat = SaleFormat(rawValue: text) else { return }
             switch saleFormat {
@@ -474,11 +475,13 @@ class DigitalAssetViewController: ParentPostViewController {
                                     // createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
                                     .flatMap { (txResults) -> AnyPublisher<Int, PostingError> in
                                         var topicsRetainer: [String]!
-                                        return Future<[String], PostingError> { promise in
+                                        return Future<[String: Any], PostingError> { promise in
                                             self.socketDelegate.promise = promise
                                         }
-                                        .flatMap({ (topics) -> AnyPublisher<[String?], PostingError> in
-                                            topicsRetainer = topics
+                                        .flatMap({ (webSocketMessage) -> AnyPublisher<[String?], PostingError> in
+                                            if let topics = webSocketMessage["topics"] as? [String] {
+                                                topicsRetainer = topics
+                                            }
                                             
                                             if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
                                                 let fileURLS = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
@@ -617,7 +620,7 @@ class DigitalAssetViewController: ParentPostViewController {
         }
         
         let biddingTime = numOfDays.intValue * 60 * 60 * 24
-//        let biddingTime = 200
+//        let biddingTime = 400
       
         guard let NFTrackAddress = NFTrackAddress else {
             self.alert.showDetail("Sorry", with: "There was an error loading the minting contract address.", for: self)
@@ -719,18 +722,18 @@ class DigitalAssetViewController: ParentPostViewController {
                                         .eraseToAnyPublisher()
                                 }
                                 // confirm that the block has been added to the chain
-                                .flatMap({ (txResults) -> AnyPublisher<BigUInt, PostingError> in
+                                .flatMap({ (txResults) -> AnyPublisher<[TransactionReceipt], PostingError> in
                                     txResultArr = txResults
                                     guard let txResult = txResults.first else {
                                         return Fail(error: PostingError.generalError(reason: "Parsing the transaction result error."))
                                             .eraseToAnyPublisher()
                                     }
                                     print("STEP 4")
-                                    return self.confirmEtherTransactions(txHash: txResult.txResult.hash)
+                                    return self.transactionService.confirmEtherTransactionsNoDelay(txHash: txResult.txResult.hash)
                                 })
                                 .eraseToAnyPublisher()
                                 // mint a token and transfer it to the address of the newly deployed auction contract
-                                .flatMap({ (currentBlock) -> AnyPublisher<WriteTransaction, PostingError> in
+                                .flatMap({ (txReceipts) -> AnyPublisher<WriteTransaction, PostingError> in
                                     print("STEP 5")
                                     
                                     let update: [String: PostProgress] = ["update": .deployingAuction]
@@ -778,10 +781,10 @@ class DigitalAssetViewController: ParentPostViewController {
                                         .eraseToAnyPublisher()
                                 }
                                 // get the topics from the socket delegate
-                                .flatMap { (txResult) -> AnyPublisher<[String], PostingError> in
+                                .flatMap { (txResult) -> AnyPublisher<[String: Any], PostingError> in
                                     // retain the mint transaction details for FireStore
                                     txResultArr.append(contentsOf: txResult)
-                                    return Future<[String], PostingError> { promise in
+                                    return Future<[String: Any], PostingError> { promise in
                                         print("STEP 7")
                                         self.socketDelegate.promise = promise
                                     }
@@ -789,11 +792,14 @@ class DigitalAssetViewController: ParentPostViewController {
                                 }
                                 // instantiate the socket, parse the receipts, and create the firebase entry as soon as the socket delegate receives the data
                                 // createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
-                                .flatMap({ (topics) -> AnyPublisher<[String?], PostingError> in
+                                .flatMap({ (webSocketMessage) -> AnyPublisher<[String?], PostingError> in
                                     let update: [String: PostProgress] = ["update": .minting]
                                     NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                     
-                                    topicsRetainer = topics
+                                    if let topics = webSocketMessage["topics"] as? [String] {
+                                        topicsRetainer = topics
+                                    }
+                                    
                                     // upload images/files to the Firebase Storage and get the array of URLs
                                     if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
                                         let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
@@ -863,7 +869,7 @@ class DigitalAssetViewController: ParentPostViewController {
                                                 case .contractLoadingError:
                                                     self.alert.showDetail("Error", with: "There was an error loading your contract ABI.", for: self)
                                                 case .retrievingCurrentAddressError:
-                                                    self.alert.showDetail("Error", with: "There was an error retrieving your current account address.", for: self)
+                                                    self.alert.showDetail("Account Retrieval Error", with: "Error retrieving your account address. Please ensure that you're logged into your wallet.", for: self)
                                                 case .createTransactionIssue:
                                                     self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
                                                 case .insufficientFund(let msg):
@@ -949,60 +955,6 @@ extension DigitalAssetViewController {
     }
 }
 
-// MARK: - confirmEtherTransactions
-extension DigitalAssetViewController {
-    final func confirmEtherTransactions(txHash: String, confirmations: Int = 5) -> AnyPublisher<BigUInt, PostingError> {
-        var blockNumber: BigUInt!
-        var cycleCount: Int = 0
-        let hashPublisher = CurrentValueSubject<String, Never>(txHash)
-        return hashPublisher
-            .setFailureType(to: PostingError.self)
-            .debounce(for: .seconds(5), scheduler: RunLoop.main)
-            .flatMap { (txHash) -> AnyPublisher<TransactionReceipt, PostingError> in
-                Future<TransactionReceipt, PostingError> { promise in
-                    Web3swiftService.getReceipt(hash: txHash, promise: promise)
-                }
-                .eraseToAnyPublisher()
-            }
-            //            .retryWithDelay(retries: 5, delay: .seconds(10), scheduler: DispatchQueue.global())
-            .retry(times: 5, if: { (error) -> Bool in
-                print("error", error)
-                if case let PostingError.generalError(reason: msg) = error,
-                   msg == "Invalid value from Ethereum node" {
-                    print("yes")
-                    return true
-                }
-                print("no")
-                return false
-            })
-            .flatMap { (receipt) -> AnyPublisher<BigUInt, PostingError> in
-                blockNumber = receipt.blockNumber
-                return Future<BigUInt, PostingError> { promise in
-                    Web3swiftService.getBlock(promise)
-                }
-                .eraseToAnyPublisher()
-            }
-            .debounce(for: .seconds(10), scheduler: RunLoop.main)
-            .handleEvents(receiveOutput: { (currentBlock) in
-                let txConfirmations = currentBlock - blockNumber
-                print("currentBlock", currentBlock)
-                print("blockNumber", blockNumber as Any)
-                print("txConfirmations", txConfirmations)
-                if txConfirmations >= confirmations {
-                    print("Transaction with hash \(txHash) has been successfully confirmed.")
-                    hashPublisher.send(completion: .finished)
-                } else {
-                    cycleCount += 1
-                    print("cycle count", cycleCount)
-                    hashPublisher.send(txHash)
-                }
-            })
-            .reduce(BigUInt.init(), { allModels, response in
-                return allModels + response
-            })
-            .eraseToAnyPublisher()
-    }
-}
 
 //self.hideSpinner { [weak self] in
 //    guard let `self` = self else { return }

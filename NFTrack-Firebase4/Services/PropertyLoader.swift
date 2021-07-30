@@ -28,6 +28,55 @@ class PropertyLoader {
         self.deploymentHash = deploymentHash
     }
     
+    func initiateLoadSequence() -> AnyPublisher<[SmartContractProperty], PostingError> {
+        if #available(iOS 14.0, *) {
+            let propertyArrayPublisher = CurrentValueSubject<[String], Never>(propertiesToLoad)
+            return propertyArrayPublisher
+                .flatMap { (properties) -> AnyPublisher<[SmartContractProperty], PostingError> in
+                    return self.loadInfoWithConfirmation(
+                        propertiesToLoad: self.propertiesToLoad,
+                        deploymentHash: self.deploymentHash
+                    )
+                }
+                .handleEvents(receiveOutput: { (response: [SmartContractProperty]) in
+                    let unretrievedProperties = response.compactMap { (model) -> String? in
+                        if model.propertyDesc == nil {
+                            return model.propertyName
+                        } else {
+                            return nil
+                        }
+                    }
+                    
+                    if unretrievedProperties.count == 0 {
+                        propertyArrayPublisher.send(completion: .finished)
+                    } else {
+                        propertyArrayPublisher.send(unretrievedProperties)
+                    }
+                })
+                .reduce([SmartContractProperty](), { allModels, response in
+                    return allModels + response
+                })
+                .eraseToAnyPublisher()
+        } else {
+            // Fallback on earlier versions
+            return self.loadInfoWithConfirmation(propertiesToLoad: self.propertiesToLoad, deploymentHash: self.deploymentHash)
+                .tryMap ({ [weak self] (propertyFetchModels) -> [SmartContractProperty] in
+                    print("self?.propertiesToLoad.count", self?.propertiesToLoad.count as Any)
+                    print("propertyFetchModels.count", propertyFetchModels.count)
+                    // the stackview in the spec view will go out of bound if the count is different
+                    // the downside is that even though the fetch will grab some property values, if they're not all of them, none will show
+                    if propertyFetchModels.count != self?.propertiesToLoad.count {
+                        throw PostingError.generalError(reason: "Couldn't fetch the auction properties.")
+                    } else {
+                        return propertyFetchModels
+                    }
+                })
+                .retryWithDelay(retries: 5, delay: 1, scheduler: DispatchQueue.global())
+                .mapError { $0 as? PostingError ?? PostingError.generalError(reason: "Property fetching error.")}
+                .eraseToAnyPublisher()
+        }
+    }
+    
     private func loadInfo(propertiesToLoad: [String], deploymentHash: String) -> AnyPublisher<[SmartContractProperty], PostingError> {
         return Future<TransactionReceipt, PostingError> { promise in
             Web3swiftService.getReceipt(hash: deploymentHash, promise: promise)
@@ -63,58 +112,37 @@ class PropertyLoader {
         .eraseToAnyPublisher()
     }
     
-    func initiateLoadSequence() -> AnyPublisher<[SmartContractProperty], PostingError> {
-        if #available(iOS 14.0, *) {
-            let propertyArrayPublisher = CurrentValueSubject<[String], Never>(propertiesToLoad)
-            return propertyArrayPublisher
-                .flatMap { (properties) -> AnyPublisher<[SmartContractProperty], PostingError> in
-                    //                    guard let propertiesToLoad = self?.propertiesToLoad,
-                    //                          let deploymentHash = self?.deploymentHash else {
-                    //                        return Fail(error: PostingError.generalError(reason: "Could not fetch properties."))
-                    //                            .eraseToAnyPublisher()
-                    //                    }
-                    return self.loadInfo(
-                        propertiesToLoad: self.propertiesToLoad,
-                        deploymentHash: self.deploymentHash
-                    )
+    private func loadInfoWithConfirmation(propertiesToLoad: [String], deploymentHash: String) -> AnyPublisher<[SmartContractProperty], PostingError> {
+        transactionService.confirmEtherTransactionsNoDelay(txHash: deploymentHash)
+        .flatMap { [weak self] (receipts) -> AnyPublisher<[SmartContractProperty], PostingError>  in
+            guard let receipt = receipts.first,
+                  let contractAddress = receipt.contractAddress else {
+                return Fail(error: PostingError.generalError(reason: "Could not obtain the auction contract."))
+                    .eraseToAnyPublisher()
+            }
+            
+            self?.contractAddress = contractAddress
+            let listOfPrepPublishers = propertiesToLoad.map { (propertyToRead) in
+                return Future<SmartContractProperty, PostingError> { promise in
+                    self?.transactionService.prepareTransactionForReading(method: propertyToRead, abi: auctionABI, contractAddress: contractAddress, promise: promise)
                 }
-                .handleEvents(receiveOutput: { (response: [SmartContractProperty]) in
-                    let unretrievedProperties = response.compactMap { (model) -> String? in
-                        if model.propertyDesc == nil {
-                            return model.propertyName
-                        } else {
-                            return nil
-                        }
-                    }
-                    
-                    if unretrievedProperties.count == 0 {
-                        propertyArrayPublisher.send(completion: .finished)
-                    } else {
-                        propertyArrayPublisher.send(unretrievedProperties)
-                    }
-                })
-                .reduce([SmartContractProperty](), { allModels, response in
-                    return allModels + response
-                })
-                .eraseToAnyPublisher()
-        } else {
-            // Fallback on earlier versions
-            return self.loadInfo(propertiesToLoad: self.propertiesToLoad, deploymentHash: self.deploymentHash)
-                .tryMap ({ [weak self] (propertyFetchModels) -> [SmartContractProperty] in
-                    print("self?.propertiesToLoad.count", self?.propertiesToLoad.count as Any)
-                    print("propertyFetchModels.count", propertyFetchModels.count)
-                    // the stackview in the spec view will go out of bound if the count is different
-                    // the downside is that even though the fetch will grab some property values, if they're not all of them, none will show
-                    if propertyFetchModels.count != self?.propertiesToLoad.count {
-                        throw PostingError.generalError(reason: "Couldn't fetch the auction properties.")
-                    } else {
-                        return propertyFetchModels
-                    }
-                })
-                .retryWithDelay(retries: 5, delay: 1, scheduler: DispatchQueue.global())
-                .mapError { $0 as? PostingError ?? PostingError.generalError(reason: "Property fetching error.")}
+            }
+            return Publishers.MergeMany(listOfPrepPublishers)
+                .collect()
                 .eraseToAnyPublisher()
         }
+        .flatMap { [weak self] (propertyFetchModels) -> AnyPublisher<[SmartContractProperty], PostingError> in
+            let listOfReadPublishers = propertyFetchModels.map { (propertyFetchModel) in
+                return Future<SmartContractProperty, PostingError> { promise in
+                    var mutableModel = propertyFetchModel
+                    self?.executeReadTransaction(propertyFetchModel: &mutableModel, promise: promise)
+                }
+            }
+            return Publishers.MergeMany(listOfReadPublishers)
+                .collect()
+                .eraseToAnyPublisher()
+        }
+        .eraseToAnyPublisher()
     }
     
     private final func executeReadTransaction(
@@ -128,7 +156,7 @@ class PropertyLoader {
             }
             
             let result: [String: Any] = try transaction.call()
-            switch AuctionProperties(rawValue: propertyFetchModel.propertyName) {
+            switch AuctionContract.AuctionProperties(rawValue: propertyFetchModel.propertyName) {
                 case .startingBid:
                     if let startingBid = result["0"] as? BigUInt,
                        let bidInEth = Web3.Utils.formatToEthereumUnits(startingBid, toUnits: .eth, decimals: 9) {
@@ -139,15 +167,8 @@ class PropertyLoader {
                     }
                 case .auctionEndTime:
                     if let auctionEndTime = result["0"] as? BigUInt {
-//                        propertyFetchModel.propertyDesc = auctionEndTime.description
                         let date = Date(timeIntervalSince1970: Double(auctionEndTime))
                         propertyFetchModel.propertyDesc = date
-//                        let formatter = DateFormatter()
-//                        formatter.timeStyle = .short
-//                        formatter.dateStyle = .short
-//                        formatter.timeZone = .current
-//                        let formattedDate = formatter.string(from: date)
-//                        propertyFetchModel.propertyDesc = formattedDate
                     }
                 case .highestBid:
                     if let startingBid = result["0"] as? BigUInt {

@@ -323,6 +323,7 @@ struct UserDefaultKeys {
     static let displayName: String = "displayName"
     static let photoURL: String = "photoURL"
     static let filterSettings: String = "filterSettings"
+    static let fcmToken: String = "fcmToken"
 }
 
 
@@ -559,6 +560,10 @@ struct InfoText {
     
     static let auction = """
     An auction smart contract gets deployed to the blockchain when you post your item.  You set the bidding time limit. The starting price is from zero.  When the auction is finished, the token gets transferred to the buyer and you get to withdraw the final bid amount as a beneficiary. If no bid exists, you get to withdraw the token.
+    """
+    
+    static let pending = """
+    Pending means there is a bid transaction from a user that is either waiting or in the process of being mined. The relevant information will be updated on your screen soon after the transaction is added to the blockchain.
     """
 }
 

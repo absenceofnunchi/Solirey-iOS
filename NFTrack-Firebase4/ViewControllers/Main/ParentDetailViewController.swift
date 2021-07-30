@@ -71,6 +71,8 @@ class ParentDetailViewController: UIViewController {
         setConstraints()
     }
     
+    // called when fetchUserData fetched data and assigns it to userInfo
+    // modular so that children view controllers can override it
     func userInfoDidSet() {
         processProfileImage()
     }
@@ -125,8 +127,6 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         listingSpecView = SpecDisplayView(listingDetailArr: listingDetailArr)
         listingSpecView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(listingSpecView)
-        
-        
     }
     
     //    // MARK: - configureEditButton
@@ -224,6 +224,9 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
     }
     
     @objc func tapped(_ sender: UITapGestureRecognizer!) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         let tag = sender.view?.tag
         switch tag {
             case 1:

@@ -7,6 +7,7 @@
 
 import UIKit
 import Firebase
+import FirebaseAuth
 import FirebaseMessaging
 import FirebaseFirestore
 import UserNotifications
@@ -110,7 +111,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         
         // Print full message.
-        print(userInfo)
+        print("Print full message.", userInfo)
         
         completionHandler(UIBackgroundFetchResult.newData)
     }
@@ -170,6 +171,7 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
         // Messaging.messaging().appDidReceiveMessage(userInfo)
         // Print full message.
         print("userInfo", userInfo)
+        
 
         // getting access to the window object from SceneDelegate
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -190,7 +192,7 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
                     // docId, sellerUserId, buyerUserId
                     // the sellerUserId/buyerUserId names are misnomers and have to be changed
                     // they simply have to be two members of a chat room
-                    // simply going with how the chat room currently has sellerUserId/buyerUserId labels
+                    // going with how the chat room currently has sellerUserId/buyerUserId labels for now
                     // ChatVC will compare them against UserId
                     if let docId = userInfo["docId"] as? String,
                        let sellerUserId = userInfo["uid"] as? String,
@@ -209,6 +211,7 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
                         }
                     }
                 case "status":
+                    // for updating the status of the online direct purchases using escrow
                     guard let docId = userInfo["docID"] as? String else {
                         completionHandler()
                         return
@@ -268,6 +271,33 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
                         //
                         //                                    }
                         //                                }
+                    }
+                case "topic":
+                    // for updating the status of the online direct purchases using escrow
+                    guard let docId = userInfo["docId"] as? String else {
+                        completionHandler()
+                        return
+                    }
+                                        
+                    let docRef = FirebaseService.shared.db.collection("post").document(docId)
+                    docRef.getDocument { [weak self] (document, error) in
+                        if let error = error {
+                            print("app delegate error", error)
+                            completionHandler()
+                            return
+                        }
+                        
+                        guard let document = document,
+                              let post = self?.parseDocument(document: document),
+                              let tabBarController = rootViewController as? UITabBarController,
+                              let navController = tabBarController.selectedViewController as? UINavigationController else {
+                            completionHandler()
+                            return
+                        }
+                                                
+                        let AuctionDetailVC = AuctionDetailViewController()
+                        AuctionDetailVC.post = post
+                        navController.pushViewController(AuctionDetailVC, animated: true)
                     }
                 default:
                     break
@@ -352,13 +382,15 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
 extension AppDelegate : MessagingDelegate {
     // [START refresh_token]
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        print("Firebase registration token: \(String(describing: fcmToken))")
+//        print("Firebase registration token: \(String(describing: fcmToken))")
         if let fcmToken = fcmToken {
             Auth.auth().addStateDidChangeListener { (auth, user) in
                 if let user = user {
                     FirebaseService.shared.db.collection("deviceToken").document(user.uid).updateData(["token": FieldValue.arrayUnion([fcmToken])])
                 }
             }
+            
+            UserDefaults.standard.set(fcmToken, forKey: UserDefaultKeys.fcmToken)
         }
 //        let dataDict:[String: String] = ["token": fcmToken ?? ""]
 //        NotificationCenter.default.post(name: Notification.Name("FCMToken"), object: nil, userInfo: dataDict)

@@ -13,6 +13,7 @@
 
 import UIKit
 import Firebase
+import FirebaseAuth
 
 class AccountViewController: UIViewController {
     let alert = Alerts()

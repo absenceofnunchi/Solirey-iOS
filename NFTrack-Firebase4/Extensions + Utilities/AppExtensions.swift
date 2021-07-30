@@ -375,14 +375,14 @@ extension Publishers {
     struct RetryIf<P: Publisher>: Publisher {
         typealias Output = P.Output
         typealias Failure = P.Failure
-        
+
         let publisher: P
         let times: Int
         let condition: (P.Failure) -> Bool
-        
+
         func receive<S>(subscriber: S) where S : Subscriber, Failure == S.Failure, Output == S.Input {
             guard times > 0 else { return publisher.receive(subscriber: subscriber) }
-            
+
             publisher.catch { (error: P.Failure) -> AnyPublisher<Output, Failure> in
                 if condition(error)  {
                     return RetryIf(publisher: publisher, times: times - 1, condition: condition).eraseToAnyPublisher()
@@ -395,11 +395,13 @@ extension Publishers {
 }
 
 extension Publisher {
-    func retry(times: Int, if condition: @escaping (Failure) -> Bool) -> Publishers.RetryIf<Self> {
+    func retry(
+        times: Int,
+        if condition: @escaping (Failure) -> Bool
+    ) -> Publishers.RetryIf<Self> {
         Publishers.RetryIf(publisher: self, times: times, condition: condition)
     }
 }
-
 
 extension Publisher {
     func retryWithDelay<S>(
@@ -413,6 +415,18 @@ extension Publisher {
             .eraseToAnyPublisher()
     }
     
+    func retryIfWithDelay<S>(
+        retries: Int,
+        delay: S.SchedulerTimeType.Stride,
+        scheduler: S,
+        if condition: @escaping (Failure) -> Bool
+    ) -> AnyPublisher<Output, Failure> where S: Scheduler {
+        self
+            .delayIfFailure(for: delay, scheduler: scheduler)
+            .retry(times: retries, if: condition)
+            .eraseToAnyPublisher()
+    }
+        
     private func delayIfFailure<S>(
         for delay: S.SchedulerTimeType.Stride,
         scheduler: S

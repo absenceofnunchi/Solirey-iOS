@@ -55,6 +55,8 @@ struct PostProgressData {
 class ProgressModalViewController: UIViewController {
     private var titleLabel: UILabel!
     var titleString: String?
+    var timerLabel: UILabel!
+    var timer: Timer!
     private var height: CGFloat!
     private lazy var customTransitioningDelegate = TransitioningDelegate(height: height)
     private var stackView: UIStackView!
@@ -81,6 +83,10 @@ class ProgressModalViewController: UIViewController {
         super.viewDidDisappear(animated)
         NotificationCenter.default.removeObserver(self, name: .didUpdateProgress, object: nil)
         NotificationCenter.default.removeObserver(self, name: .willDismiss, object: nil)
+        
+        if let timer = timer {
+            timer.invalidate()
+        }
     }
     
     override func viewDidLoad() {
@@ -130,6 +136,12 @@ class ProgressModalViewController: UIViewController {
                         if self?.completionCount == self?.postProgressData.phases.count {
                             self?.doneButton.isHidden = false
                             self?.doneButton.isEnabled = true
+                            
+                            if let timer = self?.timer {
+                                timer.invalidate()
+                            }
+                            
+                            self?.timerLabel.text = ""
                         }
                     }
                 }
@@ -143,18 +155,58 @@ class ProgressModalViewController: UIViewController {
 }
 
 private extension ProgressModalViewController {
+    private func secondsToHoursMinutesSeconds (seconds : Int) -> (Int, Int, Int) {
+        return (seconds / 3600, (seconds % 3600) / 60, seconds % 60)
+    }
+    
     private func configureUI() {
         view.backgroundColor = .white
         view.layer.cornerRadius = 10
         view.clipsToBounds = true
         
         titleLabel = UILabel()
-        titleLabel.textColor = .lightGray
         titleLabel.text = titleString
         titleLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 20, weight: .bold)
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(titleLabel)
+        
+        timerLabel = UILabel()
+        timerLabel.textColor = .lightGray
+        timerLabel.sizeToFit()
+        timerLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .medium)
+        timerLabel.textAlignment = .center
+        timerLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(timerLabel)
+        
+        var estimatedDuration = 120
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] (Timer) in
+            if let converted = self?.secondsToHoursMinutesSeconds(seconds: estimatedDuration) {
+                if estimatedDuration >= 0 {
+                    var min, sec: String!
+                    
+                    if converted.1 < 10 {
+                        min = "0\(converted.1)"
+                    } else {
+                        min = "\(converted.1)"
+                    }
+                    
+                    if converted.2 < 10 {
+                        sec = "0\(converted.2)"
+                    } else {
+                        sec = "\(converted.2)"
+                    }
+                    
+                    let countdown = "Estimated Duration: \(min ?? "00"):\(sec ?? "00")"
+                    self?.timerLabel.text = countdown
+                    
+                    estimatedDuration -= 1
+                } else {
+                    Timer.invalidate()
+                    self?.timerLabel.text = "Estimated Duration: 00:00"
+                }
+            }
+        }
         
         let oneDotImage = createProgressImage(dotCount: .one)
         let twoDotImage = createProgressImage(dotCount: .two)
@@ -218,9 +270,12 @@ private extension ProgressModalViewController {
     
     private func setConstraints() {
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
+            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 15),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            titleLabel.heightAnchor.constraint(equalToConstant: 50),
+            
+            timerLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 0),
+            timerLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            timerLabel.heightAnchor.constraint(equalToConstant: 50),
             
             stackView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             stackView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),

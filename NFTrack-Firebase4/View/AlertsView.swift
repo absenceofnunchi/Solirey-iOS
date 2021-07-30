@@ -107,6 +107,7 @@ class Alerts {
             label.text = text
             label.textColor = .white
             label.textAlignment = .center
+            label.numberOfLines = 0
             label.sizeToFit()
             label.backgroundColor = .clear
             label.alpha = 0

@@ -9,6 +9,7 @@ import UIKit
 import web3swift
 import FirebaseFirestore
 import BigInt
+import Combine
 
 class PostViewController: ParentPostViewController {
     final override var panelButtons: [PanelButton] {
@@ -23,6 +24,7 @@ class PostViewController: ParentPostViewController {
     var deliveryMethodObserver: NSKeyValueObservation?
     final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
         deliveryMethodObserver = deliveryMethodLabel.observe(\.text) { [weak self] (label, observedChange) in
             guard let text = label.text, let deliveryMethod = DeliveryMethod(rawValue: text) else { return }
             switch deliveryMethod {
@@ -40,6 +42,8 @@ class PostViewController: ParentPostViewController {
             deliveryMethodObserver?.invalidate()
         }
     }
+    
+    var storage = Set<AnyCancellable>()
     
     final override func viewDidLoad() {
         super.viewDidLoad()

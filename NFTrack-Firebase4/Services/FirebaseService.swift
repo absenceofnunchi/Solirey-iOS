@@ -11,6 +11,10 @@ import Firebase
 import FirebaseFirestore
 import Combine
 
+struct HttpResponse: Codable {
+    let status: String
+}
+
 class FirebaseService {
     static let shared = FirebaseService()
     var db: Firestore! {
@@ -26,6 +30,7 @@ class FirebaseService {
     weak var profileReviewDelegate: ProfileReviewListViewController?
     weak var profilePostDelegate: ProfilePostingsViewController?
     weak var lastSnapshotDelegate: ProfileDetailViewController?
+    var cancellable: AnyCancellable!
 }
 
 extension FirebaseService: PostParseDelegate {
@@ -269,6 +274,85 @@ extension FirebaseService: PostParseDelegate {
         }
     }
     
+    func sendToTopics(
+        title: String,
+        topic: String,
+        content: String
+    ) -> AnyPublisher<Data, PostingError> {
+        let url = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/sendToTopics-sendToTopics")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        
+        let parameters: [String: Any] = [
+            "title": title,
+            "topic": topic,
+            "content": content,
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: parameters, options: [])
+        } catch {
+            return Fail(error: PostingError.generalError(reason: "There was an error serializing parameters to the server."))
+                .eraseToAnyPublisher()
+        }
+        
+        let session = URLSession.shared
+        return session.dataTaskPublisher(for: request)
+            .tryMap() { element -> Data in
+                if let httpResponse = element.response as? HTTPURLResponse,
+                   let httpStatusCode = APIError.HTTPStatusCode(rawValue: httpResponse.statusCode) {
+                    if !(200...299).contains(httpResponse.statusCode) {
+                        throw PostingError.apiError(APIError.generalError(reason: httpStatusCode.description))
+                    }
+                }
+                return element.data
+            }
+            .mapError { $0 as? PostingError ?? PostingError.generalError(reason: "Unknown Error") }
+            .eraseToAnyPublisher()
+    }
+    
+    func unsubscribeToTopic(
+        topic: String
+    ) -> AnyPublisher<Data, PostingError> {
+//        let url = URL(string: "http://localhost:5001/nftrack-69488/us-central1/unsubscribeToTopic-unsubscribeToTopic")!
+        let url = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/unsubscribeToTopic-unsubscribeToTopic")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        
+        let parameters: [String: Any] = [
+            "topic": topic,
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: parameters, options: [])
+        } catch {
+            return Fail(error: PostingError.generalError(reason: "There was an error serializing parameters to the server."))
+                .eraseToAnyPublisher()
+        }
+        
+        let session = URLSession.shared
+        return session.dataTaskPublisher(for: request)
+            .tryMap() { element -> Data in
+                if let httpResponse = element.response as? HTTPURLResponse,
+                   let httpStatusCode = APIError.HTTPStatusCode(rawValue: httpResponse.statusCode) {
+                    if !(200...299).contains(httpResponse.statusCode) {
+                        throw PostingError.apiError(APIError.generalError(reason: httpStatusCode.description))
+                    }
+                }
+                return element.data
+            }
+            .mapError({ (error) -> PostingError in
+                print("error in unsubscribeToTopic: ", error)
+                return error as? PostingError ?? PostingError.generalError(reason: "Unknown Error")
+            })
+//            .mapError { $0 as? PostingError ?? PostingError.generalError(reason: "Unknown Error") }
+            .eraseToAnyPublisher()
+    }
+    
     // MARK: - getTokenId
     /// uploads the receipt to the Firebase function to get the token number, which will update the Firestore
     func getTokenId1(topics: [String], documentId: String, promise: @escaping (Result<Int, PostingError>) -> Void) {
@@ -338,27 +422,19 @@ extension FirebaseService: PostParseDelegate {
         task.resume()
     }
     
-    func getTokenId(topics: [String], documentId: String) -> AnyPublisher<Data, APIError> {            // build request URL
-        let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/decodeLog-decodeLog")
-        //        guard let requestURL = URL(string: "http://localhost:5001/nftrack-69488/us-central1/decodeLog") else {
-        //            return
-        //        }
-        
-        var request = URLRequest(url: requestURL!)
+    func unsubscribeToTopic1(topic: String) -> AnyPublisher<Data, APIError> {
+//        let url = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/unsubscribeToTopic-unsubscribeToTopic")!
+        let url = URL(string: "http://localhost:5001/nftrack-69488/us-central1/unsubscribeToTopic-unsubscribeToTopic")!
+        let requestURL = url
+        var request = URLRequest(url: requestURL)
         request.httpMethod = "POST"
         request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
         
-        let parameter: [String: Any] = [
-            "hexString": topics[0],
-            "topics": [
-                topics[1],
-                topics[2],
-                topics[3]
-            ],
-            "documentID": documentId
+        let parameters: [String: Any] = [
+            "topic": topic,
         ]
         
-        let paramData = try? JSONSerialization.data(withJSONObject: parameter, options: [])
+        let paramData = try? JSONSerialization.data(withJSONObject: parameters, options: [])
         request.httpBody = paramData
         
         return URLSession.DataTaskPublisher(request: request, session: .shared)
@@ -387,43 +463,8 @@ extension FirebaseService: PostParseDelegate {
                 return APIError.unknown
             }
             .eraseToAnyPublisher()
-        
-//        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
-//            if let error = error {
-//                promise(.failure(error))
-//            }
-//
-//            if let response = response as? HTTPURLResponse,
-//               let httpStatusCode = HTTPError.HTTPStatusCode(rawValue: response.statusCode) {
-//                //                    if !(200...299).contains(response.statusCode) {}
-//                promise(.failure(httpStatusCode))
-//            }
-//
-//            if let data = data {
-//                do {
-//                    let json = try JSONSerialization.jsonObject(with: data, options: [.allowFragments])
-//                    guard let convertedJson = json as? NSNumber else {
-//                        promise(.failure(HTTPError.decodingError))
-//                        return
-//                    }
-//                    promise(.success(convertedJson.intValue))
-//                } catch {
-//                    promise(.failure(HTTPError.decodingError))
-//                }
-//            }
-//        })
-        
-        //            observation = task.progress.observe(\.fractionCompleted) { [weak self] (progress, _) in
-        //                print("decode log progress", progress)
-        //                DispatchQueue.main.async {
-        //                    self?.progressModal.progressView.isHidden = false
-        //                    self?.progressModal.progressLabel.isHidden = false
-        //                    self?.progressModal.progressView.progress = Float(progress.fractionCompleted)
-        //                    self?.progressModal.progressLabel.text = String(Int(progress.fractionCompleted * 100)) + "%"
-        //                    self?.progressModal.progressView.isHidden = true
-        //                    self?.progressModal.progressLabel.isHidden = true
-        //                }
-        //            }
-//        task.resume()
     }
 }
+
+
+

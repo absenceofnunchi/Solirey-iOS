@@ -7,14 +7,23 @@
 
 import UIKit
 import web3swift
+import Combine
 
 class SocketDelegate: Web3SocketDelegate {
     final var socketProvider: InfuraWebsocketProvider? = nil
     final weak var delegate: SocketMessageDelegate?
     final var didReceiveTopics: (([String]) -> Void)?
-    final var promise: ((Result<[String], PostingError>) -> Void)!
+    final var promise: ((Result<[String: Any], PostingError>) -> Void)!
+    final var passThroughSubject: PassthroughSubject<[String: Any], PostingError>!
     
-    init(contractAddress: EthereumAddress, topics: [String]? = nil) {
+    init(
+        contractAddress: EthereumAddress,
+        topics: [String]? = nil,
+        promise: ((Result<[String: Any], PostingError>) -> Void)?  = nil,
+        passThroughSubject: PassthroughSubject<[String: Any], PostingError>? = nil
+    ) {
+        self.promise = promise
+        self.passThroughSubject = passThroughSubject
         connectSocket(contractAddress: contractAddress, topics: topics)
     }
         
@@ -50,11 +59,20 @@ class SocketDelegate: Web3SocketDelegate {
     // Protocol method, here will be messages, received from WebSocket server
     func received(message: Any) {
         print("message", message)
-        if let dict = message as? [String: Any],
-           let topics = dict["topics"] as? [String],
-           let promise = promise {
+        if let dict = message as? [String: Any] {
+            // if the socket is needed multiple times to send the messages
+            // like the auction specs everytime someone bids
+            // then use the subject
+            if let passThroughSubject = passThroughSubject {
+                passThroughSubject.send(dict)
+            }
             
-            promise(.success(topics))
+            // if the socket is needed only once
+            // like when you're posting an item
+            // then use the promise for the Future publisher
+            if let promise = promise {
+                promise(.success(dict))
+            }
         }
     }
     
