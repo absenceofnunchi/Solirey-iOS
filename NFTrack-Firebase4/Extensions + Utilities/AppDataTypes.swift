@@ -563,7 +563,16 @@ struct InfoText {
     """
     
     static let pending = """
-    Pending means there is a bid transaction from a user that is either waiting or in the process of being mined. The relevant information will be updated on your screen soon after the transaction is added to the blockchain.
+    Pending could mean: \n\n1. There is a bid transaction from a user that is either waiting or in the process of being mined. \n\n2. The app has requested the auction details from the block chain. \n\n3. You have withdrawn the previous bid and the transaction is in the process of being mined \n\nThe relevant information will be updated on your screen soon after the transaction is added to the blockchain.
+    """
+    static let withdraw = """
+    You have been outbid by a higher bid. The previous bid made by you has to be withdrawn BY YOU to be transferred back to your wallet. It will not be done automatically.
+    """
+    static let withdrawPrior = """
+    Once you have been outbid by a higher bid, the previous bid made by you has to be withdrawn BY YOU for the fund to be transferred back to your wallet. It will not be done automatically. This is the safest way for your fund to be withdrawn in Ethereum.\n\nThe button to withdraw will be presented on the app once you are outbid.
+    """
+    static let auctionStatus = """
+    The auction status is either "active" or "ended". When the auction's time expires, you will no longer be able to bid, but you will have to officially end the auction by pressing the "End Auction" button, which will be presented after the expiration. The auction can be ended by anyone as long as the time has expired and is required prior to either transferring the asset or receiving the winning bid as a beneficiary.
     """
 }
 
@@ -591,6 +600,7 @@ enum TxType {
     case transferToken
     case bid
     case endAuction
+    case AuctionContract
 }
 
 struct TxResult {

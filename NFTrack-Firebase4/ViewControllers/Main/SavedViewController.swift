@@ -9,7 +9,6 @@ import UIKit
 import FirebaseFirestore
 
 class SavedViewController: ParentListViewController<Post>, RefetchDataDelegate, PostParseDelegate {
-
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Saved Items"

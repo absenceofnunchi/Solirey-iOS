@@ -353,6 +353,11 @@ extension SinglePageViewController: UITextFieldDelegate {
     
     // MARK: - textFieldShouldReturn
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        guard let createButton = createButton else {
+            alert.showDetail("Log In Error", with: "Unable to log in. Please ensure the password or the private key are correct.", for: self)
+            return false
+        }
+        
         if textField.returnKeyType == .done && createButton.isEnabled && ((passwordTextField.text?.count)! > 4) {
             createWallet()
         } else if textField.returnKeyType == .next {

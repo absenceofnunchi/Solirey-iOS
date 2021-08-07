@@ -41,6 +41,11 @@
 		49409A75265946870060193C /* SearchResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A74265946870060193C /* SearchResultsViewController.swift */; };
 		49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */; };
 		495D5E08268FE92F00F5DF71 /* InfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495D5E07268FE92E00F5DF71 /* InfoViewController.swift */; };
+		495FB33B26B70D000047E91D /* AuctionDeploymentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */; };
+		495FB36826B9F9500047E91D /* NFTrack_Firebase4Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FB36726B9F9500047E91D /* NFTrack_Firebase4Tests.swift */; };
+		495FB37526BB496D0047E91D /* AuctionButtonController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FB37426BB496D0047E91D /* AuctionButtonController.swift */; };
+		495FB37A26BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FB37926BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift */; };
+		495FB37F26BB8A6F0047E91D /* AuctionButtonTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FB37E26BB8A6F0047E91D /* AuctionButtonTest.swift */; };
 		495FD2CE2687B33600F1D81D /* CustomPreviewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2CD2687B33600F1D81D /* CustomPreviewItem.swift */; };
 		495FD2D32688043000F1D81D /* PDFPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */; };
 		495FD2D826892FDC00F1D81D /* StarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD2D726892FDB00F1D81D /* StarRatingView.swift */; };
@@ -58,7 +63,6 @@
 		4964E4632641B001005B3268 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4964E4612641B001005B3268 /* Main.storyboard */; };
 		4964E4652641B006005B3268 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4964E4642641B006005B3268 /* Assets.xcassets */; };
 		4964E4682641B006005B3268 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4964E4662641B006005B3268 /* LaunchScreen.storyboard */; };
-		4964E4732641B007005B3268 /* NFTrack_Firebase4Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4722641B007005B3268 /* NFTrack_Firebase4Tests.swift */; };
 		4964E47E2641B007005B3268 /* NFTrack_Firebase4UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E47D2641B007005B3268 /* NFTrack_Firebase4UITests.swift */; };
 		4964E4C12641E12A005B3268 /* BlurEffectContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4C02641E12A005B3268 /* BlurEffectContainerView.swift */; };
 		4964E4CC26430BFB005B3268 /* SignUpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E4CB26430BFB005B3268 /* SignUpViewController.swift */; };
@@ -105,6 +109,7 @@
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
 		4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */; };
 		4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */; };
+		4988F0B426BE20BC00CD7678 /* PurchasesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4988F0B326BE20BC00CD7678 /* PurchasesViewController.swift */; };
 		499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702A52672E0BA001DD80A /* ToolBarView.swift */; };
 		499702AB2673F75E001DD80A /* MessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AA2673F75E001DD80A /* MessageCell.swift */; };
 		499702B02674533E001DD80A /* ParentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AF2674533E001DD80A /* ParentCell.swift */; };
@@ -193,6 +198,11 @@
 		49409A74265946870060193C /* SearchResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsViewController.swift; sourceTree = "<group>"; };
 		49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + ResultsUpdate.swift"; sourceTree = "<group>"; };
 		495D5E07268FE92E00F5DF71 /* InfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoViewController.swift; sourceTree = "<group>"; };
+		495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionDeploymentTests.swift; sourceTree = "<group>"; };
+		495FB36726B9F9500047E91D /* NFTrack_Firebase4Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NFTrack_Firebase4Tests.swift; sourceTree = "<group>"; };
+		495FB37426BB496D0047E91D /* AuctionButtonController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionButtonController.swift; sourceTree = "<group>"; };
+		495FB37926BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AuctionDetailViewController + Properties Parse.swift"; sourceTree = "<group>"; };
+		495FB37E26BB8A6F0047E91D /* AuctionButtonTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionButtonTest.swift; sourceTree = "<group>"; };
 		495FD2CD2687B33600F1D81D /* CustomPreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomPreviewItem.swift; sourceTree = "<group>"; };
 		495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFPreviewViewController.swift; sourceTree = "<group>"; };
 		495FD2D726892FDB00F1D81D /* StarRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRatingView.swift; sourceTree = "<group>"; };
@@ -213,7 +223,6 @@
 		4964E4672641B006005B3268 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		4964E4692641B006005B3268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4964E46E2641B007005B3268 /* NFTrack-Firebase4Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NFTrack-Firebase4Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		4964E4722641B007005B3268 /* NFTrack_Firebase4Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrack_Firebase4Tests.swift; sourceTree = "<group>"; };
 		4964E4742641B007005B3268 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4964E4792641B007005B3268 /* NFTrack-Firebase4UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NFTrack-Firebase4UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4964E47D2641B007005B3268 /* NFTrack_Firebase4UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrack_Firebase4UITests.swift; sourceTree = "<group>"; };
@@ -263,6 +272,7 @@
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecDisplayView.swift; sourceTree = "<group>"; };
 		4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyLoader.swift; sourceTree = "<group>"; };
+		4988F0B326BE20BC00CD7678 /* PurchasesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchasesViewController.swift; sourceTree = "<group>"; };
 		499702A52672E0BA001DD80A /* ToolBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolBarView.swift; sourceTree = "<group>"; };
 		499702AA2673F75E001DD80A /* MessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCell.swift; sourceTree = "<group>"; };
 		499702AF2674533E001DD80A /* ParentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentCell.swift; sourceTree = "<group>"; };
@@ -369,6 +379,7 @@
 			isa = PBXGroup;
 			children = (
 				493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */,
+				495FB37426BB496D0047E91D /* AuctionButtonController.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -442,7 +453,9 @@
 		4964E4712641B007005B3268 /* NFTrack-Firebase4Tests */ = {
 			isa = PBXGroup;
 			children = (
-				4964E4722641B007005B3268 /* NFTrack_Firebase4Tests.swift */,
+				495FB36726B9F9500047E91D /* NFTrack_Firebase4Tests.swift */,
+				495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */,
+				495FB37E26BB8A6F0047E91D /* AuctionButtonTest.swift */,
 				4964E4742641B007005B3268 /* Info.plist */,
 			);
 			path = "NFTrack-Firebase4Tests";
@@ -634,6 +647,7 @@
 				496F70012652029F00E4056B /* ListDetailViewController.swift */,
 				49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */,
 				49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */,
+				495FB37926BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift */,
 				496F7006265207A700E4056B /* ImagePageViewController.swift */,
 				496F700B265421E200E4056B /* TxDetailViewController.swift */,
 				49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */,
@@ -678,6 +692,7 @@
 			children = (
 				4964E5042644891B005B3268 /* AccountViewController.swift */,
 				49221B6A266ECEE70031A756 /* ProfileViewController.swift */,
+				4988F0B326BE20BC00CD7678 /* PurchasesViewController.swift */,
 				49221B90267112200031A756 /* ParentProfileViewController.swift */,
 				4933332C268033D900B8BFC2 /* ReviewViewController.swift */,
 				493333312681116F00B8BFC2 /* ReviewPostViewController.swift */,
@@ -999,10 +1014,12 @@
 				49409A75265946870060193C /* SearchResultsViewController.swift in Sources */,
 				4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */,
 				4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */,
+				495FB37526BB496D0047E91D /* AuctionButtonController.swift in Sources */,
 				496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */,
 				493BF9D7264C4DE100B9C9D2 /* BackgroundView2.swift in Sources */,
 				495FD333268D402900F1D81D /* FilterCell.swift in Sources */,
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
+				495FB37A26BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift in Sources */,
 				495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */,
 				492A007D26A3AE44008B9B34 /* PaginatedViewController.swift in Sources */,
 				49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */,
@@ -1061,6 +1078,7 @@
 				4964E4CC26430BFB005B3268 /* SignUpViewController.swift in Sources */,
 				4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */,
 				4964E5812649A047005B3268 /* AppProtocols.swift in Sources */,
+				4988F0B426BE20BC00CD7678 /* PurchasesViewController.swift in Sources */,
 				4964E5052644891B005B3268 /* AccountViewController.swift in Sources */,
 				496D56C02659E75D00C3E7FD /* ParentPostViewController + Picker.swift in Sources */,
 				49DEFF5526841C54004C2DD0 /* ReviewDetailViewController.swift in Sources */,
@@ -1110,7 +1128,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4964E4732641B007005B3268 /* NFTrack_Firebase4Tests.swift in Sources */,
+				495FB33B26B70D000047E91D /* AuctionDeploymentTests.swift in Sources */,
+				495FB36826B9F9500047E91D /* NFTrack_Firebase4Tests.swift in Sources */,
+				495FB37F26BB8A6F0047E91D /* AuctionButtonTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -11,11 +11,14 @@ import FirebaseAuth
 import FirebaseMessaging
 import FirebaseFirestore
 import UserNotifications
+import Combine
+import web3swift
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     let gcmMessageIDKey = "gcm.message_id"
-
+    var storage = Set<AnyCancellable>()
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         FirebaseApp.configure()
@@ -290,14 +293,26 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
                         guard let document = document,
                               let post = self?.parseDocument(document: document),
                               let tabBarController = rootViewController as? UITabBarController,
-                              let navController = tabBarController.selectedViewController as? UINavigationController else {
+                              let navController = tabBarController.selectedViewController as? UINavigationController,
+                              let auctionHash = post.auctionHash,
+                              let self = self else {
                             completionHandler()
                             return
                         }
-                                                
-                        let AuctionDetailVC = AuctionDetailViewController()
-                        AuctionDetailVC.post = post
-                        navController.pushViewController(AuctionDetailVC, animated: true)
+                        
+                        Future<TransactionReceipt, PostingError> { promise in
+                            Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
+                        }
+                        .sink { (completion) in
+                            print("completion", completion)
+                        } receiveValue: { (receipt) in
+                            guard let contractAddress = receipt.contractAddress,
+                                  let currentAddress = Web3swiftService.currentAddress else { return }
+                            let auctionDetailVC = AuctionDetailViewController(auctionContractAddress: contractAddress, myContractAddress: currentAddress)
+                            auctionDetailVC.post = post
+                            navController.pushViewController(auctionDetailVC, animated: true)
+                        }
+                        .store(in: &self.storage)
                     }
                 default:
                     break

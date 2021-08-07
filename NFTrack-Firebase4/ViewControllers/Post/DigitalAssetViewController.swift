@@ -324,6 +324,7 @@ class DigitalAssetViewController: ParentPostViewController {
                     saleFormat: saleFormat,
                     paymentMethod: paymentMethod
                 )
+                
             case .openAuction:
                 guard let auctionDuration = auctionDurationLabel.text,
                       !auctionDuration.isEmpty else {
@@ -514,7 +515,25 @@ class DigitalAssetViewController: ParentPostViewController {
                                             }
                                             
                                             return Future<Int, PostingError> { promise in
-                                                self.transactionService.createFireStoreEntry(documentId: &self.documentId, senderAddress: senderAddress, escrowHash: escrowHash, auctionHash: "N/A", mintHash: mintHash, itemTitle: itemTitle, desc: desc, price: price, category: category, tokensArr: tokensArr, convertedId: convertedId, deliveryMethod: deliveryMethod, saleFormat: saleFormat, paymentMethod: paymentMethod, topics: topicsRetainer, urlStrings: urlStrings, promise: promise)
+                                                self.transactionService.createFireStoreEntry(
+                                                    documentId: &self.documentId,
+                                                    senderAddress: senderAddress,
+                                                    escrowHash: escrowHash,
+                                                    auctionHash: "N/A",
+                                                    mintHash: mintHash,
+                                                    itemTitle: itemTitle,
+                                                    desc: desc,
+                                                    price: price,
+                                                    category: category,
+                                                    tokensArr: tokensArr,
+                                                    convertedId: convertedId,
+                                                    deliveryMethod: deliveryMethod,
+                                                    saleFormat: saleFormat,
+                                                    paymentMethod: paymentMethod,
+                                                    topics: topicsRetainer,
+                                                    urlStrings: urlStrings,
+                                                    promise: promise
+                                                )
                                             }
                                             .eraseToAnyPublisher()
                                         }
@@ -671,7 +690,7 @@ class DigitalAssetViewController: ParentPostViewController {
 
                                 self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress)
                                 let parameters: [AnyObject] = [biddingTime, startingBid] as [AnyObject]
-
+                                
                                 // to be used for getting the contract address so that the token can be transferred
                                 var auctionHash: String!
                                 var txPackageArr = [TxPackage]()
@@ -712,6 +731,7 @@ class DigitalAssetViewController: ParentPostViewController {
                                     NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                     
                                     print("STEP 3")
+                                    print("txPackages", txPackages)
                                     let results = txPackages.map { self.transactionService.executeTransaction2(
                                         transaction: $0.transaction,
                                         password: password,
@@ -739,30 +759,22 @@ class DigitalAssetViewController: ParentPostViewController {
                                     let update: [String: PostProgress] = ["update": .deployingAuction]
                                     NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                     
-                                    guard let txResult = txResultArr.first else {
+                                    guard let txReceipt = txReceipts.first else {
                                         return Fail(error: PostingError.generalError(reason: "Parsing the transaction result error."))
                                             .eraseToAnyPublisher()
                                     }
                                     
-                                    // get the receipt of the auction contract deployment so that we can get the contract address for the token transfer
-                                    return Future<TransactionReceipt, PostingError> { promise in
-                                        Web3swiftService.getReceipt(hash: txResult.txResult.hash, promise: promise)
+                                    guard let auctionContractAddress = txReceipt.contractAddress else {
+                                        return Fail(error: PostingError.generalError(reason: "Failed to obtain the auction contract address."))
+                                            .eraseToAnyPublisher()
                                     }
-                                    .eraseToAnyPublisher()
-                                    .flatMap { (receipt) -> AnyPublisher<WriteTransaction, PostingError> in
-                                        guard let auctionContractAddress = receipt.contractAddress else {
-                                            return Fail(error: PostingError.generalError(reason: "Failed to obtain the auction contract address."))
-                                                .eraseToAnyPublisher()
-                                        }
-                                        
-                                        // prepare the transaction to mint and transfer the token
-                                        return Future<WriteTransaction, PostingError> { promise in
-                                            self.transactionService.prepareTransactionForMinting(
-                                                receiverAddress: auctionContractAddress,
-                                                promise: promise
-                                            )
-                                        }
-                                        .eraseToAnyPublisher()
+                                    
+                                    // prepare the transaction to mint and transfer the token
+                                    return Future<WriteTransaction, PostingError> { promise in
+                                        self.transactionService.prepareTransactionForMinting(
+                                            receiverAddress: auctionContractAddress,
+                                            promise: promise
+                                        )
                                     }
                                     .eraseToAnyPublisher()
                                 })
@@ -790,7 +802,7 @@ class DigitalAssetViewController: ParentPostViewController {
                                     }
                                     .eraseToAnyPublisher()
                                 }
-                                // instantiate the socket, parse the receipts, and create the firebase entry as soon as the socket delegate receives the data
+                                // instantiate the socket, parse the topics, and create the firebase entry as soon as the socket delegate receives the data
                                 // createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
                                 .flatMap({ (webSocketMessage) -> AnyPublisher<[String?], PostingError> in
                                     let update: [String: PostProgress] = ["update": .minting]
@@ -907,14 +919,14 @@ class DigitalAssetViewController: ParentPostViewController {
                                                     self.imagePreviewVC.collectionView.reloadData()
                                                 }
                                             }
-                                            
-                                            if self.socketDelegate != nil {
-                                                self.socketDelegate.disconnectSocket()
-                                            }
                                     }
                                 } receiveValue: { (receivedValue) in
                                     print("-------------------------------------------------------------------------------------------------------------------------")
-                                    print("receivedValue!!!", receivedValue)
+                                    print("receivedValue", receivedValue)
+                                    
+                                    if self.socketDelegate != nil {
+                                        self.socketDelegate.disconnectSocket()
+                                    }
                                 }
                                 .store(in: &self.storage)
                             }) // present for progressModal

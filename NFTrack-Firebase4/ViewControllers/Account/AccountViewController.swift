@@ -23,6 +23,7 @@ class AccountViewController: UIViewController {
     var data: [AccountMenu] = [
         AccountMenu(imageTitle: "person.circle", imageColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), titleString: NSLocalizedString("Update Profile", comment: "")),
         AccountMenu(imageTitle: "lock.circle", imageColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), titleString: NSLocalizedString("Reset Password", comment: "")),
+        AccountMenu(imageTitle: "purchased.circle", imageColor: UIColor(red: 255/255, green: 160/255, blue: 160/255, alpha: 1), titleString: NSLocalizedString("Purchases", comment: "")),
         AccountMenu(imageTitle: "arrowshape.turn.up.right.circle", imageColor: UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1), titleString: NSLocalizedString("Logout", comment: "")),
         AccountMenu(imageTitle: "pencil.circle", imageColor: .blue, titleString: NSLocalizedString("Pending Reviews", comment: "")),
         AccountMenu(imageTitle: "envelope.circle", imageColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), titleString: NSLocalizedString("Feedback", comment: "")),
@@ -89,12 +90,15 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
             case 2:
                 didRequestPasswordReset()
             case 3:
-                didLogout()
+                let purchasesVC = PurchasesViewController()
+                self.navigationController?.pushViewController(purchasesVC, animated: true)
             case 4:
-                review()
+                didLogout()
             case 5:
-                print("feedback")
+                review()
             case 6:
+                print("feedback")
+            case 7:
                 didDeleteUser()
             default:
                 break

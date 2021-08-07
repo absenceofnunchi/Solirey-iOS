@@ -362,7 +362,6 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
                 break
         }
     }
-
 }
 
 // 2
@@ -373,8 +372,9 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
 // posting
 // 10
 // 99@email.com (tasmanian)
+// 111111
 // 650ab63c9923856efde6471bb1249df2e5b0995e7a84826f4374feb7ad605079
 
 // test@email.com (N/A)
 // 123456
-//a3bf8a54341153d2890ece27123ec51438b1a5fe014ea71da7ee2422567c74b6
+// a3bf8a54341153d2890ece27123ec51438b1a5fe014ea71da7ee2422567c74b6

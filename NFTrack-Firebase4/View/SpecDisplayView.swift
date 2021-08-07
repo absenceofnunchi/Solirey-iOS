@@ -32,41 +32,43 @@ class SpecDisplayView: UIView {
     }
     
     private var storage = Set<AnyCancellable>()
-    var fetchedDataArr: [SmartContractProperty]! {
-        didSet {
-            stackView.arrangedSubviews.enumerated().forEach { (index, element) in
-                let specDetail = fetchedDataArr[index]
-                for case let subview as UILabel in element.subviews {
-                    /// tag 1 refers to the property name such as "Highest Bid"
-                    /// tag 2 refers to the property value such as "2 ether"
-                    switch subview.tag {
-                        case 1:
-                            subview.text = specDetail.propertyName
-                        case 2:
-                            // parse according to the type of the instance property's value
-                            switch specDetail.propertyDesc {
-                                case is String:
-                                    subview.text = specDetail.propertyDesc as? String
-                                case is Date:
-                                    guard let propDesc = specDetail.propertyDesc as? Date else { return }
-                                    let formatter = DateFormatter()
-                                    formatter.timeStyle = .short
-                                    formatter.dateStyle = .short
-                                    formatter.timeZone = .current
-                                    let formattedDate = formatter.string(from: propDesc)
-                                    subview.text = formattedDate
-                                default:
-                                    break
-                            }
-                        default:
-                            break
-                    }
-                }
-            }
-        }
-    }
+//    var fetchedDataArr: [SmartContractProperty]! {
+//        didSet {
+//            stackView.arrangedSubviews.enumerated().forEach { (index, element) in
+//                let specDetail = fetchedDataArr[index]
+//                for case let subview as UILabel in element.subviews {
+//                    /// tag 1 refers to the property name such as "Highest Bid"
+//                    /// tag 2 refers to the property value such as "2 ether"
+//                    switch subview.tag {
+//                        case 1:
+//                            subview.text = specDetail.propertyName
+//                        case 2:
+//                            // parse according to the type of the instance property's value
+//                            switch specDetail.propertyDesc {
+//                                case is String:
+//                                    subview.text = specDetail.propertyDesc as? String
+//                                case is Date:
+//                                    guard let propDesc = specDetail.propertyDesc as? Date else { return }
+//                                    let formatter = DateFormatter()
+//                                    formatter.timeStyle = .short
+//                                    formatter.dateStyle = .short
+//                                    formatter.timeZone = .current
+//                                    let formattedDate = formatter.string(from: propDesc)
+//                                    subview.text = formattedDate
+//                                default:
+//                                    break
+//                            }
+//                        default:
+//                            break
+//                    }
+//                }
+//            }
+//        }
+//    }
+//    
+//    var dataSource: ((SpecDisplayView)->Void)?
     private var listingDetailArr: [SmartContractProperty]!
-    private var stackView: UIStackView!
+    var stackView: UIStackView!
     
     init(listingDetailArr: [SmartContractProperty]) {
         super.init(frame: .zero)
@@ -118,11 +120,11 @@ private extension SpecDisplayView {
             NSLayoutConstraint.activate([
                 titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
                 titleLabel.heightAnchor.constraint(equalTo: containerView.heightAnchor),
-                titleLabel.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.4),
+                titleLabel.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.45),
                 
                 descLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
                 descLabel.heightAnchor.constraint(equalTo: containerView.heightAnchor),
-                descLabel.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.6),
+                descLabel.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.55),
             ])
             
             self?.stackView.addArrangedSubview(containerView)

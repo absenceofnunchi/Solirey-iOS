@@ -351,7 +351,8 @@ extension UISearchController {
 extension Notification.Name {
     static let didUpdateProgress = Notification.Name("didUpdateProgress")
     static let willDismiss = Notification.Name("willDismiss")
-    static let combineNotification = Notification.Name("CombineNotification")
+    static let auctionButtonDidUpdate = Notification.Name("auctionButtonDidUpdate")
+    static let auctionDidWithdraw = Notification.Name("auctionDidWithdraw")
 }
 
 extension UIImageView {
@@ -384,6 +385,7 @@ extension Publishers {
             guard times > 0 else { return publisher.receive(subscriber: subscriber) }
 
             publisher.catch { (error: P.Failure) -> AnyPublisher<Output, Failure> in
+                Swift.print("error in RetryIf", error)
                 if condition(error)  {
                     return RetryIf(publisher: publisher, times: times - 1, condition: condition).eraseToAnyPublisher()
                 } else {

@@ -5,6 +5,11 @@
 //  Created by J C on 2021-07-13.
 //
 
+/*
+ Abstract:
+ The screen for an auction prior to bidding
+ */
+
 import UIKit
 import Combine
 import web3swift
@@ -22,17 +27,36 @@ struct AuctionContract {
         case transferToken
     }
     
-    enum AuctionProperties: String, CaseIterable {
+    enum AuctionProperties {
         case startingBid
         case highestBid
         case highestBidder
         case auctionEndTime
-        
-        static func allCasesString() -> [String] {
-            return AuctionProperties.allCases.map { $0.rawValue }
+        case ended
+        case pendingReturns(EthereumAddress)
+        case beneficiary
+  
+        // tuple because some properties like mapping requires a key
+        var value: (String, AnyObject?) {
+            switch self {
+                case .startingBid:
+                    return ("startingBid", nil)
+                case .highestBid:
+                    return ("highestBid", nil)
+                case .highestBidder:
+                    return ("highestBidder", nil)
+                case .auctionEndTime:
+                    return ("auctionEndTime", nil)
+                case .ended:
+                    return ("ended", nil)
+                case .pendingReturns(let parameter):
+                    return ("pendingReturns", parameter as AnyObject)
+                case .beneficiary:
+                    return ("beneficiary", nil)
+            }
         }
         
-        func asFormattedString() -> String {
+        func toDisplay() -> String {
             switch self {
                 case .startingBid:
                     return "Starting Bid"
@@ -42,8 +66,18 @@ struct AuctionContract {
                     return "Highest Bidder"
                 case .auctionEndTime:
                     return "Auction End Time"
+                case .ended:
+                    return "Auction Status"
+                case .pendingReturns(_):
+                    return "Amount To Withdraw"
+                case .beneficiary:
+                    return "Beneficiary"
             }
         }
+    
+//        static func allCasesString() -> [String] {
+//            return AuctionProperties.allCases.map { $0.rawValue }
+//        }
     }
 }
 
@@ -51,58 +85,32 @@ class AuctionDetailViewController: ParentDetailViewController {
     final var historyVC: HistoryViewController!
     lazy final var historyVCHeightConstraint: NSLayoutConstraint = historyVC.view.heightAnchor.constraint(equalToConstant: 100)
     final var auctionDetailTitleLabel: UILabel!
-    final var auctionDetailRefreshButton: UIButton!
+    final var moreDetailsButton: UIButton!
     final var auctionSpecView: SpecDisplayView!
     final var storage = Set<AnyCancellable>()
     final var bidContainer: UIView!
     final var bidTextField: UITextField!
     final var auctionButton: UIButton!
     final let LIST_DETAIL_MARGIN: CGFloat = 10
-    final var propertiesToLoad: [String]!
-    lazy final var auctionDetailArr: [SmartContractProperty] = propertiesToLoad.map { SmartContractProperty(propertyName: $0, propertyDesc: "loading...")}
+    final var propertiesToLoad: [AuctionContract.AuctionProperties]!
+    lazy final var auctionDetailArr: [SmartContractProperty] = propertiesToLoad.map { SmartContractProperty(propertyName: $0.toDisplay(), propertyDesc: "loading...")}
+
     lazy final var auctionButtonNarrowConstraint: NSLayoutConstraint! = auctionButton.widthAnchor.constraint(equalTo: bidContainer.widthAnchor, multiplier: 0.45)
     lazy final var auctionButtonWideConstraint: NSLayoutConstraint! = auctionButton.widthAnchor.constraint(equalTo: bidContainer.widthAnchor, multiplier: 1)
-    final var isAuctionEnded: Bool! {
-        didSet{
-//            guard auctionButtonNarrowConstraint != nil,
-//                  auctionButtonWideConstraint != nil else { return }
-//            if isAuctionEnded == true {
-//                bidTextField.isEnabled = false
-//                bidTextField.alpha = 0
-//
-//                auctionButtonNarrowConstraint.isActive = false
-//                auctionButtonWideConstraint.isActive = true
-//                auctionButton.setTitle("End Auction", for: .normal)
-//                auctionButton.tag = 1
-//            } else {
-//                bidTextField.isEnabled = true
-//                bidTextField.alpha = 1
-//
-//                // might already be narrow
-//                auctionButtonNarrowConstraint.isActive = false
-//                auctionButtonWideConstraint.isActive = false
-//                auctionButtonNarrowConstraint.isActive = true
-//
-//                auctionButton.setTitle("Bid Now", for: .normal)
-//                auctionButton.tag = 0
-//            }
-//
-//            UIView.animate(withDuration: 0.3) { [weak self] in
-//                self?.view.layoutIfNeeded()
-//            }
-        }
-    }
+    final var auctionContractAddress: EthereumAddress!
     final var socketDelegate: SocketDelegate!
     // indicator to show whether the transaction is pending or not
     // it means the current highest bidder/bidding price will likely change
     lazy var isPending: Bool = false {
         didSet {
-            if isPending {
+            if isPending == true {
                 DispatchQueue.main.async { [weak self] in
+                    print("self?.pendingContainer.isHidden", self?.pendingContainer.isHidden as Any)
                     self?.pendingContainer.isHidden = false
                 }
             } else {
                 DispatchQueue.main.async { [weak self] in
+                    print("self?.pendingContainer.isHidden", self?.pendingContainer.isHidden as Any)
                     self?.pendingContainer.isHidden = true
                 }
             }
@@ -111,11 +119,27 @@ class AuctionDetailViewController: ParentDetailViewController {
     final var pendingContainer: UIView!
     final var pendingLabel: UILabel!
     final var activityIndicatorView: UIActivityIndicatorView!
-    final var timer: Timer!
+    final var pendingReturnButton: UIButton!
+    final var txResult: TxResult!
+    final var auctionButtonController: AuctionButtonController!
+    final var pendingReturnButtonConstraints = [NSLayoutConstraint]()
+    final var pendingReturnActivityIndicatorView: UIActivityIndicatorView!
     
-    init() {
-        self.propertiesToLoad = AuctionContract.AuctionProperties.allCasesString()
+    init(auctionContractAddress: EthereumAddress, myContractAddress: EthereumAddress) {
         super.init(nibName: nil, bundle: nil)
+        
+        self.contractAddress = myContractAddress
+        self.auctionContractAddress = auctionContractAddress
+        
+        self.propertiesToLoad = [
+            AuctionContract.AuctionProperties.startingBid,
+            AuctionContract.AuctionProperties.highestBid,
+            AuctionContract.AuctionProperties.highestBidder,
+            AuctionContract.AuctionProperties.auctionEndTime,
+            AuctionContract.AuctionProperties.ended,
+            AuctionContract.AuctionProperties.pendingReturns(myContractAddress),
+            AuctionContract.AuctionProperties.beneficiary
+        ]
     }
     
     required init?(coder: NSCoder) {
@@ -141,7 +165,9 @@ class AuctionDetailViewController: ParentDetailViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        getAuctionInfo()
+        
+        guard let auctionHash = post.auctionHash else { return }
+        getAuctionInfo(transactionHash: auctionHash, contractAddress: auctionContractAddress)
         addKeyboardObserver()
     }
     
@@ -152,7 +178,13 @@ class AuctionDetailViewController: ParentDetailViewController {
         }
         removeKeyboardObserver()
         
-        if let timer = timer {
+        if let timer = auctionButtonController.timer {
+            timer.invalidate()
+        }
+    }
+    
+    deinit {
+        if let timer = auctionButtonController.timer {
             timer.invalidate()
         }
     }
@@ -162,6 +194,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
     final override func configureUI() {
         super.configureUI()
         self.hideKeyboardWhenTappedAround()
+        auctionButtonController = AuctionButtonController()
         
         title = post.title
 
@@ -177,12 +210,6 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         auctionDetailTitleLabel.sizeToFit()
         scrollView.addSubview(auctionDetailTitleLabel)
         
-        guard let refreshImage = UIImage(systemName: "arrow.clockwise") else { return }
-        auctionDetailRefreshButton = UIButton.systemButton(with: refreshImage, target: self, action: #selector(buttonPressed(_:)))
-        auctionDetailRefreshButton.tag = 2
-        auctionDetailRefreshButton.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(auctionDetailRefreshButton)
-        
         pendingContainer = UIView()
         pendingContainer.isHidden = true
         pendingContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -192,22 +219,30 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         let pendingContainerTap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         pendingContainer.addGestureRecognizer(pendingContainerTap)
         scrollView.addSubview(pendingContainer)
-        
+
         activityIndicatorView = UIActivityIndicatorView()
         activityIndicatorView.startAnimating()
         activityIndicatorView.color = UIColor(red: 0/255, green: 155/255, blue: 0/255, alpha: 1)
         activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
         pendingContainer.addSubview(activityIndicatorView)
-        
+
         pendingLabel = createTitleLabel(text: "Pending", weight: .light)
         pendingLabel.font = UIFont.systemFont(ofSize: 12)
         pendingLabel.textColor = UIColor(red: 0/255, green: 155/255, blue: 0/204, alpha: 1)
         pendingContainer.addSubview(pendingLabel)
         
+        moreDetailsButton = UIButton(type: .system)
+        moreDetailsButton.setTitle("More Details", for: .normal)
+        moreDetailsButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        moreDetailsButton.layer.borderWidth = 0.5
+        moreDetailsButton.layer.borderColor = UIColor.lightGray.cgColor
+        moreDetailsButton.layer.cornerRadius = 7
+        moreDetailsButton.tag = 2
+        moreDetailsButton.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        moreDetailsButton.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(moreDetailsButton)
+        
         auctionSpecView = SpecDisplayView(listingDetailArr: auctionDetailArr)
-        auctionSpecView.tag = 2
-        let auctionSpecTap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
-        auctionSpecView.addGestureRecognizer(auctionSpecTap)
         auctionSpecView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(auctionSpecView)
         
@@ -236,26 +271,25 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         NSLayoutConstraint.activate([
             auctionDetailTitleLabel.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
             auctionDetailTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
-//            auctionDetailTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             
             pendingContainer.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
             pendingContainer.leadingAnchor.constraint(equalTo: auctionDetailTitleLabel.trailingAnchor, constant: 20),
             pendingContainer.heightAnchor.constraint(equalTo: auctionDetailTitleLabel.heightAnchor),
             pendingContainer.widthAnchor.constraint(equalToConstant: 100),
-            
+
             activityIndicatorView.leadingAnchor.constraint(equalTo: pendingContainer.leadingAnchor),
             activityIndicatorView.heightAnchor.constraint(equalToConstant: 30),
             activityIndicatorView.centerYAnchor.constraint(equalTo: pendingContainer.centerYAnchor),
             activityIndicatorView.widthAnchor.constraint(equalTo: activityIndicatorView.heightAnchor),
-            
+
             pendingLabel.leadingAnchor.constraint(equalTo: activityIndicatorView.trailingAnchor, constant: 5),
             pendingLabel.trailingAnchor.constraint(equalTo: pendingContainer.trailingAnchor),
             pendingLabel.heightAnchor.constraint(equalTo: pendingContainer.heightAnchor),
-            
-            auctionDetailRefreshButton.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
-            auctionDetailRefreshButton.heightAnchor.constraint(equalTo: auctionDetailTitleLabel.heightAnchor),
-            auctionDetailRefreshButton.widthAnchor.constraint(equalTo: auctionDetailRefreshButton.heightAnchor),
-            auctionDetailRefreshButton.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
+
+            moreDetailsButton.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
+            moreDetailsButton.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
+            moreDetailsButton.heightAnchor.constraint(equalTo: auctionDetailTitleLabel.heightAnchor),
+            moreDetailsButton.widthAnchor.constraint(equalToConstant: 100),
             
             auctionSpecView.topAnchor.constraint(equalTo: auctionDetailTitleLabel.bottomAnchor, constant: 10),
             auctionSpecView.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
@@ -281,6 +315,45 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         ])
     }
     
+    func createPendingContainer() {
+        pendingContainer = UIView()
+        pendingContainer.isHidden = true
+        pendingContainer.translatesAutoresizingMaskIntoConstraints = false
+        pendingContainer.backgroundColor = UIColor(red: 204/255, green: 255/255, blue: 204/255, alpha: 1)
+        pendingContainer.layer.cornerRadius = 8
+        pendingContainer.tag = 3
+        let pendingContainerTap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+        pendingContainer.addGestureRecognizer(pendingContainerTap)
+        scrollView.addSubview(pendingContainer)
+        
+        activityIndicatorView = UIActivityIndicatorView()
+        activityIndicatorView.startAnimating()
+        activityIndicatorView.color = UIColor(red: 0/255, green: 155/255, blue: 0/255, alpha: 1)
+        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
+        pendingContainer.addSubview(activityIndicatorView)
+        
+        pendingLabel = createTitleLabel(text: "Pending", weight: .light)
+        pendingLabel.font = UIFont.systemFont(ofSize: 12)
+        pendingLabel.textColor = UIColor(red: 0/255, green: 155/255, blue: 0/204, alpha: 1)
+        pendingContainer.addSubview(pendingLabel)
+        
+        NSLayoutConstraint.activate([
+            pendingContainer.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
+            pendingContainer.leadingAnchor.constraint(equalTo: auctionDetailTitleLabel.trailingAnchor, constant: 20),
+            pendingContainer.heightAnchor.constraint(equalTo: auctionDetailTitleLabel.heightAnchor),
+            pendingContainer.widthAnchor.constraint(equalToConstant: 100),
+            
+            activityIndicatorView.leadingAnchor.constraint(equalTo: pendingContainer.leadingAnchor),
+            activityIndicatorView.heightAnchor.constraint(equalToConstant: 30),
+            activityIndicatorView.centerYAnchor.constraint(equalTo: pendingContainer.centerYAnchor),
+            activityIndicatorView.widthAnchor.constraint(equalTo: activityIndicatorView.heightAnchor),
+            
+            pendingLabel.leadingAnchor.constraint(equalTo: activityIndicatorView.trailingAnchor, constant: 5),
+            pendingLabel.trailingAnchor.constraint(equalTo: pendingContainer.trailingAnchor),
+            pendingLabel.heightAnchor.constraint(equalTo: pendingContainer.heightAnchor),
+        ])
+    }
+    
     @objc final func buttonPressed(_ sender: UIButton) {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
@@ -290,20 +363,27 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                 bid()
                 break
             case 1:
-                callAuctionMethod(for: AuctionContract.AuctionMethods.auctionEnd)
+                callAuctionMethod(for: .auctionEnd)
+                break
             case 2:
-                // refresh auction detail
-                print("refresh")
+                // more details button
+                guard let auctionContractAddress = auctionContractAddress else { return }
+                let webVC = WebViewController()
+                webVC.urlString = "https://rinkeby.etherscan.io/address/\(auctionContractAddress.address)"
+                self.navigationController?.pushViewController(webVC, animated: true)
                 break
             case 3:
-                print("claim the final price")
-                setButtonStatus(as: .getTheHighestBid)
-            case 4:
-                print("withdraw your previous bid")
-                setButtonStatus(as: .withdraw)
+                callAuctionMethod(for: .getTheHighestBid)
             case 5:
-                print("transfer the ownership")
-                setButtonStatus(as: .transferToken)
+                callAuctionMethod(for: .transferToken)
+            case 60:
+                callAuctionMethod(for: .withdraw)
+            case 61:
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Withdrawal", detail: InfoText.withdrawPrior)])
+                self.present(infoVC, animated: true, completion: nil)
+            case 62:
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Status", detail: InfoText.auctionStatus)])
+                self.present(infoVC, animated: true, completion: nil)
             default:
                 break
         }
@@ -312,17 +392,10 @@ extension AuctionDetailViewController: UITextFieldDelegate {
     @objc override func tapped(_ sender: UITapGestureRecognizer!) {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
-        
         super.tapped(sender)
         let tag = sender.view?.tag
 
         switch tag {
-            case 2:
-                guard let auctionContractAddress = contractAddress else { return }
-                
-                let webVC = WebViewController()
-                webVC.urlString = "https://rinkeby.etherscan.io/address/\(auctionContractAddress.address)"
-                self.navigationController?.pushViewController(webVC, animated: true)
             case 3:
                 let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Pending Transaction", detail: InfoText.pending)])
                 self.present(infoVC, animated: true, completion: nil)
@@ -331,6 +404,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         }
     }
     
+    // the big button
     final func setButtonStatus(as status: AuctionContract.AuctionMethods) {
         DispatchQueue.main.async { [weak self] in
             guard self?.auctionButtonNarrowConstraint != nil,
@@ -357,14 +431,21 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                     self?.auctionButton.setTitle("End Auction", for: .normal)
                     self?.auctionButton.tag = 1
                 case .getTheHighestBid:
-                    self?.auctionButton.setTitle("Claim the final price", for: .normal)
+                    self?.auctionButtonNarrowConstraint.isActive = false
+                    self?.auctionButtonWideConstraint.isActive = true
+                    self?.auctionButton.setTitle("Claim The Final Bid", for: .normal)
                     self?.auctionButton.tag = 3
-                case .withdraw:
-                    self?.auctionButton.setTitle("Withdraw your preview bid", for: .normal)
-                    self?.auctionButton.tag = 4
                 case .transferToken:
-                    self?.auctionButton.setTitle("Transfer the ownership", for: .normal)
+                    self?.bidTextField.isEnabled = false
+                    self?.bidTextField.alpha = 0
+                    
+                    self?.auctionButtonNarrowConstraint.isActive = false
+                    self?.auctionButtonWideConstraint.isActive = true
+                    
+                    self?.auctionButton.setTitle("Transfer the Ownership", for: .normal)
                     self?.auctionButton.tag = 5
+                default:
+                    break
             }
             
             UIView.animate(withDuration: 0.3) { [weak self] in
@@ -373,30 +454,8 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         }
     }
     
-    final func fetchContractAddress(txHash: String) {
-        Future<TransactionReceipt, PostingError> { promise in
-            Web3swiftService.getReceipt(hash: txHash, promise: promise)
-        }
-        .sink { [weak self] (completion) in
-            switch completion {
-                case .failure(.generalError(reason: let msg)):
-                    self?.alert.showDetail("Error", with: msg, for: self)
-                    break
-                case .finished:
-                    print("contract retrieved")
-                    break
-                default:
-                    break
-            }
-        } receiveValue: { [weak self] (receipt) in
-            guard let contractAddress = receipt.contractAddress else { return }
-            self?.contractAddress = contractAddress
-        }
-        .store(in: &storage)
-    }
-    
     final func bid() {
-        guard isAuctionEnded == false else {
+        guard auctionButtonController.isAuctionEnded == false else {
             self.alert.showDetail("Sorry", with: "The auction has already ended", for: self)
             return
         }
@@ -420,7 +479,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
     }
     
     func callAuctionMethod(for method: AuctionContract.AuctionMethods, amountString: String? = nil) {
-        let content = [
+        var content = [
             StandardAlertContent(
                 index: 0,
                 titleString: "Password",
@@ -444,28 +503,54 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                 alertStyle: .noButton
             )
         ]
-        self.showSpinner {
-            let alertVC = AlertViewController(height: 350, standardAlertContent: content)
-            alertVC.action = { [weak self] (modal, mainVC) in
-                // responses to the main vc's button
-                mainVC.buttonAction = { _ in
-                    guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-                          !password.isEmpty else {
-                        self?.alert.fading(text: "Email cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
-                        return
-                    }
-                    
-                    guard let self = self else { return }
-                    self.dismiss(animated: true, completion: {
+        
+        // auxiliary info to be displayed to the user before the execution
+        let withDrawInfo = StandardAlertContent(
+            index: 2,
+            titleString: "Withdrawal",
+            body: [
+                "": InfoText.withdraw
+            ],
+            messageTextAlignment: .left
+        )
+        
+        switch method {
+            case .withdraw:
+                content.append(withDrawInfo)
+            default:
+                break
+        }
+        
+        let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+        alertVC.action = { [weak self] (modal, mainVC) in
+            // responses to the main vc's button
+            mainVC.buttonAction = { _ in
+                guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                      !password.isEmpty else {
+                    self?.alert.fading(text: "Email cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                    return
+                }
+                
+                guard let self = self else { return }
+                self.dismiss(animated: true, completion: {
+                    self.showSpinner {
+                        
                         Future<WriteTransaction, PostingError> { promise in
-                            guard let contractAddress = self.contractAddress else {
+                            guard let auctionContractAddress = self.auctionContractAddress else {
                                 promise(.failure(.generalError(reason: "Unable to load the address for the auction contract.")))
                                 return
                             }
+                            
+                            // if the socket timed out, reconnect
+                            if let isSocketConnected = self.socketDelegate.socketProvider?.socket.isConnected,
+                               isSocketConnected == false {
+                                self.createSocket()
+                            }
+                            
                             self.transactionService.prepareTransactionForWriting(
                                 method: method.rawValue,
                                 abi: auctionABI,
-                                contractAddress: contractAddress,
+                                contractAddress: auctionContractAddress,
                                 amountString: amountString ?? "0",
                                 promise: promise
                             )
@@ -474,31 +559,44 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                             self.transactionService.executeTransaction(
                                 transaction: transaction,
                                 password: password,
-                                type: .endAuction
+                                type: .AuctionContract
                             )
                         }
                         .flatMap({ (txResult) -> AnyPublisher<Data, PostingError> in
+                            self.txResult = txResult
                             switch method {
                                 case .bid:
+                                    // let's every user involved in the auction (who has previously bid before) know through the push notification that there's been a new bid
                                     let ref = FirebaseService.shared.db.collection("post").document(self.post.documentId)
-                                    if let fcmToken = UserDefaults.standard.string(forKey: UserDefaultKeys.fcmToken) {
+                                    if let fcmToken = UserDefaults.standard.string(forKey: UserDefaultKeys.fcmToken),
+                                       let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) {
                                         ref.updateData([
-                                            "bidderTokens": FieldValue.arrayUnion([fcmToken])
-                                        ])
+                                            "bidderTokens": FieldValue.arrayUnion([fcmToken]),
+                                            "bidders": FieldValue.arrayUnion([userId])
+                                        ], completion: { (error) in
+                                            if let error = error {
+                                                print("firebase error", error)
+                                            }
+                                        })
                                     }
-                                    
+
                                     Messaging.messaging().unsubscribe(fromTopic: self.post.documentId) { error in
                                         print("unsubscribed to \(self.post.documentId ?? "")")
                                     }
-                                    
+
                                     return FirebaseService.shared.sendToTopics(
                                         title: "Auction Bid",
                                         topic: self.post.documentId,
                                         content: "A new bid was made in your auction."
                                     )
                                 case .auctionEnd:
-                                    print("unsub")
+                                    // socket will utimately pick up the topics of the event emitted at the time the "auctionEnd" method is called
+                                    // but setting the isAuctionOfficiallyEnded property here to true as an insurance in case the socket doesn't pick up the topics (i.e. the internet connection failure)
+                                    self.auctionButtonController.isAuctionOfficiallyEnded = true
                                     return FirebaseService.shared.unsubscribeToTopic(topic: self.post.documentId)
+                                case .withdraw:
+                                    NotificationCenter.default.post(name: .auctionDidWithdraw, object: true)
+                                    return Result.Publisher(Data()).eraseToAnyPublisher()
                                 default:
                                     return Result.Publisher(Data()).eraseToAnyPublisher()
                             }
@@ -506,7 +604,6 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                         .sink { (completion) in
                             switch completion {
                                 case .failure(let error):
-                                    print("error", error)
                                     switch error {
                                         case .generalError(reason: let msg):
                                             self.alert.showDetail("Error", with: msg, for: self)
@@ -522,7 +619,6 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                     switch method {
                                         case .auctionEnd:
                                             self.alert.showDetail("Auction Ended", with: "Congratulations. You have officially ended the auction! The winner can now transfer the item and the beneficiary can withdraw the fund.", for: self)
-                                            
                                         case .bid:
                                             self.alert.showDetail("Bid Success!", with: "You have made a successful bid. It'll take a few moment to be reflected on the blockchain.", for: self, completion:  {
                                                 self.bidTextField.text?.removeAll()
@@ -535,197 +631,25 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                             self.alert.showDetail("Success!", with: "You have successfully withdrawn the final bid. It'll be reflected on your wallet soon.", for: self)
                                         case .transferToken:
                                             self.alert.showDetail("Congratulations!", with: "You are now the proud owner of the item. It'll take a few moment to be reflected on the app.", for: self)
+                                            
                                         case .withdraw:
                                             self.alert.showDetail("Bid Withdraw", with: "You have successfully withdrawn the previous bid amount.", for: self)
+                                            // the properties has to be manually refetched because the withDraw method doesn't have the events (which means no topics), therefore doesn't trigger the socket event
+                                            print("self.txResult.txHash", self.txResult.txHash)
+                                            DispatchQueue.main.async {
+                                                self.getAuctionInfo(transactionHash: self.txResult.txHash, contractAddress: self.auctionContractAddress)
+                                            }
                                     }
                                     break
                             }
                         } receiveValue: { (_) in }
                         .store(in: &self.storage)
-                    }) // self.dismiss
-                } // mainVC
-            } // alertVC
-            self.present(alertVC, animated: true, completion: nil)
-        }
+                    } // showSpinner
+                }) // self.dismiss
+            } // mainVC
+        } // alertVC
+        self.present(alertVC, animated: true, completion: nil)
     } // callAuctionMethod
-}
-
-// starting bid
-// current highest bid
-// current highest bidder
-// auction end time
-extension AuctionDetailViewController {
-    final func getAuctionInfo() {
-        guard let auctionHash = post.auctionHash else { return }
-        
-        let auctionInfoLoader = PropertyLoader(
-            propertiesToLoad: self.propertiesToLoad,
-            deploymentHash: auctionHash
-        )
-        
-        isPending = true
-        auctionInfoLoader.initiateLoadSequence()
-            .sink { [weak self] (completion) in
-                switch completion {
-                    case .failure(let error):
-                        print("auctionInfoLoader error", error)
-                    case .finished:
-                        print("get auction info finished", self?.userInfo.uid as Any)
-                }
-                self?.isPending = false
-            } receiveValue: { [weak self] (propertyFetchModels: [SmartContractProperty]) in
-                DispatchQueue.main.async {
-                    // if the count is different, then the arrangedSubview in the stack view of auctionSpecView will go out of bound
-                    if self?.propertiesToLoad.count == propertyFetchModels.count  {
-                        self?.auctionSpecView.fetchedDataArr = propertyFetchModels
-                    }
-                    
-                    // contract address for bidding
-                    self?.contractAddress = auctionInfoLoader.contractAddress
-                    
-                    // socket to receive topics so that the auction specs could be re-updated
-                    // whenever the current user or anybody else calls the method on the auction contract
-                    // the socket will respond
-                    // needs to be in the main thread, otherwise won't work
-                    self?.createSocket(for: auctionInfoLoader.contractAddress)
-                }
-                                
-                // check the auction end time to see if the auction is still active
-                // present the bid button accordingly
-                for case let model in propertyFetchModels where model.propertyName == AuctionContract.AuctionProperties.auctionEndTime.rawValue {
-                    guard let auctionEndDate = model.propertyDesc as? Date else { return }
-                    if auctionEndDate < Date() {
-                        DispatchQueue.main.async {
-                            self?.isAuctionEnded = true
-                        }
-                        self?.setButtonStatus(as: .auctionEnd)
-                        
-                    } else {
-                        self?.setButtonStatus(as: .bid)
-                        
-                        var differenceInSeconds = auctionEndDate.timeIntervalSince(Date())
-                        DispatchQueue.main.async {
-                            self?.isAuctionEnded = false
-                            self?.timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { (Timer) in
-                                if differenceInSeconds > 0 {
-                                    print ("\(differenceInSeconds) seconds")
-                                    differenceInSeconds -= 1
-                                } else {
-                                    self?.isAuctionEnded = true
-                                    self?.setButtonStatus(as: .auctionEnd)
-                                    Timer.invalidate()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            .store(in: &self.storage)
-    }
-    
-    func createSocket(for auctionContractAddress: EthereumAddress, topics: [String]? = nil) {
-        guard socketDelegate == nil else { return }
-        socketDelegate = SocketDelegate(
-            contractAddress: auctionContractAddress,
-            topics: topics,
-            passThroughSubject: PassthroughSubject<[String: Any], PostingError>()
-        )
-        
-        socketDelegate.passThroughSubject
-            .sink(receiveCompletion: { [weak self] (completion) in
-                switch completion {
-                    case .failure(let err):
-                        self?.alert.showDetail("Auction Detail Fetch Error", with: err.localizedDescription, for: self)
-                    case .finished:
-                        print("")
-                        break
-                }
-            }, receiveValue: { [weak self] (WebSocketMessage) in
-                guard let topics = WebSocketMessage["topics"] as? [String],
-                      let txHash = WebSocketMessage["transactionHash"] as? String,
-                      let self = self else { return }
-
-                switch topics {
-                    case _ where topics.contains(Topics.HighestBidIncreased):
-                        self.isPending = true
-                        
-                        print("HighestBidIncreased")
-                        print("txHash", txHash)
-                        // if the auction info is fetched right away, it wouldn't fetch the info from the newly added block
-                        // the transaction needs to be completed before the proper info can be reflected
-                        self.transactionService.confirmEtherTransactionsNoDelay(txHash: txHash)
-                            .sink { (completion) in
-                                switch completion {
-                                    case .failure(let err):
-                                        self.alert.showDetail("Auction Detail Fetch Error", with: err.localizedDescription, for: self)
-                                    case .finished:
-                                        print("spec fetched after mined")
-                                        self.getAuctionInfo()
-                                        break
-                                }
-                                self.isPending = false
-                            } receiveValue: {(_) in
-                            }
-                            .store(in: &self.storage)
-                    default:
-                        print("other events")
-                }
-            })
-            .store(in: &storage)
-    }
-    
-    func createEventListener() {
-        guard let auctionHash = post.auctionHash else { return }
-        Future<TransactionReceipt, PostingError> { promise in
-            Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
-        }
-        .flatMap({ (receipt) -> AnyPublisher<[EventParserResultProtocol], PostingError> in
-            return Future<[EventParserResultProtocol], PostingError> { promise in
-                let web3 = Web3swiftService.web3instance
-                guard let auctionContractAddress = receipt.contractAddress else {
-                    return promise(.failure(.generalError(reason: "Unable to retrieve the auction contract")))
-                }
-                
-                let contract = web3.contract(auctionABI, at: auctionContractAddress, abiVersion: 2)
-                
-//                var filter = EventFilter()
-//                filter.fromBlock = .blockNumber(0)
-//                filter.toBlock = .latest
-                
-                let eventParser = contract?.createEventParser("HighestBidIncreased", filter: nil)
-                
-                var blockNumber: BigUInt!
-                do {
-                    blockNumber = try web3.eth.getBlockNumber()
-                } catch {
-                    promise(.failure(.generalError(reason: "Unable to get the block number.")))
-                }
-
-                do {
-                    if let event = try eventParser?.parseBlockByNumber(UInt64(blockNumber)) {
-                        print("event parser", event)
-                        promise(.success(event))
-                    } else {
-                        promise(.failure(.generalError(reason: "No event.")))
-                    }
-                } catch {
-                    promise(.failure(.generalError(reason: "Unable to parse event.")))
-                }
-            }
-            .eraseToAnyPublisher()
-        })
-        .sink { (completion) in
-            switch completion {
-                case .finished:
-                    break
-                case .failure(let err):
-                    print(err)
-            }
-        } receiveValue: { (event) in
-            print("final event", event)
-        }
-        .store(in: &storage)
-    }
 }
 
 extension AuctionDetailViewController {
@@ -766,3 +690,4 @@ extension AuctionDetailViewController {
         self.view.endEditing(true)
     }
 }
+

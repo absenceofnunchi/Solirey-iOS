@@ -12,6 +12,9 @@ class ListViewController: ParentListViewController<Post> {
     private let userDefaults = UserDefaults.standard
     var segmentedControl: UISegmentedControl!
     private var currentIndex: Int! = 0
+    private var db: Firestore! {
+        return FirebaseService.shared.db
+    }
     
     final override func viewDidLoad() {
         super.viewDidLoad()
@@ -95,7 +98,10 @@ class ListViewController: ParentListViewController<Post> {
                 configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
             case 2:
                 // purchases
-                configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
+//                configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
+                
+                // auction
+                configureAuctionFetch()
             case 3:
                 // posts
                 configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
@@ -107,7 +113,7 @@ class ListViewController: ParentListViewController<Post> {
 
 extension ListViewController: SegmentConfigurable, PostParseDelegate {
     enum Segment: Int, CaseIterable {
-        case buying, selling, purchases, posts
+        case buying, selling, auction, posts
         
         func asString() -> String {
             switch self {
@@ -115,8 +121,8 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                     return NSLocalizedString("Buying", comment: "")
                 case .selling:
                     return NSLocalizedString("Selling", comment: "")
-                case .purchases:
-                    return NSLocalizedString("Purchases", comment: "")
+                case .auction:
+                    return NSLocalizedString("Auction", comment: "")
                 case .posts:
                     return NSLocalizedString("Postings", comment: "")
             }
@@ -154,8 +160,9 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                 configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
             case .selling:
                 configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
-            case .purchases:
-                configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
+            case .auction:
+//                configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
+                configureAuctionFetch()
             case .posts:
                 configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
         }
@@ -163,33 +170,60 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
     
     // MARK: - configureDataFetch
     final func configureDataFetch(isBuyer: Bool, status: [String]) {
-        if let userId = userDefaults.string(forKey: UserDefaultKeys.userId) {
-            FirebaseService.shared.db.collection("post")
-                .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
-                .whereField("status", in: status)
-                .getDocuments() { [weak self] (querySnapshot, err) in
-                    if let err = err {
-                        self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
-                    } else {
-                        defer {
-                            DispatchQueue.main.async {
-                                self?.tableView.reloadData()
-                                self?.delay(1.0) {
-                                    DispatchQueue.main.async {
-                                        self?.refreshControl.endRefreshing()
-                                    }
+        guard let userId = userId else { return }
+        db.collection("post")
+            .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
+            .whereField("status", in: status)
+            .getDocuments() { [weak self] (querySnapshot, error) in
+                if let error = error {
+                    self?.alert.showDetail("Error in Fetching Data", with: error.localizedDescription, for: self)
+                } else {
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                            self?.delay(1.0) {
+                                DispatchQueue.main.async {
+                                    self?.refreshControl.endRefreshing()
                                 }
                             }
                         }
-                        
-                        if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                            self?.postArr.removeAll()
-                            self?.postArr = data
-                        }
+                    }
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        self?.postArr.removeAll()
+                        self?.postArr = data
                     }
                 }
-        } else {
-            self.alert.showDetail("Oops!", with: "Please try re-logging back in!", for: self)
-        }
+            }
+    }
+    
+    // MARK: - configureAuctionFetch()
+    final func configureAuctionFetch() {
+        guard let userId = userId else { return }
+        db.collection("post")
+            .whereField("bidders", arrayContains: userId)
+            .whereField("status", isEqualTo: PostStatus.ready.rawValue)
+            .order(by: "date", descending: true)
+            .getDocuments() { [weak self] (querySnapshot, error) in
+                if let error = error {
+                    self?.alert.showDetail("Error in Fetching Data", with: error.localizedDescription, for: self)
+                } else {
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                            self?.delay(1.0) {
+                                DispatchQueue.main.async {
+                                    self?.refreshControl.endRefreshing()
+                                }
+                            }
+                        }
+                    }
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        self?.postArr.removeAll()
+                        self?.postArr = data
+                    }
+                }
+            }
     }
 }
