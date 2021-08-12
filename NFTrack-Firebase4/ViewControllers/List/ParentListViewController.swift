@@ -68,8 +68,8 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         // How should the operation update the cell once the data has been loaded?
         let updateCellClosure: (UIImage?) -> () = { [weak self] (image) in
             cell.updateAppearanceFor(.fetched(image))
-            guard let strongSelf = self else { return }
-            strongSelf.loadingOperations.removeValue(forKey: indexPath)
+            guard let self = self else { return }
+            self.loadingOperations.removeValue(forKey: indexPath)
         }
         
         // Try to find an existing data loader

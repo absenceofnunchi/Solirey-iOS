@@ -89,8 +89,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
             case .openAuction:
                 guard let auctionHash = post.auctionHash else { return }
-                print("auctionHash", auctionHash)
-
                 Future<TransactionReceipt, PostingError> { promise in
                     Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
                 }

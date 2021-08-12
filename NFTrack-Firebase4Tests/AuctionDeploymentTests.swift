@@ -240,6 +240,7 @@ class AuctionDeploymentTests: XCTestCase {
                     category: category,
                     tokensArr: tokensArr,
                     convertedId: convertedId,
+                    type: "digital",
                     deliveryMethod: deliveryMethod,
                     saleFormat: saleFormat,
                     paymentMethod: paymentMethod,

@@ -667,7 +667,7 @@ extension PostParseDelegate {
         for document in querySnapshot.documents {
             let data = document.data()
             var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat: String!
-            var date, confirmPurchaseDate, transferDate, confirmReceivedDate: Date!
+            var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
             var files, savedBy: [String]?
             data.forEach { (item) in
                 switch item.key {
@@ -725,12 +725,52 @@ extension PostParseDelegate {
                         paymentMethod = item.value as? String
                     case "saleFormat":
                         saleFormat = item.value as? String
+                    case "bidDate":
+                        let timeStamp = item.value as? Timestamp
+                        bidDate = timeStamp?.dateValue()
+                    case "auctionEndDate":
+                        let timeStamp = item.value as? Timestamp
+                        auctionEndDate = timeStamp?.dateValue()
+                    case "auctionTransferredDate":
+                        let timeStamp = item.value as? Timestamp
+                        auctionTransferredDate = timeStamp?.dateValue()
                     default:
                         break
                 }
             }
             
-            let post = Post(documentId: document.documentID, title: title, description: description, date: date, files: files, price: price, mintHash: mintHash, escrowHash: escrowHash, auctionHash: auctionHash, id: id, status: status, sellerUserId: sellerUserId, buyerUserId: buyerUserId, sellerHash: sellerHash, buyerHash: buyerHash, confirmPurchaseHash: confirmPurchaseHash, confirmPurchaseDate: confirmPurchaseDate, transferHash: transferHash, transferDate: transferDate, confirmReceivedHash: confirmReceivedHash, confirmReceivedDate: confirmReceivedDate, savedBy: savedBy, type: type, deliveryMethod: deliveryMethod, paymentMethod: paymentMethod, saleFormat: saleFormat)
+            let post = Post(
+                documentId: document.documentID,
+                title: title,
+                description: description,
+                date: date,
+                files: files,
+                price: price,
+                mintHash: mintHash,
+                escrowHash: escrowHash,
+                auctionHash: auctionHash,
+                id: id,
+                status: status,
+                sellerUserId: sellerUserId,
+                buyerUserId: buyerUserId,
+                sellerHash: sellerHash,
+                buyerHash: buyerHash,
+                confirmPurchaseHash: confirmPurchaseHash,
+                confirmPurchaseDate: confirmPurchaseDate,
+                transferHash: transferHash,
+                transferDate: transferDate,
+                confirmReceivedHash: confirmReceivedHash,
+                confirmReceivedDate: confirmReceivedDate,
+                savedBy: savedBy,
+                type: type,
+                deliveryMethod: deliveryMethod,
+                paymentMethod: paymentMethod,
+                saleFormat: saleFormat,
+                bidDate: bidDate,
+                auctionEndDate: auctionEndDate,
+                auctionTransferredDate: auctionTransferredDate
+            )
+            
             postArr.append(post)
         }
         return postArr

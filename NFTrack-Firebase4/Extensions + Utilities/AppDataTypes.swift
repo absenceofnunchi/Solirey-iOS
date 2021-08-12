@@ -101,8 +101,41 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var deliveryMethod: String!
     var paymentMethod: String!
     var saleFormat: String!
+    var bidDate: Date?
+    var auctionEndDate: Date?
+    var auctionTransferredDate: Date?
     
-    init(documentId: String, title: String, description: String, date: Date, files: [String]?, price: String, mintHash: String, escrowHash: String? = "N/A", auctionHash: String? = "N/A", id: String, status: String, sellerUserId: String, buyerUserId: String?,sellerHash: String, buyerHash: String?, confirmPurchaseHash: String?, confirmPurchaseDate: Date?, transferHash: String?, transferDate: Date?, confirmReceivedHash: String?, confirmReceivedDate: Date?, savedBy: [String]?, type: String, deliveryMethod: String, paymentMethod: String, saleFormat: String) {
+    init(
+        documentId: String,
+        title: String,
+        description: String,
+        date: Date,
+        files: [String]?,
+        price: String,
+        mintHash: String,
+        escrowHash: String? = "N/A",
+        auctionHash: String? = "N/A",
+        id: String,
+        status: String,
+        sellerUserId: String,
+        buyerUserId: String?,
+        sellerHash: String,
+        buyerHash: String?,
+        confirmPurchaseHash: String?,
+        confirmPurchaseDate: Date?,
+        transferHash: String?,
+        transferDate: Date?,
+        confirmReceivedHash: String?,
+        confirmReceivedDate: Date?,
+        savedBy: [String]?,
+        type: String,
+        deliveryMethod: String,
+        paymentMethod: String,
+        saleFormat: String,
+        bidDate: Date?,
+        auctionEndDate: Date?,
+        auctionTransferredDate: Date?
+    ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
         self.title = title
@@ -128,6 +161,9 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.deliveryMethod = deliveryMethod
         self.paymentMethod = paymentMethod
         self.saleFormat = saleFormat
+        self.bidDate = bidDate
+        self.auctionEndDate = auctionEndDate
+        self.auctionTransferredDate = auctionTransferredDate
     }
 }
 
@@ -224,7 +260,24 @@ enum PurchaseStatus: String {
 /// when the seller transfers the token: transferred
 /// when the transaction is complete: complete
 enum PostStatus: String {
-    case ready, pending, complete, aborted, resold, transferred
+    case ready, pending, aborted, complete, resold, transferred 
+}
+
+enum AuctionStatus: String {
+    case ready, bid, ended, transferred
+    
+    var toDisplay: String! {
+        switch self {
+            case .bid:
+                return "Bid"
+            case .ended:
+                return "Auction Ended"
+            case .transferred:
+                return "Transferred"
+            default:
+                return "ready"
+        }
+    }
 }
 
 // MARK:- PositionStatus

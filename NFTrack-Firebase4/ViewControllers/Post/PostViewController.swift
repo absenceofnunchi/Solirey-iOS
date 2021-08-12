@@ -136,256 +136,269 @@ class PostViewController: ParentPostViewController {
     /// 8. update the firestore with the urls of the photos
     /// 9. delete the photos from the local storage
     
-    final override func processMint(price: String?, itemTitle: String, desc: String, category: String, convertedId: String, tokensArr: Set<String>, userId: String, deliveryMethod: String, saleFormat: String, paymentMethod: String) {
-        
+    final override func processMint(
+        price: String?,
+        itemTitle: String,
+        desc: String,
+        category: String,
+        convertedId: String,
+        tokensArr: Set<String>,
+        userId: String,
+        deliveryMethod: String,
+        saleFormat: String,
+        paymentMethod: String
+    ) {
         guard let price = price, !price.isEmpty else {
             self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
             return
         }
         
-        // escrow deployment
-        self.transactionService.prepareTransactionForNewContract(contractABI: purchaseABI2, bytecode: purchaseBytecode2, value: String(price), completion: { [weak self] (transaction, error) in
-            guard let `self` = self else { return }
-            if let error = error {
-                switch error {
-                    case .invalidAmountFormat:
-                        self.alert.showDetail("Error", with: "The price is in a wrong format", for: self)
-                    case .contractLoadingError:
-                        self.alert.showDetail("Error", with: "Escrow Contract Loading Error", for: self)
-                    case .createTransactionIssue:
-                        self.alert.showDetail("Error", with: "Escrow Contract Transaction Issue", for: self)
-                    case .retrievingEstimatedGasError:
-                        self.alert.showDetail("Error", with: "There was an error getting the estimating the gas limit.", for: self)
-                    case .retrievingCurrentAddressError:
-                        self.alert.showDetail("Error", with: "There was an error getting your account address.", for: self)
-                    default:
-                        self.alert.showDetail("Error", with: "There was an error deploying your escrow contract.", for: self)
+        guard let NFTrackAddress = NFTrackAddress else {
+            self.alert.showDetail("Sorry", with: "There was an error loading the minting contract address.", for: self)
+            return
+        }
+        
+        let content = [
+            StandardAlertContent(
+                titleString: "",
+                body: [AlertModalDictionary.passwordSubtitle: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            ),
+            StandardAlertContent(
+                titleString: "Transaction Options",
+                body: [AlertModalDictionary.gasLimit: "", AlertModalDictionary.gasPrice: "", AlertModalDictionary.nonce: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            )]
+        
+        self.hideSpinner {
+            DispatchQueue.main.async {
+                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+                alertVC.action = { [weak self] (modal, mainVC) in
+                    mainVC.buttonAction = { _ in
+                        guard let self = self else { return }
+                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                              !password.isEmpty else {
+                            self
+                                .alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                            return
+                        }
+                        
+                        self.dismiss(animated: true, completion: {
+                            self.progressModal = ProgressModalViewController(postType: .tangible)
+                            self.progressModal.titleString = "Posting In Progress"
+                            self.present(self.progressModal, animated: true, completion: {
+                                self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress)
+                                
+                                var txPackageArr = [TxPackage]()
+                                print("STEP 1")
+                                Future<TxPackage, PostingError> { promise in
+                                    self.transactionService.createMintTransaction(promise)
+                                }
+                                .flatMap({ (txPackage) -> AnyPublisher<BigUInt, PostingError> in
+                                    txPackageArr.append(txPackage)
+                                    guard let contractAddress = Web3swiftService.currentAddress else {
+                                        return Fail(error: PostingError.retrievingCurrentAddressError)
+                                            .eraseToAnyPublisher()
+                                    }
+                                    return Future<BigUInt, PostingError> { promise in
+                                        do {
+                                            // get the current nonce so that we can increment it manually
+                                            // the rapid creation of transactions back to back results in the same nonce
+                                            // this is true even if nonce is set to .pending
+                                            print("STEP 2")
+                                            let nonce = try Web3swiftService.web3instance.eth.getTransactionCount(address: contractAddress)
+                                            promise(.success(nonce))
+                                        } catch {
+                                            promise(.failure(.generalError(reason: error.localizedDescription)))
+                                        }
+                                    }
+                                    .eraseToAnyPublisher()
+                                })
+                                .flatMap { (nonce) -> AnyPublisher<TxPackage, PostingError> in
+                                    print("nonce", nonce)
+                                    print("advance", nonce.advanced(by: 1))
+                                    print("STEP 3")
+                                    return Future<TxPackage, PostingError> { promise in
+                                        self.transactionService.prepareTransactionForNewContractWithGasEstimate(
+                                            contractABI: purchaseABI2,
+                                            bytecode: purchaseBytecode2,
+                                            value: price,
+                                            nonce: nonce.advanced(by: 1),
+                                            promise: promise
+                                        )
+                                    }
+                                    .eraseToAnyPublisher()
+                                }
+                                .flatMap { (txPackage2) -> AnyPublisher<[TxPackage], PostingError> in
+                                    txPackageArr.append(txPackage2)
+                                    return Future<[TxPackage], PostingError> { promise in
+                                        print("STEP 4")
+                                        self.transactionService.calculateTotalGasCost(with: txPackageArr, promise: promise)
+                                        let update: [String: PostProgress] = ["update": .estimatGas]
+                                        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                    }
+                                    .eraseToAnyPublisher()
+                                }
+                                // execute the transactions and get the receipts in an array
+                                .flatMap { (txPackages) -> AnyPublisher<[TxResult], PostingError> in
+                                    let update: [String: PostProgress] = ["update": .deployingEscrow]
+                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                    
+                                    print("STEP 5")
+                                    let results = txPackages.map { self.transactionService.executeTransaction(transaction: $0.transaction, password: password, type: $0.type) }
+                                    return Publishers.MergeMany(results)
+                                        .collect()
+                                        .eraseToAnyPublisher()
+                                }
+                                // instantiate the socket, parse the receipts, and create the firebase entry as soon as the socket receives the data
+                                // createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
+                                .flatMap { (txResults) -> AnyPublisher<Int, PostingError> in
+                                    var topicsRetainer: [String]!
+                                    return Future<[String: Any], PostingError> { promise in
+                                        print("STEP 6")
+                                        self.socketDelegate.promise = promise
+                                    }
+                                    .flatMap({ (webSocketMessage) -> AnyPublisher<[String?], PostingError> in
+                                        let update: [String: PostProgress] = ["update": .minting]
+                                        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                        
+                                        if let topics = webSocketMessage["topics"] as? [String] {
+                                            topicsRetainer = topics
+                                        }
+                                        // upload images/files to the Firebase Storage and get the array of URLs
+                                        if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
+                                            print("STEP 7")
+                                            let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+                                                return Future<String?, PostingError> { promise in
+                                                    self.uploadFileWithPromise(
+                                                        fileURL: previewData.filePath,
+                                                        userId: self.userId,
+                                                        promise: promise
+                                                    )
+                                                }.eraseToAnyPublisher()
+                                            }
+                                            return Publishers.MergeMany(fileURLs)
+                                                .collect()
+                                                .eraseToAnyPublisher()
+                                        } else {
+                                            // if there are none to upload, return an empty array
+                                            return Result.Publisher([] as [String]).eraseToAnyPublisher()
+                                        }
+                                    })
+                                    // upload the details to Firestore
+                                    .flatMap { (urlStrings) -> AnyPublisher<Int, PostingError> in
+                                        var escrowHash: String!
+                                        var mintHash: String!
+                                        var senderAddress: String!
+                                        for txResult in txResults {
+                                            if txResult.txType == .deploy {
+                                                escrowHash = txResult.txHash
+                                            } else {
+                                                mintHash = txResult.txHash
+                                            }
+                                            senderAddress = txResult.senderAddress
+                                        }
+                                        print("STEP 8")
+                                        
+                                        return Future<Int, PostingError> { promise in
+                                            self.transactionService.createFireStoreEntry(
+                                                documentId: &self.documentId,
+                                                senderAddress: senderAddress,
+                                                escrowHash: escrowHash,
+                                                auctionHash: "N/A",
+                                                mintHash: mintHash,
+                                                itemTitle: itemTitle,
+                                                desc: desc,
+                                                price: price,
+                                                category: category,
+                                                tokensArr: tokensArr,
+                                                convertedId: convertedId,
+                                                type: "tangible",
+                                                deliveryMethod: deliveryMethod,
+                                                saleFormat: saleFormat,
+                                                paymentMethod: paymentMethod,
+                                                topics: topicsRetainer,
+                                                urlStrings: urlStrings,
+                                                promise: promise
+                                            )
+                                        }
+                                        .eraseToAnyPublisher()
+                                    }
+                                    .eraseToAnyPublisher()
+                                } // socket delegate
+                                .sink { (completion) in
+                                    switch completion {
+                                        case .failure(let error):
+                                            switch error {
+                                                case .fileUploadError(.fileNotAvailable):
+                                                    self.alert.showDetail("Error", with: "No image file was found.", for: self)
+                                                case .retrievingEstimatedGasError:
+                                                    self.alert.showDetail("Error", with: "There was an error retrieving the gas estimation.", for: self)
+                                                case .retrievingGasPriceError:
+                                                    self.alert.showDetail("Error", with: "There was an error retrieving the current gas price.", for: self)
+                                                case .contractLoadingError:
+                                                    self.alert.showDetail("Error", with: "There was an error loading your contract ABI.", for: self)
+                                                case .retrievingCurrentAddressError:
+                                                    self.alert.showDetail("Error", with: "There was an error retrieving your current account address.", for: self)
+                                                case .createTransactionIssue:
+                                                    self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
+                                                case .insufficientFund(let msg):
+                                                    self.alert.showDetail("Error", with: msg, height: 500, alignment: .left, for: self)
+                                                case .emptyAmount:
+                                                    self.alert.showDetail("Error", with: "The ETH value cannot be blank for the transaction.", for: self)
+                                                case .invalidAmountFormat:
+                                                    self.alert.showDetail("Error", with: "The ETH value is in an incorrect format.", for: self)
+                                                case .generalError(reason: let msg):
+                                                    self.alert.showDetail("Error", with: msg, for: self)
+                                                default:
+                                                    self.alert.showDetail("Error", with: "There was an error creating your post.", for: self)
+                                            }
+                                        case .finished:
+                                            let update: [String: PostProgress] = ["update": .images]
+                                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                            
+                                            DispatchQueue.main.async {
+                                                self.titleTextField.text?.removeAll()
+                                                self.priceTextField.text?.removeAll()
+                                                self.descTextView.text?.removeAll()
+                                                self.idTextField.text?.removeAll()
+                                                self.deliveryMethodLabel.text?.removeAll()
+                                                self.saleMethodLabel.text?.removeAll()
+                                                self.pickerLabel.text?.removeAll()
+                                                self.tagTextField.tokens.removeAll()
+                                                self.paymentMethodLabel.text?.removeAll()
+                                            }
+                                            
+                                            if self.previewDataArr.count > 0 {
+                                                self.previewDataArr.removeAll()
+                                                self.imagePreviewVC.data.removeAll()
+                                                DispatchQueue.main.async {
+                                                    self.imagePreviewVC.collectionView.reloadData()
+                                                }
+                                            }
+                                            
+                                    }
+                                } receiveValue: { (receivedValue) in
+                                    print("receivedValue", receivedValue)
+                                    self.socketDelegate.disconnectSocket()
+                                }
+                                .store(in: &self.storage)
+                            }) // progress modal
+                        }) // alert VC dismissal
+                    } // main VC button action
+                    self?.present(alertVC, animated: true, completion: nil)
                 }
             }
-            
-            // minting
-            self.transactionService.prepareTransactionForMinting { (mintTransaction, mintError) in
-                if let error = mintError {
-                    switch error {
-                        case .contractLoadingError:
-                            self.alert.showDetail("Error", with: "Minting Contract Loading Error", for: self)
-                        case .createTransactionIssue:
-                            self.alert.showDetail("Error", with: "Minting Contract Transaction Issue", for: self)
-                        case .retrievingEstimatedGasError:
-                            self.alert.showDetail("Error", with: "There was an error getting the estimating the gas limit.", for: self)
-                        default:
-                            self.alert.showDetail("Error", with: "There was an error minting your token.", for: self)
-                    }
-                }
-                
-//                /// check the balance of the wallet against the deposit into the escrow + gas limit for two transactions: minting and deploying the contract
-//                let localDatabase = LocalDatabase()
-//                guard let wallet = localDatabase.getWallet(), let walletAddress = EthereumAddress(wallet.address) else {
-//                    self.alert.showDetail("Sorry", with: "There was an error retrieving your wallet.", for: self)
-//                    return
-//                }
-//
-//                var balanceResult: BigUInt!
-//                do {
-//                    balanceResult = try Web3swiftService.web3instance.eth.getBalance(address: walletAddress)
-//                } catch {
-//                    self.alert.showDetail("Sorry", with: "An error retrieving the balance of your wallet.", for: self)
-//                    return
-//                }
-//
-//                guard let currentGasPrice = try? Web3swiftService.web3instance.eth.getGasPrice() else {
-//                    self.alert.showDetail("Sorry", with: "An error retreiving the current gas price.", for: self)
-//                    return
-//                }
-//
-//                guard let estimatedGasForMinting = estimatedGasForMinting,
-//                      let estimatedGasForDeploying = estimatedGasForDeploying,
-//                      let priceInWei = Web3.Utils.parseToBigUInt(String(price), units: .eth),
-//                      ((estimatedGasForMinting + estimatedGasForDeploying) * currentGasPrice + priceInWei) < balanceResult else {
-//                    self.alert.showDetail("Sorry", with: "Insufficient funds in your wallet to cover both the gas fee and the deposit for the escrow.", height: 300, for: self)
-//                    return
-//                }
-                
-                // escrow deployment transaction
-                if let transaction = transaction {
-                    self.hideSpinner {}
-                    let content = [
-                        StandardAlertContent(
-                            index: 0,
-                            titleString: "Password",
-                            body: [AlertModalDictionary.passwordSubtitle: ""],
-                            isEditable: true,
-                            fieldViewHeight: 50,
-                            messageTextAlignment: .left,
-                            alertStyle: .withCancelButton
-                        ),
-                        StandardAlertContent(
-                            index: 1,
-                            titleString: "Details",
-                            body: [
-                                AlertModalDictionary.gasLimit: "",
-                                AlertModalDictionary.gasPrice: "",
-                                AlertModalDictionary.nonce: ""
-                            ],
-                            isEditable: true,
-                            fieldViewHeight: 50,
-                            messageTextAlignment: .left,
-                            alertStyle: .noButton
-                        )
-                    ]
-                    
-                    DispatchQueue.main.async {
-                        let alertVC = AlertViewController(height: 400, standardAlertContent: content)
-                        alertVC.action = { [weak self] (modal, mainVC) in
-                            // responses to the main vc's button
-                            mainVC.buttonAction = { _ in
-                                guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-                                      !password.isEmpty else {
-                                    self?.alert.fading(text: "Email cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
-                                    return
-                                }
-                                
-                                guard let self = self else { return }
-                                self.dismiss(animated: true, completion: {
-                                    self.progressModal = ProgressModalViewController(postType: .tangible)
-                                    self.progressModal.titleString = "Posting In Progress"
-                                    self.present(self.progressModal, animated: true, completion: {
-                                        DispatchQueue.global(qos: .userInitiated).async {
-                                            do {
-                                                // create new contract
-                                                let result = try transaction.send(password: password, transactionOptions: nil)
-                                                print("deployment result", result)
-                                                let update: [String: PostProgress] = ["update": .deployingEscrow]
-                                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                                
-                                                // mint transaction
-                                                if let mintTransaction = mintTransaction {
-                                                    do {
-                                                        let mintResult = try mintTransaction.send(password: password,transactionOptions: nil)
-                                                        print("mintResult", mintResult)
-                                                        
-                                                        // firebase
-                                                        let senderAddress = result.transaction.sender!.address
-                                                        let ref = self.db.collection("post")
-                                                        let id = ref.document().documentID
-                                                        
-                                                        // for deleting photos afterwards
-                                                        self.documentId = id
-                                                        
-                                                        // txHash is either minting or transferring the ownership
-                                                        self.db.collection("post").document(id).setData([
-                                                            "sellerUserId": userId,
-                                                            "senderAddress": senderAddress,
-                                                            "escrowHash": result.hash,
-                                                            "mintHash": mintResult.hash,
-                                                            "date": Date(),
-                                                            "title": itemTitle,
-                                                            "description": desc,
-                                                            "price": price,
-                                                            "category": category,
-                                                            "status": PostStatus.ready.rawValue,
-                                                            "tags": Array(tokensArr),
-                                                            "itemIdentifier": convertedId,
-                                                            "isReviewed": false,
-                                                            "type": "digital",
-                                                            "deliveryMethod": deliveryMethod,
-                                                            "saleFormat": saleFormat,
-                                                            "paymentMethod": paymentMethod
-                                                        ]) { (error) in
-                                                            if let error = error {
-                                                                self.alert.showDetail("Error", with: error.localizedDescription, for: self)
-                                                            } else {
-                                                                /// no need for a socket if you don't have images to upload?
-                                                                /// show the success alert here
-                                                                /// apply the same for resell
-                                                                //                                                                    self.socketDelegate = SocketDelegate(contractAddress: "0x656f9bf02fa8eff800f383e5678e699ce2788c5c")
-                                                                //                                                                    self.socketDelegate.delegate = self
-                                                            }
-                                                        }
-                                                    } catch Web3Error.nodeError(let desc) {
-                                                        if let index = desc.firstIndex(of: ":") {
-                                                            let newIndex = desc.index(after: index)
-                                                            let newStr = desc[newIndex...]
-                                                            DispatchQueue.main.async {
-                                                                self.alert.showDetail("Alert", with: String(newStr), for: self)
-                                                            }
-                                                        }
-                                                    } catch Web3Error.transactionSerializationError {
-                                                        DispatchQueue.main.async {
-                                                            self.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
-                                                        }
-                                                    } catch Web3Error.connectionError {
-                                                        DispatchQueue.main.async {
-                                                            self.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
-                                                        }
-                                                    } catch Web3Error.dataError {
-                                                        DispatchQueue.main.async {
-                                                            self.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
-                                                        }
-                                                    } catch Web3Error.inputError(_) {
-                                                        DispatchQueue.main.async {
-                                                            self.alert.showDetail("Alert", with: "Failed to sign the transaction. \n\nPlease try logging out of your wallet (not the Buroku account) and logging back in. \n\nEnsure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
-                                                        }
-                                                    } catch Web3Error.processingError(let desc) {
-                                                        DispatchQueue.main.async {
-                                                            self.alert.showDetail("Alert", with: desc, height: 320, for: self)
-                                                        }
-                                                    } catch {
-                                                        self.alert.showDetail("Error", with: error.localizedDescription, for: self)
-                                                    }
-                                                }
-                                                
-                                            } catch Web3Error.nodeError(let desc) {
-                                                if let index = desc.firstIndex(of: ":") {
-                                                    let newIndex = desc.index(after: index)
-                                                    let newStr = desc[newIndex...]
-                                                    DispatchQueue.main.async {
-                                                        self.alert.showDetail("Alert", with: String(newStr), for: self)
-                                                    }
-                                                }
-                                            } catch Web3Error.transactionSerializationError {
-                                                DispatchQueue.main.async {
-                                                    self.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
-                                                }
-                                            } catch Web3Error.connectionError {
-                                                DispatchQueue.main.async {
-                                                    self.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
-                                                }
-                                            } catch Web3Error.dataError {
-                                                DispatchQueue.main.async {
-                                                    self.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
-                                                }
-                                            } catch Web3Error.inputError(_) {
-                                                DispatchQueue.main.async {
-                                                    self.alert.showDetail("Alert", with: "Failed to sign the transaction. \n\nPlease try logging out of your wallet (not the Buroku account) and logging back in. \n\nEnsure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
-                                                }
-                                            } catch Web3Error.processingError(let desc) {
-                                                DispatchQueue.main.async {
-                                                    self.alert.showDetail("Alert", with: desc, height: 320, for: self)
-                                                }
-                                            } catch {
-                                                self.alert.showDetail("Error", with: error.localizedDescription, for: self)
-                                            }
-                                        } // DispatchQueue.global background
-                                    }) // end of self.present completion for ProgressModalVC
-                                }) // end of self.dismiss completion
-                            } // mainVC
-                        } // alertVC
-                        self.present(alertVC, animated: true, completion: nil)
-                    }
-                } // transaction
-            } // end of prepareTransactionForMinting
-        }) // end of prepareTransactionForNewContract
+        }
     }
 }
 
-//extension PostViewController {
-//    final override func didReceiveMessage(topics: [String]) {
-//        super.didReceiveMessage(topics: topics)
-//        self.socketDelegate.disconnectSocket()
-//        print("did receive")
-//    }
-//}
 
 extension PostViewController {
     override var inputView: UIView? {

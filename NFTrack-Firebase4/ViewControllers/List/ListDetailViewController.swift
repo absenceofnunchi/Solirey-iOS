@@ -401,132 +401,134 @@ extension ListDetailViewController {
                     )
                 ]
                 
-                let alertVC = AlertViewController(standardAlertContent: content)
-                alertVC.action = { [weak self ] (modal, mainVC) in
-                    mainVC.buttonAction = { _ in
-                        guard  let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-                               !password.isEmpty else {
-                            self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
-                            return
-                        }
-                        
-                        self?.dismiss(animated: true, completion: {
-                            self?.showSpinner {
-                                DispatchQueue.global(qos: .userInitiated).async {
-                                    do {
-                                        let result = try transaction.send(password: password, transactionOptions: nil)
-                                        if let status = status {
-                                            switch status {
-                                                case .ready:
-                                                    break
-                                                case .pending:
-                                                    /// tag 2
-                                                    /// confirmedPurchase
-                                                    let buyerHash = Web3swiftService.currentAddressString
-                                                    FirebaseService.shared.db.collection("post").document(self!.post.documentId).updateData([
-                                                        "status": status.rawValue,
-                                                        "buyerHash": buyerHash ?? "NA",
-                                                        "buyerUserId": self?.userId ?? "NA",
-                                                        "\(method)Hash": result.hash,
-                                                        "\(method)Date": Date()
-                                                    ], completion: { (error) in
-                                                        if let error = error {
-                                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
-                                                        } else {
-                                                            /// send the push notification to the seller
-                                                            guard let `self` = self else { return }
-                                                            self.sendNotification(sender: self.userId, recipient: self.post.sellerUserId, content: "Your item has been purchased!", docID: self.post.documentId) { [weak self] (error) in
-                                                                if let error = error {
-                                                                    print("error", error)
+                DispatchQueue.main.async {
+                    let alertVC = AlertViewController(standardAlertContent: content)
+                    alertVC.action = { (modal, mainVC) in
+                        mainVC.buttonAction = { _ in
+                            guard  let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                                   !password.isEmpty else {
+                                self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                                return
+                            }
+                            
+                            self?.dismiss(animated: true, completion: {
+                                self?.showSpinner {
+                                    DispatchQueue.global(qos: .userInitiated).async {
+                                        do {
+                                            let result = try transaction.send(password: password, transactionOptions: nil)
+                                            if let status = status {
+                                                switch status {
+                                                    case .ready:
+                                                        break
+                                                    case .pending:
+                                                        /// tag 2
+                                                        /// confirmedPurchase
+                                                        let buyerHash = Web3swiftService.currentAddressString
+                                                        FirebaseService.shared.db.collection("post").document(self!.post.documentId).updateData([
+                                                            "status": status.rawValue,
+                                                            "buyerHash": buyerHash ?? "NA",
+                                                            "buyerUserId": self?.userId ?? "NA",
+                                                            "\(method)Hash": result.hash,
+                                                            "\(method)Date": Date()
+                                                        ], completion: { (error) in
+                                                            if let error = error {
+                                                                self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
+                                                            } else {
+                                                                /// send the push notification to the seller
+                                                                guard let `self` = self else { return }
+                                                                self.sendNotification(sender: self.userId, recipient: self.post.sellerUserId, content: "Your item has been purchased!", docID: self.post.documentId) { [weak self] (error) in
+                                                                    if let error = error {
+                                                                        print("error", error)
+                                                                    }
+                                                                    
+                                                                    self?.alert.showDetail("Success!", with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.", alignment: .left, for: self, completion:  {
+                                                                        self?.getStatus()
+                                                                        self?.navigationController?.popViewController(animated: true)
+                                                                    })
                                                                 }
-                                                                
-                                                                self?.alert.showDetail("Success!", with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.", alignment: .left, for: self, completion:  {
-                                                                    self?.getStatus()
+                                                            }
+                                                        })
+                                                    case .complete:
+                                                        /// tag 3
+                                                        /// confirmRecieved
+                                                        FirebaseService.shared.db.collection("post").document(self!.post.documentId).updateData([
+                                                            "status": status.rawValue,
+                                                            "\(method)Hash": result.hash,
+                                                            "\(method)Date": Date()
+                                                        ], completion: { (error) in
+                                                            if let error = error {
+                                                                self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
+                                                            } else {
+                                                                /// send the push notification to the seller
+                                                                guard let `self` = self else { return }
+                                                                self.sendNotification(sender: self.userId, recipient: self.post.sellerUserId, content: "Your item has been received by the buyer!", docID: self.post.documentId) { [weak self] (error) in
+                                                                    if let error = error {
+                                                                        print("error", error)
+                                                                    }
+                                                                    self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", alignment: .left, for: self, completion:  {
+                                                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
+                                                                        self?.navigationController?.popViewController(animated: true)
+                                                                    })
+                                                                }
+                                                            }
+                                                        })
+                                                    case .aborted:
+                                                        FirebaseService.shared.db.collection("post").document(self!.post.documentId).delete() { err in
+                                                            if let err = err {
+                                                                self?.alert.showDetail("Error", with: err.localizedDescription, for: self)
+                                                            } else {
+                                                                self?.alert.showDetail("Success!", with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.", for: self, completion:  {
+                                                                    self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
                                                                     self?.navigationController?.popViewController(animated: true)
                                                                 })
                                                             }
                                                         }
-                                                    })
-                                                case .complete:
-                                                    /// tag 3
-                                                    /// confirmRecieved
-                                                    FirebaseService.shared.db.collection("post").document(self!.post.documentId).updateData([
-                                                        "status": status.rawValue,
-                                                        "\(method)Hash": result.hash,
-                                                        "\(method)Date": Date()
-                                                    ], completion: { (error) in
-                                                        if let error = error {
-                                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
-                                                        } else {
-                                                            /// send the push notification to the seller
-                                                            guard let `self` = self else { return }
-                                                            self.sendNotification(sender: self.userId, recipient: self.post.sellerUserId, content: "Your item has been received by the buyer!", docID: self.post.documentId) { [weak self] (error) in
-                                                                if let error = error {
-                                                                    print("error", error)
-                                                                }
-                                                                self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", alignment: .left, for: self, completion:  {
-                                                                    self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
-                                                                    self?.navigationController?.popViewController(animated: true)
-                                                                })
-                                                            }
-                                                        }
-                                                    })
-                                                case .aborted:
-                                                    FirebaseService.shared.db.collection("post").document(self!.post.documentId).delete() { err in
-                                                        if let err = err {
-                                                            self?.alert.showDetail("Error", with: err.localizedDescription, for: self)
-                                                        } else {
-                                                            self?.alert.showDetail("Success!", with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.", for: self, completion:  {
-                                                                self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
-                                                                self?.navigationController?.popViewController(animated: true)
-                                                            })
-                                                        }
-                                                    }
-                                                default:
-                                                    break
+                                                    default:
+                                                        break
+                                                }
                                             }
-                                        }
-                                    } catch Web3Error.nodeError(let desc) {
-                                        if let index = desc.firstIndex(of: ":") {
-                                            let newIndex = desc.index(after: index)
-                                            let newStr = desc[newIndex...]
+                                        } catch Web3Error.nodeError(let desc) {
+                                            if let index = desc.firstIndex(of: ":") {
+                                                let newIndex = desc.index(after: index)
+                                                let newStr = desc[newIndex...]
+                                                DispatchQueue.main.async {
+                                                    self?.alert.showDetail("Alert", with: String(newStr), for: self)
+                                                }
+                                            }
+                                        } catch Web3Error.transactionSerializationError {
                                             DispatchQueue.main.async {
+                                                self?.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
+                                            }
+                                        } catch Web3Error.connectionError {
+                                            DispatchQueue.main.async {
+                                                self?.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
+                                            }
+                                        } catch Web3Error.dataError {
+                                            DispatchQueue.main.async {
+                                                self?.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
+                                            }
+                                        } catch Web3Error.inputError(_) {
+                                            DispatchQueue.main.async {
+                                                self?.alert.showDetail("Alert", with: "Failed to sign the transaction. You may be using an incorrect password. \n\nOtherwise, please try logging out of your wallet (not the NFTrack account) and logging back in. Ensure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
+                                            }
+                                        } catch Web3Error.processingError(let desc) {
+                                            DispatchQueue.main.async {
+                                                self?.alert.showDetail("Alert", with: desc, height: 320, for: self)
+                                            }
+                                        } catch {
+                                            if let index = error.localizedDescription.firstIndex(of: "(") {
+                                                let newStr = error.localizedDescription.prefix(upTo: index)
                                                 self?.alert.showDetail("Alert", with: String(newStr), for: self)
                                             }
+                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                         }
-                                    } catch Web3Error.transactionSerializationError {
-                                        DispatchQueue.main.async {
-                                            self?.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
-                                        }
-                                    } catch Web3Error.connectionError {
-                                        DispatchQueue.main.async {
-                                            self?.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
-                                        }
-                                    } catch Web3Error.dataError {
-                                        DispatchQueue.main.async {
-                                            self?.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
-                                        }
-                                    } catch Web3Error.inputError(_) {
-                                        DispatchQueue.main.async {
-                                            self?.alert.showDetail("Alert", with: "Failed to sign the transaction. You may be using an incorrect password. \n\nOtherwise, please try logging out of your wallet (not the NFTrack account) and logging back in. Ensure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
-                                        }
-                                    } catch Web3Error.processingError(let desc) {
-                                        DispatchQueue.main.async {
-                                            self?.alert.showDetail("Alert", with: desc, height: 320, for: self)
-                                        }
-                                    } catch {
-                                        if let index = error.localizedDescription.firstIndex(of: "(") {
-                                            let newStr = error.localizedDescription.prefix(upTo: index)
-                                            self?.alert.showDetail("Alert", with: String(newStr), for: self)
-                                        }
-                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
                                     }
                                 }
-                            }
-                        })
-                    } // mainVC button action
-                } // alertVC
-                self?.present(alertVC, animated: true, completion: nil)
+                            })
+                        } // mainVC button action
+                    } // alertVC
+                    self?.present(alertVC, animated: true, completion: nil)
+                }
             }
         }
     }

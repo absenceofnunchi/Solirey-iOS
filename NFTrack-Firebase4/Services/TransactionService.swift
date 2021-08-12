@@ -312,6 +312,7 @@ extension TransactionService {
         bytecode: String,
         value: String = "0",
         parameters: [AnyObject]? = nil,
+        nonce: BigUInt? = nil,
         promise: @escaping (Result<TxPackage, PostingError>) -> Void
     ) {
         guard let currentAddress = Web3swiftService.currentAddress else {
@@ -320,6 +321,7 @@ extension TransactionService {
         }
                 
         var options = TransactionOptions.defaultOptions
+        options.nonce = (nonce != nil) ? .manual(nonce!) : .pending
         options.from = currentAddress
         options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
         options.gasPrice = TransactionOptions.GasPricePolicy.automatic
@@ -889,6 +891,7 @@ extension TransactionService {
         category: String,
         tokensArr: Set<String>,
         convertedId: String,
+        type: String,
         deliveryMethod: String,
         saleFormat: String,
         paymentMethod: String,
@@ -913,11 +916,11 @@ extension TransactionService {
             "description": desc,
             "price": price,
             "category": category,
-            "status": PostStatus.ready.rawValue,
+            "status": AuctionStatus.ready.rawValue,
             "tags": Array(tokensArr),
             "itemIdentifier": convertedId,
             "isReviewed": false,
-            "type": "digital",
+            "type": type,
             "deliveryMethod": deliveryMethod,
             "saleFormat": saleFormat,
             "files": urlStrings,

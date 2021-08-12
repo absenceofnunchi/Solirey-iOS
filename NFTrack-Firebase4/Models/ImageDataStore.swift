@@ -10,9 +10,6 @@ import UIKit.UIImage
 
 class ImageDataStore<T> {
     fileprivate var posts: [T]!
-    public var numberOfImage: Int {
-        return posts.count
-    }
     
     public func loadImage(at index: Int) -> DataLoadOperation? {
         if (0..<posts.count).contains(index) {

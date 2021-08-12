@@ -8,6 +8,7 @@
 /*
  Abstract:
  The screen for an auction prior to bidding
+ Update the status and the date of each step: bid, ended, and transferred.  These three are for the ProgressCell indicator.
  */
 
 import UIKit
@@ -94,7 +95,6 @@ class AuctionDetailViewController: ParentDetailViewController {
     final let LIST_DETAIL_MARGIN: CGFloat = 10
     final var propertiesToLoad: [AuctionContract.AuctionProperties]!
     lazy final var auctionDetailArr: [SmartContractProperty] = propertiesToLoad.map { SmartContractProperty(propertyName: $0.toDisplay(), propertyDesc: "loading...")}
-
     lazy final var auctionButtonNarrowConstraint: NSLayoutConstraint! = auctionButton.widthAnchor.constraint(equalTo: bidContainer.widthAnchor, multiplier: 0.45)
     lazy final var auctionButtonWideConstraint: NSLayoutConstraint! = auctionButton.widthAnchor.constraint(equalTo: bidContainer.widthAnchor, multiplier: 1)
     final var auctionContractAddress: EthereumAddress!
@@ -124,6 +124,9 @@ class AuctionDetailViewController: ParentDetailViewController {
     final var auctionButtonController: AuctionButtonController!
     final var pendingReturnButtonConstraints = [NSLayoutConstraint]()
     final var pendingReturnActivityIndicatorView: UIActivityIndicatorView!
+    final var db: Firestore! {
+        return FirebaseService.shared.db
+    }
     
     init(auctionContractAddress: EthereumAddress, myContractAddress: EthereumAddress) {
         super.init(nibName: nil, bundle: nil)
@@ -567,12 +570,15 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                             switch method {
                                 case .bid:
                                     // let's every user involved in the auction (who has previously bid before) know through the push notification that there's been a new bid
-                                    let ref = FirebaseService.shared.db.collection("post").document(self.post.documentId)
                                     if let fcmToken = UserDefaults.standard.string(forKey: UserDefaultKeys.fcmToken),
                                        let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) {
-                                        ref.updateData([
+                                        
+                                        // the update of the status and the date is to display the progress on ProgressCell
+                                        self.db.collection("post").document(self.post.documentId).updateData([
                                             "bidderTokens": FieldValue.arrayUnion([fcmToken]),
-                                            "bidders": FieldValue.arrayUnion([userId])
+                                            "bidders": FieldValue.arrayUnion([userId]),
+                                            "status": AuctionStatus.bid.rawValue,
+                                            "bidDate": Date()
                                         ], completion: { (error) in
                                             if let error = error {
                                                 print("firebase error", error)
@@ -593,9 +599,20 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                     // socket will utimately pick up the topics of the event emitted at the time the "auctionEnd" method is called
                                     // but setting the isAuctionOfficiallyEnded property here to true as an insurance in case the socket doesn't pick up the topics (i.e. the internet connection failure)
                                     self.auctionButtonController.isAuctionOfficiallyEnded = true
+                                    
+                                    self.db.collection("post").document(self.post.documentId).updateData([
+                                        "status": AuctionStatus.ended.rawValue,
+                                        "auctionEndDate": Date()
+                                    ])
                                     return FirebaseService.shared.unsubscribeToTopic(topic: self.post.documentId)
                                 case .withdraw:
                                     NotificationCenter.default.post(name: .auctionDidWithdraw, object: true)
+                                    return Result.Publisher(Data()).eraseToAnyPublisher()
+                                case .transferToken:
+                                    self.db.collection("post").document(self.post.documentId).updateData([
+                                        "status": AuctionStatus.transferred.rawValue,
+                                        "auctionTransferredDate": Date()
+                                    ])
                                     return Result.Publisher(Data()).eraseToAnyPublisher()
                                 default:
                                     return Result.Publisher(Data()).eraseToAnyPublisher()
@@ -619,6 +636,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                     switch method {
                                         case .auctionEnd:
                                             self.alert.showDetail("Auction Ended", with: "Congratulations. You have officially ended the auction! The winner can now transfer the item and the beneficiary can withdraw the fund.", for: self)
+                                            self.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
                                         case .bid:
                                             self.alert.showDetail("Bid Success!", with: "You have made a successful bid. It'll take a few moment to be reflected on the blockchain.", for: self, completion:  {
                                                 self.bidTextField.text?.removeAll()
@@ -631,7 +649,6 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                             self.alert.showDetail("Success!", with: "You have successfully withdrawn the final bid. It'll be reflected on your wallet soon.", for: self)
                                         case .transferToken:
                                             self.alert.showDetail("Congratulations!", with: "You are now the proud owner of the item. It'll take a few moment to be reflected on the app.", for: self)
-                                            
                                         case .withdraw:
                                             self.alert.showDetail("Bid Withdraw", with: "You have successfully withdrawn the previous bid amount.", for: self)
                                             // the properties has to be manually refetched because the withDraw method doesn't have the events (which means no topics), therefore doesn't trigger the socket event

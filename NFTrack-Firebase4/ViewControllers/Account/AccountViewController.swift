@@ -18,7 +18,8 @@ import FirebaseAuth
 class AccountViewController: UIViewController {
     let alert = Alerts()
     let localDatabase = LocalDatabase()
-    
+    var scrollView: UIScrollView!
+    var balanceCardView: BalanceCardView!
     var tableView: UITableView!
     var data: [AccountMenu] = [
         AccountMenu(imageTitle: "person.circle", imageColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), titleString: NSLocalizedString("Update Profile", comment: "")),
@@ -29,7 +30,6 @@ class AccountViewController: UIViewController {
         AccountMenu(imageTitle: "envelope.circle", imageColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), titleString: NSLocalizedString("Feedback", comment: "")),
         AccountMenu(imageTitle: "trash.circle", imageColor: UIColor(red: 49/255, green: 11/255, blue: 11/255, alpha: 1), titleString: NSLocalizedString("Delete Account", comment: ""))
     ]
-    
     var logoutButton: UIButton!
     
     override func viewDidLoad() {
@@ -50,10 +50,18 @@ class AccountViewController: UIViewController {
 
 extension AccountViewController: TableViewConfigurable {
     func configureUI() {
+        scrollView = UIScrollView()
+        scrollView.automaticallyAdjustsScrollIndicatorInsets = false
+        scrollView.contentInsetAdjustmentBehavior = .never
+        scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: 800)
+        scrollView.delegate = self
+        view.addSubview(scrollView)
+        scrollView.fill()
+        
         tableView = configureTableView(delegate: self, dataSource: self, height: 70, cellType: AccountCell.self, identifier: AccountCell.identifier)
         tableView.isScrollEnabled = false
         tableView.separatorStyle = .none
-        view.addSubview(tableView)
+        scrollView.addSubview(tableView)
     }
     
     func setConstraints() {

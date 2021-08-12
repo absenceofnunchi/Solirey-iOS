@@ -39,7 +39,7 @@ struct PostProgressData {
     init(postType: PostType) {
         switch postType {
             case .tangible:
-                phases = [.estimatGas, .deployingEscrow, .images, .minting]
+                phases = [.estimatGas, .deployingEscrow, .minting, .images]
             case .digital(.onlineDirect):
                 phases = [.estimatGas, .images, .deployingEscrow, .minting]
             case .digital(.openAuction):

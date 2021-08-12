@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		49054D0626C5B2D000ECCB58 /* BalanceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */; };
 		490D275D267ECEA1003500C1 /* ProgressModalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */; };
 		490D2762267ECF5F003500C1 /* PartialPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D2761267ECF5F003500C1 /* PartialPresentationController.swift */; };
 		49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B6A266ECEE70031A756 /* ProfileViewController.swift */; };
@@ -110,6 +111,7 @@
 		4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */; };
 		4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */; };
 		4988F0B426BE20BC00CD7678 /* PurchasesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4988F0B326BE20BC00CD7678 /* PurchasesViewController.swift */; };
+		4988F0D126BF721400CD7678 /* ListVCTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4988F0D026BF721400CD7678 /* ListVCTest.swift */; };
 		499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702A52672E0BA001DD80A /* ToolBarView.swift */; };
 		499702AB2673F75E001DD80A /* MessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AA2673F75E001DD80A /* MessageCell.swift */; };
 		499702B02674533E001DD80A /* ParentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702AF2674533E001DD80A /* ParentCell.swift */; };
@@ -165,6 +167,7 @@
 /* Begin PBXFileReference section */
 		185327341381F410AFB911BC /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; sourceTree = "<group>"; };
 		2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceCardView.swift; sourceTree = "<group>"; };
 		490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressModalViewController.swift; sourceTree = "<group>"; };
 		490D2761267ECF5F003500C1 /* PartialPresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartialPresentationController.swift; sourceTree = "<group>"; };
 		49221B6A266ECEE70031A756 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
@@ -273,6 +276,7 @@
 		4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecDisplayView.swift; sourceTree = "<group>"; };
 		4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyLoader.swift; sourceTree = "<group>"; };
 		4988F0B326BE20BC00CD7678 /* PurchasesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchasesViewController.swift; sourceTree = "<group>"; };
+		4988F0D026BF721400CD7678 /* ListVCTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListVCTest.swift; sourceTree = "<group>"; };
 		499702A52672E0BA001DD80A /* ToolBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolBarView.swift; sourceTree = "<group>"; };
 		499702AA2673F75E001DD80A /* MessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCell.swift; sourceTree = "<group>"; };
 		499702AF2674533E001DD80A /* ParentCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentCell.swift; sourceTree = "<group>"; };
@@ -456,6 +460,7 @@
 				495FB36726B9F9500047E91D /* NFTrack_Firebase4Tests.swift */,
 				495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */,
 				495FB37E26BB8A6F0047E91D /* AuctionButtonTest.swift */,
+				4988F0D026BF721400CD7678 /* ListVCTest.swift */,
 				4964E4742641B007005B3268 /* Info.plist */,
 			);
 			path = "NFTrack-Firebase4Tests";
@@ -495,6 +500,7 @@
 				4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */,
 				495FD2D726892FDB00F1D81D /* StarRatingView.swift */,
 				4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */,
+				49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -1093,6 +1099,7 @@
 				49D59C762663326500107F79 /* SocketDelegate.swift in Sources */,
 				49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */,
 				492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */,
+				49054D0626C5B2D000ECCB58 /* BalanceCardView.swift in Sources */,
 				49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */,
 				493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */,
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
@@ -1128,6 +1135,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4988F0D126BF721400CD7678 /* ListVCTest.swift in Sources */,
 				495FB33B26B70D000047E91D /* AuctionDeploymentTests.swift in Sources */,
 				495FB36826B9F9500047E91D /* NFTrack_Firebase4Tests.swift in Sources */,
 				495FB37F26BB8A6F0047E91D /* AuctionButtonTest.swift in Sources */,

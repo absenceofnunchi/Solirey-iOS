@@ -125,6 +125,8 @@ class DigitalAssetViewController: ParentPostViewController {
                             self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.CONTENT_SIZE_HEIGHT_WITH_AUCTION_FIELDS)
                         }
                     }
+                default:
+                    break
             }
         }
     }
@@ -367,10 +369,10 @@ class DigitalAssetViewController: ParentPostViewController {
         saleFormat: String,
         paymentMethod: String
     ) {
-        guard let contractAddress = NFTrackAddress?.address else {
-            self.alert.showDetail("Sorry", with: "There was an error loading the contract address.", for: self)
-            return
-        }
+//        guard let contractAddress = NFTrackAddress?.address else {
+//            self.alert.showDetail("Sorry", with: "There was an error loading the contract address.", for: self)
+//            return
+//        }
 //        self.socketDelegate = SocketDelegate(contractAddress: contractAddress)
         
         let content = [
@@ -527,6 +529,7 @@ class DigitalAssetViewController: ParentPostViewController {
                                                     category: category,
                                                     tokensArr: tokensArr,
                                                     convertedId: convertedId,
+                                                    type: "digital",
                                                     deliveryMethod: deliveryMethod,
                                                     saleFormat: saleFormat,
                                                     paymentMethod: paymentMethod,
@@ -858,6 +861,7 @@ class DigitalAssetViewController: ParentPostViewController {
                                             category: category,
                                             tokensArr: tokensArr,
                                             convertedId: convertedId,
+                                            type: "digital",
                                             deliveryMethod: deliveryMethod,
                                             saleFormat: saleFormat,
                                             paymentMethod: paymentMethod,

@@ -5,6 +5,14 @@
 //  Created by J C on 2021-08-06.
 //
 
+/*
+ Abstract:
+ Fetches the purchased items from Firestore and displays it.
+ The purchased items are anything with their status as "complete".
+ This implies all items including tangible items (escrow, direct), digital (online direct, open auction).
+ The items will be displayed here until the user decides to resell, at which point, the item will show on ListVC.
+ */
+
 import UIKit
 import Firebase
 
