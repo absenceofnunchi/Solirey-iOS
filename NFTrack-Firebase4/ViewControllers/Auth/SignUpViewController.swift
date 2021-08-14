@@ -22,27 +22,8 @@ class SignUpViewController: UIViewController {
     private var additionalLabel: UILabel!
     private var toggleButton: UIButton!
     private let alert = Alerts()
-    
-    lazy var ipadNoKeyboard: [NSLayoutConstraint] = [
-        containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-        containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-        containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-        containerView.heightAnchor.constraint(equalToConstant: 380),
-    ]
-    
-    lazy var mobileNoKeyboard: [NSLayoutConstraint] = [
-        containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-        containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-        containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-        containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.5),
-    ]
-    
-    lazy var withKeyboard: [NSLayoutConstraint] = [
-        containerView.topAnchor.constraint(equalTo: passwordsDontMatch.bottomAnchor, constant: 10),
-        containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-        containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-        containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.3),
-    ]
+    lazy private var topConstraint: NSLayoutConstraint = containerView.topAnchor.constraint(equalTo: passwordsDontMatch.bottomAnchor, constant: 10)
+    lazy private var centerConstraint: NSLayoutConstraint = containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -95,6 +76,7 @@ extension SignUpViewController {
         emailTextField.placeholder = "Enter your email"
             emailTextField.autocapitalizationType = .none
         emailTextField.autocorrectionType = .no
+        emailTextField.textContentType = .emailAddress
         textFields.append(emailTextField)
         emailTextField.setLeftPaddingPoints(10)
         emailTextField.translatesAutoresizingMaskIntoConstraints = false
@@ -123,6 +105,9 @@ extension SignUpViewController {
         passwordTextField.layer.borderWidth = 1
         passwordTextField.layer.borderColor = UIColor.gray.cgColor
         passwordTextField.layer.cornerRadius = 10
+        passwordTextField.isSecureTextEntry = true
+        passwordTextField.autocorrectionType = .no
+        passwordTextField.textContentType = .newPassword
         passwordTextField.placeholder = "Create a new password"
         textFields.append(passwordTextField)
         passwordTextField.setLeftPaddingPoints(10)
@@ -134,6 +119,9 @@ extension SignUpViewController {
         repeatPasswordTextField.layer.borderWidth = 1
         repeatPasswordTextField.layer.borderColor = UIColor.gray.cgColor
         repeatPasswordTextField.layer.cornerRadius = 10
+        repeatPasswordTextField.isSecureTextEntry = true
+        repeatPasswordTextField.autocorrectionType = .no
+        repeatPasswordTextField.textContentType = .newPassword
         repeatPasswordTextField.placeholder = "Enter your password again"
         textFields.append(repeatPasswordTextField)
         repeatPasswordTextField.setLeftPaddingPoints(10)
@@ -174,13 +162,27 @@ extension SignUpViewController {
     }
     
     func setConstraints() {
+        topConstraint.isActive = false
+        centerConstraint.isActive = true
+        
+        var constraints = [NSLayoutConstraint]()
         if UIDevice.current.userInterfaceIdiom == .pad {
-            NSLayoutConstraint.activate(ipadNoKeyboard)
+            constraints.append(contentsOf: [
+                centerConstraint,
+                containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+                containerView.heightAnchor.constraint(equalToConstant: 500)
+            ])
         }else{
-            NSLayoutConstraint.activate(mobileNoKeyboard)
+            constraints.append(contentsOf: [
+                centerConstraint,
+                containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+                containerView.heightAnchor.constraint(equalToConstant: 420)
+            ])
         }
         
-        NSLayoutConstraint.activate([
+        constraints.append(contentsOf: [
             // paswords don't match label
             passwordsDontMatch.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
             passwordsDontMatch.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -238,6 +240,8 @@ extension SignUpViewController {
             toggleButton.widthAnchor.constraint(equalTo: additionalContainer.widthAnchor, multiplier: 0.2),
             toggleButton.heightAnchor.constraint(equalToConstant: 40)
         ])
+        
+        NSLayoutConstraint.activate(constraints)
     }
     
     // MARK: - Button Handler
@@ -379,14 +383,28 @@ extension SignUpViewController {
                         self?.alert.showDetail("Sorry", with: error!.localizedDescription, for: self)
                         return
                     }
-                    
+                                        
                     let createRequest = user.createProfileChangeRequest()
                     createRequest.displayName = displayName
                     createRequest.commitChanges { (error) in
                         if let error = error {
                             self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                         } else {
-                            self?.navigationController?.popViewController(animated: true)
+                            print("displayName", displayName)
+                            FirebaseService.shared.db.collection("user").document(user.uid).setData([
+                                "photoURL": "NA",
+                                "displayName": displayName,
+                                "uid": user.uid,
+                                "memberSince": Date()
+                            ], completion: { (error) in
+                                if let error = error {
+                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                                } else {
+                                    DispatchQueue.main.async {
+                                        self?.navigationController?.popViewController(animated: true)
+                                    }
+                                }
+                            })
                         }
                     }
                 }
@@ -420,26 +438,18 @@ extension SignUpViewController {
 
             //Check keyboards Y position and according to that move view up and down
             if keyBoardFrameY >= UIScreen.main.bounds.size.height {
-                NSLayoutConstraint.deactivate(withKeyboard)
-                
-                if UIDevice.current.userInterfaceIdiom == .pad {
-                    NSLayoutConstraint.activate(ipadNoKeyboard)
-                } else {
-                    NSLayoutConstraint.activate(mobileNoKeyboard)
-                }
+                UIView.animate(withDuration: 3, delay: 0, options: .curveEaseInOut) { [weak self] in
+                    self?.centerConstraint.isActive = true
+                    self?.topConstraint.isActive = false
+                    self?.view.layoutIfNeeded()
+                } completion: { (_) in }
             } else {
-                if UIDevice.current.userInterfaceIdiom == .pad {
-                    NSLayoutConstraint.deactivate(ipadNoKeyboard)
-                } else {
-                    NSLayoutConstraint.deactivate(mobileNoKeyboard)
-                }
-                
-                NSLayoutConstraint.activate(withKeyboard)
-                UIView.animate(withDuration: 1) {
-                    self.containerView.layoutIfNeeded()
-                }
+                UIView.animate(withDuration: 3, delay: 0, options: .curveEaseInOut) { [weak self] in
+                    self?.centerConstraint.isActive = false
+                    self?.topConstraint.isActive = true
+                    self?.view.layoutIfNeeded()
+                } completion: { (_) in }
             }
         }
     }
-            
 }

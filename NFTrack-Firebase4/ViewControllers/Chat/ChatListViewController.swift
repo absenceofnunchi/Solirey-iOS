@@ -49,7 +49,13 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
             displayName = post.buyerDisplayName
         }
         
-        let userInfo = UserInfo(email: nil, displayName: displayName, photoURL: nil, uid: userId)
+        let userInfo = UserInfo(
+            email: nil,
+            displayName: displayName,
+            photoURL: nil,
+            uid: userId,
+            memberSince: nil
+        )
         
         let chatVC = ChatViewController()
         chatVC.post = post

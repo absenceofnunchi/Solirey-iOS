@@ -21,12 +21,25 @@ class SignInViewController: UIViewController {
     private var toggleButton: UIButton!
     private let dissolveAnimator = DissolveTransitionAnimator()
     private let alert = Alerts()
-    
+    lazy private var centerConstraint: NSLayoutConstraint = containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+    lazy private var topConstraint: NSLayoutConstraint = containerView.topAnchor.constraint(equalTo: warningLabel.bottomAnchor, constant: 5)
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
         configureUI()
         setConstraints()
+    }
+    
+    // MARK: - viewWillAppear
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.addKeyboardObserver()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.removeKeyboardObserver()
     }
 }
 
@@ -61,6 +74,7 @@ extension SignInViewController {
         passwordTextField.layer.borderWidth = 1
         passwordTextField.layer.borderColor = UIColor.gray.cgColor
         passwordTextField.layer.cornerRadius = 10
+        passwordTextField.textContentType = .password
         passwordTextField.placeholder = "Enter your password"
         passwordTextField.setLeftPaddingPoints(10)
         textFields.append(passwordTextField)
@@ -71,6 +85,7 @@ extension SignInViewController {
         emailTextField = UITextField()
         emailTextField.delegate = self
         emailTextField.autocapitalizationType = .none
+        emailTextField.textContentType = .emailAddress
         emailTextField.autocorrectionType = .no
         emailTextField.layer.borderWidth = 1
         emailTextField.layer.cornerRadius = 10
@@ -114,25 +129,39 @@ extension SignInViewController {
     }
     
     func setConstraints() {
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            NSLayoutConstraint.activate([
-                // container view
-                containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-                containerView.heightAnchor.constraint(equalToConstant: 350),
-            ])
-        }else{
-            NSLayoutConstraint.activate([
-                // container view
-                containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-                containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.2),
-            ])
-        }
+        centerConstraint.isActive = true
+        topConstraint.isActive = false
+
+        var constraints = [NSLayoutConstraint]()
         
-        NSLayoutConstraint.activate([
+        constraints.append(contentsOf: [
+            // container view
+            topConstraint,
+            centerConstraint,
+            containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.2),
+        ])
+        
+//        if UIDevice.current.userInterfaceIdiom == .pad {
+//            constraints.append(contentsOf: [
+//                // container view
+//                containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//                containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+//                containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+//                containerView.heightAnchor.constraint(equalToConstant: 350),
+//            ])
+//        }else{
+//            constraints.append(contentsOf: [
+//                // container view
+//                centerConstraint,
+//                containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//                containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+//                containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.2),
+//            ])
+//        }
+        
+        constraints.append(contentsOf: [
             // warning label
             warningLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 100),
             warningLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -176,6 +205,8 @@ extension SignInViewController {
             toggleButton.widthAnchor.constraint(equalTo: additionalContainer.widthAnchor, multiplier: 0.3),
             toggleButton.heightAnchor.constraint(equalToConstant: 40)
         ])
+        
+        NSLayoutConstraint.activate(constraints)
     }
     
     @objc func buttonHandler(_ sender: UIButton!) {
@@ -323,6 +354,45 @@ extension SignInViewController {
                 }
             }
             // [END headless_email_auth]
+        }
+    }
+}
+
+extension SignInViewController {
+    // MARK: - addKeyboardObserver
+    func addKeyboardObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardNotifications(notification:)),
+                                               name: UIResponder.keyboardWillChangeFrameNotification,
+                                               object: nil)
+    }
+    
+    // MARK: - removeKeyboardObserver
+    func removeKeyboardObserver(){
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+    }
+    
+    // MARK: - keyboardNotifications
+    // This method will notify when keyboard appears/ dissapears
+    @objc func keyboardNotifications(notification: NSNotification) {
+        if let userInfo = notification.userInfo {
+            // here we will get frame of keyBoard (i.e. x, y, width, height)
+            let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+            let keyBoardFrameY = keyBoardFrame!.origin.y
+            
+            //Check keyboards Y position and according to that move view up and down
+            if keyBoardFrameY >= UIScreen.main.bounds.size.height {
+                UIView.animate(withDuration: 3, delay: 0, options: .curveEaseInOut) { [weak self] in
+                    self?.centerConstraint.isActive = true
+                    self?.topConstraint.isActive = false
+                    self?.view.layoutIfNeeded()
+                } completion: { (_) in }
+            } else {
+                UIView.animate(withDuration: 3, delay: 0, options: .curveEaseInOut) { [weak self] in
+                    self?.centerConstraint.isActive = false
+                    self?.topConstraint.isActive = true
+                    self?.view.layoutIfNeeded()
+                } completion: { (_) in }
+            }
         }
     }
 }

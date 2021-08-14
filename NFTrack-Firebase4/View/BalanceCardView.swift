@@ -8,13 +8,13 @@
 import UIKit
 
 class BalanceCardView: UIView {
-    var startingColor = UIColor(red: 175/255, green: 122/255, blue: 197/255, alpha: 1).cgColor
-    var finishingColor = UIColor(red: 215/255, green: 189/255, blue: 226/255, alpha: 1).cgColor
-    let backgroundColorArr = [UIColor(red: 175/255, green: 122/255, blue: 197/255, alpha: 1), UIColor(red: 255/255, green: 144/255, blue: 107/255, alpha: 1)]
+    var startingColor: UIColor = UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1)
+    var finishingColor: UIColor = UIColor(red: 217/255, green: 158/255, blue: 172/255, alpha: 1)
+    lazy var backgroundColorArr: [CGColor] = [startingColor.cgColor, finishingColor.cgColor]
     var titleLabel: UILabel!
     var subtitleLabel: UILabel!
-//    var balanceAnimationView: BalanceAnimationView!
-    var cardNumberLabel: UILabel!
+    var balanceLabel: UILabel!
+    var walletAddressLabel: UILabel!
     var expiryLabel: UILabel!
     
     init() {
@@ -37,7 +37,7 @@ extension BalanceCardView {
     
     override func draw(_ rect: CGRect) {
         guard let context = UIGraphicsGetCurrentContext() else { return }
-        context.drawLinearGradient(in: self.bounds, startingWith: startingColor, finishingWith: finishingColor)
+        context.drawLinearGradient(in: self.bounds, startingWith: startingColor.cgColor, finishingWith: finishingColor.cgColor)
         
         drawPattern(arcCenter: .zero, radius: self.bounds.height - 50)
         drawPattern(arcCenter: CGPoint(x: self.bounds.maxX, y: self.bounds.minY), radius: self.bounds.height / 3)
@@ -48,7 +48,7 @@ extension BalanceCardView {
 extension BalanceCardView {
     func configure() {
         self.isOpaque = false
-        self.backgroundColor = backgroundColorArr[0]
+        self.backgroundColor = startingColor
         self.layer.cornerRadius = 10
         self.clipsToBounds = true
         self.layer.masksToBounds = true
@@ -64,24 +64,25 @@ extension BalanceCardView {
         
         // subtitle
         subtitleLabel = UILabel()
-        subtitleLabel.text = "CARD BALANCE"
+        subtitleLabel.text = "WALLET BALANCE"
         subtitleLabel.textColor = .white
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         subtitleLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
         self.addSubview(subtitleLabel)
         
-        // balanceAnimationView
-//        balanceAnimationView = BalanceAnimationView()
-//        balanceAnimationView.translatesAutoresizingMaskIntoConstraints = false
-//        self.addSubview(balanceAnimationView)
+        // balanceLabel
+        balanceLabel = UILabel()
+        balanceLabel.textColor = .white
+        balanceLabel.sizeToFit()
+        balanceLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(balanceLabel)
         
         // card number label
-        cardNumberLabel = UILabel()
-        cardNumberLabel.text = "**** **** **** 156"
-        cardNumberLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
-        cardNumberLabel.textColor = .white
-        cardNumberLabel.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(cardNumberLabel)
+        walletAddressLabel = UILabel()
+        walletAddressLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        walletAddressLabel.textColor = .white
+        walletAddressLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(walletAddressLabel)
         
         // expiry label
         expiryLabel = UILabel()
@@ -99,23 +100,22 @@ extension BalanceCardView {
             // title label
             titleLabel.topAnchor.constraint(equalTo: self.layoutMarginsGuide.topAnchor),
             titleLabel.leadingAnchor.constraint(equalTo: self.layoutMarginsGuide.leadingAnchor),
-            //            titleLabel.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 1/5),
             titleLabel.heightAnchor.constraint(equalTo: self.heightAnchor, multiplier: 1/5),
             
             // subtitle label
             subtitleLabel.leadingAnchor.constraint(equalTo: self.layoutMarginsGuide.leadingAnchor),
-            subtitleLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor, constant: -10),
+            subtitleLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor, constant: -30),
             
-            // balanceAnimationView
-//            balanceAnimationView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 5),
-//            balanceAnimationView.leadingAnchor.constraint(equalTo: self.layoutMarginsGuide.leadingAnchor),
-//            balanceAnimationView.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.5),
-//            balanceAnimationView.heightAnchor.constraint(equalToConstant: 50),
+            // balance Label
+            balanceLabel.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 5),
+            balanceLabel.leadingAnchor.constraint(equalTo: self.layoutMarginsGuide.leadingAnchor),
+            balanceLabel.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.8),
+            balanceLabel.heightAnchor.constraint(equalToConstant: 50),
             
             // card number label
-            cardNumberLabel.bottomAnchor.constraint(equalTo: self.layoutMarginsGuide.bottomAnchor),
-            cardNumberLabel.leadingAnchor.constraint(equalTo: self.layoutMarginsGuide.leadingAnchor),
-            cardNumberLabel.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.4),
+            walletAddressLabel.bottomAnchor.constraint(equalTo: self.layoutMarginsGuide.bottomAnchor),
+            walletAddressLabel.leadingAnchor.constraint(equalTo: self.layoutMarginsGuide.leadingAnchor),
+            walletAddressLabel.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.8),
             
             // expiry label
             expiryLabel.trailingAnchor.constraint(equalTo: self.layoutMarginsGuide.trailingAnchor),

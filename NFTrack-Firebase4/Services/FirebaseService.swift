@@ -401,6 +401,7 @@ extension FirebaseService: PostParseDelegate {
                         promise(.failure(.apiError(APIError.decodingError)))
                         return
                     }
+                    print("convertedJson.intValue", convertedJson.intValue)
                     promise(.success(convertedJson.intValue))
                 } catch {
                     promise(.failure(.apiError(APIError.decodingError)))

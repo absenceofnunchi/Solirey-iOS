@@ -66,7 +66,6 @@ class LocalDatabase {
         
         do {
             let result = try mainContext.fetch(requestWallet)
-            print("result", result)
             for item in result {
                 mainContext.delete(item)
             }

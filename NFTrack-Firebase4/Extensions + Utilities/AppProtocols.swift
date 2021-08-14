@@ -459,14 +459,21 @@ protocol UsernameBannerConfigurable where Self: UIViewController {
 
 extension UsernameBannerConfigurable {
     func fetchUserData(id: String) {
-        DispatchQueue.global(qos: .utility).async {
+        DispatchQueue.global(qos: .userInitiated).async {
             let docRef = FirebaseService.shared.db.collection("user").document(id)
             docRef.getDocument { [weak self] (document, error) in
                 if let document = document, document.exists {
                     if let data = document.data() {
                         let displayName = data[UserDefaultKeys.displayName] as? String
                         let photoURL = data[UserDefaultKeys.photoURL] as? String
-                        let userInfo = UserInfo(email: nil, displayName: displayName!, photoURL: photoURL, uid: id)
+                        let memberSince = data[UserDefaultKeys.memberSince] as? Timestamp
+                        let userInfo = UserInfo(
+                            email: nil,
+                            displayName: displayName!,
+                            photoURL: photoURL,
+                            uid: id,
+                            memberSince: memberSince?.dateValue()
+                        )
                         self?.userInfo = userInfo
                     }
                 } else {

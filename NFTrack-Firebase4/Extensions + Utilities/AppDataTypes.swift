@@ -369,12 +369,14 @@ struct UserInfo {
     let displayName: String
     let photoURL: String?
     let uid: String?
+    let memberSince: Date?
 }
 
 struct UserDefaultKeys {
     static let userId: String = "userId"
     static let displayName: String = "displayName"
     static let photoURL: String = "photoURL"
+    static let memberSince: String = "memberSince"
     static let filterSettings: String = "filterSettings"
     static let fcmToken: String = "fcmToken"
 }
@@ -640,7 +642,7 @@ struct SmartContractProperty {
 /// the keys of the dictionary for displaying the alert modal as well as parsing the user input from the modal
 struct AlertModalDictionary {
     static let passwordTitle = "Password"
-    static let emailSubtitle = "Please Enter the email of your account"
+    static let emailSubtitle = "Please enter the email of your account"
     static let passwordSubtitle = "Please Enter Your Password"
     static let gasLimit = "Gas Limit"
     static let gasPrice = "Gas Price"

@@ -9,50 +9,36 @@ import UIKit
 
 class UnregisteredWalletViewController: UIViewController, ModalConfigurable {
     var closeButton: UIButton!
-    var backgroundAnimator: UIViewPropertyAnimator!
-    let galleries: [String] = ["1", "2"]
-    var pvc: UIPageViewController!
+    private var backgroundAnimator: UIViewPropertyAnimator!
+    final let galleries: [String] = ["1", "2"]
+    private var pvc: UIPageViewController!
+    lazy private var centerConstraint: NSLayoutConstraint = pvc.view.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+    lazy private var topConstraint: NSLayoutConstraint = pvc.view.topAnchor.constraint(equalTo: view.topAnchor, constant: 100)
     
     // MARK: - viewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = .white
+        self.hideKeyboardWhenTappedAround()
         configureCloseButton()
         setButtonConstraints()
         configurePageVC()
         setConstraints()
+        
+        let swipeDown = UISwipeGestureRecognizer(target: self, action: #selector(swiped(_:)))
+        swipeDown.direction = .down
+        view.addGestureRecognizer(swipeDown)
     }
     
     // MARK: - viewWillAppear
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        UIView.animateKeyframes(withDuration: 0.6, delay: 0.0, animations: {
-            UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 0.4) {
-                self.pvc.view.alpha = 1
-                self.pvc.view.transform = .identity
-            }
-        },
-        completion: nil
-        )
-        
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         self.addKeyboardObserver()
     }
     
-    // MARK: - viewWillDisappear
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
-        UIView.animateKeyframes(withDuration: 0.3, delay: 0.0, animations: {
-            UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 0.5) {
-                self.pvc.view.alpha = 0
-                self.pvc.view.transform = CGAffineTransform(translationX: 0, y: 80)
-            }
-        },
-        completion: nil
-        )
-        
         self.removeKeyboardObserver()
     }
 }
@@ -80,11 +66,15 @@ extension UnregisteredWalletViewController {
     
     // MARK: - setSinglePageConstraints
     func setConstraints() {
+        topConstraint.isActive = false
+        centerConstraint.isActive = true
+        
         guard let pv = pvc.view else { return }
         if UIDevice.current.userInterfaceIdiom == .pad {
             NSLayoutConstraint.activate([
                 // container view
-                pv.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+                topConstraint,
+                centerConstraint,
                 pv.centerXAnchor.constraint(equalTo: view.centerXAnchor),
                 pv.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 1),
                 pv.heightAnchor.constraint(equalToConstant: 350),
@@ -92,12 +82,16 @@ extension UnregisteredWalletViewController {
         }else{
             NSLayoutConstraint.activate([
                 // container view
+                centerConstraint,
                 pv.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                pv.centerYAnchor.constraint(equalTo: view.centerYAnchor),
                 pv.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 1),
-                pv.heightAnchor.constraint(equalTo: pv.widthAnchor, multiplier: 1.2),
+                pv.heightAnchor.constraint(equalToConstant: 400),
             ])
         }
+    }
+    
+    @objc func swiped(_ sender: UISwipeGestureRecognizer) {
+        view.endEditing(true)
     }
 }
 
@@ -151,46 +145,31 @@ extension UnregisteredWalletViewController {
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
+    // MARK: - keyboardNotifications
     // This method will notify when keyboard appears/ dissapears
     @objc func keyboardNotifications(notification: NSNotification) {
-        
-        var txtFieldY : CGFloat = 0.0  //Using this we will calculate the selected textFields Y Position
-        let spaceBetweenTxtFieldAndKeyboard : CGFloat = 5.0 //Specify the space between textfield and keyboard
-        
-        
-        var frame = CGRect(x: 0, y: 0, width: 0, height: 0)
-        if let activeTextField = UIResponder.currentFirst() as? UITextField ?? UIResponder.currentFirst() as? UITextView {
-            // Here we will get accurate frame of textField which is selected if there are multiple textfields
-            frame = self.view.convert(activeTextField.frame, from:activeTextField.superview)
-            txtFieldY = frame.origin.y + frame.size.height
-        }
-        
         if let userInfo = notification.userInfo {
             // here we will get frame of keyBoard (i.e. x, y, width, height)
             let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
             let keyBoardFrameY = keyBoardFrame!.origin.y
-            let keyBoardFrameHeight = keyBoardFrame!.size.height
             
-            var viewOriginY: CGFloat = 0.0
             //Check keyboards Y position and according to that move view up and down
             if keyBoardFrameY >= UIScreen.main.bounds.size.height {
-                viewOriginY = 0.0
+                NSLayoutConstraint.deactivate([topConstraint])
+                NSLayoutConstraint.activate([centerConstraint])
+                
+                UIView.animate(withDuration: 2, delay: 0, options: .curveEaseInOut) { [weak self] in
+                    self?.view.layoutIfNeeded()
+                } completion: { (_) in }
             } else {
-                // if textfields y is greater than keyboards y then only move View to up
-                if txtFieldY >= keyBoardFrameY {
-                    
-                    viewOriginY = (txtFieldY - keyBoardFrameY) + spaceBetweenTxtFieldAndKeyboard
-                    
-                    //This condition is just to check viewOriginY should not be greator than keyboard height
-                    // if its more than keyboard height then there will be black space on the top of keyboard.
-                    if viewOriginY > keyBoardFrameHeight { viewOriginY = keyBoardFrameHeight }
-                }
+                NSLayoutConstraint.deactivate([centerConstraint])
+                NSLayoutConstraint.activate([topConstraint])
+                
+                UIView.animate(withDuration: 2, delay: 0, options: .curveEaseInOut) { [weak self] in
+                    self?.view.layoutIfNeeded()
+                } completion: { (_) in }
             }
-            
-            //set the Y position of view
-            self.view.frame.origin.y = -viewOriginY
         }
     }
 }
-
 

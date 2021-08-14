@@ -26,7 +26,7 @@ class KeysService: IKeysService {
         return localStorage.getWallet()
     }
     
-    func addNewWalletWithPrivateKey(key: String, password: String, completion: @escaping (KeyWalletModel?, Error?) -> Void) {
+    func addNewWalletWithPrivateKey(key: String, password: String, completion: @escaping (KeyWalletModel?, WalletSavingError?) -> Void) {
         let text = key.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let data = Data.fromHex(text) else {
             completion(nil, WalletSavingError.couldNotSaveTheWallet)
@@ -44,12 +44,12 @@ class KeysService: IKeysService {
         }
         
         guard let keyData = try? JSONEncoder().encode(newWallet.keystoreParams) else {
-            completion(nil, WalletSavingError.couldNotSaveTheWallet)
+            completion(nil, WalletSavingError.couldNotCreateTheWallet)
             return
         }
         
         guard let address = newWallet.addresses?.first?.address else {
-            completion(nil, WalletSavingError.couldNotSaveTheWallet)
+            completion(nil, WalletSavingError.couldNotGetAddress)
             return
         }
         

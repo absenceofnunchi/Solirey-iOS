@@ -32,23 +32,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                         UserDefaults.standard.set("NA", forKey: UserDefaultKeys.photoURL)
                     }
                     
-                    var urlString: String!
-                    
-                    if user.photoURL != nil {
-                        urlString = "\(user.photoURL!)"
-                    } else {
-                        urlString = "NA"
-                    }
- 
-                    FirebaseService.shared.db.collection("user").document(user.uid).setData([
-                        "photoURL": urlString!,
-                        "displayName": user.displayName ?? "No name",
-                        "uid": user.uid
-                    ], completion: { (error) in
-                        if let error = error {
-                            print("error updating profile", error.localizedDescription)
-                        }
-                    })
+//                    var urlString: String!
+//
+//                    if user.photoURL != nil {
+//                        urlString = "\(user.photoURL!)"
+//                    } else {
+//                        urlString = "NA"
+//                    }
+//
+//                    FirebaseService.shared.db.collection("user").document(user.uid).setData([
+//                        "photoURL": urlString!,
+//                        "displayName": user.displayName ?? "No name",
+//                        "uid": user.uid
+//                    ], completion: { (error) in
+//                        if let error = error {
+//                            print("error updating profile", error.localizedDescription)
+//                        }
+//                    })
                     
                     let tabBar = UITabBarController()
                     

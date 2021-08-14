@@ -17,7 +17,7 @@ class SinglePageViewController: UIViewController {
     weak var delegate: WalletDelegate?
     var mode: WalletCreationType = .createKey
     private let walletController = WalletGenerationController()
-
+    
     // createWallet
     var passwordTextField: UITextField!
     var repeatPasswordTextField: UITextField!
@@ -61,7 +61,6 @@ extension SinglePageViewController {
         containerView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(containerView)
         containerView.fill(inset: 30)
-        
     }
 
     func configureCreateWallet() {
@@ -114,7 +113,7 @@ extension SinglePageViewController {
     func setCreateWalletConstraints() {
         NSLayoutConstraint.activate([
             // paswords don't match label
-            passwordsDontMatch.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 10),
+            passwordsDontMatch.topAnchor.constraint(equalTo: repeatPasswordTextField.bottomAnchor, constant: 3),
             passwordsDontMatch.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             passwordsDontMatch.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.8),
             passwordsDontMatch.heightAnchor.constraint(equalToConstant: 50),
@@ -354,7 +353,7 @@ extension SinglePageViewController: UITextFieldDelegate {
     // MARK: - textFieldShouldReturn
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         guard let createButton = createButton else {
-            alert.showDetail("Log In Error", with: "Unable to log in. Please ensure the password or the private key are correct.", for: self)
+            alert.fading(text: "Unable to log in.", controller: self, toBePasted: nil)
             return false
         }
         
@@ -375,16 +374,12 @@ extension SinglePageViewController {
     // MARK: - createWallet
     func createWallet() {
         guard let password = passwordTextField.text, !password.isEmpty else {
-            alert.showDetail("Empty Password", with: "The password cannot be empty", height: 250, alignment: .center, for: self) { [weak self] in
-                self?.dismiss(animated: true, completion: nil)
-            } completion: {}
+            self.alert.fading(text: "The password cannot be empty.", controller: self, toBePasted: nil, width: 250)
             return
         }
         
         guard let repeatPassword = repeatPasswordTextField.text, !repeatPassword.isEmpty else {
-            alert.showDetail("Empty Password", with: "Repeat password cannot be empty", height: 250, alignment: .center, for: self) { [weak self] in
-                self?.dismiss(animated: true, completion: nil)
-            } completion: {}
+            self.alert.fading(text: "The repeat password cannot be empty.", controller: self, toBePasted: nil, width: 250)
             return
         }
         
@@ -397,9 +392,7 @@ extension SinglePageViewController {
         
         walletController.createWallet(with: mode, password: passwordTextField.text, key: nil) { [weak self](error) in
             guard error == nil else {
-                self?.alert.showDetail("Wallet Creation Error", with: error?.localizedDescription, alignment: .center, for: self) { [weak self] in
-                    self?.dismiss(animated: true, completion: nil)
-                } completion: {}
+                self?.alert.fading(text: "Unable to create a wallet.", controller: self, toBePasted: nil, width: 250)
                 return
             }
 
@@ -411,25 +404,34 @@ extension SinglePageViewController {
     // MARK: - importWallet
     func importWallet() {
         guard let password = passwordTextField.text, !password.isEmpty else {
-            self.alert.showDetail("Sorry", with: "The password cannot be empty", for: self)
+            self.alert.fading(text: "The password cannot be empty.", controller: self, toBePasted: nil, width: 250)
             return
         }
         
         guard let privateKey = enterPrivateKeyTextField.text, !privateKey.isEmpty else {
-            self.alert.showDetail("Sorry", with: "The private key cannot be empty", for: self)
+            self.alert.fading(text: "The private key cannot be empty.", controller: self, toBePasted: nil, width: 300)
             return
         }
 
         keyService.addNewWalletWithPrivateKey(key: privateKey, password: password) { [weak self](wallet, error) in
-            if let _ = error {
-                self?.alert.showDetail("Sorry", with: "There was an error importing your wallet", for: self)
+            if let error = error {
+                switch error {
+                    case .couldNotSaveTheWallet, .couldNotCreateTheWallet:
+                        self?.alert.fading(text: "Could not import the wallet.", controller: self, toBePasted: nil, width: 250)
+                        break
+                    case .couldNotGetAddress:
+                        self?.alert.fading(text: "Could not get the wallet address.", controller: self, toBePasted: nil, width: 300)
+                        break
+                    default:
+                        break
+                }
                 return
             }
 
             guard let wallet = wallet else { return }
             self?.localDatabase.saveWallet(isRegistered: true, wallet: wallet) { (error) in
                 if let _ = error {
-                    self?.alert.showDetail("Sorry", with: "There was an error saving your imported wallet", for: self)
+                    self?.alert.fading(text: "Could not save the wallet", controller: self, toBePasted: nil, width: 250)
                     return
                 }
 

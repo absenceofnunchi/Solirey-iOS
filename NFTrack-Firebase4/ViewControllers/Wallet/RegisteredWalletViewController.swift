@@ -378,3 +378,6 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
 // test@email.com (N/A)
 // 123456
 // a3bf8a54341153d2890ece27123ec51438b1a5fe014ea71da7ee2422567c74b6
+
+// 100@email.com (Tom Cruise)
+// 123456

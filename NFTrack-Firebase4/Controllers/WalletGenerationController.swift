@@ -28,7 +28,6 @@ extension WalletGenerationController {
                         completion(error)
                     } else {
                         guard let wallet = wallet else {
-                            print("Wallet is nil")
                             return
                         }
                         

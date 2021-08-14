@@ -14,12 +14,13 @@
 import UIKit
 import Firebase
 import FirebaseAuth
+import web3swift
 
 class AccountViewController: UIViewController {
     let alert = Alerts()
     let localDatabase = LocalDatabase()
     var scrollView: UIScrollView!
-    var balanceCardView: BalanceCardView!
+    let balanceCardView = BalanceCardView()
     var tableView: UITableView!
     var data: [AccountMenu] = [
         AccountMenu(imageTitle: "person.circle", imageColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), titleString: NSLocalizedString("Update Profile", comment: "")),
@@ -31,20 +32,48 @@ class AccountViewController: UIViewController {
         AccountMenu(imageTitle: "trash.circle", imageColor: UIColor(red: 49/255, green: 11/255, blue: 11/255, alpha: 1), titleString: NSLocalizedString("Delete Account", comment: ""))
     ]
     var logoutButton: UIButton!
+    let CARD_HEIGHT: CGFloat = 200
+    let CELL_HEIGHT: CGFloat = 70
+    let transactionService = TransactionService()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if #available(iOS 14.0, *) {
-            data.insert(AccountMenu(imageTitle: "creditcard.circle", imageColor: UIColor(red: 238/255, green: 183/255, blue: 107/255, alpha: 1), titleString: "Wallet")
-, at: 0)
-        } else {
-            data.insert(AccountMenu(imageTitle: "folder.circle", imageColor: UIColor(red: 238/255, green: 183/255, blue: 107/255, alpha: 1), titleString: "Wallet"), at: 0)
-        }
+//        if #available(iOS 14.0, *) {
+//            data.insert(AccountMenu(imageTitle: "creditcard.circle", imageColor: UIColor(red: 238/255, green: 183/255, blue: 107/255, alpha: 1), titleString: "Wallet")
+//, at: 0)
+//        } else {
+//            data.insert(AccountMenu(imageTitle: "folder.circle", imageColor: UIColor(red: 238/255, green: 183/255, blue: 107/255, alpha: 1), titleString: "Wallet"), at: 0)
+//        }
 
         configureNavigationBar(vc: self)
         configureUI()
         setConstraints()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard let address = Web3swiftService.currentAddress else {
+            balanceCardView.balanceLabel.text = "No wallet"
+            balanceCardView.walletAddressLabel?.text = ""
+            return
+        }
+        
+        DispatchQueue.global().async { [weak self] in
+            do {
+                let balance = try Web3swiftService.web3instance.eth.getBalance(address: address)
+                if let balanceString = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth, decimals: 4) {
+                    DispatchQueue.main.async {
+                        guard let self = self else { return }
+                        self.balanceCardView.balanceLabel.text = "\(self.transactionService.stripZeros(balanceString)) ETH"
+                    }
+                }
+            } catch {
+                self?.balanceCardView.balanceLabel.text = "Failed to fetch the balance"
+            }
+        }
+        
+        balanceCardView.walletAddressLabel?.text = address.address
     }
 }
 
@@ -53,12 +82,27 @@ extension AccountViewController: TableViewConfigurable {
         scrollView = UIScrollView()
         scrollView.automaticallyAdjustsScrollIndicatorInsets = false
         scrollView.contentInsetAdjustmentBehavior = .never
-        scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: 800)
+        scrollView.contentSize = CGSize(
+            width: self.view.bounds.size.width,
+            height: CARD_HEIGHT + CELL_HEIGHT * CGFloat(data.count) + 200
+        )
         scrollView.delegate = self
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
-        scrollView.fill()
         
-        tableView = configureTableView(delegate: self, dataSource: self, height: 70, cellType: AccountCell.self, identifier: AccountCell.identifier)
+        balanceCardView.tag = 7
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+        balanceCardView.addGestureRecognizer(tap)
+        balanceCardView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(balanceCardView)
+        
+        tableView = configureTableView(
+            delegate: self,
+            dataSource: self,
+            height: CELL_HEIGHT,
+            cellType: AccountCell.self,
+            identifier: AccountCell.identifier
+        )
         tableView.isScrollEnabled = false
         tableView.separatorStyle = .none
         scrollView.addSubview(tableView)
@@ -66,10 +110,20 @@ extension AccountViewController: TableViewConfigurable {
     
     func setConstraints() {
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            tableView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            balanceCardView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 30),
+            balanceCardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            balanceCardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            balanceCardView.heightAnchor.constraint(equalToConstant: CARD_HEIGHT),
+            
+            tableView.topAnchor.constraint(equalTo: balanceCardView.bottomAnchor, constant: 20),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            tableView.heightAnchor.constraint(equalToConstant: CELL_HEIGHT * CGFloat(data.count) + 50)
         ])
     }
 }
@@ -90,24 +144,32 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch indexPath.row {
             case 0:
+                didUpdateProfile()
+            case 1:
+                didRequestPasswordReset()
+            case 2:
+                let purchasesVC = PurchasesViewController()
+                self.navigationController?.pushViewController(purchasesVC, animated: true)
+            case 3:
+                didLogout()
+            case 4:
+                review()
+            case 5:
+                print("feedback")
+            case 6:
+                didDeleteUser()
+            default:
+                break
+        }
+    }
+    
+    @objc func tapped(_ sender: UITapGestureRecognizer) {
+        guard let v = sender.view else { return }
+        switch v.tag {
+            case 7:
                 let walletVC = WalletViewController()
                 walletVC.modalPresentationStyle = .fullScreen
                 self.present(walletVC, animated: true)
-            case 1:
-                didUpdateProfile()
-            case 2:
-                didRequestPasswordReset()
-            case 3:
-                let purchasesVC = PurchasesViewController()
-                self.navigationController?.pushViewController(purchasesVC, animated: true)
-            case 4:
-                didLogout()
-            case 5:
-                review()
-            case 6:
-                print("feedback")
-            case 7:
-                didDeleteUser()
             default:
                 break
         }
@@ -120,6 +182,7 @@ extension AccountViewController {
         let content = [
             StandardAlertContent(
                 titleString: AlertModalDictionary.emailSubtitle,
+                
                 body: ["": ""],
                 isEditable: true,
                 fieldViewHeight: 50,

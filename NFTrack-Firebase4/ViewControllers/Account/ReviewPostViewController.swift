@@ -32,7 +32,13 @@ class ReviewPostViewController: ParentProfileViewController {
         if let userId = userDefaults.string(forKey: UserDefaultKeys.userId),
            let displayName = userDefaults.string(forKey: UserDefaultKeys.displayName) {
             let photoURL = userDefaults.string(forKey: UserDefaultKeys.photoURL)
-            return UserInfo(email: nil, displayName: displayName, photoURL: photoURL, uid: userId)
+            return UserInfo(
+                email: nil,
+                displayName: displayName,
+                photoURL: photoURL,
+                uid: userId,
+                memberSince: nil
+            )
         } else {
             return nil
         }
@@ -134,7 +140,13 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
                 if let data = document.data() {
                     let displayName = data[UserDefaultKeys.displayName] as? String
                     let photoURL = data[UserDefaultKeys.photoURL] as? String
-                    let userInfo = UserInfo(email: nil, displayName: displayName!, photoURL: photoURL, uid: revieweeUserId)
+                    let userInfo = UserInfo(
+                        email: nil,
+                        displayName: displayName!,
+                        photoURL: photoURL,
+                        uid: revieweeUserId,
+                        memberSince: nil
+                        )
                     self?.userInfo = userInfo
                     completion?()
                 }
@@ -320,14 +332,21 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
         
         let reviewDetailRef = reviewRef.collection("details").document()
         self.documentID = reviewDetailRef.documentID
+        
+        guard
+            let rInfo = self.reviewerInfo,
+            let photoURL = rInfo.photoURL,
+            let confirmReceivedHash = self.post.confirmReceivedHash
+            else { return }
+        
         batch.setData([
             "revieweeUserId": revieweeUserId,
             "reviewerUserId": reviewerUserId,
             "reviewerDisplayName": reviewerDisplayName,
-            "reviewerPhotoURL": self.reviewerInfo!.photoURL!,
+            "reviewerPhotoURL": photoURL,
             "starRating": numOfStars,
             "review": reviewText,
-            "confirmReceivedHash": self.post.confirmReceivedHash! as String,
+            "confirmReceivedHash": confirmReceivedHash,
             /// finalized date
             "date": (self.post.confirmReceivedDate ?? Date()) as Date,
         ], forDocument: reviewDetailRef)

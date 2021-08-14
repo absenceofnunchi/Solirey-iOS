@@ -522,9 +522,7 @@ extension TransactionService {
                 completion(nil, PostingError.invalidAmountFormat)
                 return
             }
-            
-            print("amount", amount)
-            
+                        
             var options = TransactionOptions.defaultOptions
 //            options.callOnBlock = .pending
 //            options.nonce = .pending

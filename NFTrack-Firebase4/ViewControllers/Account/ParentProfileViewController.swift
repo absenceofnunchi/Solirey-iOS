@@ -34,7 +34,7 @@ extension ParentProfileViewController {
         scrollView = UIScrollView()
         scrollView.automaticallyAdjustsScrollIndicatorInsets = false
         scrollView.contentInsetAdjustmentBehavior = .never
-        scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: 1000)
+        scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: 1200)
         scrollView.delegate = self
         view.addSubview(scrollView)
         scrollView.fill()

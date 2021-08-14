@@ -5,6 +5,12 @@
 //  Created by J C on 2021-06-07.
 //
 
+/*
+ Abstract:
+ The profile page from AccountVC only for the user themselves, not for the public viewing
+ Able to edit the profile photo, username, and the email.
+ */
+
 import UIKit
 import Firebase
 import FirebaseAuth
@@ -30,7 +36,13 @@ extension ProfileViewController {
     func fetchUserInfo() {
         let user = Auth.auth().currentUser
         if let user = user {
-            self.userInfo = UserInfo(email: user.email, displayName: user.displayName ?? "N/A", photoURL: (user.photoURL != nil) ? "\(user.photoURL!)" : "NA", uid: user.uid)
+            self.userInfo = UserInfo(
+                email: user.email,
+                displayName: user.displayName ?? "N/A",
+                photoURL: (user.photoURL != nil) ? "\(user.photoURL!)" : "NA",
+                uid: user.uid,
+                memberSince: nil
+            )
         }
     }
     
@@ -333,7 +345,8 @@ extension ProfileViewController {
     /// this is for when ListDetailVC downloads and displays the user info
     /// you want it on a separate collection so that when a profile is updated, you only have to update a single document, not every post
     func updateUser(displayName: String, photoURL: String?, completion: @escaping (Error?) -> Void) {
-        FirebaseService.shared.db.collection("user").document(self.userInfo.uid!).setData([
+        guard let uid = self.userInfo.uid else { return }
+        FirebaseService.shared.db.collection("user").document(uid).updateData([
             "photoURL": photoURL ?? "NA",
             "displayName": displayName,
             "uid": self.userInfo.uid!

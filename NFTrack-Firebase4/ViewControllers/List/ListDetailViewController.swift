@@ -10,6 +10,7 @@ import web3swift
 import Firebase
 import FirebaseFirestore
 import BigInt
+import Combine
 
 class ListDetailViewController: ParentDetailViewController {
     final override var post: Post! {
@@ -44,6 +45,7 @@ class ListDetailViewController: ParentDetailViewController {
     final var starButtonItem: UIBarButtonItem!
     weak var delegate: RefetchDataDelegate?
     final var observation: NSKeyValueObservation?
+    private var storage = Set<AnyCancellable>()
     
     final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -198,7 +200,8 @@ extension ListDetailViewController {
                 self.present(resellVC, animated: true, completion: nil)
             case 5:
                 // transfer ownership
-                transferToken()
+                guard let post = post else { return }
+                transferToken(post: post)
             case 6:
                 let chatVC = ChatViewController()
                 chatVC.userInfo = userInfo
@@ -265,90 +268,88 @@ extension ListDetailViewController {
                     }
                     
                     if let transaction = transaction {
-                        DispatchQueue.global().async {
-                            do {
-                                let result: [String: Any] = try transaction.call()
-                                if let value = result["0"] as? BigUInt {
-                                    let serialized = value.serialize()
+                        do {
+                            let result: [String: Any] = try transaction.call()
+                            if let value = result["0"] as? BigUInt {
+                                let serialized = value.serialize()
+                                
+                                print("serialized.count", serialized.count)
+                                
+                                var status: String!
+                                var buyerButtonTitle: String!
+                                var sellerButtonTitle: String!
+                                var sellerTag: Int!
+                                var buyerTag: Int!
+                                
+                                if serialized.count == 0 {
+                                    // abort
+                                    status = PurchaseStatus.created.rawValue
+                                    sellerButtonTitle = "Abort"
+                                    sellerTag = 1
                                     
-                                    print("serialized.count", serialized.count)
-                                    
-                                    var status: String!
-                                    var buyerButtonTitle: String!
-                                    var sellerButtonTitle: String!
-                                    var sellerTag: Int!
-                                    var buyerTag: Int!
-                                    
-                                    if serialized.count == 0 {
-                                        // abort
-                                        status = PurchaseStatus.created.rawValue
-                                        sellerButtonTitle = "Abort"
-                                        sellerTag = 1
-                                        
-                                        // buy
-                                        buyerButtonTitle = "Buy"
-                                        buyerTag = 2
-                                    } else if serialized.count == 1 {
-                                        let statusCode = serialized[0]
-                                        print("statusCode", statusCode)
-                                        switch statusCode {
-                                            case 1:
-                                                status = PurchaseStatus.locked.rawValue
-                                                sellerButtonTitle = "Transfer Ownership"
-                                                // default
-                                                sellerTag = 5
-                                                
-                                                if self.post.transferHash != nil {
-                                                    buyerButtonTitle = "Confirm Received"
-                                                    buyerTag = 3
-                                                } else {
-                                                    buyerButtonTitle = "Transfer Pending"
-                                                    buyerTag = 8
-                                                }
-                                            case 2:
-                                                status = "Inactive"
-                                                sellerButtonTitle = "Transaction Completed"
-                                                
-                                                buyerButtonTitle = "Sell"
-                                                buyerTag = 4
-                                            default:
-                                                break
-                                        }
-                                    }
-                                    
-                                    if self.userId != self.post.sellerUserId {
-                                        DispatchQueue.main.async {
-                                            self.configureStatusButton(buttonTitle: buyerButtonTitle, tag: buyerTag)
-                                        }
-                                    } else if self.userId == self.post.sellerUserId {
-                                        DispatchQueue.main.async {
-                                            self.configureStatusButton(buttonTitle: sellerButtonTitle, tag: sellerTag)
-                                        }
-                                    } else {
-                                        self.alert.showDetail("Authorization Error", with: "You need to be logged in!", for: self) { [weak self] in
-                                            DispatchQueue.main.async {
-                                                self?.navigationController?.popViewController(animated: true)
+                                    // buy
+                                    buyerButtonTitle = "Buy"
+                                    buyerTag = 2
+                                } else if serialized.count == 1 {
+                                    let statusCode = serialized[0]
+                                    print("statusCode", statusCode)
+                                    switch statusCode {
+                                        case 1:
+                                            status = PurchaseStatus.locked.rawValue
+                                            sellerButtonTitle = "Transfer Ownership"
+                                            // default
+                                            sellerTag = 5
+                                            
+                                            if self.post.transferHash != nil {
+                                                buyerButtonTitle = "Confirm Received"
+                                                buyerTag = 3
+                                            } else {
+                                                buyerButtonTitle = "Transfer Pending"
+                                                buyerTag = 8
                                             }
-                                        } completion: {}
-                                    }
-                                    
-                                    if self.statusLabel != nil {
-                                        DispatchQueue.main.async {
-                                            self.statusLabel.text = status
-                                        }
-                                    }
-                                } else {
-                                    DispatchQueue.main.async {
-                                        self.navigationController?.popViewController(animated: true)
+                                        case 2:
+                                            status = "Inactive"
+                                            sellerButtonTitle = "Transaction Completed"
+                                            
+                                            buyerButtonTitle = "Sell"
+                                            buyerTag = 4
+                                        default:
+                                            break
                                     }
                                 }
-                            } catch {
-                                self.alert.showDetail("Error", with: error.localizedDescription, for: self) { [weak self] in
+                                
+                                if self.userId != self.post.sellerUserId {
                                     DispatchQueue.main.async {
-                                        self?.navigationController?.popViewController(animated: true)
+                                        self.configureStatusButton(buttonTitle: buyerButtonTitle, tag: buyerTag)
                                     }
-                                } completion: {}
+                                } else if self.userId == self.post.sellerUserId {
+                                    DispatchQueue.main.async {
+                                        self.configureStatusButton(buttonTitle: sellerButtonTitle, tag: sellerTag)
+                                    }
+                                } else {
+                                    self.alert.showDetail("Authorization Error", with: "You need to be logged in!", for: self) { [weak self] in
+                                        DispatchQueue.main.async {
+                                            self?.navigationController?.popViewController(animated: true)
+                                        }
+                                    } completion: {}
+                                }
+                                
+                                if self.statusLabel != nil {
+                                    DispatchQueue.main.async {
+                                        self.statusLabel.text = status
+                                    }
+                                }
+                            } else {
+                                DispatchQueue.main.async {
+                                    self.navigationController?.popViewController(animated: true)
+                                }
                             }
+                        } catch {
+                            self.alert.showDetail("Error", with: error.localizedDescription, for: self) { [weak self] in
+                                DispatchQueue.main.async {
+                                    self?.navigationController?.popViewController(animated: true)
+                                }
+                            } completion: {}
                         }
                     }
                 })
@@ -509,7 +510,7 @@ extension ListDetailViewController {
                                             }
                                         } catch Web3Error.inputError(_) {
                                             DispatchQueue.main.async {
-                                                self?.alert.showDetail("Alert", with: "Failed to sign the transaction. You may be using an incorrect password. \n\nOtherwise, please try logging out of your wallet (not the NFTrack account) and logging back in. Ensure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
+                                                self?.alert.showDetail("Alert", with: "Failed to sign the transaction. You may be using an incorrect password. \n\nOtherwise, please try logging out of your wallet (not the NFTrack account) and logging back in. Ensure that you remember the password and the private key.", height: 400, alignment: .left, for: self)
                                             }
                                         } catch Web3Error.processingError(let desc) {
                                             DispatchQueue.main.async {
@@ -535,7 +536,188 @@ extension ListDetailViewController {
 }
 
 extension ListDetailViewController {
-    final func transferToken() {
+    final func transferToken(post: Post) {
+        let content = [
+            StandardAlertContent(
+                index: 0,
+                titleString: "Password",
+                body: [AlertModalDictionary.passwordSubtitle: ""],
+                isEditable: true,
+                fieldViewHeight: 50,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            ),
+            StandardAlertContent(
+                index: 1,
+                titleString: "Transaction Options",
+                body: [
+                    AlertModalDictionary.gasLimit: "",
+                    AlertModalDictionary.gasPrice: "",
+                    AlertModalDictionary.nonce: ""
+                ],
+                isEditable: true,
+                fieldViewHeight: 50,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            )
+        ]
+        
+        var documentRetainer: DocumentSnapshot!
+        
+        let alertVC = AlertViewController(height: 400, standardAlertContent: content)
+        alertVC.action = { [weak self] (modal, mainVC) in
+            // responses to the main vc's button
+            mainVC.buttonAction = { _ in
+                guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                      !password.isEmpty else {
+                    self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                    return
+                }
+                
+                self?.dismiss(animated: true, completion: {
+                    self?.showSpinner({
+                        Future<[AnyObject], PostingError> { promise in
+                            let docRef = FirebaseService.shared.db.collection("post").document(post.documentId)
+                            docRef.getDocument { (document, error) in
+                                if let document = document,
+                                   document.exists,
+                                   let data = document.data() {
+                                    
+                                    documentRetainer = document
+                                    var buyerHash: String!
+                                    var tokenId: String!
+                                    data.forEach { (item) in
+                                        switch item.key {
+                                            case "buyerHash":
+                                                buyerHash = item.value as? String
+                                            case "tokenId":
+                                                tokenId = item.value as? String
+                                            default:
+                                                break
+                                        }
+                                    }
+                                    
+                                    guard let bh = buyerHash else {
+                                        promise(.failure(.generalError(reason: "The item has not been purchased by a buyer yet.")))
+                                        return
+                                    }
+                                    
+                                    guard let ti = tokenId else {
+                                        promise(.failure(.generalError(reason: "The item does not have token ID registered. It may take up to 10 mins to process.")))
+                                        return
+                                    }
+                                    
+                                    guard let fromAddress = Web3swiftService.currentAddress,
+                                          let toAddress = EthereumAddress(bh) else {
+                                        promise(.failure(.generalError(reason: "Could not get the contract address to transfer the token.")))
+                                        return
+                                    }
+
+                                    let param: [AnyObject] = [fromAddress, toAddress, ti] as [AnyObject]
+                                    promise(.success(param))
+                                }
+                            }
+                        }
+                        .eraseToAnyPublisher()
+                        .flatMap { [weak self] (param) -> AnyPublisher<WriteTransaction, PostingError> in
+                            guard let NFTrackAddress = NFTrackAddress else {
+                                return Fail(error: PostingError.generalError(reason: "Unable to load the contract address."))
+                                    .eraseToAnyPublisher()
+                            }
+                            return Future<WriteTransaction, PostingError> { promise in
+                                self?.transactionService.prepareTransactionForWriting(
+                                    method: "transferFrom",
+                                    abi: NFTrackABI,
+                                    param: param,
+                                    contractAddress: NFTrackAddress,
+                                    promise: promise)
+                            }
+                            .eraseToAnyPublisher()
+                        }
+                        .flatMap { (transaction) -> AnyPublisher<TransactionSendingResult, PostingError> in
+                            Future<TransactionSendingResult, PostingError> { promise in
+                                do {
+                                    let receipt = try transaction.send(password: password, transactionOptions: nil)
+                                    promise(.success(receipt))
+                                } catch {
+                                    if let err = error as? Web3Error {
+                                        promise(.failure(.generalError(reason: err.errorDescription)))
+                                    } else {
+                                        promise(.failure(.generalError(reason: error.localizedDescription)))
+                                    }
+                                }
+                            }
+                            .eraseToAnyPublisher()
+                        }
+                        .flatMap { (result) -> AnyPublisher<Bool, PostingError> in
+                            Future<Bool, PostingError> { promise in
+                                FirebaseService.shared.db.collection("post").document(documentRetainer.documentID).updateData([
+                                    "transferHash": result.hash,
+                                    "transferDate": Date(),
+                                    "status": PostStatus.transferred.rawValue
+                                ], completion: { (error) in
+                                    if let error = error {
+                                        promise(.failure(.generalError(reason: error.localizedDescription)))
+                                    } else {
+                                        /// send the push notification to the seller
+                                        guard let `self` = self, let buyerUserId = self.post.buyerUserId else {
+                                            return promise(.failure(.generalError(reason: "Unable to get the buyer's hash.")))
+                                        }
+                                        
+                                        self.sendNotification(
+                                            sender: self.userId,
+                                            recipient: buyerUserId,
+                                            content: "The seller has transferred the item!",
+                                            docID: self.post.documentId
+                                        ) { (error) in
+                                            if let error = error {
+                                                print("notification error", error.localizedDescription)
+                                            }
+                                            
+                                            promise(.success(true))
+                                        }
+                                    }
+                                })
+                            }
+                            .eraseToAnyPublisher()
+                        }
+                        .sink { [weak self] (completion) in
+                            switch completion {
+                                case .failure(let error):
+                                    switch error {
+                                        case .generalError(reason: let reason):
+                                            self?.alert.showDetail("Error", with: reason, for: self)
+                                        case .emptyAmount:
+                                            self?.alert.showDetail("Error", with: "The amount cannot be empty.", for: self)
+                                        case .invalidAmountFormat:
+                                            self?.alert.showDetail("Error", with: "Invalid amount format.", for: self)
+                                        case .contractLoadingError:
+                                            self?.alert.showDetail("Error", with: "Unable to load the contract.", for: self)
+                                        case .createTransactionIssue:
+                                            self?.alert.showDetail("Error", with: "Unable to create a transaction.", for: self)
+                                        default:
+                                            self?.alert.showDetail("Error", with: "There was an error transferring the item.", for: self)
+                                    }
+                                    break
+                                case .finished:
+                                    self?.hideSpinner({
+                                        print("finished")
+                                    })
+                                    break
+                            }
+                        } receiveValue: { (isFinished) in
+                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
+                            self?.navigationController?.popViewController(animated: true)
+                        }
+                        .store(in: &self!.storage)
+                    })
+                 })
+            }
+        }
+        self.present(alertVC, animated: true, completion: nil)
+    }
+    
+    final func transferToken1() {
         let docRef = FirebaseService.shared.db.collection("post").document(post.documentId)
         docRef.getDocument { [weak self] (document, error) in
             if let document = document,
@@ -567,17 +749,18 @@ extension ListDetailViewController {
                 
                 guard let fromAddress = Web3swiftService.currentAddress,
                       let toAddress = EthereumAddress(bh),
-                      let erc721ContractAddress = erc721ContractAddress else {
+                      let NFTrackAddress = NFTrackAddress else {
                     self?.alert.showDetail("Error", with: "Could not get the contract address to transfer the token.", for: self)
                     return
                 }
                 
                 let param: [AnyObject] = [fromAddress, toAddress, ti] as [AnyObject]
+                
                 self?.transactionService.prepareTransactionForWriting(
                     method: "transferFrom",
                     abi: NFTrackABI,
                     param: param,
-                    contractAddress: erc721ContractAddress,
+                    contractAddress: NFTrackAddress,
                     completion: { (transaction, error) in
                         
                     if let error = error {
@@ -623,82 +806,84 @@ extension ListDetailViewController {
                             )
                         ]
                         
-                        let alertVC = AlertViewController(height: 400, standardAlertContent: content)
-                        alertVC.action = { [weak self] (modal, mainVC) in
-                            // responses to the main vc's button
-                            mainVC.buttonAction = { _ in
-                                guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-                                      !password.isEmpty else {
-                                    self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
-                                    return
-                                }
-                                
-                                self?.dismiss(animated: true, completion: {
-                                    self?.showSpinner({
-                                        DispatchQueue.global().async {
-                                            do {
-                                                let receipt = try transaction.send(password: password, transactionOptions: nil)
-                                                FirebaseService.shared.db.collection("post").document(document.documentID).updateData([
-                                                    "transferHash": receipt.hash,
-                                                    "transferDate": Date(),
-                                                    "status": PostStatus.transferred.rawValue
-                                                ], completion: { (error) in
-                                                    if let error = error {
-                                                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
-                                                    } else {
-                                                        /// send the push notification to the seller
-                                                        guard let `self` = self, let buyerUserId = self.post.buyerUserId else { return }
-                                                        self.sendNotification(sender: self.userId, recipient: buyerUserId, content: "The seller has transferred the item!", docID: self.post.documentId) { [weak self] (error) in
-                                                            if let error = error {
-                                                                print("error", error)
+                        DispatchQueue.main.async {
+                            let alertVC = AlertViewController(height: 400, standardAlertContent: content)
+                            alertVC.action = { [weak self] (modal, mainVC) in
+                                // responses to the main vc's button
+                                mainVC.buttonAction = { _ in
+                                    guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                                          !password.isEmpty else {
+                                        self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                                        return
+                                    }
+                                    
+                                    self?.dismiss(animated: true, completion: {
+                                        self?.showSpinner({
+                                            DispatchQueue.global().async {
+                                                do {
+                                                    let receipt = try transaction.send(password: password, transactionOptions: nil)
+                                                    FirebaseService.shared.db.collection("post").document(document.documentID).updateData([
+                                                        "transferHash": receipt.hash,
+                                                        "transferDate": Date(),
+                                                        "status": PostStatus.transferred.rawValue
+                                                    ], completion: { (error) in
+                                                        if let error = error {
+                                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
+                                                        } else {
+                                                            /// send the push notification to the seller
+                                                            guard let `self` = self, let buyerUserId = self.post.buyerUserId else { return }
+                                                            self.sendNotification(sender: self.userId, recipient: buyerUserId, content: "The seller has transferred the item!", docID: self.post.documentId) { [weak self] (error) in
+                                                                if let error = error {
+                                                                    print("error", error)
+                                                                }
+                                                                
+                                                                self?.alert.showDetail(
+                                                                    "Success!",
+                                                                    with: "The token has been successfully transferred.",
+                                                                    for: self
+                                                                ) {
+                                                                    self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
+                                                                    self?.navigationController?.popViewController(animated: true)
+                                                                } completion: {}
                                                             }
-                                                            
-                                                            self?.alert.showDetail(
-                                                                "Success!",
-                                                                with: "The token has been successfully transferred.",
-                                                                for: self
-                                                            ) {
-                                                                self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
-                                                                self?.navigationController?.popViewController(animated: true)
-                                                            } completion: {}
                                                         }
+                                                    })
+                                                } catch Web3Error.nodeError(let desc) {
+                                                    if let index = desc.firstIndex(of: ":") {
+                                                        let newIndex = desc.index(after: index)
+                                                        let newStr = desc[newIndex...]
+                                                        self?.alert.showDetail("Alert", with: String(newStr), for: self)
                                                     }
-                                                })
-                                            } catch Web3Error.nodeError(let desc) {
-                                                if let index = desc.firstIndex(of: ":") {
-                                                    let newIndex = desc.index(after: index)
-                                                    let newStr = desc[newIndex...]
-                                                    self?.alert.showDetail("Alert", with: String(newStr), for: self)
+                                                } catch Web3Error.transactionSerializationError {
+                                                    DispatchQueue.main.async {
+                                                        self?.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
+                                                    }
+                                                } catch Web3Error.connectionError {
+                                                    DispatchQueue.main.async {
+                                                        self?.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
+                                                    }
+                                                } catch Web3Error.dataError {
+                                                    DispatchQueue.main.async {
+                                                        self?.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
+                                                    }
+                                                } catch Web3Error.inputError(_) {
+                                                    DispatchQueue.main.async {
+                                                        self?.alert.showDetail("Alert", with: "Failed to sign the transaction. You may be using an incorrect password. \n\nOtherwise, please try logging out of your wallet (not the NFTrack account) and logging back in. Ensure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
+                                                    }
+                                                } catch Web3Error.processingError(let desc) {
+                                                    DispatchQueue.main.async {
+                                                        self?.alert.showDetail("Alert", with: "\(desc). Ensure that you're using the same address used in the original transaction.", height: 320, alignment: .left, for: self)
+                                                    }
+                                                } catch {
+                                                    self?.alert.showDetail("Error", with: "There was an error with the transfer transaction.", for: self)
                                                 }
-                                            } catch Web3Error.transactionSerializationError {
-                                                DispatchQueue.main.async {
-                                                    self?.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
-                                                }
-                                            } catch Web3Error.connectionError {
-                                                DispatchQueue.main.async {
-                                                    self?.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
-                                                }
-                                            } catch Web3Error.dataError {
-                                                DispatchQueue.main.async {
-                                                    self?.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
-                                                }
-                                            } catch Web3Error.inputError(_) {
-                                                DispatchQueue.main.async {
-                                                    self?.alert.showDetail("Alert", with: "Failed to sign the transaction. You may be using an incorrect password. \n\nOtherwise, please try logging out of your wallet (not the NFTrack account) and logging back in. Ensure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
-                                                }
-                                            } catch Web3Error.processingError(let desc) {
-                                                DispatchQueue.main.async {
-                                                    self?.alert.showDetail("Alert", with: "\(desc). Ensure that you're using the same address used in the original transaction.", height: 320, alignment: .left, for: self)
-                                                }
-                                            } catch {
-                                                self?.alert.showDetail("Error", with: "There was an error with the transfer transaction.", for: self)
-                                            }
-                                        } // dispatchQueue
-                                    }) // showSpinner
-                                }) // dismiss
-                            } // mainVC buttonAction
-                        } // alertVC
-                        self?.present(alertVC, animated: true, completion: nil)
+                                            } // dispatchQueue
+                                        }) // showSpinner
+                                    }) // dismiss
+                                } // mainVC buttonAction
+                            } // alertVC
+                            self?.present(alertVC, animated: true, completion: nil)
+                        }
                     } // transaction
                 })
             } else {

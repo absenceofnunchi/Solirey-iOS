@@ -13,16 +13,19 @@ import UIKit
 import FirebaseFirestore
 
 class ProfileDetailViewController: ParentProfileViewController {
+//    private var itemsTitleLabel: UILabel!
+//    private let CELL_HEIGHT: CGFloat = 100
+//    private var tableViewHeight: CGFloat = 0
+//    private var tableView: UITableView!
+
     var profileImage: UIImage!
-    private var itemsTitleLabel: UILabel!
-    private var tableView: UITableView!
-    private let CELL_HEIGHT: CGFloat = 100
-    private var tableViewHeight: CGFloat = 0
     private var customSegmentedControl: CustomSegmentedControl!
     private var profilePostingsVC: ProfilePostingsViewController!
     private var profileReviewVC: ProfileReviewListViewController!
     private let db = FirebaseService.shared
     private var lastSnapshot: QueryDocumentSnapshot!
+    private var memberHistoryTitleLabel: UILabel!
+    private var memberHistoryTextField: UITextField!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -55,7 +58,7 @@ class ProfileDetailViewController: ParentProfileViewController {
     
     override func preferredContentSizeDidChange(forChildContentContainer container: UIContentContainer) {
         super.preferredContentSizeDidChange(forChildContentContainer: container)
-        self.scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: container.preferredContentSize.height)
+        self.scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: container.preferredContentSize.height + 150)
     }
 }
 
@@ -65,6 +68,17 @@ extension ProfileDetailViewController {
         view.backgroundColor = .white
         
         displayNameTextField.isUserInteractionEnabled = false
+        
+        memberHistoryTitleLabel = createTitleLabel(text: "Member Since")
+        scrollView.addSubview(memberHistoryTitleLabel)
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        let formattedDate = formatter.string(from: userInfo.memberSince ?? Date())
+        
+        memberHistoryTextField = createTextField(content: formattedDate, delegate: self)
+        memberHistoryTextField.isUserInteractionEnabled = false
+        scrollView.addSubview(memberHistoryTextField)
 
         customSegmentedControl = CustomSegmentedControl()
         customSegmentedControl.addTarget(self, action: #selector(segmentedControlSelectionDidChange(_:)), for: .valueChanged)
@@ -72,7 +86,17 @@ extension ProfileDetailViewController {
         scrollView.addSubview(customSegmentedControl)
 
         NSLayoutConstraint.activate([
-            customSegmentedControl.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 10),
+            memberHistoryTitleLabel.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 30),
+            memberHistoryTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            memberHistoryTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
+            memberHistoryTitleLabel.heightAnchor.constraint(equalToConstant: 50),
+            
+            memberHistoryTextField.topAnchor.constraint(equalTo: memberHistoryTitleLabel.bottomAnchor, constant: 10),
+            memberHistoryTextField.heightAnchor.constraint(equalToConstant: 50),
+            memberHistoryTextField.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            memberHistoryTextField.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
+            
+            customSegmentedControl.topAnchor.constraint(equalTo: memberHistoryTextField.bottomAnchor, constant: 50),
             customSegmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             customSegmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             customSegmentedControl.heightAnchor.constraint(equalToConstant: 50),
@@ -145,7 +169,6 @@ extension ProfileDetailViewController: PaginateFetchDelegate {
         let h = size.height
         let reload_distance:CGFloat = 10.0
         if y > (h + reload_distance) {
-            
             guard let uid = userInfo.uid else { return }
             db.refetchReviews(uid: uid, lastSnapshot: self.lastSnapshot)
         }
