@@ -56,7 +56,7 @@ class AuctionButtonController {
     }
     
     final var timer: Timer!
-    final var status: AuctionContract.AuctionMethods!
+    final var status: AuctionContract.ContractMethods!
     
     init() {
         self.currentAddress = Web3swiftService.currentAddress

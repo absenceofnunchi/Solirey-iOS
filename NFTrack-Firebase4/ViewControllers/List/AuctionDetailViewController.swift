@@ -19,69 +19,6 @@ import FirebaseAuth
 import FirebaseFirestore
 import FirebaseMessaging
 
-struct AuctionContract {
-    enum AuctionMethods: String {
-        case bid
-        case withdraw
-        case auctionEnd
-        case getTheHighestBid
-        case transferToken
-    }
-    
-    enum AuctionProperties {
-        case startingBid
-        case highestBid
-        case highestBidder
-        case auctionEndTime
-        case ended
-        case pendingReturns(EthereumAddress)
-        case beneficiary
-  
-        // tuple because some properties like mapping requires a key
-        var value: (String, AnyObject?) {
-            switch self {
-                case .startingBid:
-                    return ("startingBid", nil)
-                case .highestBid:
-                    return ("highestBid", nil)
-                case .highestBidder:
-                    return ("highestBidder", nil)
-                case .auctionEndTime:
-                    return ("auctionEndTime", nil)
-                case .ended:
-                    return ("ended", nil)
-                case .pendingReturns(let parameter):
-                    return ("pendingReturns", parameter as AnyObject)
-                case .beneficiary:
-                    return ("beneficiary", nil)
-            }
-        }
-        
-        func toDisplay() -> String {
-            switch self {
-                case .startingBid:
-                    return "Starting Bid"
-                case .highestBid:
-                    return "Highest Bid"
-                case .highestBidder:
-                    return "Highest Bidder"
-                case .auctionEndTime:
-                    return "Auction End Time"
-                case .ended:
-                    return "Auction Status"
-                case .pendingReturns(_):
-                    return "Amount To Withdraw"
-                case .beneficiary:
-                    return "Beneficiary"
-            }
-        }
-    
-//        static func allCasesString() -> [String] {
-//            return AuctionProperties.allCases.map { $0.rawValue }
-//        }
-    }
-}
-
 class AuctionDetailViewController: ParentDetailViewController {
     final var historyVC: HistoryViewController!
     lazy final var historyVCHeightConstraint: NSLayoutConstraint = historyVC.view.heightAnchor.constraint(equalToConstant: 100)
@@ -93,7 +30,7 @@ class AuctionDetailViewController: ParentDetailViewController {
     final var bidTextField: UITextField!
     final var auctionButton: UIButton!
     final let LIST_DETAIL_MARGIN: CGFloat = 10
-    final var propertiesToLoad: [AuctionContract.AuctionProperties]!
+    final var propertiesToLoad: [AuctionContract.ContractProperties]!
     lazy final var auctionDetailArr: [SmartContractProperty] = propertiesToLoad.map { SmartContractProperty(propertyName: $0.toDisplay(), propertyDesc: "loading...")}
     lazy final var auctionButtonNarrowConstraint: NSLayoutConstraint! = auctionButton.widthAnchor.constraint(equalTo: bidContainer.widthAnchor, multiplier: 0.45)
     lazy final var auctionButtonWideConstraint: NSLayoutConstraint! = auctionButton.widthAnchor.constraint(equalTo: bidContainer.widthAnchor, multiplier: 1)
@@ -105,12 +42,10 @@ class AuctionDetailViewController: ParentDetailViewController {
         didSet {
             if isPending == true {
                 DispatchQueue.main.async { [weak self] in
-                    print("self?.pendingContainer.isHidden", self?.pendingContainer.isHidden as Any)
                     self?.pendingContainer.isHidden = false
                 }
             } else {
                 DispatchQueue.main.async { [weak self] in
-                    print("self?.pendingContainer.isHidden", self?.pendingContainer.isHidden as Any)
                     self?.pendingContainer.isHidden = true
                 }
             }
@@ -135,13 +70,13 @@ class AuctionDetailViewController: ParentDetailViewController {
         self.auctionContractAddress = auctionContractAddress
         
         self.propertiesToLoad = [
-            AuctionContract.AuctionProperties.startingBid,
-            AuctionContract.AuctionProperties.highestBid,
-            AuctionContract.AuctionProperties.highestBidder,
-            AuctionContract.AuctionProperties.auctionEndTime,
-            AuctionContract.AuctionProperties.ended,
-            AuctionContract.AuctionProperties.pendingReturns(myContractAddress),
-            AuctionContract.AuctionProperties.beneficiary
+            AuctionContract.ContractProperties.startingBid,
+            AuctionContract.ContractProperties.highestBid,
+            AuctionContract.ContractProperties.highestBidder,
+            AuctionContract.ContractProperties.auctionEndTime,
+            AuctionContract.ContractProperties.ended,
+            AuctionContract.ContractProperties.pendingReturns(myContractAddress),
+            AuctionContract.ContractProperties.beneficiary
         ]
     }
     
@@ -170,7 +105,11 @@ class AuctionDetailViewController: ParentDetailViewController {
         super.viewDidAppear(animated)
         
         guard let auctionHash = post.auctionHash else { return }
-        getAuctionInfo(transactionHash: auctionHash, contractAddress: auctionContractAddress)
+        getAuctionInfo(
+            transactionHash: auctionHash,
+            executeReadTransaction: executeReadTransaction,
+            contractAddress: auctionContractAddress
+        )
         addKeyboardObserver()
     }
     
@@ -408,7 +347,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
     }
     
     // the big button
-    final func setButtonStatus(as status: AuctionContract.AuctionMethods) {
+    final func setButtonStatus(as status: AuctionContract.ContractMethods) {
         DispatchQueue.main.async { [weak self] in
             guard self?.auctionButtonNarrowConstraint != nil,
                   self?.auctionButtonWideConstraint != nil else { return }
@@ -478,10 +417,10 @@ extension AuctionDetailViewController: UITextFieldDelegate {
             return
         }
         
-        callAuctionMethod(for: AuctionContract.AuctionMethods.bid, amountString: bidAmount)
+        callAuctionMethod(for: AuctionContract.ContractMethods.bid, amountString: bidAmount)
     }
     
-    func callAuctionMethod(for method: AuctionContract.AuctionMethods, amountString: String? = nil) {
+    func callAuctionMethod(for method: AuctionContract.ContractMethods, amountString: String? = nil) {
         var content = [
             StandardAlertContent(
                 index: 0,
@@ -652,9 +591,12 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                         case .withdraw:
                                             self.alert.showDetail("Bid Withdraw", with: "You have successfully withdrawn the previous bid amount.", for: self)
                                             // the properties has to be manually refetched because the withDraw method doesn't have the events (which means no topics), therefore doesn't trigger the socket event
-                                            print("self.txResult.txHash", self.txResult.txHash)
                                             DispatchQueue.main.async {
-                                                self.getAuctionInfo(transactionHash: self.txResult.txHash, contractAddress: self.auctionContractAddress)
+                                                self.getAuctionInfo(
+                                                    transactionHash: self.txResult.txHash,
+                                                    executeReadTransaction: self.executeReadTransaction,
+                                                    contractAddress: self.auctionContractAddress
+                                                )
                                             }
                                     }
                                     break
@@ -707,4 +649,3 @@ extension AuctionDetailViewController {
         self.view.endEditing(true)
     }
 }
-

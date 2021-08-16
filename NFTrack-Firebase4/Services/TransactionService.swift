@@ -1004,7 +1004,6 @@ extension TransactionService {
         return hashPublisher
             .setFailureType(to: PostingError.self)
             .flatMap { (txHash) -> AnyPublisher<TransactionReceipt, PostingError> in
-                print("txHash in confirm", txHash)
                 return Future<TransactionReceipt, PostingError> { promise in
                     DispatchQueue.main.async {
                         Web3swiftService.getReceipt(hash: txHash, promise: promise)

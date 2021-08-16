@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		49054D0626C5B2D000ECCB58 /* BalanceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */; };
+		49054D3326C961F600ECCB58 /* ListDetailTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D3226C961F600ECCB58 /* ListDetailTest.swift */; };
+		49054D3826C9F4DE00ECCB58 /* PropertyLoader + Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D3726C9F4DD00ECCB58 /* PropertyLoader + Utilities.swift */; };
+		49054D3D26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D3C26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift */; };
 		490D275D267ECEA1003500C1 /* ProgressModalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */; };
 		490D2762267ECF5F003500C1 /* PartialPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D2761267ECF5F003500C1 /* PartialPresentationController.swift */; };
 		49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B6A266ECEE70031A756 /* ProfileViewController.swift */; };
@@ -168,6 +171,9 @@
 		185327341381F410AFB911BC /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; sourceTree = "<group>"; };
 		2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceCardView.swift; sourceTree = "<group>"; };
+		49054D3226C961F600ECCB58 /* ListDetailTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailTest.swift; sourceTree = "<group>"; };
+		49054D3726C9F4DD00ECCB58 /* PropertyLoader + Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PropertyLoader + Utilities.swift"; sourceTree = "<group>"; };
+		49054D3C26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListDetailViewController + GetStatus.swift"; sourceTree = "<group>"; };
 		490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressModalViewController.swift; sourceTree = "<group>"; };
 		490D2761267ECF5F003500C1 /* PartialPresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartialPresentationController.swift; sourceTree = "<group>"; };
 		49221B6A266ECEE70031A756 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
@@ -461,6 +467,7 @@
 				495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */,
 				495FB37E26BB8A6F0047E91D /* AuctionButtonTest.swift */,
 				4988F0D026BF721400CD7678 /* ListVCTest.swift */,
+				49054D3226C961F600ECCB58 /* ListDetailTest.swift */,
 				4964E4742641B007005B3268 /* Info.plist */,
 			);
 			path = "NFTrack-Firebase4Tests";
@@ -511,6 +518,7 @@
 				4964E4D126430FBE005B3268 /* AppExtensions.swift */,
 				4964E5802649A047005B3268 /* AppProtocols.swift */,
 				493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */,
+				49054D3726C9F4DD00ECCB58 /* PropertyLoader + Utilities.swift */,
 			);
 			path = "Extensions + Utilities";
 			sourceTree = "<group>";
@@ -652,6 +660,7 @@
 				496F6FF72651AD6300E4056B /* ListViewController.swift */,
 				496F70012652029F00E4056B /* ListDetailViewController.swift */,
 				49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */,
+				49054D3C26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift */,
 				49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */,
 				495FB37926BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift */,
 				496F7006265207A700E4056B /* ImagePageViewController.swift */,
@@ -1068,6 +1077,7 @@
 				4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */,
 				490D275D267ECEA1003500C1 /* ProgressModalViewController.swift in Sources */,
 				49E759AD26669ACB0064BB34 /* ParentPostViewController.swift in Sources */,
+				49054D3D26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift in Sources */,
 				499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */,
 				497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */,
 				49F694BE265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift in Sources */,
@@ -1128,6 +1138,7 @@
 				495FD324268C034000F1D81D /* QuickUICheckViewController.swift in Sources */,
 				4997030526769A36001DD80A /* CardCell.swift in Sources */,
 				495D5E08268FE92F00F5DF71 /* InfoViewController.swift in Sources */,
+				49054D3826C9F4DE00ECCB58 /* PropertyLoader + Utilities.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1137,6 +1148,7 @@
 			files = (
 				4988F0D126BF721400CD7678 /* ListVCTest.swift in Sources */,
 				495FB33B26B70D000047E91D /* AuctionDeploymentTests.swift in Sources */,
+				49054D3326C961F600ECCB58 /* ListDetailTest.swift in Sources */,
 				495FB36826B9F9500047E91D /* NFTrack_Firebase4Tests.swift in Sources */,
 				495FB37F26BB8A6F0047E91D /* AuctionButtonTest.swift in Sources */,
 			);

@@ -15,19 +15,25 @@ import BigInt
 // current highest bidder
 // auction end time
 extension AuctionDetailViewController {
-    final func getAuctionInfo(transactionHash: String, contractAddress: EthereumAddress) {
+    final func getAuctionInfo(
+        transactionHash: String,
+        executeReadTransaction: @escaping (_ propertyFetchModel: inout SmartContractProperty, _ promise: (Result<SmartContractProperty, PostingError>) -> Void) -> Void,
+        contractAddress: EthereumAddress
+    ) {
         //        guard let auctionHash = post.auctionHash else { return }
         
-        let auctionInfoLoader = PropertyLoader(
+        let auctionInfoLoader = PropertyLoader<AuctionContract>(
             propertiesToLoad: self.propertiesToLoad,
             transactionHash: transactionHash,
-            contractAddress: contractAddress
+            executeReadTransaction: executeReadTransaction,
+            contractAddress: contractAddress,
+            contractABI: auctionABI
         )
-        
+
         isPending = true
         auctionInfoLoader.initiateLoadSequence()
             .sink { [weak self] (completion) in
-//                self?.isPending = false
+                self?.isPending = false
                 switch completion {
                     case .failure(.retrievingCurrentAddressError):
                         self?.alert.showDetail("Contract Address Error", with: "Unable to retrieve the current address of your wallet", for: self)
@@ -66,13 +72,80 @@ extension AuctionDetailViewController {
                 // the status will determine what the "big button" should display
                 guard let self = self else { return }
                 NotificationCenter.default.publisher(for: .auctionButtonDidUpdate)
-                    .compactMap { $0.object as? AuctionContract.AuctionMethods }
+                    .compactMap { $0.object as? AuctionContract.ContractMethods }
                     .sink { (status) in
                         self.setButtonStatus(as: status)
                     }
                     .store(in: &self.storage)
             }
             .store(in: &self.storage)
+    }
+    
+    final func executeReadTransaction(
+        propertyFetchModel: inout SmartContractProperty,
+        promise: (Result<SmartContractProperty, PostingError>) -> Void
+    ) {
+        do {
+            guard let transaction = propertyFetchModel.transaction else {
+                promise(.failure(.generalError(reason: "Unable to create a transaction.")))
+                return
+            }
+            
+            let result: [String: Any] = try transaction.call()
+            switch propertyFetchModel.propertyName {
+                case AuctionContract.ContractProperties.startingBid.value.0:
+                    if let startingBid = result["0"] as? BigUInt,
+                       let bidInEth = Web3.Utils.formatToEthereumUnits(startingBid, toUnits: .eth, decimals: 9) {
+                        // remove the unnecessary zeros in the decimal
+                        let trimmed = self.transactionService.stripZeros(bidInEth)
+                        propertyFetchModel.propertyDesc = "\(trimmed) ETH"
+                    }
+                case AuctionContract.ContractProperties.auctionEndTime.value.0:
+                    if let auctionEndTime = result["0"] as? BigUInt {
+                        let date = Date(timeIntervalSince1970: Double(auctionEndTime))
+                        propertyFetchModel.propertyDesc = date
+                    }
+                case AuctionContract.ContractProperties.highestBid.value.0:
+                    if let highestBid = result["0"] as? BigUInt {
+                        if let converted = Web3.Utils.formatToEthereumUnits(highestBid, toUnits: .eth, decimals: 9) {
+                            let trimmed = transactionService.stripZeros(converted)
+                            propertyFetchModel.propertyDesc = "\(trimmed) ETH"
+                        }
+                    }
+                case AuctionContract.ContractProperties.highestBidder.value.0:
+                    if let propertyDesc = result["0"] as? EthereumAddress {
+                        if propertyDesc.address == "0x0000000000000000000000000000000000000000" {
+                            propertyFetchModel.propertyDesc = "No Bidder"
+                        } else {
+                            propertyFetchModel.propertyDesc = propertyDesc.address
+                        }
+                    }
+                case AuctionContract.ContractProperties.ended.value.0:
+                    if let ended = result["0"] as? Bool {
+                        propertyFetchModel.propertyDesc = ended
+                    }
+                case AuctionContract.ContractProperties.pendingReturns(self.contractAddress).value.0:
+                    if let pendingReturns = result["0"] as? BigUInt,
+                       let converted = Web3.Utils.formatToEthereumUnits(pendingReturns, toUnits: .eth, decimals: 9) {
+                        let trimmed = self.transactionService.stripZeros(converted.description)
+                        propertyFetchModel.propertyDesc = trimmed
+                    }
+                case AuctionContract.ContractProperties.beneficiary.value.0:
+                    if let propertyDesc = result["0"] as? EthereumAddress {
+                        if propertyDesc.address == "0x0000000000000000000000000000000000000000" {
+                            propertyFetchModel.propertyDesc = "N/A"
+                        } else {
+                            propertyFetchModel.propertyDesc = propertyDesc.address
+                        }
+                    }
+                default:
+                    break
+            }
+            
+            promise(.success(propertyFetchModel))
+        } catch {
+            promise(.failure(.generalError(reason: "Could not read the properties from the blockchain.")))
+        }
     }
     
     // parsing the result here and not inside AuctionSpecView to make AuctionSpecView modular
@@ -99,7 +172,7 @@ extension AuctionDetailViewController {
             for case let subview as UILabel in element.subviews where subview.tag == 2 {
                 switch specDetail.propertyName {
                     // show the info button when the pending return value is 0
-                    case AuctionContract.AuctionProperties.pendingReturns(self.contractAddress).value.0 where specDetail.propertyDesc as? String == "0":
+                    case AuctionContract.ContractProperties.pendingReturns(self.contractAddress).value.0 where specDetail.propertyDesc as? String == "0":
                         subview.text = specDetail.propertyDesc as? String
                         pendingReturnButton = UIButton()
                         pendingReturnButton.alpha = 0
@@ -127,7 +200,7 @@ extension AuctionDetailViewController {
                         print("1")
                         break
                     // show the pending return button when there is a non-zero value to be returned
-                    case AuctionContract.AuctionProperties.pendingReturns(self.contractAddress).value.0 where specDetail.propertyDesc as? String != "0":
+                    case AuctionContract.ContractProperties.pendingReturns(self.contractAddress).value.0 where specDetail.propertyDesc as? String != "0":
                         subview.text = specDetail.propertyDesc as? String
 
                         pendingReturnButton = UIButton()
@@ -185,7 +258,7 @@ extension AuctionDetailViewController {
                             }
                             .store(in: &self.storage)
                         break
-                    case AuctionContract.AuctionProperties.highestBidder.value.0 where specDetail.propertyDesc is String:
+                    case AuctionContract.ContractProperties.highestBidder.value.0 where specDetail.propertyDesc is String:
                         guard let highestBidder = specDetail.propertyDesc as? String else { return }
                         auctionButtonController.highestBidder = highestBidder
                         
@@ -194,7 +267,7 @@ extension AuctionDetailViewController {
                         } else {
                             subview.text = specDetail.propertyDesc as? String
                         }
-                    case AuctionContract.AuctionProperties.ended.value.0 where specDetail.propertyDesc is Bool:
+                    case AuctionContract.ContractProperties.ended.value.0 where specDetail.propertyDesc is Bool:
                         guard let status = specDetail.propertyDesc as? Bool else { return }
                         subview.text = status == false ? "Active" : "Ended"
                         auctionButtonController.isAuctionOfficiallyEnded = status
@@ -219,7 +292,7 @@ extension AuctionDetailViewController {
                             statusInfoButton.alpha = 1
                         }
                         break
-                    case AuctionContract.AuctionProperties.auctionEndTime.value.0 where specDetail.propertyDesc is Date:
+                    case AuctionContract.ContractProperties.auctionEndTime.value.0 where specDetail.propertyDesc is Date:
                         guard let propDesc = specDetail.propertyDesc as? Date else { return }
                         auctionButtonController.auctionEndTime = propDesc
                         auctionButtonController.isAuctionEnded = propDesc < Date()
@@ -230,7 +303,7 @@ extension AuctionDetailViewController {
                         formatter.timeZone = .current
                         let formattedDate = formatter.string(from: propDesc)
                         subview.text = formattedDate
-                    case AuctionContract.AuctionProperties.beneficiary.value.0 where specDetail.propertyDesc is String:
+                    case AuctionContract.ContractProperties.beneficiary.value.0 where specDetail.propertyDesc is String:
                         guard let benficiary = specDetail.propertyDesc as? String else { return }
                         auctionButtonController.beneficiary = benficiary
                         if benficiary == self.contractAddress.address {
@@ -271,24 +344,12 @@ extension AuctionDetailViewController {
                 switch topics {
                     case _ where topics.contains(Topics.HighestBidIncreased):
                         self?.isPending = true
-                        self?.getAuctionInfo(transactionHash: txHash, contractAddress: auctionContractAddress)
-                        
-                    //                        // if the auction info is fetched right away, it wouldn't fetch the info from the newly added block
-                    //                        // the transaction needs to be completed before the proper info can be reflected
-                    //                        self.transactionService.confirmEtherTransactionsNoDelay(txHash: txHash)
-                    //                            .sink { (completion) in
-                    //                                switch completion {
-                    //                                    case .failure(let err):
-                    //                                        self.alert.showDetail("Auction Detail Fetch Error", with: err.localizedDescription, for: self)
-                    //                                    case .finished:
-                    //                                        print("spec fetched after mined")
-                    //                                        self.getAuctionInfo()
-                    //                                        break
-                    //                                }
-                    //                                self.isPending = false
-                    //                            } receiveValue: {(_) in
-                    //                            }
-                    //                            .store(in: &self.storage)
+                        guard let executeReadTransaction = self?.executeReadTransaction else { return }
+                        self?.getAuctionInfo(
+                            transactionHash: txHash,
+                            executeReadTransaction: executeReadTransaction,
+                            contractAddress: auctionContractAddress
+                        )
                     default:
                         print("other events")
                 }

@@ -240,18 +240,6 @@ class UnderlineView: UIView {
     }
 }
 
-// MARK: - PurchaseMethods
-enum PurchaseMethods: String {
-    case abort, confirmPurchase, confirmReceived
-}
-
-// MARK: - PurchaseStatus
-enum PurchaseStatus: String {
-    case created = "Created"
-    case locked = "Locked"
-    case inactive = "Inactive"
-}
-
 // MARK: - PostStatus
 /// determines whether to show the post or not
 /// when the seller first posts: ready
@@ -261,23 +249,6 @@ enum PurchaseStatus: String {
 /// when the transaction is complete: complete
 enum PostStatus: String {
     case ready, pending, aborted, complete, resold, transferred 
-}
-
-enum AuctionStatus: String {
-    case ready, bid, ended, transferred
-    
-    var toDisplay: String! {
-        switch self {
-            case .bid:
-                return "Bid"
-            case .ended:
-                return "Auction Ended"
-            case .transferred:
-                return "Transferred"
-            default:
-                return "ready"
-        }
-    }
 }
 
 // MARK:- PositionStatus
@@ -380,7 +351,6 @@ struct UserDefaultKeys {
     static let filterSettings: String = "filterSettings"
     static let fcmToken: String = "fcmToken"
 }
-
 
 // MARK: - Message
 struct Message {
@@ -542,12 +512,10 @@ extension CaseCountable where Self: RawRepresentable, Self.RawValue == Int {
     }
 }
 
-
 enum SaleFormat: String {
     case onlineDirect = "Online Direct"
     case openAuction = "Open Auction"
 }
-
 
 // MARK: - Delivery method
 enum DeliveryMethod: String {
@@ -568,7 +536,6 @@ struct FilterSettings: Codable {
     var priceIsDescending: Bool = false
     var dateIsDescending: Bool = false
 }
-
 
 struct InfoText {
     static let deliveryMethod = """
@@ -629,6 +596,12 @@ struct InfoText {
     static let auctionStatus = """
     The auction status is either "active" or "ended". When the auction's time expires, you will no longer be able to bid, but you will have to officially end the auction by pressing the "End Auction" button, which will be presented after the expiration. The auction can be ended by anyone as long as the time has expired and is required prior to either transferring the asset or receiving the winning bid as a beneficiary.
     """
+    static let receiptPending = """
+    The buyer will update the status when they receive the item, after which the transaction is completed.  You will be able to withdraw your fund from the escrow after the confirmation of the receipt by the buyer.
+    """
+    static let transferCompleted = """
+    Congratulations! You have successfully completed the selling process.
+    """
 }
 
 // MARK: - SmartContractProperty
@@ -681,4 +654,6 @@ struct TxPackage {
 // MARK: - Topics
 struct Topics {
     static let HighestBidIncreased = "0xf4757a49b326036464bec6fe419a4ae38c8a02ce3e68bf0809674f6aab8ad300"
+    static let Transfer = "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
+    static let Transfer2 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
 }

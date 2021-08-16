@@ -26,7 +26,7 @@ class AuctionButtonTest: XCTestCase {
         auctionButtonController.isAuctionEnded = false
         auctionButtonController.isAuctionOfficiallyEnded = false
         NotificationCenter.default.publisher(for: .auctionButtonDidUpdate)
-            .compactMap { $0.object as? AuctionContract.AuctionMethods }
+            .compactMap { $0.object as? AuctionContract.ContractMethods }
             .sink { (status) in
                 XCTAssertEqual(status, .bid)
             }
@@ -37,7 +37,7 @@ class AuctionButtonTest: XCTestCase {
         auctionButtonController.isAuctionEnded = true
         auctionButtonController.isAuctionOfficiallyEnded = false
         NotificationCenter.default.publisher(for: .auctionButtonDidUpdate)
-            .compactMap { $0.object as? AuctionContract.AuctionMethods }
+            .compactMap { $0.object as? AuctionContract.ContractMethods }
             .sink { (status) in
                 XCTAssertEqual(status, .auctionEnd)
             }
@@ -52,7 +52,7 @@ class AuctionButtonTest: XCTestCase {
         auctionButtonController.beneficiary = currentAddress.address
         
         NotificationCenter.default.publisher(for: .auctionButtonDidUpdate)
-            .compactMap { $0.object as? AuctionContract.AuctionMethods }
+            .compactMap { $0.object as? AuctionContract.ContractMethods }
             .sink { (status) in
                 XCTAssertEqual(status, .getTheHighestBid)
             }
@@ -67,7 +67,7 @@ class AuctionButtonTest: XCTestCase {
         auctionButtonController.highestBidder = currentAddress.address
         
         NotificationCenter.default.publisher(for: .auctionButtonDidUpdate)
-            .compactMap { $0.object as? AuctionContract.AuctionMethods }
+            .compactMap { $0.object as? AuctionContract.ContractMethods }
             .sink { (status) in
                 XCTAssertEqual(status, .transferToken)
             }

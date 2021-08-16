@@ -9,21 +9,20 @@ import UIKit
 import web3swift
 import Firebase
 import FirebaseFirestore
-import BigInt
 import Combine
 
 class ListDetailViewController: ParentDetailViewController {
     final override var post: Post! {
         didSet {
             self.getStatus()
-//            self.getHistory()
         }
     }
     final var optionsBarItem: UIBarButtonItem!
     private var statusTitleLabel: UILabel!
-    private var statusLabel: UILabelPadding!
+    final var statusLabel: UILabelPadding!
     final var updateStatusButton = UIButton()
-    private var userId: String! {
+    final var activityIndicatorView: UIActivityIndicatorView!
+    final var userId: String! {
         return UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
     }
     
@@ -45,12 +44,18 @@ class ListDetailViewController: ParentDetailViewController {
     final var starButtonItem: UIBarButtonItem!
     weak var delegate: RefetchDataDelegate?
     final var observation: NSKeyValueObservation?
-    private var storage = Set<AnyCancellable>()
-    
+    final var storage = Set<AnyCancellable>()
+    private var socketDelegate: SocketDelegate!
+
     final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if observation != nil {
             observation?.invalidate()
+        }
+        
+        if let isSocketConnected = self.socketDelegate.socketProvider?.socket.isConnected,
+           isSocketConnected == false {
+            self.createSocket()
         }
     }
     
@@ -58,6 +63,10 @@ class ListDetailViewController: ParentDetailViewController {
         super.viewDidDisappear(animated)
         if observation != nil {
             observation?.invalidate()
+        }
+        
+        if socketDelegate != nil {
+            socketDelegate.disconnectSocket()
         }
     }
     
@@ -141,10 +150,18 @@ extension ListDetailViewController {
         scrollView.addSubview(statusLabel)
         
         updateStatusButton.backgroundColor = .black
+        updateStatusButton.isEnabled = false
         updateStatusButton.layer.cornerRadius = 5
         updateStatusButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
         updateStatusButton.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(updateStatusButton)
+        
+        activityIndicatorView = UIActivityIndicatorView()
+        activityIndicatorView.hidesWhenStopped = true
+        activityIndicatorView.color = .white
+        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
+        updateStatusButton.addSubview(activityIndicatorView)
+        activityIndicatorView.startAnimating()
         
         historyVC = HistoryViewController()
         historyVC.itemIdentifier = post.id
@@ -171,6 +188,9 @@ extension ListDetailViewController {
             updateStatusButton.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
             updateStatusButton.heightAnchor.constraint(equalToConstant: 50),
             
+            activityIndicatorView.centerYAnchor.constraint(equalTo: updateStatusButton.centerYAnchor),
+            activityIndicatorView.centerXAnchor.constraint(equalTo: updateStatusButton.centerXAnchor),
+            
             historyVC.view.topAnchor.constraint(equalTo: updateStatusButton.bottomAnchor, constant: 40),
             historyVC.view.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             historyVC.view.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
@@ -185,13 +205,13 @@ extension ListDetailViewController {
         switch sender.tag {
             case 1:
                 // abort by the seller
-                updateState(method: PurchaseMethods.abort.rawValue, status: .aborted)
+                updateState(method: PurchaseMethods.abort.methodName, status: .aborted)
             case 2:
-                // confirm purchase
-                updateState(method: PurchaseMethods.confirmPurchase.rawValue, price: String(post.price), status: .pending)
+                // confirm purchase or "buy"
+                updateState(method: PurchaseMethods.confirmPurchase.methodName, price: String(post.price), status: .pending)
             case 3:
                 // confirm received
-                updateState(method: PurchaseMethods.confirmReceived.rawValue, status: .complete)
+                updateState(method: PurchaseMethods.confirmReceived.methodName, status: .complete)
             case 4:
                 // sell
                 let resellVC = ResellViewController()
@@ -230,6 +250,14 @@ extension ListDetailViewController {
                 let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Status", detail: InfoText.transferPending)])
                 self.present(infoVC, animated: true, completion: nil)
                 break
+            case 9:
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Status", detail: InfoText.receiptPending)])
+                self.present(infoVC, animated: true, completion: nil)
+                break
+            case 10:
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Status", detail: InfoText.transferCompleted)])
+                self.present(infoVC, animated: true, completion: nil)
+                break
             default:
                 break
         }
@@ -237,135 +265,10 @@ extension ListDetailViewController {
     
     // MARK: - configureStatusButton
     final func configureStatusButton(buttonTitle: String = "Buy", tag: Int = 2) {
-        updateStatusButton.tag = tag
-        updateStatusButton.setTitle(buttonTitle, for: .normal)
-    }
-}
-
-extension ListDetailViewController {
-    // MARK: - getStatus
-    final func getStatus() {
-        DispatchQueue.global().async { [weak self] in
-            guard let `self` = self else { return }
-            do {
-                guard let escrowHash = self.post.escrowHash else {
-                    self.alert.showDetail("Error", with: "Could not load the escrow hash", for: self)
-                    return
-                }
-                let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(escrowHash)
-                guard let contractAddress = receipt.contractAddress else { return }
-                self.contractAddress = contractAddress
-                self.transactionService.prepareTransactionForReading(method: "state", contractAddress: contractAddress, completion: { (transaction, error) in
-                    if let error = error {
-                        switch error {
-                            case .contractLoadingError:
-                                self.alert.showDetail("Error", with: "Contract Loading Error", for: self)
-                            case .createTransactionIssue:
-                                self.alert.showDetail("Error", with: "Contract Transaction Issue", for: self)
-                            default:
-                                self.alert.showDetail("Error", with: "There was an error getting your information from the blockchain.", for: self)
-                        }
-                    }
-                    
-                    if let transaction = transaction {
-                        do {
-                            let result: [String: Any] = try transaction.call()
-                            if let value = result["0"] as? BigUInt {
-                                let serialized = value.serialize()
-                                
-                                print("serialized.count", serialized.count)
-                                
-                                var status: String!
-                                var buyerButtonTitle: String!
-                                var sellerButtonTitle: String!
-                                var sellerTag: Int!
-                                var buyerTag: Int!
-                                
-                                if serialized.count == 0 {
-                                    // abort
-                                    status = PurchaseStatus.created.rawValue
-                                    sellerButtonTitle = "Abort"
-                                    sellerTag = 1
-                                    
-                                    // buy
-                                    buyerButtonTitle = "Buy"
-                                    buyerTag = 2
-                                } else if serialized.count == 1 {
-                                    let statusCode = serialized[0]
-                                    print("statusCode", statusCode)
-                                    switch statusCode {
-                                        case 1:
-                                            status = PurchaseStatus.locked.rawValue
-                                            sellerButtonTitle = "Transfer Ownership"
-                                            // default
-                                            sellerTag = 5
-                                            
-                                            if self.post.transferHash != nil {
-                                                buyerButtonTitle = "Confirm Received"
-                                                buyerTag = 3
-                                            } else {
-                                                buyerButtonTitle = "Transfer Pending"
-                                                buyerTag = 8
-                                            }
-                                        case 2:
-                                            status = "Inactive"
-                                            sellerButtonTitle = "Transaction Completed"
-                                            
-                                            buyerButtonTitle = "Sell"
-                                            buyerTag = 4
-                                        default:
-                                            break
-                                    }
-                                }
-                                
-                                if self.userId != self.post.sellerUserId {
-                                    DispatchQueue.main.async {
-                                        self.configureStatusButton(buttonTitle: buyerButtonTitle, tag: buyerTag)
-                                    }
-                                } else if self.userId == self.post.sellerUserId {
-                                    DispatchQueue.main.async {
-                                        self.configureStatusButton(buttonTitle: sellerButtonTitle, tag: sellerTag)
-                                    }
-                                } else {
-                                    self.alert.showDetail("Authorization Error", with: "You need to be logged in!", for: self) { [weak self] in
-                                        DispatchQueue.main.async {
-                                            self?.navigationController?.popViewController(animated: true)
-                                        }
-                                    } completion: {}
-                                }
-                                
-                                if self.statusLabel != nil {
-                                    DispatchQueue.main.async {
-                                        self.statusLabel.text = status
-                                    }
-                                }
-                            } else {
-                                DispatchQueue.main.async {
-                                    self.navigationController?.popViewController(animated: true)
-                                }
-                            }
-                        } catch {
-                            self.alert.showDetail("Error", with: error.localizedDescription, for: self) { [weak self] in
-                                DispatchQueue.main.async {
-                                    self?.navigationController?.popViewController(animated: true)
-                                }
-                            } completion: {}
-                        }
-                    }
-                })
-            }  catch Web3Error.nodeError(let desc) {
-                if let index = desc.firstIndex(of: ":") {
-                    let newIndex = desc.index(after: index)
-                    let newStr = desc[newIndex...]
-                    self.alert.showDetail("Alert", with: String(newStr), for: self)
-                }
-            } catch {
-                self.alert.showDetail("Error", with: "Unable to retrieve the contract adddress", for: self) { [weak self] in
-                    DispatchQueue.main.async {
-                        self?.navigationController?.popViewController(animated: true)
-                    }
-                } completion: {}
-            }
+        DispatchQueue.main.async { [weak self] in
+            self?.updateStatusButton.tag = tag
+            self?.updateStatusButton.isEnabled = true
+            self?.updateStatusButton.setTitle(buttonTitle, for: .normal)
         }
     }
 }
@@ -716,181 +619,6 @@ extension ListDetailViewController {
         }
         self.present(alertVC, animated: true, completion: nil)
     }
-    
-    final func transferToken1() {
-        let docRef = FirebaseService.shared.db.collection("post").document(post.documentId)
-        docRef.getDocument { [weak self] (document, error) in
-            if let document = document,
-               document.exists,
-               let data = document.data() {
-                
-                var buyerHash: String!
-                var tokenId: String!
-                data.forEach { (item) in
-                    switch item.key {
-                        case "buyerHash":
-                            buyerHash = item.value as? String
-                        case "tokenId":
-                            tokenId = item.value as? String
-                        default:
-                            break
-                    }
-                }
-                
-                guard let bh = buyerHash else {
-                    self?.alert.showDetail("Error", with: "The item has not been purchased by a buyer yet.", for: self)
-                    return
-                }
-                
-                guard let ti = tokenId else {
-                    self?.alert.showDetail("Error", with: "The item does not have token ID registered. It may take up to 10 mins to process.", for: self)
-                    return
-                }
-                
-                guard let fromAddress = Web3swiftService.currentAddress,
-                      let toAddress = EthereumAddress(bh),
-                      let NFTrackAddress = NFTrackAddress else {
-                    self?.alert.showDetail("Error", with: "Could not get the contract address to transfer the token.", for: self)
-                    return
-                }
-                
-                let param: [AnyObject] = [fromAddress, toAddress, ti] as [AnyObject]
-                
-                self?.transactionService.prepareTransactionForWriting(
-                    method: "transferFrom",
-                    abi: NFTrackABI,
-                    param: param,
-                    contractAddress: NFTrackAddress,
-                    completion: { (transaction, error) in
-                        
-                    if let error = error {
-                        switch error {
-                            case .invalidAmountFormat:
-                                self?.alert.showDetail("Error", with: "The ETH amount is not in a correct format!", for: self)
-                            case .zeroAmount:
-                                self?.alert.showDetail("Error", with: "The ETH amount cannot be negative", for: self)
-                            case .insufficientFund:
-                                self?.alert.showDetail("Error", with: "There is an insufficient amount of ETH in the wallet.", for: self)
-                            case .contractLoadingError:
-                                self?.alert.showDetail("Error", with: "There was an error loading your contract.", for: self)
-                            case .createTransactionIssue:
-                                self?.alert.showDetail("Error", with: "There was an error creating the transaction.", for: self)
-                            default:
-                                self?.alert.showDetail("Sorry", with: "There was an error. Please try again.", for: self)
-                        }
-                    }
-                    
-                    if let transaction = transaction {
-                        let content = [
-                            StandardAlertContent(
-                                index: 0,
-                                titleString: "Password",
-                                body: [AlertModalDictionary.passwordSubtitle: ""],
-                                isEditable: true,
-                                fieldViewHeight: 50,
-                                messageTextAlignment: .left,
-                                alertStyle: .withCancelButton
-                            ),
-                            StandardAlertContent(
-                                index: 1,
-                                titleString: "Transaction Options",
-                                body: [
-                                    AlertModalDictionary.gasLimit: "",
-                                    AlertModalDictionary.gasPrice: "",
-                                    AlertModalDictionary.nonce: ""
-                                ],
-                                isEditable: true,
-                                fieldViewHeight: 50,
-                                messageTextAlignment: .left,
-                                alertStyle: .noButton
-                            )
-                        ]
-                        
-                        DispatchQueue.main.async {
-                            let alertVC = AlertViewController(height: 400, standardAlertContent: content)
-                            alertVC.action = { [weak self] (modal, mainVC) in
-                                // responses to the main vc's button
-                                mainVC.buttonAction = { _ in
-                                    guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-                                          !password.isEmpty else {
-                                        self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
-                                        return
-                                    }
-                                    
-                                    self?.dismiss(animated: true, completion: {
-                                        self?.showSpinner({
-                                            DispatchQueue.global().async {
-                                                do {
-                                                    let receipt = try transaction.send(password: password, transactionOptions: nil)
-                                                    FirebaseService.shared.db.collection("post").document(document.documentID).updateData([
-                                                        "transferHash": receipt.hash,
-                                                        "transferDate": Date(),
-                                                        "status": PostStatus.transferred.rawValue
-                                                    ], completion: { (error) in
-                                                        if let error = error {
-                                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
-                                                        } else {
-                                                            /// send the push notification to the seller
-                                                            guard let `self` = self, let buyerUserId = self.post.buyerUserId else { return }
-                                                            self.sendNotification(sender: self.userId, recipient: buyerUserId, content: "The seller has transferred the item!", docID: self.post.documentId) { [weak self] (error) in
-                                                                if let error = error {
-                                                                    print("error", error)
-                                                                }
-                                                                
-                                                                self?.alert.showDetail(
-                                                                    "Success!",
-                                                                    with: "The token has been successfully transferred.",
-                                                                    for: self
-                                                                ) {
-                                                                    self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
-                                                                    self?.navigationController?.popViewController(animated: true)
-                                                                } completion: {}
-                                                            }
-                                                        }
-                                                    })
-                                                } catch Web3Error.nodeError(let desc) {
-                                                    if let index = desc.firstIndex(of: ":") {
-                                                        let newIndex = desc.index(after: index)
-                                                        let newStr = desc[newIndex...]
-                                                        self?.alert.showDetail("Alert", with: String(newStr), for: self)
-                                                    }
-                                                } catch Web3Error.transactionSerializationError {
-                                                    DispatchQueue.main.async {
-                                                        self?.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
-                                                    }
-                                                } catch Web3Error.connectionError {
-                                                    DispatchQueue.main.async {
-                                                        self?.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
-                                                    }
-                                                } catch Web3Error.dataError {
-                                                    DispatchQueue.main.async {
-                                                        self?.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
-                                                    }
-                                                } catch Web3Error.inputError(_) {
-                                                    DispatchQueue.main.async {
-                                                        self?.alert.showDetail("Alert", with: "Failed to sign the transaction. You may be using an incorrect password. \n\nOtherwise, please try logging out of your wallet (not the NFTrack account) and logging back in. Ensure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
-                                                    }
-                                                } catch Web3Error.processingError(let desc) {
-                                                    DispatchQueue.main.async {
-                                                        self?.alert.showDetail("Alert", with: "\(desc). Ensure that you're using the same address used in the original transaction.", height: 320, alignment: .left, for: self)
-                                                    }
-                                                } catch {
-                                                    self?.alert.showDetail("Error", with: "There was an error with the transfer transaction.", for: self)
-                                                }
-                                            } // dispatchQueue
-                                        }) // showSpinner
-                                    }) // dismiss
-                                } // mainVC buttonAction
-                            } // alertVC
-                            self?.present(alertVC, animated: true, completion: nil)
-                        }
-                    } // transaction
-                })
-            } else {
-                self?.alert.showDetail("Sorry", with: "Unable to find the token to transfer.", for: self)
-            }
-        }
-    }
 }
 
 extension ListDetailViewController {
@@ -949,5 +677,46 @@ extension ListDetailViewController {
         }
         
         task.resume()
+    }
+}
+
+extension ListDetailViewController {
+    func createSocket(topics: [String]? = nil) {
+        guard socketDelegate == nil else { return }
+        socketDelegate = SocketDelegate(
+            contractAddress: self.contractAddress,
+            topics: topics,
+            passThroughSubject: PassthroughSubject<[String: Any], PostingError>()
+        )
+        
+        socketDelegate.passThroughSubject
+            .sink(receiveCompletion: { [weak self] (completion) in
+                switch completion {
+                    case .failure(let err):
+                        self?.alert.showDetail("Auction Detail Fetch Error", with: err.localizedDescription, for: self)
+                    case .finished:
+                        print("")
+                        break
+                }
+            }, receiveValue: { [weak self] (WebSocketMessage) in
+                guard let topics = WebSocketMessage["topics"] as? [String],
+                      let txHash = WebSocketMessage["transactionHash"] as? String,
+                      let contractAddress = self?.contractAddress else { return }
+                
+                switch topics {
+                    case _ where topics.contains(Topics.Transfer) || topics.contains(Topics.Transfer2):
+//                        self?.isPending = true
+//                        guard let executeReadTransaction = self?.executeReadTransaction else { return }
+//                        self?.getAuctionInfo(
+//                            transactionHash: txHash,
+//                            executeReadTransaction: executeReadTransaction,
+//                            contractAddress: contractAddress
+//                        )
+                        break
+                    default:
+                        print("other events")
+                }
+            })
+            .store(in: &storage)
     }
 }
