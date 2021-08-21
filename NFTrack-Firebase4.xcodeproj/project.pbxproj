@@ -11,6 +11,10 @@
 		49054D3326C961F600ECCB58 /* ListDetailTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D3226C961F600ECCB58 /* ListDetailTest.swift */; };
 		49054D3826C9F4DE00ECCB58 /* PropertyLoader + Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D3726C9F4DD00ECCB58 /* PropertyLoader + Utilities.swift */; };
 		49054D3D26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D3C26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift */; };
+		49054D4226CA310300ECCB58 /* PendingIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D4126CA310300ECCB58 /* PendingIndicatorView.swift */; };
+		49054D4726CAC21700ECCB58 /* ListDetailViewController + UpdateState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D4626CAC21700ECCB58 /* ListDetailViewController + UpdateState.swift */; };
+		49054D4F26CB66A400ECCB58 /* TangibleListEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D4E26CB66A300ECCB58 /* TangibleListEditViewController.swift */; };
+		49054D5426CC785C00ECCB58 /* ParentListEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D5326CC785B00ECCB58 /* ParentListEditViewController.swift */; };
 		490D275D267ECEA1003500C1 /* ProgressModalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */; };
 		490D2762267ECF5F003500C1 /* PartialPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D2761267ECF5F003500C1 /* PartialPresentationController.swift */; };
 		49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B6A266ECEE70031A756 /* ProfileViewController.swift */; };
@@ -113,6 +117,7 @@
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
 		4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */; };
 		4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */; };
+		4984292226CDBD9A0062CD43 /* DigitalListEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4984292126CDBD9A0062CD43 /* DigitalListEditViewController.swift */; };
 		4988F0B426BE20BC00CD7678 /* PurchasesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4988F0B326BE20BC00CD7678 /* PurchasesViewController.swift */; };
 		4988F0D126BF721400CD7678 /* ListVCTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4988F0D026BF721400CD7678 /* ListVCTest.swift */; };
 		499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499702A52672E0BA001DD80A /* ToolBarView.swift */; };
@@ -174,6 +179,10 @@
 		49054D3226C961F600ECCB58 /* ListDetailTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailTest.swift; sourceTree = "<group>"; };
 		49054D3726C9F4DD00ECCB58 /* PropertyLoader + Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PropertyLoader + Utilities.swift"; sourceTree = "<group>"; };
 		49054D3C26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListDetailViewController + GetStatus.swift"; sourceTree = "<group>"; };
+		49054D4126CA310300ECCB58 /* PendingIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingIndicatorView.swift; sourceTree = "<group>"; };
+		49054D4626CAC21700ECCB58 /* ListDetailViewController + UpdateState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListDetailViewController + UpdateState.swift"; sourceTree = "<group>"; };
+		49054D4E26CB66A300ECCB58 /* TangibleListEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TangibleListEditViewController.swift; sourceTree = "<group>"; };
+		49054D5326CC785B00ECCB58 /* ParentListEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentListEditViewController.swift; sourceTree = "<group>"; };
 		490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressModalViewController.swift; sourceTree = "<group>"; };
 		490D2761267ECF5F003500C1 /* PartialPresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartialPresentationController.swift; sourceTree = "<group>"; };
 		49221B6A266ECEE70031A756 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
@@ -281,6 +290,7 @@
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecDisplayView.swift; sourceTree = "<group>"; };
 		4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyLoader.swift; sourceTree = "<group>"; };
+		4984292126CDBD9A0062CD43 /* DigitalListEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitalListEditViewController.swift; sourceTree = "<group>"; };
 		4988F0B326BE20BC00CD7678 /* PurchasesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchasesViewController.swift; sourceTree = "<group>"; };
 		4988F0D026BF721400CD7678 /* ListVCTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListVCTest.swift; sourceTree = "<group>"; };
 		499702A52672E0BA001DD80A /* ToolBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolBarView.swift; sourceTree = "<group>"; };
@@ -508,6 +518,7 @@
 				495FD2D726892FDB00F1D81D /* StarRatingView.swift */,
 				4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */,
 				49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */,
+				49054D4126CA310300ECCB58 /* PendingIndicatorView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -661,6 +672,10 @@
 				496F70012652029F00E4056B /* ListDetailViewController.swift */,
 				49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */,
 				49054D3C26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift */,
+				49054D4626CAC21700ECCB58 /* ListDetailViewController + UpdateState.swift */,
+				49054D5326CC785B00ECCB58 /* ParentListEditViewController.swift */,
+				49054D4E26CB66A300ECCB58 /* TangibleListEditViewController.swift */,
+				4984292126CDBD9A0062CD43 /* DigitalListEditViewController.swift */,
 				49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */,
 				495FB37926BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift */,
 				496F7006265207A700E4056B /* ImagePageViewController.swift */,
@@ -1069,6 +1084,7 @@
 				496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */,
 				4964E52126489564005B3268 /* BigPreviewViewController.swift in Sources */,
 				495FD2D32688043000F1D81D /* PDFPreviewViewController.swift in Sources */,
+				4984292226CDBD9A0062CD43 /* DigitalListEditViewController.swift in Sources */,
 				493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */,
 				499F994E266ADA0E00FC6CDE /* HistoryDetailViewController.swift in Sources */,
 				490D2762267ECF5F003500C1 /* PartialPresentationController.swift in Sources */,
@@ -1111,9 +1127,11 @@
 				492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */,
 				49054D0626C5B2D000ECCB58 /* BalanceCardView.swift in Sources */,
 				49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */,
+				49054D4726CAC21700ECCB58 /* ListDetailViewController + UpdateState.swift in Sources */,
 				493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */,
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
+				49054D5426CC785C00ECCB58 /* ParentListEditViewController.swift in Sources */,
 				499F9953266AED0E00FC6CDE /* ParentDetailViewController.swift in Sources */,
 				49DEFF652686552E004C2DD0 /* PreviewPDFViewController.swift in Sources */,
 				499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */,
@@ -1125,6 +1143,7 @@
 				499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */,
 				49765A5226ADEE850094A8EC /* TestSocketDelegate.swift in Sources */,
 				495FD31C268B9DCA00F1D81D /* NewPostViewController.swift in Sources */,
+				49054D4226CA310300ECCB58 /* PendingIndicatorView.swift in Sources */,
 				499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */,
 				49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */,
 				4964E568264968A7005B3268 /* Errors.swift in Sources */,
@@ -1133,6 +1152,7 @@
 				4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */,
 				495FD32E268D292E00F1D81D /* FilterViewController.swift in Sources */,
 				496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */,
+				49054D4F26CB66A400ECCB58 /* TangibleListEditViewController.swift in Sources */,
 				4964E52C2648B096005B3268 /* MyPresentationController.swift in Sources */,
 				495FD2CE2687B33600F1D81D /* CustomPreviewItem.swift in Sources */,
 				495FD324268C034000F1D81D /* QuickUICheckViewController.swift in Sources */,

@@ -865,7 +865,6 @@ extension TransactionService {
             var result: [String: Any]!
             do {
                 result = try transaction.call()
-                
                 print("result", result as Any)
             } catch {
                 if let err = error as? Web3Error {

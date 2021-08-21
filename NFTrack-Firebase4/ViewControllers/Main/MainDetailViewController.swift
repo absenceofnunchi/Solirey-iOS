@@ -116,12 +116,3 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         }
     }
 }
-
-//guard let myContractAddress = Web3swiftService.currentAddress else {
-//    self.alert.showDetail("Wallet Not Logged In.", with: "You have to be logged into your wallet to continue.", for: self, buttonAction: {
-//
-//    }, completion:  {
-//
-//    })
-//    return
-//}

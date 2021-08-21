@@ -5,6 +5,14 @@
 //  Created by J C on 2021-08-16.
 //
 
+/*
+ Abstract:
+ Fetches the "status" property from the escrow smart contract using latest transaction hash and the contract address.
+ Once the status is fetched, it's used to update two things:
+ 1. The status label which shows one of three states - Created, Locked, Inactive
+ 2. The state update button which will display and execute different methods depending on the stage of the sale and also on whether the user is a seller or a buyer.
+ */
+
 import UIKit
 import Combine
 import web3swift
@@ -24,7 +32,7 @@ extension ListDetailViewController {
          The property loader should check the latest hash and verify whether the block has been added before fetching the status property,
          which means to check from the last to first, reverse chronologically.
          */
-        
+        self.isPending = true
         var latestHash: String!
         if let confirmReceivedHash = post.confirmReceivedHash {
             latestHash = confirmReceivedHash
@@ -81,12 +89,16 @@ extension ListDetailViewController {
                 case .failure(.generalError(reason: let msg)):
                     self?.alert.showDetail("Auction Info Retrieval Error", with: msg, for: self)
                 case .finished:
-                    print("get auction info finished")
+                    print("status info finished")
                 default:
                     self?.alert.showDetail("Auction Info Retrieval Error", with: "Unable to fetch the auction contract information.", for: self)
             }
         } receiveValue: { [weak self] (propertyFetchModels: [SmartContractProperty]) in
             self?.parseFetchResultToDisplay(propertyFetchModels)
+            self?.isPending = false
+            
+            guard let contractAddress = self?.contractAddress else { return }
+            self?.createSocket(contractAddress: contractAddress)
         }
         .store(in: &self.storage)
     }
@@ -129,9 +141,7 @@ extension ListDetailViewController {
                         }
                     }
                 }
-                
-                print("status", status)
-                
+                                
                 switch "\(status)" {
                     case "0":
                         if post.sellerUserId == userId {
@@ -172,4 +182,3 @@ extension ListDetailViewController {
         }
     }
 }
-

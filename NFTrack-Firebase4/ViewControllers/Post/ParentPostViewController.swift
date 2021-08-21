@@ -114,10 +114,9 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
         return imageName
     }
     
-    let SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat = 1650
-    let IMAGE_PREVIEW_HEIGHT: CGFloat = 180
-    lazy var SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW: CGFloat = SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT + IMAGE_PREVIEW_HEIGHT
-    
+    var SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat! = 1650
+    var IMAGE_PREVIEW_HEIGHT: CGFloat! = 180
+    lazy var SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW: CGFloat! = SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT + IMAGE_PREVIEW_HEIGHT
     var escrowHash: String!
     var mintHash: String!
     var senderAddress: String!
@@ -162,7 +161,9 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
     
     /// where the subclasses override the ImagePreview post type.
     /// This has to be done before setConstraints
-    func configureImagePreview() {}
+    func configureImagePreview() {
+        configureImagePreview(postType: .tangible, superView: scrollView)
+    }
 }
 
 extension ParentPostViewController {
@@ -175,7 +176,6 @@ extension ParentPostViewController {
         
         scrollView = UIScrollView()
         scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT)
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
         scrollView.fill()
         
@@ -298,7 +298,7 @@ extension ParentPostViewController {
         addTagButton.translatesAutoresizingMaskIntoConstraints = false
         tagContainerView.addSubview(addTagButton)
 
-        createButtonPanel(panelButtons: panelButtons) { (buttonsArr) in
+        createButtonPanel(panelButtons: panelButtons, superView: scrollView) { (buttonsArr) in
             buttonsArr.forEach { (button) in
                 button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
             }
@@ -311,7 +311,7 @@ extension ParentPostViewController {
         postButton.backgroundColor = .black
         postButton.tag = 3
         postButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(postButton)
+        scrollView.addSubview(postButton)
     }
     
     // MARK: - setConstraints
@@ -489,7 +489,7 @@ extension ParentPostViewController {
         } else {
             self.alert.showDetail(
                 "Upload Limit",
-                with: "There is a limit of 6 files per review.",
+                with: "There is a limit of 6 files per post.",
                 for: self) {
                 print("something")
             } completion:  {}
@@ -555,16 +555,16 @@ extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigati
 
 extension ParentPostViewController: PreviewDelegate {
     // MARK: - configureImagePreview
-    func configureImagePreview(postType: PostType) {
-        imagePreviewVC = ImagePreviewViewController(postType: postType)
-        imagePreviewVC.data = previewDataArr
-        imagePreviewVC.delegate = self
-        imagePreviewVC.view.translatesAutoresizingMaskIntoConstraints = false
-        addChild(imagePreviewVC)
-        imagePreviewVC.view.frame = view.bounds
-        view.addSubview(imagePreviewVC.view)
-        imagePreviewVC.didMove(toParent: self)
-    }
+//    func configureImagePreview(postType: PostType) {
+//        imagePreviewVC = ImagePreviewViewController(postType: postType)
+//        imagePreviewVC.data = previewDataArr
+//        imagePreviewVC.delegate = self
+//        imagePreviewVC.view.translatesAutoresizingMaskIntoConstraints = false
+//        addChild(imagePreviewVC)
+//        imagePreviewVC.view.frame = view.bounds
+//        view.addSubview(imagePreviewVC.view)
+//        imagePreviewVC.didMove(toParent: self)
+//    }
     
     // MARK: - didDeleteImage
     func didDeleteFileFromPreview(filePath: URL) {
@@ -705,8 +705,6 @@ extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
     // MARK: - didReceiveMessage
     @objc func didReceiveMessage(topics: [String]) {
 
-        
-        
         // get the token ID to be uploaded to Firestore
         getTokenId(topics: topics) { [weak self](_, res) in
             guard let res = res else { return }
@@ -843,7 +841,6 @@ extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
                         completion(nil, GeneralErrors.decodingError)
                         return
                     }
-                    print("convertedJson.intValue", convertedJson.intValue)
                     completion(convertedJson.intValue, nil)
                 } catch {
                     completion(nil, GeneralErrors.decodingError)

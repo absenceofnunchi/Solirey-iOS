@@ -28,6 +28,8 @@ class ReviewDetailViewController: UIViewController {
     var reviewTitleLabel: UILabel!
     var reviewLabel: UILabelPadding!
     var starRatingView: StarRatingView!
+    var singlePageVC: ImagePageViewController!
+    var imageHeightConstraint: NSLayoutConstraint!
 
     override func viewDidLoad() {   
         super.viewDidLoad()
@@ -84,13 +86,16 @@ extension ReviewDetailViewController: PageVCConfigurable, UsernameBannerConfigur
     
     // MARK: - setConstraints
     func setConstraints() {
+        guard let pv = pvc.view else { return }
+        
         if let files = post.files, files.count > 0 {
-            guard let pv = pvc.view else { return }
-            setImageDisplayConstraints(v: scrollView)
-            setNameDisplayConstraints(topView: pv)
+            imageHeightConstraint = pv.heightAnchor.constraint(equalToConstant: 250)
         } else {
-            setNameDisplayConstraints(topView: scrollView)
+            imageHeightConstraint = pv.heightAnchor.constraint(equalToConstant: 0)
         }
+        
+        setImageDisplayConstraints(v: scrollView)
+        setNameDisplayConstraints(topView: pv)
         
         constraints.append(contentsOf: [
             starRatingView.topAnchor.constraint(equalTo: usernameContainer.bottomAnchor, constant: 40),

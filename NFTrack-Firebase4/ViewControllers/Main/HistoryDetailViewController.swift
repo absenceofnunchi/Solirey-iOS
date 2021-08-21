@@ -42,7 +42,8 @@ extension HistoryDetailViewController {
         ownerTitleHash = createTitleLabel(text: "Owner Address")
         scrollView.addSubview(ownerTitleHash)
         
-        ownerHash = createLabel(text: post.sellerHash, hashType: .address, target: self, action: #selector(buttonPressed))
+        ownerHash = createLabel(text: post.sellerHash, hashType: .address, target: self, action: #selector(tapped))
+        ownerHash.tag = 2
         ownerHash.lineBreakMode = .byClipping
         ownerHash.numberOfLines = 0
         ownerHash.sizeToFit()
@@ -51,7 +52,8 @@ extension HistoryDetailViewController {
         escrowHashTitleLabel = createTitleLabel(text: "Escrow Address")
         scrollView.addSubview(escrowHashTitleLabel)
         
-        escrowHashLabel = createLabel(text: post.escrowHash ?? "N/A", hashType: .tx, target: self, action: #selector(buttonPressed))
+        escrowHashLabel = createLabel(text: post.escrowHash ?? "N/A", hashType: .tx, target: self, action: #selector(tapped))
+        escrowHashLabel.tag = 2
         escrowHashLabel.lineBreakMode = .byClipping
         escrowHashLabel.numberOfLines = 0
         escrowHashLabel.sizeToFit()
@@ -60,7 +62,8 @@ extension HistoryDetailViewController {
         mintHashTitleLabel = createTitleLabel(text: "Mint Tx Hash")
         scrollView.addSubview(mintHashTitleLabel)
         
-        mintHashLabel = createLabel(text: post.mintHash, hashType: .tx, target: self, action: #selector(buttonPressed))
+        mintHashLabel = createLabel(text: post.mintHash, hashType: .tx, target: self, action: #selector(tapped))
+        mintHashLabel.tag = 2
         mintHashLabel.lineBreakMode = .byClipping
         mintHashLabel.numberOfLines = 0
         mintHashLabel.sizeToFit()
@@ -72,7 +75,8 @@ extension HistoryDetailViewController {
             confirmPurchaseHashTitleLabel = createTitleLabel(text: "Purchase Tx Hash")
             scrollView.addSubview(confirmPurchaseHashTitleLabel)
             
-            confirmPurchaseLabel = createLabel(text: confirmPurchaseHash, hashType: .tx, target: self, action: #selector(buttonPressed))
+            confirmPurchaseLabel = createLabel(text: confirmPurchaseHash, hashType: .tx, target: self, action: #selector(tapped))
+            confirmPurchaseLabel.tag = 2
             confirmPurchaseLabel.lineBreakMode = .byClipping
             confirmPurchaseLabel.numberOfLines = 0
             confirmPurchaseLabel.sizeToFit()
@@ -81,7 +85,8 @@ extension HistoryDetailViewController {
             transferTitleLabel = createTitleLabel(text: "Transfer Tx Hash")
             scrollView.addSubview(transferTitleLabel)
             
-            transferLabel = createLabel(text: confirmReceivedHash, hashType: .tx, target: self, action: #selector(buttonPressed))
+            transferLabel = createLabel(text: confirmReceivedHash, hashType: .tx, target: self, action: #selector(tapped))
+            transferLabel.tag = 2
             transferLabel.lineBreakMode = .byClipping
             transferLabel.numberOfLines = 0
             transferLabel.sizeToFit()
@@ -90,7 +95,8 @@ extension HistoryDetailViewController {
             confirmReceivedHashTitleLabel = createTitleLabel(text: "Confirm Received Tx Hash")
             scrollView.addSubview(confirmReceivedHashTitleLabel)
             
-            confirmReceivedHashLabel = createLabel(text: confirmReceivedHash, hashType: .tx, target: self, action: #selector(buttonPressed))
+            confirmReceivedHashLabel = createLabel(text: confirmReceivedHash, hashType: .tx, target: self, action: #selector(tapped))
+            confirmReceivedHashLabel.tag = 2
             confirmReceivedHashLabel.lineBreakMode = .byClipping
             confirmReceivedHashLabel.numberOfLines = 0
             confirmReceivedHashLabel.sizeToFit()
@@ -167,12 +173,21 @@ extension HistoryDetailViewController {
 }
 
 extension HistoryDetailViewController {
-    @objc func buttonPressed(_ sender: UITapGestureRecognizer) {
-        if let label = sender.view as? UILabel, let text = label.text {
-            let webVC = WebViewController()
-            let hashType = label.tag == 0 ? "tx" : "address"
-            webVC.urlString = "https://rinkeby.etherscan.io/\(hashType)/\(text)"
-            self.navigationController?.pushViewController(webVC, animated: true)
+    @objc override func tapped(_ sender: UITapGestureRecognizer) {
+        super.tapped(sender)
+        
+        let tag = sender.view?.tag
+        switch tag {
+            case 2:
+                if let label = sender.view as? UILabel, let text = label.text {
+                    let webVC = WebViewController()
+                    let hashType = label.tag == 0 ? "tx" : "address"
+                    webVC.urlString = "https://rinkeby.etherscan.io/\(hashType)/\(text)"
+                    self.navigationController?.pushViewController(webVC, animated: true)
+                }
+            default:
+                break
         }
+
     }
 }

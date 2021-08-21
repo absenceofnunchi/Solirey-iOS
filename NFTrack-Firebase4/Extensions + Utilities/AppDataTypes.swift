@@ -587,6 +587,11 @@ struct InfoText {
     static let pending = """
     Pending could mean: \n\n1. There is a bid transaction from a user that is either waiting or in the process of being mined. \n\n2. The app has requested the auction details from the block chain. \n\n3. You have withdrawn the previous bid and the transaction is in the process of being mined \n\nThe relevant information will be updated on your screen soon after the transaction is added to the blockchain.
     """
+    
+    static let pendingEscrow = """
+    Pending could mean either that there are transactions such as the confirmation of the purchase, transfer of the asset, confirmation of the receipt are being mined and added to the blockchain or the app is fetching certain information from the smart contract.
+    """
+    
     static let withdraw = """
     You have been outbid by a higher bid. The previous bid made by you has to be withdrawn BY YOU to be transferred back to your wallet. It will not be done automatically.
     """
@@ -656,4 +661,7 @@ struct Topics {
     static let HighestBidIncreased = "0xf4757a49b326036464bec6fe419a4ae38c8a02ce3e68bf0809674f6aab8ad300"
     static let Transfer = "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
     static let Transfer2 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+    static let PurchaseConfirmed = "0xd5d55c8a68912e9a110618df8d5e2e83b8d83211c57a8ddd1203df92885dc881"
+    static let ItemReceived = "0xe89152acd703c9d8c7d28829d443260b411454d45394e7995815140c8cbcbcf7"
+    static let Aborted = ""
 }

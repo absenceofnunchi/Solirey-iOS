@@ -246,7 +246,7 @@ class DigitalAssetViewController: ParentPostViewController {
     
     // MARK: - configureImagePreview
     final override func configureImagePreview() {
-        configureImagePreview(postType: .digital(.onlineDirect))
+        configureImagePreview(postType: .digital(.onlineDirect), superView: scrollView)
     }
     
     // MARK: - imagePickerController

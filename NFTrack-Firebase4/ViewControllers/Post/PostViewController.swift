@@ -104,7 +104,7 @@ class PostViewController: ParentPostViewController {
     }
     
     final override func configureImagePreview() {
-        configureImagePreview(postType: .tangible)
+        configureImagePreview(postType: .tangible, superView: scrollView)
     }
     
     final override func buttonPressed(_ sender: UIButton) {
@@ -389,6 +389,7 @@ class PostViewController: ParentPostViewController {
                                     self.socketDelegate.disconnectSocket()
                                 }
                                 .store(in: &self.storage)
+                                
                             }) // progress modal
                         }) // alert VC dismissal
                     } // main VC button action

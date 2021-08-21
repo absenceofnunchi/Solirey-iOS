@@ -8,11 +8,15 @@
 import UIKit
 import QuickLook
 
+// to distinguish the sections when displayed
+// however, no sections are being implemented at the moment
+// remote image is to display images right at then moment when the cell is being dequeued. TangibleListEditVC uses this since it's displaying the images in Firestore Storage
+// whereas the normal "image" enum is used when local images are used such as PostVC
 enum Header: Int, CaseIterable {
-    case image, document
+    case image, document, remoteImage
     func asString() -> String {
         switch self {
-            case .image:
+            case .image, .remoteImage:
                 return NSLocalizedString("Images", comment: "")
             case .document:
                 return NSLocalizedString("Documents", comment: "")
@@ -26,19 +30,22 @@ struct PreviewData {
 }
 
 class ImagePreviewViewController: UIViewController {
-    var data: [PreviewData]! {
+    var data: [PreviewData]! = [] {
         didSet {
+            guard let collectionView = collectionView else { return }
             if data.count > 0 {
                 data = NSOrderedSet(array: data).array as? [PreviewData]
-                collectionView.reloadData()
             }
+            collectionView.reloadData()
         }
     }
     
-    weak var delegate: PreviewDelegate?
+    weak var delegate: DeletePreviewDelegate?
     var collectionView: UICollectionView! = nil
     var postType: PostType!
-    
+    var loadingIndicator: UIActivityIndicatorView!
+    // to be used for BigPreviewVC after fetching the image data from Firebase Storage
+    var remoteImageData: Data!
     init(postType: PostType) {
         super.init(nibName: nil, bundle: nil)
         self.postType = postType
@@ -50,6 +57,8 @@ class ImagePreviewViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        loadingIndicator = UIActivityIndicatorView()
         configureHierarchy()
         setConstraints()
     }
@@ -92,9 +101,10 @@ extension ImagePreviewViewController {
 
 extension ImagePreviewViewController: UICollectionViewDelegate {
     private func configureHierarchy() {
-        collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout(postType: postType))
+        if collectionView == nil {
+            collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout(postType: postType))
+        }
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-//        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         collectionView.backgroundColor = .systemBackground
         collectionView.delegate = self
         collectionView.dataSource = self
@@ -117,7 +127,6 @@ extension ImagePreviewViewController: UICollectionViewDelegate {
 
 extension ImagePreviewViewController: UICollectionViewDataSource {
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
-//        return Header.allCases.count
         return 1
     }
     
@@ -127,7 +136,9 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
     
     // make a cell for each cell index path
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageCell.reuseIdentifier, for: indexPath as IndexPath) as! ImageCell
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageCell.reuseIdentifier, for: indexPath as IndexPath) as? ImageCell else {
+            fatalError("ImageCell fatal error")
+        }
         
         let header = data[indexPath.row].header
         let filePath = data[indexPath.row].filePath
@@ -142,10 +153,24 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
                         cell.imageView.image = image
                     }
                 }
+            case .remoteImage:
+                cell.contentView.insertSubview(loadingIndicator, belowSubview: cell.closeButton)
+                loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+                NSLayoutConstraint.activate([
+                    loadingIndicator.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+                    loadingIndicator.centerXAnchor.constraint(equalTo: cell.centerXAnchor)
+                ])
+                
+                loadingIndicator.startAnimating()
+                cell.imageView.setImage(from: filePath) { [weak self] imageData in
+                    // to be used for enlargement
+                    self?.remoteImageData = imageData
+                    self?.loadingIndicator.stopAnimating()
+                }
         }
         
-        cell.buttonAction = { _ in
-            self.deletePreviewImage(indexPath: indexPath)
+        cell.buttonAction = { [weak self] _ in
+            self?.deletePreviewImage(indexPath: indexPath)
         }
         
         return cell
@@ -271,7 +296,15 @@ extension ImagePreviewViewController: UIContextMenuInteractionDelegate {
         func getPreviewVC(indexPath: IndexPath) -> UIViewController? {
             let bigVC = BigPreviewViewController()
             let filePath = data[indexPath.row].filePath
-            let image = UIImage(contentsOfFile: "\(filePath.path)")
+            var image: UIImage!
+            
+            switch data[indexPath.row].header {
+                case .remoteImage:
+                    image = UIImage(data: remoteImageData)
+                default:
+                    image = UIImage(contentsOfFile: "\(filePath.path)")
+            }
+            
             bigVC.imageView.image = image
             return bigVC
         }

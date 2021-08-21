@@ -293,6 +293,25 @@ extension UIImageView {
         }
         task.resume()
     }
+    
+    func setImage(from urlAddress: URL?, completion: ((Data?) -> Void)? = nil) {
+        guard let url = urlAddress else {
+            completion?(nil)
+            return
+        }
+        
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data, error == nil else {
+                completion?(nil)
+                return
+            }
+            DispatchQueue.main.async {
+                self.image = UIImage(data: data)
+                completion?(data)
+            }
+        }
+        task.resume()
+    }
 }
 
 import PDFKit

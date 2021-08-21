@@ -16,8 +16,40 @@ protocol WalletDelegate: AnyObject {
 
 // MARK: - PreviewDelegate
 /// PostViewController
-protocol PreviewDelegate: AnyObject {
+protocol DeletePreviewDelegate: AnyObject {
     func didDeleteFileFromPreview(filePath: URL)
+}
+
+// MARK: - PreviewDelegate1
+// To show the preview images 
+protocol PreviewDelegate: DeletePreviewDelegate {
+    var SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat! { get }
+    var IMAGE_PREVIEW_HEIGHT: CGFloat! { get }
+    var SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW: CGFloat! { get set }
+    var imagePreviewConstraintHeight: NSLayoutConstraint! { get set }
+    var imagePreviewVC: ImagePreviewViewController! { get set }
+    var previewDataArr: [PreviewData]! { get set }
+    func configureImagePreview(postType: PostType, superView: UIView)
+    func didDeleteFileFromPreview(filePath: URL)
+}
+
+extension PreviewDelegate where Self: UIViewController {
+    // MARK: - configureImagePreview
+    func configureImagePreview(postType: PostType, superView: UIView) {
+        imagePreviewVC = ImagePreviewViewController(postType: postType)
+        imagePreviewVC.data = previewDataArr
+        imagePreviewVC.delegate = self
+        imagePreviewVC.view.translatesAutoresizingMaskIntoConstraints = false
+        addChild(imagePreviewVC)
+        imagePreviewVC.view.frame = view.bounds
+        superView.addSubview(imagePreviewVC.view)
+        imagePreviewVC.didMove(toParent: self)
+    }
+    
+    // MARK: - didDeleteImage
+    func didDeleteFileFromPreview(filePath: URL) {
+        previewDataArr = previewDataArr.filter { $0.filePath != filePath }
+    }
 }
 
 // MARK: - MessageDelegate
@@ -428,6 +460,7 @@ extension FileUploadable {
             print("error saving file with error", error)
         }
     }
+
 }
 
 // MARK: - RefetchDataDelegate
@@ -442,6 +475,7 @@ protocol SegmentConfigurable {
     func segmentedControlSelectionDidChange(_ sender: UISegmentedControl)
 }
 
+// fetches the username and the profile image to display on ParentDetailVC, ReviewDetailVC
 protocol UsernameBannerConfigurable where Self: UIViewController {
     var userInfo: UserInfo! { get set }
     var usernameContainer: UIView! { get set }
@@ -583,10 +617,13 @@ extension UsernameBannerConfigurable {
     }
 }
 
+// displays images and pdf documents
 protocol PageVCConfigurable: UIPageViewControllerDataSource, UIPageViewControllerDelegate where Self: UIViewController {
     var pvc: UIPageViewController! { get set }
     var galleries: [String]! { get set }
+    var singlePageVC: ImagePageViewController! { get set }
     var constraints: [NSLayoutConstraint]! { get set }
+    var imageHeightConstraint: NSLayoutConstraint! { get set }
     func configureImageDisplay<T: MediaConfigurable, U: UIView>(post: T, v: U)
     func setImageDisplayConstraints<T: UIView>(v: T)
 }
@@ -595,7 +632,7 @@ extension PageVCConfigurable {
     func configureImageDisplay<T: MediaConfigurable, U: UIView>(post: T, v: U) {
         if let files = post.files, files.count > 0 {
             self.galleries.append(contentsOf: files)
-            let singlePageVC = ImagePageViewController(gallery: galleries[0])
+            singlePageVC = ImagePageViewController(gallery: galleries[0])
             pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
             pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
             pvc.dataSource = self
@@ -615,10 +652,10 @@ extension PageVCConfigurable {
     func setImageDisplayConstraints<T: UIView>(v: T) {
         guard let pv = pvc.view else { return }
         constraints.append(contentsOf: [
+            imageHeightConstraint,
             pv.topAnchor.constraint(equalTo: v.topAnchor, constant: 0),
             pv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             pv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            pv.heightAnchor.constraint(equalToConstant: 250),
         ])
     }
 }
@@ -784,20 +821,21 @@ extension PostParseDelegate {
     }
 }
 
+// Panel of buttons i. e. Camera, Image, Document buttons for posting items
 protocol ButtonPanelConfigurable where Self: UIViewController {
     var buttonPanel: UIStackView! { get set }
     var constraints: [NSLayoutConstraint]! { get set }
-    func createButtonPanel(panelButtons: [PanelButton], completion: (_ buttonsArr: [UIButton]) -> Void)
+    func createButtonPanel(panelButtons: [PanelButton], superView: UIView, completion: (_ buttonsArr: [UIButton]) -> Void)
     func setButtonPanelConstraints(topView: UIView)
 }
 
 extension ButtonPanelConfigurable {
-    func createButtonPanel(panelButtons: [PanelButton], completion: (_ buttonsArr: [UIButton]) -> Void) {
+    func createButtonPanel(panelButtons: [PanelButton], superView: UIView, completion: (_ buttonsArr: [UIButton]) -> Void) {
         buttonPanel = UIStackView()
         buttonPanel.axis = .horizontal
         buttonPanel.distribution = .fillEqually
         buttonPanel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(buttonPanel)
+        superView.addSubview(buttonPanel)
         
         var buttonsArr = [UIButton]()
         for i in 0..<panelButtons.count {
@@ -827,4 +865,8 @@ extension ButtonPanelConfigurable {
             buttonPanel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
         ])
     }
+}
+
+protocol UpdatePostDelegate: AnyObject {
+    func didUpdatePost(titleString: String, desc: String, files: [String]?)
 }

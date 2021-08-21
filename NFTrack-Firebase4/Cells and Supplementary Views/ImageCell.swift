@@ -35,7 +35,7 @@ extension ImageCell {
         let image = UIImage(systemName: "multiply.circle.fill")!.withTintColor(.red, renderingMode: .alwaysOriginal)
         closeButton = UIButton.systemButton(with: image, target: self, action: #selector(buttonPressed))
         closeButton.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(closeButton)
+        self.contentView.addSubview(closeButton)
     }
     
     @objc func buttonPressed() {

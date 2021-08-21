@@ -201,7 +201,7 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
             self.starRatingView.translatesAutoresizingMaskIntoConstraints = false
             self.scrollView.addSubview(self.starRatingView)
             
-            self.createButtonPanel(panelButtons: self.panelButtons) { (buttonsArr) in
+            self.createButtonPanel(panelButtons: self.panelButtons, superView: self.scrollView) { (buttonsArr) in
                 buttonsArr.forEach { (button) in
                     button.addTarget(self, action: #selector(self.buttonPressed(_:)), for: .touchUpInside)
                 }
@@ -514,7 +514,8 @@ extension ReviewPostViewController: DocumentDelegate, QLPreviewControllerDataSou
     }
 }
 
-extension ReviewPostViewController: PreviewDelegate {
+extension ReviewPostViewController: DeletePreviewDelegate {
+
     // MARK: - didDeleteImage
     func didDeleteFileFromPreview(filePath: URL) {
         previewDataArr = previewDataArr.filter { $0.filePath != filePath }

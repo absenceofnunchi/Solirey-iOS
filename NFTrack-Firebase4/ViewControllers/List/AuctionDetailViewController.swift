@@ -42,18 +42,17 @@ class AuctionDetailViewController: ParentDetailViewController {
         didSet {
             if isPending == true {
                 DispatchQueue.main.async { [weak self] in
-                    self?.pendingContainer.isHidden = false
+                    self?.pendingIndicatorView.isHidden = false
                 }
             } else {
                 DispatchQueue.main.async { [weak self] in
-                    self?.pendingContainer.isHidden = true
+                    self?.pendingIndicatorView.isHidden = true
                 }
             }
         }
     }
-    final var pendingContainer: UIView!
-    final var pendingLabel: UILabel!
-    final var activityIndicatorView: UIActivityIndicatorView!
+    
+    final var pendingIndicatorView: PendingIndicatorView!
     final var pendingReturnButton: UIButton!
     final var txResult: TxResult!
     final var auctionButtonController: AuctionButtonController!
@@ -130,6 +129,20 @@ class AuctionDetailViewController: ParentDetailViewController {
             timer.invalidate()
         }
     }
+    
+    final override func userInfoDidSet() {
+        super.userInfoDidSet()
+        
+        guard let status = post.status,
+              status != AuctionStatus.ended.rawValue else { return }
+        
+        if userInfo.uid != userId {
+            configureBuyerNavigationBar()
+            fetchSavedPostData()
+        } else if post.sellerUserId == userId {
+            configureSellerNavigationBar()
+        }
+    }
 }
 
 extension AuctionDetailViewController: UITextFieldDelegate {
@@ -152,26 +165,14 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         auctionDetailTitleLabel.sizeToFit()
         scrollView.addSubview(auctionDetailTitleLabel)
         
-        pendingContainer = UIView()
-        pendingContainer.isHidden = true
-        pendingContainer.translatesAutoresizingMaskIntoConstraints = false
-        pendingContainer.backgroundColor = UIColor(red: 204/255, green: 255/255, blue: 204/255, alpha: 1)
-        pendingContainer.layer.cornerRadius = 8
-        pendingContainer.tag = 3
-        let pendingContainerTap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
-        pendingContainer.addGestureRecognizer(pendingContainerTap)
-        scrollView.addSubview(pendingContainer)
-
-        activityIndicatorView = UIActivityIndicatorView()
-        activityIndicatorView.startAnimating()
-        activityIndicatorView.color = UIColor(red: 0/255, green: 155/255, blue: 0/255, alpha: 1)
-        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
-        pendingContainer.addSubview(activityIndicatorView)
-
-        pendingLabel = createTitleLabel(text: "Pending", weight: .light)
-        pendingLabel.font = UIFont.systemFont(ofSize: 12)
-        pendingLabel.textColor = UIColor(red: 0/255, green: 155/255, blue: 0/204, alpha: 1)
-        pendingContainer.addSubview(pendingLabel)
+        pendingIndicatorView = PendingIndicatorView()
+        pendingIndicatorView.isHidden = true
+        pendingIndicatorView.buttonAction = { _ in
+            let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Pending Transaction", detail: InfoText.pending)])
+            self.present(infoVC, animated: true, completion: nil)
+        }
+        pendingIndicatorView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(pendingIndicatorView)
         
         moreDetailsButton = UIButton(type: .system)
         moreDetailsButton.setTitle("More Details", for: .normal)
@@ -214,19 +215,10 @@ extension AuctionDetailViewController: UITextFieldDelegate {
             auctionDetailTitleLabel.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
             auctionDetailTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             
-            pendingContainer.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
-            pendingContainer.leadingAnchor.constraint(equalTo: auctionDetailTitleLabel.trailingAnchor, constant: 20),
-            pendingContainer.heightAnchor.constraint(equalTo: auctionDetailTitleLabel.heightAnchor),
-            pendingContainer.widthAnchor.constraint(equalToConstant: 100),
-
-            activityIndicatorView.leadingAnchor.constraint(equalTo: pendingContainer.leadingAnchor),
-            activityIndicatorView.heightAnchor.constraint(equalToConstant: 30),
-            activityIndicatorView.centerYAnchor.constraint(equalTo: pendingContainer.centerYAnchor),
-            activityIndicatorView.widthAnchor.constraint(equalTo: activityIndicatorView.heightAnchor),
-
-            pendingLabel.leadingAnchor.constraint(equalTo: activityIndicatorView.trailingAnchor, constant: 5),
-            pendingLabel.trailingAnchor.constraint(equalTo: pendingContainer.trailingAnchor),
-            pendingLabel.heightAnchor.constraint(equalTo: pendingContainer.heightAnchor),
+            pendingIndicatorView.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
+            pendingIndicatorView.leadingAnchor.constraint(equalTo: auctionDetailTitleLabel.trailingAnchor, constant: 20),
+            pendingIndicatorView.heightAnchor.constraint(equalTo: auctionDetailTitleLabel.heightAnchor),
+            pendingIndicatorView.widthAnchor.constraint(equalToConstant: 100),
 
             moreDetailsButton.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
             moreDetailsButton.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
@@ -257,46 +249,8 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         ])
     }
     
-    func createPendingContainer() {
-        pendingContainer = UIView()
-        pendingContainer.isHidden = true
-        pendingContainer.translatesAutoresizingMaskIntoConstraints = false
-        pendingContainer.backgroundColor = UIColor(red: 204/255, green: 255/255, blue: 204/255, alpha: 1)
-        pendingContainer.layer.cornerRadius = 8
-        pendingContainer.tag = 3
-        let pendingContainerTap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
-        pendingContainer.addGestureRecognizer(pendingContainerTap)
-        scrollView.addSubview(pendingContainer)
-        
-        activityIndicatorView = UIActivityIndicatorView()
-        activityIndicatorView.startAnimating()
-        activityIndicatorView.color = UIColor(red: 0/255, green: 155/255, blue: 0/255, alpha: 1)
-        activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
-        pendingContainer.addSubview(activityIndicatorView)
-        
-        pendingLabel = createTitleLabel(text: "Pending", weight: .light)
-        pendingLabel.font = UIFont.systemFont(ofSize: 12)
-        pendingLabel.textColor = UIColor(red: 0/255, green: 155/255, blue: 0/204, alpha: 1)
-        pendingContainer.addSubview(pendingLabel)
-        
-        NSLayoutConstraint.activate([
-            pendingContainer.topAnchor.constraint(equalTo: listingSpecView.bottomAnchor, constant: 40),
-            pendingContainer.leadingAnchor.constraint(equalTo: auctionDetailTitleLabel.trailingAnchor, constant: 20),
-            pendingContainer.heightAnchor.constraint(equalTo: auctionDetailTitleLabel.heightAnchor),
-            pendingContainer.widthAnchor.constraint(equalToConstant: 100),
-            
-            activityIndicatorView.leadingAnchor.constraint(equalTo: pendingContainer.leadingAnchor),
-            activityIndicatorView.heightAnchor.constraint(equalToConstant: 30),
-            activityIndicatorView.centerYAnchor.constraint(equalTo: pendingContainer.centerYAnchor),
-            activityIndicatorView.widthAnchor.constraint(equalTo: activityIndicatorView.heightAnchor),
-            
-            pendingLabel.leadingAnchor.constraint(equalTo: activityIndicatorView.trailingAnchor, constant: 5),
-            pendingLabel.trailingAnchor.constraint(equalTo: pendingContainer.trailingAnchor),
-            pendingLabel.heightAnchor.constraint(equalTo: pendingContainer.heightAnchor),
-        ])
-    }
     
-    @objc final func buttonPressed(_ sender: UIButton) {
+    @objc final override func buttonPressed(_ sender: UIButton) {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
@@ -318,6 +272,12 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                 callAuctionMethod(for: .getTheHighestBid)
             case 5:
                 callAuctionMethod(for: .transferToken)
+            case 11:
+                let listEditVC = DigitalListEditViewController()
+                listEditVC.post = post
+                listEditVC.delegate = self
+                self.navigationController?.pushViewController(listEditVC, animated: true)
+                break
             case 60:
                 callAuctionMethod(for: .withdraw)
             case 61:
@@ -325,21 +285,6 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                 self.present(infoVC, animated: true, completion: nil)
             case 62:
                 let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Status", detail: InfoText.auctionStatus)])
-                self.present(infoVC, animated: true, completion: nil)
-            default:
-                break
-        }
-    }
-    
-    @objc override func tapped(_ sender: UITapGestureRecognizer!) {
-        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
-        feedbackGenerator.impactOccurred()
-        super.tapped(sender)
-        let tag = sender.view?.tag
-
-        switch tag {
-            case 3:
-                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Pending Transaction", detail: InfoText.pending)])
                 self.present(infoVC, animated: true, completion: nil)
             default:
                 break

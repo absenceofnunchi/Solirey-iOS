@@ -24,6 +24,7 @@ class ParentDetailViewController: UIViewController {
     var post: Post!
     var pvc: UIPageViewController!
     var galleries: [String]!
+    var singlePageVC: ImagePageViewController!
     var usernameContainer: UIView!
     var dateLabel: UILabel!
     var profileImageView: UIImageView!
@@ -43,6 +44,20 @@ class ParentDetailViewController: UIViewController {
             userInfoDidSet()
         }
     }
+    weak var delegate: RefetchDataDelegate?
+    var chatButtonItem: UIBarButtonItem!
+    var starButtonItem: UIBarButtonItem!
+    var postEditButtonItem: UIBarButtonItem!
+    var isSaved: Bool! = false {
+        didSet {
+            configureBuyerNavigationBar()
+        }
+    }
+    var userId: String! {
+        return UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
+    }
+    var imageHeightConstraint: NSLayoutConstraint!
+    
     // to refresh after update
     weak var tableViewRefreshDelegate: TableViewRefreshDelegate?
     
@@ -129,57 +144,19 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         scrollView.addSubview(listingSpecView)
     }
     
-    //    // MARK: - configureEditButton
-    //    func configureEditButton() {
-    //        buttonPanel = UIView()
-    //        buttonPanel.translatesAutoresizingMaskIntoConstraints = false
-    //        scrollView.addSubview(buttonPanel)
-    //
-    //        editButton = UIButton()
-    //        editButton.tag = 3
-    //        editButton.backgroundColor = .blue
-    //        editButton.setTitle("Edit", for: .normal)
-    //        editButton.layer.cornerRadius = 5
-    //        editButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
-    //        editButton.translatesAutoresizingMaskIntoConstraints = false
-    //        buttonPanel.addSubview(editButton)
-    //
-    //        deleteButton = UIButton()
-    //        deleteButton.tag = 4
-    //        deleteButton.backgroundColor = .red
-    //        deleteButton.setTitle("Delete", for: .normal)
-    //        deleteButton.layer.cornerRadius = 6
-    //        deleteButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
-    //        deleteButton.translatesAutoresizingMaskIntoConstraints = false
-    //        buttonPanel.addSubview(deleteButton)
-    //
-    //        NSLayoutConstraint.activate([
-    //            buttonPanel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
-    //            buttonPanel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
-    //            buttonPanel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
-    //            buttonPanel.heightAnchor.constraint(equalToConstant: 50),
-    //
-    //            editButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
-    //            editButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
-    //            editButton.heightAnchor.constraint(equalToConstant: 50),
-    //            editButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
-    //
-    //            deleteButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
-    //            deleteButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
-    //            deleteButton.heightAnchor.constraint(equalToConstant: 50),
-    //            deleteButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4)
-    //        ])
-    //    }
-    //
     // MARK: - setConstraints
     @objc func setConstraints() {
+        guard let pvc = pvc,
+              let pv = pvc.view else { return }
+        
         if let files = post.files, files.count > 0 {
-            guard let pv = pvc.view else { return }
-            setImageDisplayConstraints(v: scrollView)
-            setNameDisplayConstraints(topView: pv)
+            imageHeightConstraint = pv.heightAnchor.constraint(equalToConstant: 250)
         } else {
-            setNameDisplayConstraints(topView: scrollView)
+            imageHeightConstraint = pv.heightAnchor.constraint(equalToConstant: 0)
         }
+        
+        setImageDisplayConstraints(v: scrollView)
+        setNameDisplayConstraints(topView: pv)
         
         constraints.append(contentsOf: [
             priceTitleLabel.topAnchor.constraint(equalTo: usernameContainer.bottomAnchor, constant: 40),
@@ -239,6 +216,76 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
                 break
         }
     }
+    
+    final func fetchSavedPostData() {
+        if let savedBy = post.savedBy, savedBy.contains(userId) {
+            isSaved = true
+        } else {
+            isSaved = false
+        }
+    }
+    
+    final func configureBuyerNavigationBar() {
+        var buttonItemsArr = [UIBarButtonItem]()
+        
+        guard let chatImage = UIImage(systemName: "message"),
+              let starImage = UIImage(systemName: "star"),
+              let starImageFill = UIImage(systemName: "star.fill") else {
+            return
+        }
+        chatButtonItem = UIBarButtonItem(image: chatImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+        chatButtonItem.tag = 6
+        buttonItemsArr.append(chatButtonItem)
+        
+        let finalImage = isSaved ? starImageFill : starImage
+        starButtonItem = UIBarButtonItem(image: finalImage.withTintColor(isSaved ? .red : .gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+        starButtonItem.tag = 7
+        buttonItemsArr.append(starButtonItem)
+        
+        self.navigationItem.rightBarButtonItems = buttonItemsArr
+    }
+    
+    // needs a corresponding buttonPressed selector in the subclass
+    // for example, the tangible items will assign the tag in ListDetailVC and the digital items in AuctionDetailVC
+    // the reason for this is because the tangible items can have their title, description, and the media files modified
+    // whereas the digital item can only have their title and the description modified
+    // the former will be done in TangibleListEditVC and the latter in DigitalListEditVC
+    func configureSellerNavigationBar() {
+        postEditButtonItem = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(buttonPressed(_:)))
+        postEditButtonItem.tag = 11
+        self.navigationItem.rightBarButtonItems = [postEditButtonItem]
+    }
+    
+    @objc func buttonPressed(_ sender: UIButton) {
+        switch sender.tag {
+            case 6:
+                let chatVC = ChatViewController()
+                chatVC.userInfo = userInfo
+                chatVC.post = post
+                // to display the title on ChatList when multiple items under the same owner
+                // or maybe search for pre-existing chat room first and join the same one
+                // chatVC.itemName = title
+                self.navigationController?.pushViewController(chatVC, animated: true)
+            case 7:
+                // saving the favourite post
+                isSaved = !isSaved
+                FirebaseService.shared.db.collection("post").document(post.documentId).updateData([
+                    "savedBy": isSaved ? FieldValue.arrayUnion(["\(userId!)"]) : FieldValue.arrayRemove(["\(userId!)"])
+                ]) {(error) in
+                    if let error = error {
+                        self.alert.showDetail("Sorry", with: error.localizedDescription, for: self) { [weak self] in
+                            DispatchQueue.main.async {
+                                self?.navigationController?.popViewController(animated: true)
+                            }
+                        } completion: {}
+                    } else {
+                        self.delegate?.didFetchData()
+                    }
+                }
+            default:
+                break
+        }
+    }
 }
 
 extension ParentDetailViewController {
@@ -274,6 +321,19 @@ extension ParentDetailViewController {
         } else {
             return 0
         }
+    }
+}
+
+extension ParentDetailViewController: UpdatePostDelegate {
+    func didUpdatePost(titleString: String, desc: String, files: [String]? = nil) {
+        self.title = titleString
+        self.descLabel?.text = desc
+        imageHeightConstraint.constant = 0
+        
+        guard let files = files else { return }
+        galleries = files
+        singlePageVC = ImagePageViewController(gallery: galleries[0])
+        imageHeightConstraint.constant = 250
     }
 }
 
