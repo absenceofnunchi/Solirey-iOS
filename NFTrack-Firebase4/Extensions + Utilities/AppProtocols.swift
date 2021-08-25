@@ -172,6 +172,7 @@ protocol FileUploadable where Self:UIViewController {
     func deleteFile(fileName: String)
     func saveImage(imageName: String, image: UIImage) -> URL?
     func saveFile(fileName: String, data: Data)
+    func saveImage(imageName: String, image: UIImage, promise: @escaping (Result<URL, PostingError>) -> Void)
 }
 
 extension FileUploadable {
@@ -461,6 +462,60 @@ extension FileUploadable {
         }
     }
 
+    func saveImage(imageName: String, image: UIImage, promise: @escaping (Result<URL, PostingError>) -> Void) {
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            promise(.failure(.generalError(reason: "Could not create a URL to save the image.")))
+            return
+        }
+        
+        let fileName = imageName
+        let fileURL = documentsDirectory.appendingPathComponent(fileName)
+        guard let data = image.jpegData(compressionQuality: 0.8) else {
+            promise(.failure(.generalError(reason: "Could not process the downloaded image data.")))
+            return
+        }
+        
+        //Checks if file exists, removes it if so.
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            do {
+                try FileManager.default.removeItem(atPath: fileURL.path)
+            } catch {
+                promise(.failure(.generalError(reason: "Couldn't remove file at path.")))
+            }
+        }
+        
+        do {
+            try data.write(to: fileURL)
+            promise(.success(fileURL))
+        } catch {
+            promise(.failure(.generalError(reason: "Error saving file with error")))
+        }
+    }
+    
+    func saveFile(fileName: String, data: Data, promise: @escaping (Result<URL, PostingError>) -> Void) {
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            promise(.failure(.generalError(reason: "Could not create a URL to save the image.")))
+            return
+        }
+        
+        let fileURL = documentsDirectory.appendingPathComponent(fileName)
+        
+        //Checks if file exists, removes it if so.
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            do {
+                try FileManager.default.removeItem(atPath: fileURL.path)
+            } catch {
+                promise(.failure(.generalError(reason: "Couldn't remove file at path.")))
+            }
+        }
+        
+        do {
+            try data.write(to: fileURL)
+            promise(.success(fileURL))
+        } catch {
+            promise(.failure(.generalError(reason: "Error saving file with error")))
+        }
+    }
 }
 
 // MARK: - RefetchDataDelegate
@@ -630,23 +685,27 @@ protocol PageVCConfigurable: UIPageViewControllerDataSource, UIPageViewControlle
 
 extension PageVCConfigurable {
     func configureImageDisplay<T: MediaConfigurable, U: UIView>(post: T, v: U) {
+        
         if let files = post.files, files.count > 0 {
             self.galleries.append(contentsOf: files)
             singlePageVC = ImagePageViewController(gallery: galleries[0])
-            pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-            pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
-            pvc.dataSource = self
-            pvc.delegate = self
-            addChild(pvc)
-            v.addSubview(pvc.view)
-            pvc.view.translatesAutoresizingMaskIntoConstraints = false
-            pvc.didMove(toParent: self)
-            
-            let pageControl = UIPageControl.appearance()
-            pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
-            pageControl.currentPageIndicatorTintColor = .gray
-            pageControl.backgroundColor = .white
+        } else {
+            self.galleries.append(contentsOf: [])
+            singlePageVC = ImagePageViewController(gallery: nil)
         }
+        pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+        pvc.dataSource = self
+        pvc.delegate = self
+        addChild(pvc)
+        v.addSubview(pvc.view)
+        pvc.view.translatesAutoresizingMaskIntoConstraints = false
+        pvc.didMove(toParent: self)
+        
+        let pageControl = UIPageControl.appearance()
+        pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
+        pageControl.currentPageIndicatorTintColor = .gray
+        pageControl.backgroundColor = .white
     }
     
     func setImageDisplayConstraints<T: UIView>(v: T) {
@@ -702,6 +761,7 @@ extension PaginateFetchDelegate {
 
 protocol PostParseDelegate {
     func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post]?
+    func parseDocument(document: DocumentSnapshot) -> Post?
 }
 
 extension PostParseDelegate {
@@ -819,6 +879,115 @@ extension PostParseDelegate {
         }
         return postArr
     }
+    
+    func parseDocument(document: DocumentSnapshot) -> Post? {
+        guard let data = document.data() else { return nil }
+        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat: String!
+        var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
+        var files, savedBy: [String]?
+        data.forEach { (item) in
+            switch item.key {
+                case "sellerUserId":
+                    sellerUserId = item.value as? String
+                case "senderAddress":
+                    sellerHash = item.value as? String
+                case "title":
+                    title = item.value as? String
+                case "description":
+                    description = item.value as? String
+                case "date":
+                    let timeStamp = item.value as? Timestamp
+                    date = timeStamp?.dateValue()
+                case "files":
+                    files = item.value as? [String]
+                case "price":
+                    price = item.value as? String
+                case "mintHash":
+                    mintHash = item.value as? String
+                case "escrowHash":
+                    escrowHash = item.value as? String
+                case "auctionHash":
+                    auctionHash = item.value as? String
+                case "itemIdentifier":
+                    id = item.value as? String
+                case "transferHash":
+                    transferHash = item.value as? String
+                case "status":
+                    status = item.value as? String
+                case "confirmPurchaseHash":
+                    confirmPurchaseHash = item.value as? String
+                case "confirmReceivedHash":
+                    confirmReceivedHash = item.value as? String
+                case "confirmPurchaseDate":
+                    let timeStamp = item.value as? Timestamp
+                    confirmPurchaseDate = timeStamp?.dateValue()
+                case "transferDate":
+                    let timeStamp = item.value as? Timestamp
+                    transferDate = timeStamp?.dateValue()
+                case "confirmReceivedDate":
+                    let timeStamp = item.value as? Timestamp
+                    confirmReceivedDate = timeStamp?.dateValue()
+                case "buyerHash":
+                    buyerHash = item.value as? String
+                case "savedBy":
+                    savedBy = item.value as? [String]
+                case "buyerUserId":
+                    buyerUserId = item.value as? String
+                case "type":
+                    type = item.value as? String
+                case "deliveryMethod":
+                    deliveryMethod = item.value as? String
+                case "paymentMethod":
+                    paymentMethod = item.value as? String
+                case "saleFormat":
+                    saleFormat = item.value as? String
+                case "bidDate":
+                    let timeStamp = item.value as? Timestamp
+                    bidDate = timeStamp?.dateValue()
+                case "auctionEndDate":
+                    let timeStamp = item.value as? Timestamp
+                    auctionEndDate = timeStamp?.dateValue()
+                case "auctionTransferredDate":
+                    let timeStamp = item.value as? Timestamp
+                    auctionTransferredDate = timeStamp?.dateValue()
+                default:
+                    break
+            }
+        }
+        
+        let post = Post(
+            documentId: document.documentID,
+            title: title,
+            description: description,
+            date: date,
+            files: files,
+            price: price,
+            mintHash: mintHash,
+            escrowHash: escrowHash,
+            auctionHash: auctionHash,
+            id: id,
+            status: status,
+            sellerUserId: sellerUserId,
+            buyerUserId: buyerUserId,
+            sellerHash: sellerHash,
+            buyerHash: buyerHash,
+            confirmPurchaseHash: confirmPurchaseHash,
+            confirmPurchaseDate: confirmPurchaseDate,
+            transferHash: transferHash,
+            transferDate: transferDate,
+            confirmReceivedHash: confirmReceivedHash,
+            confirmReceivedDate: confirmReceivedDate,
+            savedBy: savedBy,
+            type: type,
+            deliveryMethod: deliveryMethod,
+            paymentMethod: paymentMethod,
+            saleFormat: saleFormat,
+            bidDate: bidDate,
+            auctionEndDate: auctionEndDate,
+            auctionTransferredDate: auctionTransferredDate
+        )
+        return post
+    }
 }
 
 // Panel of buttons i. e. Camera, Image, Document buttons for posting items
@@ -867,6 +1036,19 @@ extension ButtonPanelConfigurable {
     }
 }
 
-protocol UpdatePostDelegate: AnyObject {
-    func didUpdatePost(titleString: String, desc: String, files: [String]?)
+protocol SharableDelegate where Self: UIViewController  {
+    func share(_ objectsToShare: [AnyObject])
+}
+
+extension SharableDelegate {
+    func share(_ objectsToShare: [AnyObject]) {
+        let shareSheetVC = UIActivityViewController(activityItems: objectsToShare, applicationActivities: nil)
+        present(shareSheetVC, animated: true, completion: nil)
+        
+        if let pop = shareSheetVC.popoverPresentationController {
+            pop.sourceView = self.view
+            pop.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.height, width: 0, height: 0)
+            pop.permittedArrowDirections = []
+        }
+    }
 }

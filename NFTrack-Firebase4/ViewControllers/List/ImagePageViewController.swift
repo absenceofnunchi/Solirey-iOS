@@ -19,7 +19,7 @@ class ImagePageViewController: UIViewController {
     var loadingIndicator: UIActivityIndicatorView!
     var document: PDFDocument!
     
-    init(gallery: String) {
+    init(gallery: String?) {
         self.gallery = gallery
         self.imageView = UIImageView()
         self.loadingIndicator = UIActivityIndicatorView()
@@ -47,33 +47,32 @@ extension ImagePageViewController {
             loadingIndicator.centerYAnchor.constraint(equalTo: imageView.centerYAnchor),
         ])
         
-        if let url = URL(string: gallery) {
-            let fileExtension = url.pathExtension
-            if fileExtension == "pdf" {
-                pdfView = PDFView()
-                pdfView.autoScales = true
-                pdfView.setPDF(from: url) { [weak self] doc in
-                    self?.document = doc
-                    self?.loadingIndicator.stopAnimating()
-                }
-                pdfView.frame = CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 250))
-                let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
-                pdfView.tag = 1
-                pdfView.isUserInteractionEnabled = true
-                pdfView.addGestureRecognizer(tap)
-                view.addSubview(pdfView)
-            } else {
-                imageView.setImage(from: gallery) { [weak self] in
-                    self?.loadingIndicator.stopAnimating()
-                }
-                imageView.contentMode = .scaleAspectFill
-                imageView.frame = CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 250))
-                imageView.isUserInteractionEnabled = true
-                let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
-                imageView.tag = 2
-                imageView.addGestureRecognizer(tap)
-                view.addSubview(imageView)
+        guard let gallery = gallery, let url = URL(string: gallery) else { return }
+        let fileExtension = url.pathExtension
+        if fileExtension == "pdf" {
+            pdfView = PDFView()
+            pdfView.autoScales = true
+            pdfView.setPDF(from: url) { [weak self] doc in
+                self?.document = doc
+                self?.loadingIndicator.stopAnimating()
             }
+            pdfView.frame = CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 250))
+            let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
+            pdfView.tag = 1
+            pdfView.isUserInteractionEnabled = true
+            pdfView.addGestureRecognizer(tap)
+            view.addSubview(pdfView)
+        } else {
+            imageView.setImage(from: gallery) { [weak self] in
+                self?.loadingIndicator.stopAnimating()
+            }
+            imageView.contentMode = .scaleAspectFill
+            imageView.frame = CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 250))
+            imageView.isUserInteractionEnabled = true
+            let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
+            imageView.tag = 2
+            imageView.addGestureRecognizer(tap)
+            view.addSubview(imageView)
         }
     }
     

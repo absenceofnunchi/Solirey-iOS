@@ -7,10 +7,7 @@
 
 import UIKit
 
-class BalanceCardView: UIView {
-    var startingColor: UIColor = UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1)
-    var finishingColor: UIColor = UIColor(red: 217/255, green: 158/255, blue: 172/255, alpha: 1)
-    lazy var backgroundColorArr: [CGColor] = [startingColor.cgColor, finishingColor.cgColor]
+class BalanceCardView: GradientBackgroundView {
     var titleLabel: UILabel!
     var subtitleLabel: UILabel!
     var balanceLabel: UILabel!
@@ -23,24 +20,18 @@ class BalanceCardView: UIView {
         setConstraints()
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
-extension BalanceCardView {
-    func drawPattern (arcCenter: CGPoint, radius: CGFloat) {
-        let path = UIBezierPath(arcCenter: arcCenter, radius: radius, startAngle: 0, endAngle: CGFloat.pi * 2, clockwise: true)
-        UIColor.white.setFill()
-        path.fill(with: .overlay, alpha: 0.1)
+    init(titleString: String, subtitleString: String) {
+        super.init(frame: .zero)
+        
+        self.titleLabel?.text = titleString
+        self.subtitleLabel?.text = subtitleString
+        
+        configure()
+        setConstraints()
     }
     
-    override func draw(_ rect: CGRect) {
-        guard let context = UIGraphicsGetCurrentContext() else { return }
-        context.drawLinearGradient(in: self.bounds, startingWith: startingColor.cgColor, finishingWith: finishingColor.cgColor)
-        
-        drawPattern(arcCenter: .zero, radius: self.bounds.height - 50)
-        drawPattern(arcCenter: CGPoint(x: self.bounds.maxX, y: self.bounds.minY), radius: self.bounds.height / 3)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
@@ -64,8 +55,8 @@ extension BalanceCardView {
         
         // subtitle
         subtitleLabel = UILabel()
-        subtitleLabel.text = "WALLET BALANCE"
         subtitleLabel.textColor = .white
+        subtitleLabel.sizeToFit()
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         subtitleLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
         self.addSubview(subtitleLabel)
@@ -95,7 +86,7 @@ extension BalanceCardView {
 
 // MARK:- set constraints
 extension BalanceCardView {
-    func setConstraints() {
+    @objc func setConstraints() {
         NSLayoutConstraint.activate([
             // title label
             titleLabel.topAnchor.constraint(equalTo: self.layoutMarginsGuide.topAnchor),

@@ -206,6 +206,7 @@ class PostViewController: ParentPostViewController {
                                         return Fail(error: PostingError.retrievingCurrentAddressError)
                                             .eraseToAnyPublisher()
                                     }
+
                                     return Future<BigUInt, PostingError> { promise in
                                         do {
                                             // get the current nonce so that we can increment it manually
@@ -221,8 +222,6 @@ class PostViewController: ParentPostViewController {
                                     .eraseToAnyPublisher()
                                 })
                                 .flatMap { (nonce) -> AnyPublisher<TxPackage, PostingError> in
-                                    print("nonce", nonce)
-                                    print("advance", nonce.advanced(by: 1))
                                     print("STEP 3")
                                     return Future<TxPackage, PostingError> { promise in
                                         self.transactionService.prepareTransactionForNewContractWithGasEstimate(
@@ -356,25 +355,36 @@ class PostViewController: ParentPostViewController {
                                                     self.alert.showDetail("Error", with: "The ETH value is in an incorrect format.", for: self)
                                                 case .generalError(reason: let msg):
                                                     self.alert.showDetail("Error", with: msg, for: self)
+                                                case .apiError(.generalError(reason: let err)):
+                                                    self.alert.showDetail("Error", with: err, for: self)
                                                 default:
                                                     self.alert.showDetail("Error", with: "There was an error creating your post.", for: self)
                                             }
                                         case .finished:
+                                            // update the progress indicator
                                             let update: [String: PostProgress] = ["update": .images]
                                             NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                             
+                                            FirebaseService.shared.sendToTopicsVoid(
+                                                title: "New item has been listed on \(category)",
+                                                content: itemTitle,
+                                                topic: category,
+                                                docId: self.documentId
+                                            )
+                                            
+                                            // reset the fields
                                             DispatchQueue.main.async {
                                                 self.titleTextField.text?.removeAll()
                                                 self.priceTextField.text?.removeAll()
                                                 self.descTextView.text?.removeAll()
                                                 self.idTextField.text?.removeAll()
                                                 self.deliveryMethodLabel.text?.removeAll()
-                                                self.saleMethodLabel.text?.removeAll()
                                                 self.pickerLabel.text?.removeAll()
                                                 self.tagTextField.tokens.removeAll()
                                                 self.paymentMethodLabel.text?.removeAll()
                                             }
                                             
+                                            // remove the image and file previews
                                             if self.previewDataArr.count > 0 {
                                                 self.previewDataArr.removeAll()
                                                 self.imagePreviewVC.data.removeAll()
@@ -382,7 +392,6 @@ class PostViewController: ParentPostViewController {
                                                     self.imagePreviewVC.collectionView.reloadData()
                                                 }
                                             }
-                                            
                                     }
                                 } receiveValue: { (receivedValue) in
                                     print("receivedValue", receivedValue)

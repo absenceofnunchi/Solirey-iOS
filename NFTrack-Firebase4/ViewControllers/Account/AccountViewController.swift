@@ -90,6 +90,7 @@ extension AccountViewController: TableViewConfigurable {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
         
+        balanceCardView.subtitleLabel?.text = "WALLET BALANCE"
         balanceCardView.tag = 7
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         balanceCardView.addGestureRecognizer(tap)

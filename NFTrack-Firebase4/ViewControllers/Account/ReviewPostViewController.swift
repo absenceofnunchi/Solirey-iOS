@@ -5,7 +5,9 @@
 //  Created by J C on 2021-06-21.
 //
 /*
- Where you create the review and submit it
+ Create the review and submit it.
+ Only available to the buyer after the sale has been finalized.
+ The pending review is valid for 30 days.
  */
 
 import UIKit

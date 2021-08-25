@@ -24,6 +24,13 @@ class CreditCardView: UIView {
         setConstraints()
     }
     
+    init(titleString: String, subtitleString: String) {
+        self.titleLabel?.text = titleString
+        self.subtitleLabel?.text = subtitleString
+        
+        super.init(frame: .zero)
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -48,7 +55,7 @@ extension CreditCardView {
 
 // MARK:- configure
 extension CreditCardView {
-    func configure() {
+   func configure() {
         self.isOpaque = false
         self.backgroundColor = backgroundColorArr[0]
         self.layer.cornerRadius = 10
@@ -98,7 +105,7 @@ extension CreditCardView {
 
 // MARK:- set constraints
 extension CreditCardView {
-    func setConstraints() {
+    @objc func setConstraints() {
         NSLayoutConstraint.activate([
             // title label
             titleLabel.topAnchor.constraint(equalTo: self.layoutMarginsGuide.topAnchor),

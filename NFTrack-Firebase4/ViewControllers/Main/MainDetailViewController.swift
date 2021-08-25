@@ -9,6 +9,7 @@ import UIKit
 import FirebaseFirestore
 import web3swift
 import Combine
+import FirebaseMessaging
 
 class MainDetailViewController: ParentListViewController<Post>, PostParseDelegate {
     var storage = Set<AnyCancellable>()
@@ -43,14 +44,26 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 }
         }
     }
+    var subscriptionButtonItem: UIBarButtonItem!
+    var isSubscribed: Bool! = false {
+        didSet {
+            print("isSubscribed", isSubscribed as Any)
+            configureNavigationItem()
+        }
+    }
     
     override func setDataStore(postArr: [Post]) {
         dataStore = PostImageDataStore(posts: postArr)
     }
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        configureNavigationItem()
+        fetchSubscriptionStatus()
+    }
+    
     // MARK: - didRefreshTableView
     override func didRefreshTableView(index: Int) {
-        
     }
     
     override func configureUI() {
@@ -59,6 +72,41 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         tableView.prefetchDataSource = self
         view.addSubview(tableView)
         tableView.fill()
+    }
+    
+    func configureNavigationItem() {
+        guard let bookmarkImage = UIImage(systemName: isSubscribed ? "bookmark.fill" : "bookmark") else { return }
+        subscriptionButtonItem = UIBarButtonItem(image: bookmarkImage, style: .plain, target: self, action: #selector(buttonPressed(_:)))
+        subscriptionButtonItem.tag = 0
+        navigationItem.rightBarButtonItem = subscriptionButtonItem
+    }
+    
+    func fetchSubscriptionStatus() {
+        FirebaseService.shared.db
+            .collection("deviceToken")
+            .document(userId)
+            .getDocument { [weak self] (document, error) in
+                if let _ = error {
+                    self?.alert.showDetail("Error", with: "Unable to fetch the status of your subscription. Please try again later.", for: self)
+                }
+                
+                guard let document = document,
+                      let data = document.data(),
+                      let title = self?.title else { return }
+                
+                var subscriptions: [String]!
+                data.forEach { (item) in
+                    switch item.key {
+                        case "subscription":
+                            subscriptions = item.value as? [String]
+                            if subscriptions.contains(title) {
+                                self?.isSubscribed = true
+                            }
+                        default:
+                            break
+                    }
+                }
+            }
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -113,6 +161,65 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                     }
                 }
                 .store(in: &storage)
+        }
+    }
+}
+
+extension MainDetailViewController {
+    @objc func buttonPressed(_ sender: UIButton) {
+
+        switch sender.tag {
+            case 0:
+                
+                guard let title = self.title else { return }
+                let convertedTitle = title.trimmingAllSpaces(using: .whitespacesAndNewlines).lowercased()
+                
+                if isSubscribed == false {
+                    self.alert.showDetail(
+                        "Subscription",
+                        with: "Would you like to get notified every time \(title) has a newly listed item? You can unsubscribe at any time.",
+                        for: self,
+                        alertStyle: .withCancelButton,
+                        buttonAction: { [weak self] in
+                            guard let self = self else { return }
+                            
+                            self.isSubscribed = !self.isSubscribed
+                            
+                            FirebaseService.shared.db.collection("deviceToken").document(self.userId).setData([
+                                "subscription": FieldValue.arrayUnion(["\(convertedTitle)"])
+                            ], merge: true) { [weak self] (error) in
+                                if let _ = error {
+                                    self?.alert.showDetail("Subscription Error", with: "Unable to subscribe. Please try again later.", for: self)
+                                } else {
+                                    Messaging.messaging().subscribe(toTopic: convertedTitle) { error in
+                                        print("Subscribed to \(title) topic")
+                                    }
+                                    
+                                    print("sub")
+                                }
+                            }
+                        }
+                    )
+                } else {
+                    self.isSubscribed = !self.isSubscribed
+                    
+                    FirebaseService.shared.db.collection("deviceToken").document(self.userId).setData([
+                        "subscription": FieldValue.arrayRemove(["\(convertedTitle)"])
+                    ], merge: true) { [weak self] (error) in
+                        if let _ = error {
+                            self?.alert.showDetail("Subscription Error", with: "Unable to subscribe. Please try again later.", for: self)
+                        } else {
+                            Messaging.messaging().unsubscribe(fromTopic: convertedTitle) { error in
+                                print("unsubscribed to \(title) topic")
+                            }
+                            
+                            print("unsub")
+                        }
+                    }
+                }
+                break
+            default:
+                break
         }
     }
 }

@@ -138,21 +138,19 @@ extension MainViewController {
         } else {
             optionsBarItem = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(menuHandler(action:)))
             navigationItem.rightBarButtonItem = optionsBarItem
-            print("below iOS 14")
         }
     }
     
-    @objc private func menuHandler(action: UIAction) {
-        
-//        switch action.title {
-//            case "Saved Items":
-//                let savedVC = SavedViewController()
-//                self.navigationController?.pushViewController(savedVC, animated: true)
-//            case "Quick UI Check":
-//                let checkVC = QuickUICheckViewController()
-//                self.navigationController?.pushViewController(checkVC, animated: true)
-//            default:
-//                break
-//        }
+    @objc private func menuHandler(action: UIAction) {        
+        switch action.title {
+            case "Saved Items":
+                let savedVC = SavedViewController()
+                self.navigationController?.pushViewController(savedVC, animated: true)
+            case "Quick UI Check":
+                let checkVC = QuickUICheckViewController()
+                self.navigationController?.pushViewController(checkVC, animated: true)
+            default:
+                break
+        }
     }
 }

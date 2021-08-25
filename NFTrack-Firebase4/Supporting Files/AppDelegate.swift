@@ -47,10 +47,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 print("Error fetching FCM registration token: \(error)")
             } else if let token = token {
 //                print("FCM registration token: \(token)")
-                Auth.auth().addStateDidChangeListener { (auth, user) in
-                    if let user = user {
-                        FirebaseService.shared.db.collection("deviceToken").document(user.uid).updateData(["token": FieldValue.arrayUnion([token])])
-                    }
+                let user = Auth.auth().currentUser
+                if let user = user {
+                    let uid = user.uid
+                    FirebaseService.shared.db.collection("deviceToken").document(uid).setData(["token": FieldValue.arrayUnion([token])], merge: true)
                 }
             }
         }
@@ -136,7 +136,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 // [START ios_10_message_handling]
 @available(iOS 10, *)
-extension AppDelegate : UNUserNotificationCenterDelegate {
+extension AppDelegate : UNUserNotificationCenterDelegate, PostParseDelegate {
     
     // Receive displayed notifications for iOS 10 devices.
     func userNotificationCenter(_ center: UNUserNotificationCenter,
@@ -320,115 +320,6 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
         }
         
         completionHandler()
-    }
-    
-    func parseDocument(document: DocumentSnapshot) -> Post? {
-        guard let data = document.data() else { return nil }
-        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat: String!
-        var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
-        var files, savedBy: [String]?
-        data.forEach { (item) in
-            switch item.key {
-                case "sellerUserId":
-                    sellerUserId = item.value as? String
-                case "senderAddress":
-                    sellerHash = item.value as? String
-                case "title":
-                    title = item.value as? String
-                case "description":
-                    description = item.value as? String
-                case "date":
-                    let timeStamp = item.value as? Timestamp
-                    date = timeStamp?.dateValue()
-                case "files":
-                    files = item.value as? [String]
-                case "price":
-                    price = item.value as? String
-                case "mintHash":
-                    mintHash = item.value as? String
-                case "escrowHash":
-                    escrowHash = item.value as? String
-                case "auctionHash":
-                    auctionHash = item.value as? String
-                case "itemIdentifier":
-                    id = item.value as? String
-                case "transferHash":
-                    transferHash = item.value as? String
-                case "status":
-                    status = item.value as? String
-                case "confirmPurchaseHash":
-                    confirmPurchaseHash = item.value as? String
-                case "confirmReceivedHash":
-                    confirmReceivedHash = item.value as? String
-                case "confirmPurchaseDate":
-                    let timeStamp = item.value as? Timestamp
-                    confirmPurchaseDate = timeStamp?.dateValue()
-                case "transferDate":
-                    let timeStamp = item.value as? Timestamp
-                    transferDate = timeStamp?.dateValue()
-                case "confirmReceivedDate":
-                    let timeStamp = item.value as? Timestamp
-                    confirmReceivedDate = timeStamp?.dateValue()
-                case "buyerHash":
-                    buyerHash = item.value as? String
-                case "savedBy":
-                    savedBy = item.value as? [String]
-                case "buyerUserId":
-                    buyerUserId = item.value as? String
-                case "type":
-                    type = item.value as? String
-                case "deliveryMethod":
-                    deliveryMethod = item.value as? String
-                case "paymentMethod":
-                    paymentMethod = item.value as? String
-                case "saleFormat":
-                    saleFormat = item.value as? String
-                case "bidDate":
-                    let timeStamp = item.value as? Timestamp
-                    bidDate = timeStamp?.dateValue()
-                case "auctionEndDate":
-                    let timeStamp = item.value as? Timestamp
-                    auctionEndDate = timeStamp?.dateValue()
-                case "auctionTransferredDate":
-                    let timeStamp = item.value as? Timestamp
-                    auctionTransferredDate = timeStamp?.dateValue()
-                default:
-                    break
-            }
-        }
-
-        let post = Post(
-            documentId: document.documentID,
-            title: title,
-            description: description,
-            date: date,
-            files: files,
-            price: price,
-            mintHash: mintHash,
-            escrowHash: escrowHash,
-            auctionHash: auctionHash,
-            id: id,
-            status: status,
-            sellerUserId: sellerUserId,
-            buyerUserId: buyerUserId,
-            sellerHash: sellerHash,
-            buyerHash: buyerHash,
-            confirmPurchaseHash: confirmPurchaseHash,
-            confirmPurchaseDate: confirmPurchaseDate,
-            transferHash: transferHash,
-            transferDate: transferDate,
-            confirmReceivedHash: confirmReceivedHash,
-            confirmReceivedDate: confirmReceivedDate,
-            savedBy: savedBy,
-            type: type,
-            deliveryMethod: deliveryMethod,
-            paymentMethod: paymentMethod,
-            saleFormat: saleFormat,
-            bidDate: bidDate,
-            auctionEndDate: auctionEndDate,
-            auctionTransferredDate: auctionTransferredDate
-        )
-        return post
     }
 }
 // [END ios_10_message_handling]

@@ -752,41 +752,6 @@ extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
         }
     }
     
-//    func uploadFiles(_ promise: @escaping (Result<[String], PostingError>) -> Void) {
-//        var fileCount: Int = 0
-//        var urlStringArr = [String]()
-//        if self.previewDataArr.count > 0 {
-//            for previewData in previewDataArr {
-//                self.uploadFile(fileURL: previewData.filePath, userId: self.userId, promise: promise)
-////                    guard let strongSelf = self else { return }
-//                    urlStringArr.append("\(url)")
-////                    strongSelf.db.collection("post").document(strongSelf.documentId).updateData([
-////                        "files": FieldValue.arrayUnion(["\(url)"])
-////                    ], completion: { (error) in
-////                        if let error = error {
-////                            strongSelf.alert.showDetail("Error", with: error.localizedDescription, for: self)
-////                        }
-////                    })
-//
-//                fileCount += 1
-//                if fileCount == previewDataArr.count {
-//                    self.previewDataArr.removeAll()
-//                    self.imagePreviewVC.data.removeAll()
-//                    DispatchQueue.main.async { [weak self] in
-//                        self?.imagePreviewVC.collectionView.reloadData()
-//                    }
-//                    let update: [String: PostProgress] = ["update": .images]
-//                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//                    print("urlStrings in uploadFiels", urlStringArr)
-//                    promise(.success(urlStringArr))
-//                }
-//            }
-//        } else {
-//            let update: [String: PostProgress] = ["update": .images]
-//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//        }
-//    }
-    
     // MARK: - getTokenId
     /// uploads the receipt to the Firebase function to get the token number, which will update the Firestore
     func getTokenId(topics: [String], completion: @escaping (Int?, Error?) -> Void) {

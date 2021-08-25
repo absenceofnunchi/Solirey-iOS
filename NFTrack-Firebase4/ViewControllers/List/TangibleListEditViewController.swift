@@ -31,6 +31,7 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                     } completion: { (_) in
                         guard let `self` = self else { return }
                         self.scrollView.contentSize = CGSize(width: self.view.bounds.width, height: self.SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW)
+                        self.imagePreviewVC.data = previewDataArr
                     }
                 }
             } else {
@@ -75,6 +76,10 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
     var url: URL!
     var userId: String!
     var storage = Set<AnyCancellable>()
+    var storageRef: StorageReference! {
+        let storage = Storage.storage()
+        return storage.reference()
+    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -83,6 +88,7 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
             /// whenever the image picker is dismissed, the collection view has to be updated
             imagePreviewVC.data = previewDataArr
         }
+
     }
 
     override func configureUI() {
@@ -97,20 +103,19 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
         }
         
         if let files = post.files, files.count > 0 {
-            for file in files {
-                guard let filePath = URL(string: file) else { return }
-                if file.contains("pdf") {
-                    previewDataArr.append(PreviewData(header: .document, filePath: filePath))
-                } else {
-                    
-
-//                    saveImage(imageName: <#T##String#>, image: <#T##UIImage#>)
-                    previewDataArr.append(PreviewData(header: .remoteImage, filePath: filePath))
-                }
-            }
+            downloadFiles(files: files)
         }
         
-        
+//        if let files = post.files, files.count > 0 {
+//            for file in files {
+//                if file.contains("pdf") {
+//                    downloadFiles(urlString: file, type: .document)
+//                } else {
+//                    downloadFiles(urlString: file, type: .image)
+//                }
+//            }
+//        }
+//
         // the digital type should never run
         if post.type == "digital" {
             configureImagePreview(postType: .digital(.onlineDirect), superView: scrollView)
@@ -118,15 +123,6 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
             configureImagePreview(postType: .tangible, superView: scrollView)
         }
     }
-    
-//    func downloadFiled(files: [String]) {
-//        files.map { (file) -> AnyPublisher<String, PostingError> in
-//            Future<String, PostingError> { promise in
-//                
-//            }
-//            .eraseToAnyPublisher()
-//        }
-//    }
     
     override func setConstraints() {
         super.setConstraints()
@@ -186,7 +182,7 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                               let userId = self?.userId else { return }
 
                         // if there are files to upload
-                        func withFiles(_ data: [PreviewData]) -> AnyPublisher<Bool, PostingError> {
+                        func withFiles(_ data: [PreviewData]) -> AnyPublisher<[String?], PostingError> {
                             let fileURLs = data.map { (previewData) -> AnyPublisher<String?, PostingError> in
                                 return Future<String?, PostingError> { promise in
                                     self?.uploadFileWithPromise(
@@ -199,8 +195,8 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                             return Publishers.MergeMany(fileURLs)
                                 .collect()
                                 .eraseToAnyPublisher()
-                                .flatMap { (urlStrings) -> AnyPublisher<Bool, PostingError> in
-                                    Future<Bool, PostingError> { promise in
+                                .flatMap { (urlStrings) -> AnyPublisher<[String?], PostingError> in
+                                    Future<[String?], PostingError> { promise in
                                         self?.db.collection("post").document(postId).updateData([
                                             "title": itemTitle,
                                             "description": desc,
@@ -210,7 +206,7 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                                                 promise(.failure(.generalError(reason: error.localizedDescription)))
                                             }
                                             
-                                            promise(.success(true))
+                                            promise(.success(urlStrings))
                                         }
                                     }
                                     .eraseToAnyPublisher()
@@ -219,8 +215,8 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                         }
                         
                         // if there are no files to upload
-                        func withoutFiles() -> AnyPublisher<Bool, PostingError> {
-                            Future<Bool, PostingError> { promise in
+                        func withoutFiles() -> AnyPublisher<[String?], PostingError> {
+                            Future<[String?], PostingError> { promise in
                                 self?.db.collection("post").document(postId).updateData([
                                     "title": itemTitle,
                                     "description": desc,
@@ -230,42 +226,57 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                                         promise(.failure(.generalError(reason: error.localizedDescription)))
                                     }
                                     
-                                    promise(.success(true))
+                                    promise(.success([]))
                                 }
                             }
                             .eraseToAnyPublisher()
                         }
 
-                        var updatePublisher: AnyPublisher<Bool, PostingError>!
-                        if let previewDataArr = self?.previewDataArr {
-                            // the path either starts from "https://" or "file://"
-                            // the former implies that it's already uploaded in Firebase Storage, therefore doesn't need to be uploaded
-                            let filtered = previewDataArr.filter { $0.filePath.absoluteString.lowercased().hasPrefix("file:") }
-                            updatePublisher = withFiles(filtered)
-                        } else {
-                            updatePublisher = withoutFiles()
-                        }
-                        
-                        updatePublisher
-                        .sink { (completion) in
-                            switch completion {
-                                case .failure(let error):
-                                    self?.alert.showDetail("Update Error", with: error.localizedDescription, for: self)
-                                    break
-                                case .finished:
-                                    self?.alert.showDetail("Success!", with: "Your post has been successfully updated.", for: self, buttonAction: {
-                                        self?.dismiss(animated: true, completion: {
-                                            self?.navigationController?.popViewController(animated: true)
-                                        })
-                                    }, completion:  {
-                                        self?.delegate?.didUpdatePost(titleString: itemTitle, desc: desc, files: nil)
-                                    })
-                                    break
-                            }
-                        } receiveValue: { (isDone) in }
-                        .store(in: &self!.storage)
-                    }
-                }
+                        //
+                        self?.dismiss(animated: true, completion: {
+                            self?.showSpinner({
+                                var updatePublisher: AnyPublisher<[String?], PostingError>!
+                                if let previewDataArr = self?.previewDataArr {
+                                    // the path either starts from "https://" or "file://"
+                                    // the former implies that it's already uploaded in Firebase Storage, therefore doesn't need to be uploaded
+                                    let filtered = previewDataArr.filter { $0.filePath.absoluteString.lowercased().hasPrefix("file:") }
+                                    updatePublisher = withFiles(filtered)
+                                } else {
+                                    updatePublisher = withoutFiles()
+                                }
+                                
+                                updatePublisher
+                                    .sink { (completion) in
+                                        switch completion {
+                                            case .failure(let error):
+                                                self?.alert.showDetail("Update Error", with: error.localizedDescription, for: self)
+                                                break
+                                            case .finished:
+                                                self?.alert.showDetail("Success!", with: "Your post has been successfully updated.", for: self, buttonAction: {
+                                                    self?.dismiss(animated: true, completion: {
+                                                        self?.deleteAllStorageFiles()
+
+                                                        guard let window = UIApplication.shared.windows.first,
+                                                              let tabBarController = window.rootViewController as? UITabBarController else { return }
+                                                        
+                                                        print("self?.navigationController?", self?.navigationController as Any)
+                                                        self?.navigationController?.popToRootViewController(animated: true)
+                                                        tabBarController.selectedIndex = 1
+                                                        guard let vcs = tabBarController.viewControllers, let listVC = vcs[0] as? ListViewController else { return }
+                                                        listVC.segmentedControl.selectedSegmentIndex = 3
+                                                        listVC.segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+                                                    })
+                                                }, completion:  {
+                                                    
+                                                })
+                                                break
+                                        }
+                                    } receiveValue: { _ in }
+                                    .store(in: &self!.storage)
+                            }) // show spinner
+                        }) // dismiss
+                    } // button action
+                } // alert action
                 self.present(alertVC, animated: true, completion: nil)
                 
             case 1:
@@ -292,25 +303,7 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                             }
                             
                             // delete the image and pdf files in the storage
-                            if let files = self?.post.files {
-                                for file in files {
-                                    // Create a reference to the file to delete
-                                    let storage = Storage.storage()
-                                    let storageRef = storage.reference()
-                                    let mediaRef = storageRef.child(file)
-                                    
-                                    // Delete the file
-                                    mediaRef.delete { error in
-                                        if let error = error {
-                                            // Uh-oh, an error occurred!
-                                            print("storage delete error", error)
-                                        } else {
-                                            // File deleted successfully
-                                            print("storage delete success")
-                                        }
-                                    }
-                                }
-                            }
+                            self?.deleteAllStorageFiles()
                             
                             self?.alert.showDetail("Success!", with: "Your post has been successfully deleted.", for: self, buttonAction: {
                                 self?.dismiss(animated: true, completion: {
@@ -341,6 +334,27 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                 break
         }
     }
+    
+    func deleteAllStorageFiles() {
+        // delete the image and pdf files in the storage
+        if let files = self.post.files {
+            for file in files {
+                // Create a reference to the file to delete
+                let mediaRef = self.storageRef.child(file)
+                
+                // Delete the file
+                mediaRef.delete { error in
+                    if let error = error {
+                        // Uh-oh, an error occurred!
+                        print("storage delete error", error)
+                    } else {
+                        // File deleted successfully
+                        print("storage delete success")
+                    }
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Image picker
@@ -353,7 +367,6 @@ extension TangibleListEditViewController: UIImagePickerControllerDelegate & UINa
             return
         }
 
-        print("picker", filePath)
         let previewData = PreviewData(header: .image, filePath: filePath)
         previewDataArr.append(previewData)
     }
@@ -400,4 +413,150 @@ extension TangibleListEditViewController {
     func didDeleteFileFromPreview(filePath: URL) {
         previewDataArr = previewDataArr.filter { $0.filePath != filePath }
     }
+}
+
+extension TangibleListEditViewController {
+    func downloadFiles(files: [String]) {
+        let previewDataPublishers = files.map { (file) -> AnyPublisher<PreviewData, PostingError> in
+            if file.contains("pdf") {
+                return downloadFiles(urlString: file, type: .document)
+            } else {
+                return downloadFiles(urlString: file, type: .image)
+            }
+        }
+        return Publishers.MergeMany(previewDataPublishers)
+            .collect()
+            .eraseToAnyPublisher()
+//            .map { (previewDataPublishers) -> [PreviewData] in
+//                return previewDataPublishers
+//            }
+            .sink { [weak self] (completion) in
+                switch completion {
+                    case .failure(.generalError(reason: let error)):
+                        self?.alert.showDetail("Image/Doc Fetch Error", with: error, for: self)
+                    case .finished:
+                        print("download finished")
+                    default:
+                        self?.alert.showDetail("Image/Doc Fetch Error", with: "Unable to fetch the data.", for: self)
+                }
+            } receiveValue: { [weak self] (previewArr) in
+                self?.previewDataArr = previewArr
+                self?.imagePreviewVC.data = previewArr                
+            }
+            .store(in: &self.storage)
+    }
+    
+    func saveFile(fileName: String, data: Data, promise: @escaping (Result<PreviewData, PostingError>) -> Void) {
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            promise(.failure(.generalError(reason: "Could not create a URL to save the image.")))
+            return
+        }
+        
+        let fileURL = documentsDirectory.appendingPathComponent(fileName)
+        
+        //Checks if file exists, removes it if so.
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            do {
+                try FileManager.default.removeItem(atPath: fileURL.path)
+            } catch {
+                promise(.failure(.generalError(reason: "Couldn't remove file at path.")))
+            }
+        }
+        
+        do {
+            try data.write(to: fileURL)
+            promise(.success(PreviewData(header: .document, filePath: fileURL)))
+        } catch {
+            promise(.failure(.generalError(reason: "Error saving file with error")))
+        }
+    }
+    
+    func saveImage(imageName: String, image: UIImage, promise: @escaping (Result<PreviewData, PostingError>) -> Void) {
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            promise(.failure(.generalError(reason: "Could not create a URL to save the image.")))
+            return
+        }
+        
+        let fileName = imageName
+        let fileURL = documentsDirectory.appendingPathComponent(fileName)
+        guard let data = image.jpegData(compressionQuality: 0.8) else {
+            promise(.failure(.generalError(reason: "Could not process the downloaded image data.")))
+            return
+        }
+        
+        //Checks if file exists, removes it if so.
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            do {
+                try FileManager.default.removeItem(atPath: fileURL.path)
+            } catch {
+                promise(.failure(.generalError(reason: "Couldn't remove file at path.")))
+            }
+        }
+        
+        do {
+            try data.write(to: fileURL)
+            promise(.success(PreviewData(header: .image, filePath: fileURL)))
+        } catch {
+            promise(.failure(.generalError(reason: "Error saving file with error")))
+        }
+    }
+    
+    func downloadFiles(urlString: String, type: Header) -> AnyPublisher<PreviewData, PostingError> {
+        Future<Data, PostingError> { promise in
+            FirebaseService.shared.downloadURL(urlString: urlString, promise: promise)
+        }
+        .eraseToAnyPublisher()
+        .flatMap { [weak self] (data) -> AnyPublisher<PreviewData, PostingError> in
+            Future<PreviewData, PostingError> { promise in
+                if type == .document {
+                    self?.saveFile(fileName: UUID().uuidString, data: data, promise: promise)
+                } else {
+                    guard let image = UIImage(data: data) else {
+                        promise(.failure(.generalError(reason: "Unable to process the image preivew.")))
+                        return
+                    }
+                    self?.saveImage(imageName: UUID().uuidString, image: image, promise: promise)
+                }
+            }
+            .eraseToAnyPublisher()
+        }
+        .eraseToAnyPublisher()
+    }
+    
+    //    func downloadFiles(urlString: String, type: Header) {
+    //        Future<Data, PostingError> { promise in
+    //            FirebaseService.shared.downloadURL(urlString: urlString, promise: promise)
+    //        }
+    //        .eraseToAnyPublisher()
+    //        .flatMap { [weak self] (data) -> AnyPublisher<URL, PostingError> in
+    //            Future<URL, PostingError> { promise in
+    //                if type == .document {
+    //                    self?.saveFile(fileName: UUID().uuidString, data: data, promise: promise)
+    //                } else {
+    //                    guard let image = UIImage(data: data) else {
+    //                        promise(.failure(.generalError(reason: "Unable to process the image preivew.")))
+    //                        return
+    //                    }
+    //                    self?.saveImage(imageName: UUID().uuidString, image: image, promise: promise)
+    //                }
+    //            }
+    //            .eraseToAnyPublisher()
+    //        }
+    //        .map { (url) -> PreviewData in
+    //            return PreviewData(header: type, filePath: url)
+    //        }
+    //        .sink { [weak self] (completion) in
+    //            switch completion {
+    //                case .failure(.generalError(reason: let error)):
+    //                    self?.alert.showDetail("Image/Doc Fetch Error", with: error, for: self)
+    //                case .finished:
+    //                    print("download finished")
+    //                default:
+    //                    self?.alert.showDetail("Image/Doc Fetch Error", with: "Unable to fetch the data.", for: self)
+    //            }
+    //        } receiveValue: { [weak self] (previewData) in
+    //            self?.previewDataArr.append(previewData)
+    //        }
+    //        .store(in: &self.storage)
+    //    }
 }

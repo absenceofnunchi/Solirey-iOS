@@ -16,7 +16,6 @@ class ListDetailViewController: ParentDetailViewController {
             self.getStatus()
         }
     }
-    final var optionsBarItem: UIBarButtonItem!
     private var statusTitleLabel: UILabel!
     final var statusLabel: UILabelPadding!
     final var updateStatusButton = UIButton()
@@ -24,7 +23,6 @@ class ListDetailViewController: ParentDetailViewController {
     final var historyVC: HistoryViewController!
     lazy var historyVCHeightConstraint: NSLayoutConstraint = historyVC.view.heightAnchor.constraint(equalToConstant: 100)
     final var observation: NSKeyValueObservation?
-    final var storage = Set<AnyCancellable>()
     private var socketDelegate: SocketDelegate!
     private var pendingIndicatorView: PendingIndicatorView!
     // indicator to show whether the transaction is pending or not
@@ -221,7 +219,6 @@ extension ListDetailViewController {
                 let listEditVC = TangibleListEditViewController()
                 listEditVC.post = post
                 listEditVC.userId = userId
-                listEditVC.delegate = self
                 self.navigationController?.pushViewController(listEditVC, animated: true)
                 break
             default:
@@ -236,65 +233,6 @@ extension ListDetailViewController {
             self?.updateStatusButton.isEnabled = true
             self?.updateStatusButton.setTitle(buttonTitle, for: .normal)
         }
-    }
-}
-
-extension ListDetailViewController {
-    /// sender, recipient: firebase userId
-    /// content: the message to be show on the push notification
-    /// docID: the ID that'll be used to fetch the firebase entry once the recipient taps on the message
-    /// Post is not sent along with the message because 1) it's a class and 2) FCM only allows strings in the properties
-    final func sendNotification(sender: String, recipient: String, content: String, docID: String, completion: @escaping (Error?) -> Void) {
-        // build request URL
-        guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/sendStatusNotification-sendStatusNotification") else {
-            return
-        }
-//        guard let requestURL = URL(string: "http://localhost:5001/nftrack-69488/us-central1/sendStatusNotification-sendStatusNotification") else {
-//            return
-//        }
-        
-        // prepare request
-        var request = URLRequest(url: requestURL)
-        request.httpMethod = "POST"
-        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        
-        print("sender", sender)
-        print("recipient", recipient)
-        print("content", content)
-        print("docID", docID)
-        let parameter: [String: Any] = [
-            "sender": sender,
-            "recipient": recipient,
-            "content": content,
-            "docID": docID
-        ]
-        
-        let paramData = try? JSONSerialization.data(withJSONObject: parameter, options: [])
-        request.httpBody = paramData
-        
-        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (_, response, error) -> Void in
-            if let error = error {
-                completion(error)
-            }
-            
-            if let response = response as? HTTPURLResponse {
-                print("response", response)
-                
-                let httpStatusCode = APIError.HTTPStatusCode(rawValue: response.statusCode)
-                completion(httpStatusCode)
-                
-                //                if !(200...299).contains(response.statusCode) {
-                //                    print("start1")
-                //                    // handle HTTP server-side error
-                //                }
-            }
-        })
-        
-        observation = task.progress.observe(\.fractionCompleted) {(progress, _) in
-            print("progress", progress)
-        }
-        
-        task.resume()
     }
 }
 

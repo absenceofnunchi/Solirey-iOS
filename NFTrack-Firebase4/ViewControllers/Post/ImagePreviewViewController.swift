@@ -142,6 +142,7 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
         
         let header = data[indexPath.row].header
         let filePath = data[indexPath.row].filePath
+                
         switch header {
             case .image:
                 if let image = UIImage(contentsOfFile: "\(filePath.path)") {

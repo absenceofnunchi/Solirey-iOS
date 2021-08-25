@@ -621,12 +621,15 @@ extension TransactionService {
             if let transaction = transaction {
                 do {
                     let escrowGasEstimate = try transaction.estimateGas()
+                    print("escrowGasEstimate", escrowGasEstimate)
                     let txPackage = TxPackage(
                         transaction: transaction,
                         gasEstimate: escrowGasEstimate,
                         price: nil,
                         type: .mint
                     )
+                    
+                    print("txPackage", txPackage)
                     
                     promise(.success(txPackage))
                 } catch {

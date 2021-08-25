@@ -21,7 +21,6 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate {
     }
     var alert: Alerts!
     // The callback to the previous VC (i.e. ListDetailVC) to reflect the updated data
-    weak var delegate: UpdatePostDelegate?
     var stackView: UIStackView!
     let buttonData: [[String: Any]] = [
         [
@@ -150,7 +149,7 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate {
                                     self?.navigationController?.popViewController(animated: true)
                                 })
                             }, completion:  {
-                                self?.delegate?.didUpdatePost(titleString: itemTitle, desc: desc, files: nil)
+                                
                             })
                         }
                     }

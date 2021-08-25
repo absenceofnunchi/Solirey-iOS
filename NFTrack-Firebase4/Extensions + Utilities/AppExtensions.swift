@@ -463,3 +463,8 @@ extension Publisher {
     }
 }
 
+extension String {
+    func trimmingAllSpaces(using characterSet: CharacterSet) -> String {
+        return components(separatedBy: characterSet).joined()
+    }
+}

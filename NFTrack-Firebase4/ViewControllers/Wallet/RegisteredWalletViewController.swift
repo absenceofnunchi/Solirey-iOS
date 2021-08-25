@@ -275,7 +275,12 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
             case 1:
                 // delete
                 let content = [
-                    StandardAlertContent(titleString: "Delete Wallet", body: ["": "Are you sure you want to delete your wallet from your local storage?"], messageTextAlignment: .left, alertStyle: .withCancelButton, buttonAction: { [weak self](_) in
+                    StandardAlertContent(
+                        titleString: "Delete Wallet",
+                        body: ["": "Are you sure you want to delete your wallet from your local storage?"],
+                        messageTextAlignment: .left,
+                        alertStyle: .withCancelButton,
+                        buttonAction: { [weak self](_) in
                         self?.dismiss(animated: true, completion: nil)
                         self?.localDatabase.deleteWallet { (error) in
                             if let error = error {

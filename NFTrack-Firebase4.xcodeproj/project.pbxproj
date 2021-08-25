@@ -48,6 +48,7 @@
 		493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */; };
 		49409A75265946870060193C /* SearchResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A74265946870060193C /* SearchResultsViewController.swift */; };
 		49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */; };
+		4958117526D6DAF1002C8F3B /* IPFSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958117426D6DAF1002C8F3B /* IPFSService.swift */; };
 		495D5E08268FE92F00F5DF71 /* InfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495D5E07268FE92E00F5DF71 /* InfoViewController.swift */; };
 		495FB33B26B70D000047E91D /* AuctionDeploymentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */; };
 		495FB36826B9F9500047E91D /* NFTrack_Firebase4Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FB36726B9F9500047E91D /* NFTrack_Firebase4Tests.swift */; };
@@ -111,6 +112,8 @@
 		496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F70012652029F00E4056B /* ListDetailViewController.swift */; };
 		496F7007265207A700E4056B /* ImagePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F7006265207A700E4056B /* ImagePageViewController.swift */; };
 		496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F700B265421E200E4056B /* TxDetailViewController.swift */; };
+		49721DA226D58385009BA7E7 /* ReportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49721DA126D58384009BA7E7 /* ReportViewController.swift */; };
+		49721DAF26D5C2F3009BA7E7 /* GradientBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49721DAE26D5C2F3009BA7E7 /* GradientBackgroundView.swift */; };
 		49765A5226ADEE850094A8EC /* TestSocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49765A5126ADEE850094A8EC /* TestSocketDelegate.swift */; };
 		497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9AEB2655A60300F09CAA /* NFTrackABI.swift */; };
 		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
@@ -150,7 +153,6 @@
 		49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E75A02266A7C670064BB34 /* HistoryViewController.swift */; };
 		49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E7D64B267AA73F00E8815A /* ChatViewController1.swift */; };
 		49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E7D650267AA77000E8815A /* MeesageCells1.swift */; };
-		49F694BE265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */; };
 		5F2181656BA2F887A451E929 /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */; };
 		8BF7EDDB714370A039E12BAF /* Pods_NFTrack_Firebase4.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FF1612C9EA21D4904E1BD19 /* Pods_NFTrack_Firebase4.framework */; };
 /* End PBXBuildFile section */
@@ -215,6 +217,7 @@
 		493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ERC721PresetABI.swift; sourceTree = "<group>"; };
 		49409A74265946870060193C /* SearchResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsViewController.swift; sourceTree = "<group>"; };
 		49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + ResultsUpdate.swift"; sourceTree = "<group>"; };
+		4958117426D6DAF1002C8F3B /* IPFSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPFSService.swift; sourceTree = "<group>"; };
 		495D5E07268FE92E00F5DF71 /* InfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoViewController.swift; sourceTree = "<group>"; };
 		495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionDeploymentTests.swift; sourceTree = "<group>"; };
 		495FB36726B9F9500047E91D /* NFTrack_Firebase4Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NFTrack_Firebase4Tests.swift; sourceTree = "<group>"; };
@@ -284,6 +287,8 @@
 		496F70012652029F00E4056B /* ListDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailViewController.swift; sourceTree = "<group>"; };
 		496F7006265207A700E4056B /* ImagePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePageViewController.swift; sourceTree = "<group>"; };
 		496F700B265421E200E4056B /* TxDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TxDetailViewController.swift; sourceTree = "<group>"; };
+		49721DA126D58384009BA7E7 /* ReportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportViewController.swift; sourceTree = "<group>"; };
+		49721DAE26D5C2F3009BA7E7 /* GradientBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientBackgroundView.swift; sourceTree = "<group>"; };
 		49765A5126ADEE850094A8EC /* TestSocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSocketDelegate.swift; sourceTree = "<group>"; };
 		497A9AEB2655A60300F09CAA /* NFTrackABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABI.swift; sourceTree = "<group>"; };
 		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -324,7 +329,6 @@
 		49E7D64B267AA73F00E8815A /* ChatViewController1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController1.swift; sourceTree = "<group>"; };
 		49E7D650267AA77000E8815A /* MeesageCells1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeesageCells1.swift; sourceTree = "<group>"; };
 		49E7D67A267BE9CF00E8815A /* NFTrack-Firebase4.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "NFTrack-Firebase4.entitlements"; sourceTree = "<group>"; };
-		49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ListDetailViewController + OptionsBar.swift"; sourceTree = "<group>"; };
 		5C42156D98AD4812550FF489 /* Pods-NFTrack-Firebase4Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4Tests.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4Tests/Pods-NFTrack-Firebase4Tests.release.xcconfig"; sourceTree = "<group>"; };
 		5D3028929C2B2E423CDD6DAF /* Pods-NFTrack-Firebase4.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4/Pods-NFTrack-Firebase4.debug.xcconfig"; sourceTree = "<group>"; };
 		69497F4D2E3074B9F7D67603 /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.release.xcconfig"; sourceTree = "<group>"; };
@@ -518,6 +522,7 @@
 				495FD2D726892FDB00F1D81D /* StarRatingView.swift */,
 				4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */,
 				49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */,
+				49721DAE26D5C2F3009BA7E7 /* GradientBackgroundView.swift */,
 				49054D4126CA310300ECCB58 /* PendingIndicatorView.swift */,
 			);
 			path = View;
@@ -602,6 +607,7 @@
 				493BF9DB264C515C00B9C9D2 /* TransactionService.swift */,
 				496F6FF2264EA3D100E4056B /* FirebaseService.swift */,
 				4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */,
+				4958117426D6DAF1002C8F3B /* IPFSService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -670,7 +676,6 @@
 				49221B882670FC2F0031A756 /* TempViewController.swift */,
 				496F6FF72651AD6300E4056B /* ListViewController.swift */,
 				496F70012652029F00E4056B /* ListDetailViewController.swift */,
-				49F694BD265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift */,
 				49054D3C26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift */,
 				49054D4626CAC21700ECCB58 /* ListDetailViewController + UpdateState.swift */,
 				49054D5326CC785B00ECCB58 /* ParentListEditViewController.swift */,
@@ -686,6 +691,7 @@
 				49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */,
 				495FD2DF26895B3300F1D81D /* ProfileReviewListViewController.swift */,
 				495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */,
+				49721DA126D58384009BA7E7 /* ReportViewController.swift */,
 			);
 			path = List;
 			sourceTree = "<group>";
@@ -1072,6 +1078,7 @@
 				493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */,
 				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
 				499702B5267459D8001DD80A /* ChatListViewController.swift in Sources */,
+				49721DA226D58385009BA7E7 /* ReportViewController.swift in Sources */,
 				4997030A2676CC00001DD80A /* SavedViewController.swift in Sources */,
 				499702AB2673F75E001DD80A /* MessageCell.swift in Sources */,
 				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
@@ -1081,6 +1088,7 @@
 				49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */,
 				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
 				496F6FFD2651F15200E4056B /* ListCell.swift in Sources */,
+				4958117526D6DAF1002C8F3B /* IPFSService.swift in Sources */,
 				496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */,
 				4964E52126489564005B3268 /* BigPreviewViewController.swift in Sources */,
 				495FD2D32688043000F1D81D /* PDFPreviewViewController.swift in Sources */,
@@ -1096,7 +1104,6 @@
 				49054D3D26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift in Sources */,
 				499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */,
 				497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */,
-				49F694BE265EE46C00D00F89 /* ListDetailViewController + OptionsBar.swift in Sources */,
 				4964E56D2649694A005B3268 /* CoreDataServices.swift in Sources */,
 				49221B79266FE4CB0031A756 /* ProfileDetailViewController.swift in Sources */,
 				493BF9C8264C166000B9C9D2 /* CreditCardView.swift in Sources */,
@@ -1154,6 +1161,7 @@
 				496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */,
 				49054D4F26CB66A400ECCB58 /* TangibleListEditViewController.swift in Sources */,
 				4964E52C2648B096005B3268 /* MyPresentationController.swift in Sources */,
+				49721DAF26D5C2F3009BA7E7 /* GradientBackgroundView.swift in Sources */,
 				495FD2CE2687B33600F1D81D /* CustomPreviewItem.swift in Sources */,
 				495FD324268C034000F1D81D /* QuickUICheckViewController.swift in Sources */,
 				4997030526769A36001DD80A /* CardCell.swift in Sources */,

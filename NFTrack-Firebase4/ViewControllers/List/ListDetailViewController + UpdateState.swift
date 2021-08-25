@@ -77,7 +77,12 @@ extension ListDetailViewController {
                                                             } else {
                                                                 /// send the push notification to the seller
                                                                 guard let `self` = self else { return }
-                                                                self.sendNotification(sender: self.userId, recipient: self.post.sellerUserId, content: "Your item has been purchased!", docID: self.post.documentId) { [weak self] (error) in
+                                                                FirebaseService.shared.sendNotification(
+                                                                    sender: self.userId,
+                                                                    recipient: self.post.sellerUserId,
+                                                                    content: "Your item has been purchased!",
+                                                                    docID: self.post.documentId
+                                                                ) { [weak self] (error) in
                                                                     if let error = error {
                                                                         print("error", error)
                                                                     }
@@ -102,7 +107,12 @@ extension ListDetailViewController {
                                                             } else {
                                                                 /// send the push notification to the seller
                                                                 guard let `self` = self else { return }
-                                                                self.sendNotification(sender: self.userId, recipient: self.post.sellerUserId, content: "Your item has been received by the buyer!", docID: self.post.documentId) { [weak self] (error) in
+                                                                FirebaseService.shared.sendNotification(
+                                                                    sender: self.userId,
+                                                                    recipient: self.post.sellerUserId,
+                                                                    content: "Your item has been received by the buyer!",
+                                                                    docID: self.post.documentId
+                                                                ) { [weak self] (error) in
                                                                     if let error = error {
                                                                         print("error", error)
                                                                     }
@@ -304,7 +314,7 @@ extension ListDetailViewController {
                                             return promise(.failure(.generalError(reason: "Unable to get the buyer's hash.")))
                                         }
                                         
-                                        self.sendNotification(
+                                        FirebaseService.shared.sendNotification(
                                             sender: self.userId,
                                             recipient: buyerUserId,
                                             content: "The seller has transferred the item!",

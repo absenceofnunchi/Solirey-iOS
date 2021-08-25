@@ -25,7 +25,6 @@ class AuctionDetailViewController: ParentDetailViewController {
     final var auctionDetailTitleLabel: UILabel!
     final var moreDetailsButton: UIButton!
     final var auctionSpecView: SpecDisplayView!
-    final var storage = Set<AnyCancellable>()
     final var bidContainer: UIView!
     final var bidTextField: UITextField!
     final var auctionButton: UIButton!
@@ -275,7 +274,6 @@ extension AuctionDetailViewController: UITextFieldDelegate {
             case 11:
                 let listEditVC = DigitalListEditViewController()
                 listEditVC.post = post
-                listEditVC.delegate = self
                 self.navigationController?.pushViewController(listEditVC, animated: true)
                 break
             case 60:
@@ -470,14 +468,18 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                         })
                                     }
 
+                                    // unsubscribe so that you don't get the push notification for your own update
+                                    // but later resubscribe for the notification for the counterparty
+                                    // firebase doesn't have a way to opt out of the notification directed at yourself
                                     Messaging.messaging().unsubscribe(fromTopic: self.post.documentId) { error in
                                         print("unsubscribed to \(self.post.documentId ?? "")")
                                     }
 
                                     return FirebaseService.shared.sendToTopics(
                                         title: "Auction Bid",
+                                        content: "A new bid was made in your auction.",
                                         topic: self.post.documentId,
-                                        content: "A new bid was made in your auction."
+                                        docId: self.post.documentId
                                     )
                                 case .auctionEnd:
                                     // socket will utimately pick up the topics of the event emitted at the time the "auctionEnd" method is called

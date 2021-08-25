@@ -14,8 +14,9 @@ import web3swift
 import Firebase
 import FirebaseFirestore
 import BigInt
+import Combine
 
-class ParentDetailViewController: UIViewController {
+class ParentDetailViewController: UIViewController, SharableDelegate {
     // MARK: - Properties
     var alert: Alerts!
     let transactionService = TransactionService()
@@ -48,6 +49,9 @@ class ParentDetailViewController: UIViewController {
     var chatButtonItem: UIBarButtonItem!
     var starButtonItem: UIBarButtonItem!
     var postEditButtonItem: UIBarButtonItem!
+    var shareButtonItem: UIBarButtonItem!
+    var reportButtonItem: UIBarButtonItem!
+    
     var isSaved: Bool! = false {
         didSet {
             configureBuyerNavigationBar()
@@ -69,10 +73,11 @@ class ParentDetailViewController: UIViewController {
         SmartContractProperty(propertyName: "Sale Format", propertyDesc: post.saleFormat)
     ]
     let LIST_DETAIL_HEIGHT: CGFloat = 50
-    
+    var storage = Set<AnyCancellable>()
+    var optionsBarItem: UIBarButtonItem!
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         configureBackground()
         /// UsernameBannerConfigurable
         configureNameDisplay(post: post, v: scrollView) { (profileImageView, displayNameLabel) in
@@ -226,23 +231,46 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
     }
     
     final func configureBuyerNavigationBar() {
-        var buttonItemsArr = [UIBarButtonItem]()
-        
         guard let chatImage = UIImage(systemName: "message"),
               let starImage = UIImage(systemName: "star"),
-              let starImageFill = UIImage(systemName: "star.fill") else {
+              let starImageFill = UIImage(systemName: "star.fill"),
+              let shareImage = UIImage(systemName: "square.and.arrow.up"),
+              let reportImage = UIImage(systemName: "flag") else {
             return
         }
-        chatButtonItem = UIBarButtonItem(image: chatImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
-        chatButtonItem.tag = 6
-        buttonItemsArr.append(chatButtonItem)
         
-        let finalImage = isSaved ? starImageFill : starImage
-        starButtonItem = UIBarButtonItem(image: finalImage.withTintColor(isSaved ? .red : .gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
-        starButtonItem.tag = 7
-        buttonItemsArr.append(starButtonItem)
-        
-        self.navigationItem.rightBarButtonItems = buttonItemsArr
+        if #available(iOS 14.0, *) {
+            let barButtonMenu = UIMenu(title: "", children: [
+                UIAction(title: NSLocalizedString("Message", comment: ""), image: chatImage, handler: menuHandler),
+                UIAction(title: NSLocalizedString("Save", comment: ""), image: isSaved ? starImageFill : starImage, handler: menuHandler),
+                UIAction(title: NSLocalizedString("Share", comment: ""), image: shareImage, handler: menuHandler),
+                UIAction(title: NSLocalizedString("Report", comment: ""), image: reportImage, handler: menuHandler),
+            ])
+            
+            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
+            optionsBarItem = UIBarButtonItem(title: nil, image: image, primaryAction: nil, menu: barButtonMenu)
+            navigationItem.rightBarButtonItem = optionsBarItem
+        } else {
+            var buttonItemsArr = [UIBarButtonItem]()
+            chatButtonItem = UIBarButtonItem(image: chatImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            chatButtonItem.tag = 6
+            buttonItemsArr.append(chatButtonItem)
+            
+            let finalImage = isSaved ? starImageFill : starImage
+            starButtonItem = UIBarButtonItem(image: finalImage.withTintColor(isSaved ? .red : .gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            starButtonItem.tag = 7
+            buttonItemsArr.append(starButtonItem)
+            
+            shareButtonItem = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(buttonPressed(_:)))
+            shareButtonItem.tag = 12
+            buttonItemsArr.append(shareButtonItem)
+            
+            reportButtonItem = UIBarButtonItem(image: reportImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            reportButtonItem.tag = 13
+            buttonItemsArr.append(reportButtonItem)
+            
+            self.navigationItem.rightBarButtonItems = buttonItemsArr
+        }
     }
     
     // needs a corresponding buttonPressed selector in the subclass
@@ -251,40 +279,143 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
     // whereas the digital item can only have their title and the description modified
     // the former will be done in TangibleListEditVC and the latter in DigitalListEditVC
     func configureSellerNavigationBar() {
+        var buttonItemsArr = [UIBarButtonItem]()
+
         postEditButtonItem = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(buttonPressed(_:)))
         postEditButtonItem.tag = 11
-        self.navigationItem.rightBarButtonItems = [postEditButtonItem]
+        buttonItemsArr.append(postEditButtonItem)
+        
+        shareButtonItem = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(buttonPressed(_:)))
+        shareButtonItem.tag = 12
+        buttonItemsArr.append(shareButtonItem)
+        
+        self.navigationItem.rightBarButtonItems = buttonItemsArr
+    }
+    
+    
+    @objc func menuHandler(action: UIAction) {
+        switch action.title {
+            case "Message":
+                navToChatVC()
+                break
+            case "Save":
+                savePost()
+                break
+            case "Share":
+                sharePost()
+                break
+            case "Report":
+                navToReport()
+                break
+            default:
+                break
+        }
     }
     
     @objc func buttonPressed(_ sender: UIButton) {
         switch sender.tag {
             case 6:
-                let chatVC = ChatViewController()
-                chatVC.userInfo = userInfo
-                chatVC.post = post
-                // to display the title on ChatList when multiple items under the same owner
-                // or maybe search for pre-existing chat room first and join the same one
-                // chatVC.itemName = title
-                self.navigationController?.pushViewController(chatVC, animated: true)
+                navToChatVC()
+                break
             case 7:
-                // saving the favourite post
-                isSaved = !isSaved
-                FirebaseService.shared.db.collection("post").document(post.documentId).updateData([
-                    "savedBy": isSaved ? FieldValue.arrayUnion(["\(userId!)"]) : FieldValue.arrayRemove(["\(userId!)"])
-                ]) {(error) in
-                    if let error = error {
-                        self.alert.showDetail("Sorry", with: error.localizedDescription, for: self) { [weak self] in
-                            DispatchQueue.main.async {
-                                self?.navigationController?.popViewController(animated: true)
-                            }
-                        } completion: {}
-                    } else {
-                        self.delegate?.didFetchData()
-                    }
-                }
+                savePost()
+                break
+            case 12:
+                sharePost()
+                break
+            case 13:
+                navToReport()
+                break
             default:
                 break
         }
+    }
+    
+    func navToChatVC() {
+        let chatVC = ChatViewController()
+        chatVC.userInfo = userInfo
+        chatVC.post = post
+        // to display the title on ChatList when multiple items under the same owner
+        // or maybe search for pre-existing chat room first and join the same one
+        // chatVC.itemName = title
+        self.navigationController?.pushViewController(chatVC, animated: true)
+    }
+    
+    func savePost() {
+        // saving the favourite post
+        isSaved = !isSaved
+        FirebaseService.shared.db.collection("post").document(post.documentId).updateData([
+            "savedBy": isSaved ? FieldValue.arrayUnion(["\(userId!)"]) : FieldValue.arrayRemove(["\(userId!)"])
+        ]) {(error) in
+            if let error = error {
+                self.alert.showDetail("Sorry", with: error.localizedDescription, for: self) { [weak self] in
+                    DispatchQueue.main.async {
+                        self?.navigationController?.popViewController(animated: true)
+                    }
+                } completion: {}
+            } else {
+                self.delegate?.didFetchData()
+            }
+        }
+    }
+    
+    func sharePost() {
+        guard let title = title,
+              let itemDescription = descLabel?.text else { return }
+        
+        var objectsToShare: [AnyObject] = [
+            "\(title)\n" as AnyObject,
+            itemDescription as AnyObject
+        ]
+        
+        showSpinner { [weak self] in
+            guard let self = self else { return }
+            Just(objectsToShare)
+                .setFailureType(to: PostingError.self)
+                .flatMap { (data) -> AnyPublisher<Data, PostingError> in
+                    if let files = self.post.files, files.count > 0 {
+                        return Future<Data, PostingError> { promise in
+                            FirebaseService.shared.downloadURL(urlString: files[0], promise: promise)
+                        }
+                        .eraseToAnyPublisher()
+                    } else {
+                        return Result.Publisher(Data()).eraseToAnyPublisher()
+                    }
+                }
+                .sink { (completion) in
+                    switch completion {
+                        case .failure(let error):
+                            self.alert.showDetail("Image Share Error", with: error.localizedDescription, for: self)
+                        case .finished:
+                            break
+                    }
+                } receiveValue: { (imageData) in
+                    if let image = UIImage(data: imageData) {
+                        objectsToShare.append(image as AnyObject)
+                    }
+                    
+                    self.hideSpinner {
+                        let shareSheetVC = UIActivityViewController(activityItems: objectsToShare, applicationActivities: nil)
+                        self.present(shareSheetVC, animated: true, completion: nil)
+                        
+                        if let pop = shareSheetVC.popoverPresentationController {
+                            pop.sourceView = self.view
+                            pop.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.height, width: 0, height: 0)
+                            pop.permittedArrowDirections = []
+                        }
+//                        self.share(objectsToShare)
+                    }
+                }
+                .store(in: &self.storage)
+        }
+
+    }
+    
+    func navToReport() {
+        let reportVC = ReportViewController()
+        reportVC.post = post
+        reportVC.userId = userId
+        self.navigationController?.pushViewController(reportVC, animated: true)
     }
 }
 
@@ -321,19 +452,6 @@ extension ParentDetailViewController {
         } else {
             return 0
         }
-    }
-}
-
-extension ParentDetailViewController: UpdatePostDelegate {
-    func didUpdatePost(titleString: String, desc: String, files: [String]? = nil) {
-        self.title = titleString
-        self.descLabel?.text = desc
-        imageHeightConstraint.constant = 0
-        
-        guard let files = files else { return }
-        galleries = files
-        singlePageVC = ImagePageViewController(gallery: galleries[0])
-        imageHeightConstraint.constant = 250
     }
 }
 
