@@ -100,8 +100,7 @@ class ReviewPostViewController: ParentProfileViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        constraints = [NSLayoutConstraint]()
+        fetchUserInfo()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -114,7 +113,9 @@ class ReviewPostViewController: ParentProfileViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         /// whenever the image picker is dismissed, the collection view has to be updated
-        imagePreviewVC.data = previewDataArr
+        if imagePreviewVC != nil {
+            imagePreviewVC.data = previewDataArr
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -160,7 +161,38 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
         }
     }
     
+    func fetchUserInfo() {
+        guard let revieweeUserId = revieweeUserId else {
+            self.alert.showDetail("Sorry", with: "Unable to get the user ID.", for: self)
+            return
+        }
+        
+        let docRef = FirebaseService.shared.db.collection("user").document(revieweeUserId)
+        docRef.getDocument { [weak self] (document, error) in
+            if let document = document, document.exists {
+                if let data = document.data() {
+                    let displayName = data[UserDefaultKeys.displayName] as? String
+                    let photoURL = data[UserDefaultKeys.photoURL] as? String
+                    let userInfo = UserInfo(
+                        email: nil,
+                        displayName: displayName!,
+                        photoURL: photoURL,
+                        uid: revieweeUserId,
+                        memberSince: nil
+                    )
+                    self?.userInfo = userInfo
+                }
+            } else {
+                self?.alert.showDetail("Sorry", with: "User data could not be fetched", for: self) {
+                    self?.navigationController?.popViewController(animated: true)
+                } completion: {}
+            }
+        }
+    }
+    
     override func configureUI() {
+        super.configureUI()
+
         view.backgroundColor = .white
         self.hideKeyboardWhenTappedAround()
 
@@ -169,96 +201,94 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
         rightBarButton.tag = 7
         self.navigationItem.rightBarButtonItem = rightBarButton
 
-        fetchUserInfo {
-            super.configureUI()
-            self.scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: self.view.bounds.size.height + 500)
-            self.displayNameTextField.isUserInteractionEnabled = false
-            
-            self.reviewTitleLabel = self.createTitleLabel(text: "Review")
-            self.reviewTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-            self.scrollView.addSubview(self.reviewTitleLabel)
-            
-            self.reviewTextView = UITextView()
-            self.reviewTextView.layer.borderWidth = 0.7
-            self.reviewTextView.layer.borderColor = UIColor.lightGray.cgColor
-            self.reviewTextView.layer.cornerRadius = 5
-            self.reviewTextView.contentInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
-            self.reviewTextView.clipsToBounds = true
-            self.reviewTextView.isScrollEnabled = true
-            self.reviewTextView.font = UIFont.systemFont(ofSize: 15)
-            self.reviewTextView.layer.borderColor = UIColor.gray.withAlphaComponent(0.5).cgColor
-            self.reviewTextView.translatesAutoresizingMaskIntoConstraints = false
-            self.scrollView.addSubview(self.reviewTextView)
-            
-            self.ratingTitleLabel = self.createTitleLabel(text: "Rating")
-            self.ratingTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-            self.scrollView.addSubview(self.ratingTitleLabel)
-            
-            self.starRatingView = StarRatingView()
-            self.starRatingView.isEnabled = true
-            self.starRatingView.starHeight = 40
-            self.starRatingView.numOfStars = { [weak self] num in
-                self?.numOfStars = num
-            }
-            self.starRatingView.translatesAutoresizingMaskIntoConstraints = false
-            self.scrollView.addSubview(self.starRatingView)
-            
-            self.createButtonPanel(panelButtons: self.panelButtons, superView: self.scrollView) { (buttonsArr) in
-                buttonsArr.forEach { (button) in
-                    button.addTarget(self, action: #selector(self.buttonPressed(_:)), for: .touchUpInside)
-                }
-            }
-            
-            self.configureImagePreview(postType: .tangible)
-            
-            self.submitButton = UIButton()
-            self.submitButton.setTitle("Submit", for: .normal)
-            self.submitButton.addTarget(self, action: #selector(self.buttonPressed(_:)), for: .touchUpInside)
-            self.submitButton.tag = 6
-            self.submitButton.layer.cornerRadius = 8
-            self.submitButton.backgroundColor = .black
-            self.submitButton.translatesAutoresizingMaskIntoConstraints = false
-            self.scrollView.addSubview(self.submitButton)
-            
-            self.imagePreviewConstraintHeight = self.imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 0)
-            self.constraints.append(contentsOf: [
-                self.ratingTitleLabel.topAnchor.constraint(equalTo: self.displayNameTextField.bottomAnchor, constant: 40),
-                self.ratingTitleLabel.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-                self.ratingTitleLabel.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-                self.ratingTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-                
-                self.starRatingView.topAnchor.constraint(equalTo: self.ratingTitleLabel.bottomAnchor, constant: 0),
-                self.starRatingView.widthAnchor.constraint(equalTo: self.scrollView.widthAnchor, multiplier: 0.8),
-                self.starRatingView.centerXAnchor.constraint(equalTo: self.scrollView.centerXAnchor),
-                self.starRatingView.heightAnchor.constraint(equalToConstant: 40),
-                
-                self.reviewTitleLabel.topAnchor.constraint(equalTo: self.starRatingView.bottomAnchor, constant: 40),
-                self.reviewTitleLabel.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-                self.reviewTitleLabel.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-                self.reviewTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-                
-                self.reviewTextView.topAnchor.constraint(equalTo: self.reviewTitleLabel.bottomAnchor, constant: 0),
-                self.reviewTextView.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-                self.reviewTextView.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-                self.reviewTextView.heightAnchor.constraint(equalToConstant: 150),
-            ])
-            
-            self.setButtonPanelConstraints(topView: self.reviewTextView)
-
-            self.constraints.append(contentsOf: [
-                self.imagePreviewVC.view.topAnchor.constraint(equalTo: self.buttonPanel.bottomAnchor, constant: 20),
-                self.imagePreviewVC.view.widthAnchor.constraint(equalTo: self.view.widthAnchor, multiplier: 0.9),
-                self.imagePreviewVC.view.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
-                self.imagePreviewConstraintHeight,
-                
-                self.submitButton.topAnchor.constraint(equalTo: self.imagePreviewVC.view.bottomAnchor, constant: 40),
-                self.submitButton.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-                self.submitButton.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-                self.submitButton.heightAnchor.constraint(equalToConstant: 50),
-            ])
-            
-            NSLayoutConstraint.activate(self.constraints)
+        self.scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: self.view.bounds.size.height + 500)
+        self.displayNameTextField.isUserInteractionEnabled = false
+        
+        self.reviewTitleLabel = self.createTitleLabel(text: "Review")
+        self.reviewTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.scrollView.addSubview(self.reviewTitleLabel)
+        
+        self.reviewTextView = UITextView()
+        self.reviewTextView.layer.borderWidth = 0.7
+        self.reviewTextView.layer.borderColor = UIColor.lightGray.cgColor
+        self.reviewTextView.layer.cornerRadius = 5
+        self.reviewTextView.contentInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
+        self.reviewTextView.clipsToBounds = true
+        self.reviewTextView.isScrollEnabled = true
+        self.reviewTextView.font = UIFont.systemFont(ofSize: 15)
+        self.reviewTextView.layer.borderColor = UIColor.gray.withAlphaComponent(0.5).cgColor
+        self.reviewTextView.translatesAutoresizingMaskIntoConstraints = false
+        self.scrollView.addSubview(self.reviewTextView)
+        
+        self.ratingTitleLabel = self.createTitleLabel(text: "Rating")
+        self.ratingTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.scrollView.addSubview(self.ratingTitleLabel)
+        
+        self.starRatingView = StarRatingView()
+        self.starRatingView.isEnabled = true
+        self.starRatingView.starHeight = 40
+        self.starRatingView.numOfStars = { [weak self] num in
+            self?.numOfStars = num
         }
+        self.starRatingView.translatesAutoresizingMaskIntoConstraints = false
+        self.scrollView.addSubview(self.starRatingView)
+        
+        self.createButtonPanel(panelButtons: self.panelButtons, superView: self.scrollView) { (buttonsArr) in
+            buttonsArr.forEach { (button) in
+                button.addTarget(self, action: #selector(self.buttonPressed(_:)), for: .touchUpInside)
+            }
+        }
+        
+        self.configureImagePreview(postType: .tangible)
+        
+        self.submitButton = UIButton()
+        self.submitButton.setTitle("Submit", for: .normal)
+        self.submitButton.addTarget(self, action: #selector(self.buttonPressed(_:)), for: .touchUpInside)
+        self.submitButton.tag = 6
+        self.submitButton.layer.cornerRadius = 8
+        self.submitButton.backgroundColor = .black
+        self.submitButton.translatesAutoresizingMaskIntoConstraints = false
+        self.scrollView.addSubview(self.submitButton)
+        
+        self.imagePreviewConstraintHeight = self.imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 0)
+        constraints = [NSLayoutConstraint]()
+        self.constraints.append(contentsOf: [
+            self.ratingTitleLabel.topAnchor.constraint(equalTo: self.displayNameTextField.bottomAnchor, constant: 40),
+            self.ratingTitleLabel.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            self.ratingTitleLabel.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
+            self.ratingTitleLabel.heightAnchor.constraint(equalToConstant: 50),
+            
+            self.starRatingView.topAnchor.constraint(equalTo: self.ratingTitleLabel.bottomAnchor, constant: 0),
+            self.starRatingView.widthAnchor.constraint(equalTo: self.scrollView.widthAnchor, multiplier: 0.8),
+            self.starRatingView.centerXAnchor.constraint(equalTo: self.scrollView.centerXAnchor),
+            self.starRatingView.heightAnchor.constraint(equalToConstant: 40),
+            
+            self.reviewTitleLabel.topAnchor.constraint(equalTo: self.starRatingView.bottomAnchor, constant: 40),
+            self.reviewTitleLabel.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            self.reviewTitleLabel.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
+            self.reviewTitleLabel.heightAnchor.constraint(equalToConstant: 50),
+            
+            self.reviewTextView.topAnchor.constraint(equalTo: self.reviewTitleLabel.bottomAnchor, constant: 0),
+            self.reviewTextView.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            self.reviewTextView.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
+            self.reviewTextView.heightAnchor.constraint(equalToConstant: 150),
+        ])
+        
+        self.setButtonPanelConstraints(topView: self.reviewTextView)
+        
+        self.constraints.append(contentsOf: [
+            self.imagePreviewVC.view.topAnchor.constraint(equalTo: self.buttonPanel.bottomAnchor, constant: 20),
+            self.imagePreviewVC.view.widthAnchor.constraint(equalTo: self.view.widthAnchor, multiplier: 0.9),
+            self.imagePreviewVC.view.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+            self.imagePreviewConstraintHeight,
+            
+            self.submitButton.topAnchor.constraint(equalTo: self.imagePreviewVC.view.bottomAnchor, constant: 40),
+            self.submitButton.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            self.submitButton.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
+            self.submitButton.heightAnchor.constraint(equalToConstant: 50),
+        ])
+        
+        NSLayoutConstraint.activate(self.constraints)
     }
     
     // MARK: - configureImagePreview
@@ -529,7 +559,8 @@ extension ReviewPostViewController: FileUploadable {
         if self.previewDataArr.count > 0 {
             var fileCount: Int = 0
             for previewData in previewDataArr {
-                self.uploadFile(fileURL: previewData.filePath, userId: self.userInfo.uid!) {[weak self](url) in
+                guard let uid = self.userInfo.uid else { return }
+                self.uploadFile(fileURL: previewData.filePath, userId: uid) {[weak self](url) in
                     guard let strongSelf = self else { return }
                     strongSelf.db.collection("review").document(strongSelf.userInfo.uid!).collection("details").document(strongSelf.documentID).updateData([
                         "files": FieldValue.arrayUnion(["\(url)"])

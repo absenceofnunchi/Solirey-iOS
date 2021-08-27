@@ -20,6 +20,8 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
     var deleteImageButton: UIButton!
     var emailTitleLabel: UILabel!
     var emailTextField: UITextField!
+    var addressTitleLabel: UILabel!
+    var addressTextField: UITextField!
     var profileImageName: String!
     var updateButton: UIButton!
     
@@ -33,30 +35,83 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
 }
 
 extension ProfileViewController {
+//    func fetchUserInfo() {
+//        let user = Auth.auth().currentUser
+//        if let user = user {
+//            self.userInfo = UserInfo(
+//                email: user.email,
+//                displayName: user.displayName ?? "N/A",
+//                photoURL: (user.photoURL != nil) ? "\(user.photoURL!)" : "NA",
+//                uid: user.uid,
+//                memberSince: nil
+//            )
+//        }
+//    }
     func fetchUserInfo() {
-        let user = Auth.auth().currentUser
-        if let user = user {
-            self.userInfo = UserInfo(
-                email: user.email,
-                displayName: user.displayName ?? "N/A",
-                photoURL: (user.photoURL != nil) ? "\(user.photoURL!)" : "NA",
-                uid: user.uid,
-                memberSince: nil
-            )
-        }
+        guard let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) else { return }
+        FirebaseService.shared.db
+            .collection("user")
+            .document(userId)
+            .getDocument { [weak self] (document, error) in
+                guard error == nil else {
+                    self?.alert.showDetail("Error", with: "Unable to retrieve the account info.", for: self)
+                    return
+                }
+                
+                guard let document = document,
+                      document.exists,
+                      let data = document.data() else {
+                    return
+                }
+                
+                var displayName: String!
+                var uid: String!
+                var photoURL: String!
+                var address: String!
+                data.forEach { (item) in
+                    switch item.key {
+                        case "displayName":
+                            displayName = item.value as? String
+                        case "uid":
+                            uid = item.value as? String
+                        case "photoURL":
+                            photoURL = item.value as? String
+                        case "address":
+                            address = item.value as? String
+                        default:
+                            break
+                    }
+                }
+                
+                self?.userInfo = UserInfo(
+                    email: nil,
+                    displayName: displayName,
+                    photoURL: photoURL,
+                    uid: uid,
+                    memberSince: nil,
+                    address: address
+                )
+            }
     }
     
     override func configureUI() {
+        super.configureUI()
         fetchUserInfo()
 
-        super.configureUI()
         self.hideKeyboardWhenTappedAround()
         
         emailTitleLabel = createTitleLabel(text: "Email")
         scrollView.addSubview(emailTitleLabel)
 
-        emailTextField = createTextField(content: userInfo.email, delegate: self)
+        emailTextField = createTextField(content: userInfo.email ?? "", delegate: self)
         scrollView.addSubview(emailTextField)
+        
+        addressTitleLabel = createTitleLabel(text: "Delivery Address")
+        scrollView.addSubview(addressTitleLabel)
+        
+        addressTextField = createTextField(content: userInfo.address ?? "No Address", delegate: self)
+        addressTextField.isUserInteractionEnabled = false
+        scrollView.addSubview(addressTextField)
         
         updateButton = UIButton()
         updateButton.backgroundColor = .black
@@ -77,32 +132,21 @@ extension ProfileViewController {
             emailTextField.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
             emailTextField.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
             
+            addressTitleLabel.topAnchor.constraint(equalTo: emailTextField.bottomAnchor, constant: 40),
+            addressTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            addressTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
+            
+            addressTextField.topAnchor.constraint(equalTo: addressTitleLabel.bottomAnchor, constant: 10),
+            addressTextField.heightAnchor.constraint(equalToConstant: 50),
+            addressTextField.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+            addressTextField.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
+            
             updateButton.topAnchor.constraint(equalTo: emailTextField.bottomAnchor, constant: 50),
             updateButton.heightAnchor.constraint(equalToConstant: 50),
             updateButton.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
             updateButton.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
         ])
     }
-    
-//    override func setConstraints() {
-//        super.setConstraints()
-//
-//        NSLayoutConstraint.activate([
-//            emailTitleLabel.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 40),
-//            emailTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-//            emailTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-//
-//            emailTextField.topAnchor.constraint(equalTo: emailTitleLabel.bottomAnchor, constant: 10),
-//            emailTextField.heightAnchor.constraint(equalToConstant: 50),
-//            emailTextField.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-//            emailTextField.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-//
-//            updateButton.topAnchor.constraint(equalTo: emailTextField.bottomAnchor, constant: 50),
-//            updateButton.heightAnchor.constraint(equalToConstant: 50),
-//            updateButton.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-//            updateButton.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-//        ])
-//    }
     
     // MARK: - buttonPressed
     @objc override func buttonPressed(_ sender: UIButton!) {
@@ -326,18 +370,17 @@ extension ProfileViewController: FileUploadable {
     }
  
     func deleteProfileImage() {
-        self.alert.showDetail("Update", with: "Press update button to execute the change.", for: self) {
-            guard let image = UIImage(systemName: "person.crop.circle.fill") else {
-                self.dismiss(animated: true, completion: nil)
-                return
-            }
-            
-            let configuration = UIImage.SymbolConfiguration(pointSize: 60, weight: .bold, scale: .large)
-            let configuredImage = image.withTintColor(.orange, renderingMode: .alwaysOriginal).withConfiguration(configuration)
-            self.profileImageButton.setImage(configuredImage, for: .normal)
-            self.deleteImageButton.isHidden = true
-            self.profileImageName = nil
-        } completion: {}
+        self.alert.fading(text: "Press \"Update\" to execute the change.", controller: self, toBePasted: nil, width: 350)
+        guard let image = UIImage(systemName: "person.crop.circle.fill") else {
+            self.dismiss(animated: true, completion: nil)
+            return
+        }
+        
+        let configuration = UIImage.SymbolConfiguration(pointSize: 60, weight: .bold, scale: .large)
+        let configuredImage = image.withTintColor(.orange, renderingMode: .alwaysOriginal).withConfiguration(configuration)
+        self.profileImageButton.setImage(configuredImage, for: .normal)
+        self.deleteImageButton.isHidden = true
+        self.profileImageName = nil
     }
 }
 

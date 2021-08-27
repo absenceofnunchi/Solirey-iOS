@@ -19,6 +19,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
     var titleTextField: UITextField!
     var priceLabel: UILabel!
     var priceTextField: UITextField!
+    var priceInfoButton: UIButton!
     var priceLabelConstraintHeight: NSLayoutConstraint!
     var priceTextFieldConstraintHeight: NSLayoutConstraint!
     var descLabel: UILabel!
@@ -189,6 +190,11 @@ extension ParentPostViewController {
         priceLabel = createTitleLabel(text: "Price")
         scrollView.addSubview(priceLabel)
         
+        guard let infoImage = UIImage(systemName: "info.circle") else { return }
+        priceInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
+        priceInfoButton.translatesAutoresizingMaskIntoConstraints = false
+        priceLabel.addSubview(priceInfoButton)
+        
         priceTextField = createTextField(delegate: self)
         priceTextField.keyboardType = .decimalPad
         priceTextField.placeholder = "In ETH"
@@ -214,7 +220,6 @@ extension ParentPostViewController {
         deliveryMethodTitleLabel.isUserInteractionEnabled = true
         scrollView.addSubview(deliveryMethodTitleLabel)
         
-        guard let infoImage = UIImage(systemName: "info.circle") else { return }
         deliveryInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
         deliveryInfoButton.translatesAutoresizingMaskIntoConstraints = false
         deliveryMethodTitleLabel.addSubview(deliveryInfoButton)
@@ -335,6 +340,9 @@ extension ParentPostViewController {
             priceLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             priceLabel.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 20),
             priceLabelConstraintHeight,
+            
+            priceInfoButton.trailingAnchor.constraint(equalTo: priceLabel.trailingAnchor),
+            priceInfoButton.heightAnchor.constraint(equalToConstant: 50),
             
             priceTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             priceTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
@@ -483,6 +491,9 @@ extension ParentPostViewController {
                 case 10:
                     documentPicker = DocumentPicker(presentationController: self, delegate: self)
                     documentPicker.displayPicker()
+                case 24:
+                    let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Pricing", detail: InfoText.pricing)])
+                    self.present(infoVC, animated: true, completion: nil)
                 default:
                     break
             }
@@ -639,7 +650,12 @@ extension ParentPostViewController {
                 self?.alert.showDetail("Incomplete", with: "Please select the digital asset.", for: self)
                 return
             }
-        
+            
+            let characterset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+            guard id.rangeOfCharacter(from: characterset.inverted) == nil else {
+                self?.alert.showDetail("Invalid Characters", with: "The unique identifier cannot contain any special characters.", for: self)
+                return
+            }
             
             guard let tagTextField = self?.tagTextField, tagTextField.tokens.count > 0 else {
                 self?.alert.showDetail("Missing Tags", with: "Please add the tags using the plus sign.", for: self)
@@ -673,7 +689,18 @@ extension ParentPostViewController {
                         }
                     }
                     
-                    self?.processMint(price: self?.priceTextField.text, itemTitle: itemTitle, desc: desc, category: category, convertedId: convertedId, tokensArr: tokensArr, userId: userId, deliveryMethod: deliveryMethod, saleFormat: saleFormat, paymentMethod: paymentMethod)
+                    self?.processMint(
+                        price: self?.priceTextField.text,
+                        itemTitle: itemTitle,
+                        desc: desc,
+                        category: category,
+                        convertedId: convertedId,
+                        tokensArr: tokensArr,
+                        userId: userId,
+                        deliveryMethod: deliveryMethod,
+                        saleFormat: saleFormat,
+                        paymentMethod: paymentMethod
+                    )
                     
                 } // not duplicate
             } // end of checkExistingId

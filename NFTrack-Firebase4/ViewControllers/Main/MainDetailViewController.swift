@@ -47,7 +47,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     var subscriptionButtonItem: UIBarButtonItem!
     var isSubscribed: Bool! = false {
         didSet {
-            print("isSubscribed", isSubscribed as Any)
             configureNavigationItem()
         }
     }
@@ -75,6 +74,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     }
     
     func configureNavigationItem() {
+        print("isSubscribed", isSubscribed as Any)
         guard let bookmarkImage = UIImage(systemName: isSubscribed ? "bookmark.fill" : "bookmark") else { return }
         subscriptionButtonItem = UIBarButtonItem(image: bookmarkImage, style: .plain, target: self, action: #selector(buttonPressed(_:)))
         subscriptionButtonItem.tag = 0
@@ -99,7 +99,10 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                     switch item.key {
                         case "subscription":
                             subscriptions = item.value as? [String]
-                            if subscriptions.contains(title) {
+                            
+                            let whitespaceCharacterSet = CharacterSet.whitespaces
+                            let formattedTitle = title.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+                            if subscriptions.contains(formattedTitle) {
                                 self?.isSubscribed = true
                             }
                         default:
@@ -170,7 +173,6 @@ extension MainDetailViewController {
 
         switch sender.tag {
             case 0:
-                
                 guard let title = self.title else { return }
                 let convertedTitle = title.trimmingAllSpaces(using: .whitespacesAndNewlines).lowercased()
                 

@@ -12,7 +12,12 @@ import Combine
 
 extension ListDetailViewController {
     final func updateState(method: String, price: String = "0", status: PostStatus? = nil) {
-        transactionService.prepareTransactionForWriting(method: method, abi: purchaseABI2, contractAddress: contractAddress, amountString: price) { [weak self](transaction, error) in
+        transactionService.prepareTransactionForWriting(
+            method: method,
+            abi: purchaseABI2,
+            contractAddress: contractAddress,
+            amountString: price
+        ) { [weak self](transaction, error) in
             if let error = error {
                 switch error {
                     case .invalidAmountFormat:
@@ -117,8 +122,10 @@ extension ListDetailViewController {
                                                                         print("error", error)
                                                                     }
                                                                     self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", alignment: .left, for: self, completion:  {
-                                                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
-                                                                        self?.navigationController?.popViewController(animated: true)
+                                                                        DispatchQueue.main.async {
+                                                                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
+                                                                            self?.navigationController?.popViewController(animated: true)
+                                                                        }
                                                                     })
                                                                 }
                                                             }
@@ -129,8 +136,10 @@ extension ListDetailViewController {
                                                                 self?.alert.showDetail("Error", with: err.localizedDescription, for: self)
                                                             } else {
                                                                 self?.alert.showDetail("Success!", with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.", for: self, completion:  {
-                                                                    self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
-                                                                    self?.navigationController?.popViewController(animated: true)
+                                                                    DispatchQueue.main.async {
+                                                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
+                                                                        self?.navigationController?.popViewController(animated: true)
+                                                                    }
                                                                 })
                                                             }
                                                         }
@@ -301,65 +310,70 @@ extension ListDetailViewController {
                         }
                         .flatMap { (result) -> AnyPublisher<Bool, PostingError> in
                             Future<Bool, PostingError> { promise in
-                                FirebaseService.shared.db.collection("post").document(documentRetainer.documentID).updateData([
-                                    "transferHash": result.hash,
-                                    "transferDate": Date(),
-                                    "status": PostStatus.transferred.rawValue
-                                ], completion: { (error) in
-                                    if let error = error {
-                                        promise(.failure(.generalError(reason: error.localizedDescription)))
-                                    } else {
-                                        /// send the push notification to the seller
-                                        guard let `self` = self, let buyerUserId = self.post.buyerUserId else {
-                                            return promise(.failure(.generalError(reason: "Unable to get the buyer's hash.")))
-                                        }
-                                        
-                                        FirebaseService.shared.sendNotification(
-                                            sender: self.userId,
-                                            recipient: buyerUserId,
-                                            content: "The seller has transferred the item!",
-                                            docID: self.post.documentId
-                                        ) { (error) in
+                                FirebaseService.shared.db
+                                    .collection("post")
+                                    .document(documentRetainer.documentID)
+                                    .updateData([
+                                        "transferHash": result.hash,
+                                        "transferDate": Date(),
+                                        "status": PostStatus.transferred.rawValue
+                                        ], completion: { (error) in
                                             if let error = error {
-                                                print("notification error", error.localizedDescription)
+                                                promise(.failure(.generalError(reason: error.localizedDescription)))
+                                            } else {
+                                                /// send the push notification to the seller
+                                                guard let `self` = self, let buyerUserId = self.post.buyerUserId else {
+                                                    return promise(.failure(.generalError(reason: "Unable to get the buyer's hash.")))
+                                                }
+                                                
+                                                FirebaseService.shared.sendNotification(
+                                                    sender: self.userId,
+                                                    recipient: buyerUserId,
+                                                    content: "The seller has transferred the item!",
+                                                    docID: self.post.documentId
+                                                ) { (error) in
+                                                    if let error = error {
+                                                        print("notification error", error.localizedDescription)
+                                                    }
+                                                    
+                                                    promise(.success(true))
+                                                }
                                             }
-                                            
-                                            promise(.success(true))
-                                        }
+                                        })
                                     }
-                                })
-                            }
-                            .eraseToAnyPublisher()
-                        }
-                        .sink { [weak self] (completion) in
-                            switch completion {
-                                case .failure(let error):
-                                    switch error {
-                                        case .generalError(reason: let reason):
-                                            self?.alert.showDetail("Error", with: reason, for: self)
-                                        case .emptyAmount:
-                                            self?.alert.showDetail("Error", with: "The amount cannot be empty.", for: self)
-                                        case .invalidAmountFormat:
-                                            self?.alert.showDetail("Error", with: "Invalid amount format.", for: self)
-                                        case .contractLoadingError:
-                                            self?.alert.showDetail("Error", with: "Unable to load the contract.", for: self)
-                                        case .createTransactionIssue:
-                                            self?.alert.showDetail("Error", with: "Unable to create a transaction.", for: self)
-                                        default:
-                                            self?.alert.showDetail("Error", with: "There was an error transferring the item.", for: self)
+                                    .eraseToAnyPublisher()
+                                }
+                                .sink { [weak self] (completion) in
+                                    switch completion {
+                                        case .failure(let error):
+                                            switch error {
+                                                case .generalError(reason: let reason):
+                                                    self?.alert.showDetail("Error", with: reason, for: self)
+                                                case .emptyAmount:
+                                                    self?.alert.showDetail("Error", with: "The amount cannot be empty.", for: self)
+                                                case .invalidAmountFormat:
+                                                    self?.alert.showDetail("Error", with: "Invalid amount format.", for: self)
+                                                case .contractLoadingError:
+                                                    self?.alert.showDetail("Error", with: "Unable to load the contract.", for: self)
+                                                case .createTransactionIssue:
+                                                    self?.alert.showDetail("Error", with: "Unable to create a transaction.", for: self)
+                                                default:
+                                                    self?.alert.showDetail("Error", with: "There was an error transferring the item.", for: self)
+                                            }
+                                            break
+                                        case .finished:
+                                            self?.hideSpinner({
+                                                print("finished")
+                                            })
+                                            break
                                     }
-                                    break
-                                case .finished:
-                                    self?.hideSpinner({
-                                        print("finished")
-                                    })
-                                    break
-                            }
-                        } receiveValue: { (isFinished) in
-                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
-                            self?.navigationController?.popViewController(animated: true)
-                        }
-                        .store(in: &self!.storage)
+                                } receiveValue: { (isFinished) in
+                                    DispatchQueue.main.async {
+                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
+                                        self?.navigationController?.popViewController(animated: true)
+                                    }
+                                }
+                                .store(in: &self!.storage)
                     })
                 })
             }

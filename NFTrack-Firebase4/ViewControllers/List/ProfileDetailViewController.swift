@@ -46,15 +46,15 @@ class ProfileDetailViewController: ParentProfileViewController {
         self.navigationItem.largeTitleDisplayMode = .always
     }
     
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        
-        DispatchQueue.main.async {
-            if self.profileImage != nil {
-                self.profileImageButton = self.createProfileImageButton(self.profileImageButton, image: self.profileImage!)
-            }
-        }
-    }
+//    override func viewDidLayoutSubviews() {
+//        super.viewDidLayoutSubviews()
+//        
+//        DispatchQueue.main.async {
+//            if self.profileImage != nil {
+//                self.profileImageButton = self.createProfileImageButton(self.profileImageButton, image: self.profileImage!)
+//            }
+//        }
+//    }
     
     override func preferredContentSizeDidChange(forChildContentContainer container: UIContentContainer) {
         super.preferredContentSizeDidChange(forChildContentContainer: container)
@@ -169,8 +169,35 @@ extension ProfileDetailViewController: PaginateFetchDelegate {
         let h = size.height
         let reload_distance:CGFloat = 10.0
         if y > (h + reload_distance) {
-            guard let uid = userInfo.uid else { return }
-            db.refetchReviews(uid: uid, lastSnapshot: self.lastSnapshot)
+            guard let uid = userInfo.uid,
+                  let lastSnapshot = self.lastSnapshot else { return }
+            db.refetchReviews(uid: uid, lastSnapshot: lastSnapshot)
+        }
+    }
+}
+
+extension ProfileDetailViewController {
+    override func configureCustomProfileImage(from url: String) {
+        let loadingIndicator = UIActivityIndicatorView()
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        profileImageButton.addSubview(loadingIndicator)
+        NSLayoutConstraint.activate([
+            loadingIndicator.centerXAnchor.constraint(equalTo: profileImageButton.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: profileImageButton.centerYAnchor)
+        ])
+        loadingIndicator.startAnimating()
+        
+        FirebaseService.shared.downloadImage(urlString: url) { [weak self] (image, error) in
+            guard let strongSelf = self else { return }
+            if let error = error {
+                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: strongSelf)
+                return
+            }
+            
+            if let image = image {
+                loadingIndicator.stopAnimating()
+                strongSelf.profileImageButton = strongSelf.createProfileImageButton(strongSelf.profileImageButton, image: image)
+            }
         }
     }
 }

@@ -153,6 +153,11 @@ class PostViewController: ParentPostViewController {
             return
         }
         
+        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+            return
+        }
+        
         guard let NFTrackAddress = NFTrackAddress else {
             self.alert.showDetail("Sorry", with: "There was an error loading the minting contract address.", for: self)
             return
@@ -198,7 +203,7 @@ class PostViewController: ParentPostViewController {
                                 var txPackageArr = [TxPackage]()
                                 print("STEP 1")
                                 Future<TxPackage, PostingError> { promise in
-                                    self.transactionService.createMintTransaction(promise)
+                                    self.transactionService.prepareMintTransactionWithGasEstimate(promise)
                                 }
                                 .flatMap({ (txPackage) -> AnyPublisher<BigUInt, PostingError> in
                                     txPackageArr.append(txPackage)
@@ -324,6 +329,7 @@ class PostViewController: ParentPostViewController {
                                                 paymentMethod: paymentMethod,
                                                 topics: topicsRetainer,
                                                 urlStrings: urlStrings,
+                                                ipfsURLStrings: [],
                                                 promise: promise
                                             )
                                         }

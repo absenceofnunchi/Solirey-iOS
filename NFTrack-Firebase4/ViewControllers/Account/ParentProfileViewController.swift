@@ -9,15 +9,31 @@ import UIKit
 
 class ParentProfileViewController: UIViewController, UIScrollViewDelegate {
     var scrollView: UIScrollView!
-    var profileImageButton: UIButton!
-    var userInfo: UserInfo!
+    var profileImageButton = UIButton(type: .custom)
+    var displayNameTextField = UITextField()
+    var userInfo: UserInfo! {
+        didSet {
+            if userInfo.photoURL != "NA" {
+                configureCustomProfileImage(from: userInfo.photoURL!)
+            } else {
+                guard let image = UIImage(systemName: "person.crop.circle.fill") else {
+                    self.dismiss(animated: true, completion: nil)
+                    return
+                }
+                let configuration = UIImage.SymbolConfiguration(pointSize: 60, weight: .bold, scale: .large)
+                let configuredImage = image.withTintColor(.orange, renderingMode: .alwaysOriginal).withConfiguration(configuration)
+                
+                profileImageButton.setImage(configuredImage, for: .normal)
+            }
+            
+            displayNameTextField.text = userInfo.displayName
+        }
+    }
     var displayNameTitleLabel: UILabel!
-    var displayNameTextField: UITextField!
     var alert: Alerts!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
         configureUI()
     }
     
@@ -40,18 +56,6 @@ extension ParentProfileViewController {
         scrollView.fill()
         
         profileImageButton = UIButton(type: .custom)
-        if userInfo.photoURL != "NA" {
-            configureCustomProfileImage(from: userInfo.photoURL!)
-        } else {
-            guard let image = UIImage(systemName: "person.crop.circle.fill") else {
-                self.dismiss(animated: true, completion: nil)
-                return
-            }
-            let configuration = UIImage.SymbolConfiguration(pointSize: 60, weight: .bold, scale: .large)
-            let configuredImage = image.withTintColor(.orange, renderingMode: .alwaysOriginal).withConfiguration(configuration)
-            profileImageButton.setImage(configuredImage, for: .normal)
-        }
-        
         profileImageButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
         profileImageButton.tag = 1
         profileImageButton.translatesAutoresizingMaskIntoConstraints = false
@@ -60,7 +64,12 @@ extension ParentProfileViewController {
         displayNameTitleLabel = createTitleLabel(text: "Display Name")
         scrollView.addSubview(displayNameTitleLabel)
         
-        displayNameTextField = createTextField(content: userInfo.displayName, delegate: self)
+        displayNameTextField.setLeftPaddingPoints(10)
+        displayNameTextField.delegate = self
+        displayNameTextField.layer.borderWidth = 0.7
+        displayNameTextField.layer.cornerRadius = 5
+        displayNameTextField.layer.borderColor = UIColor.lightGray.cgColor
+        displayNameTextField.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(displayNameTextField)
         
         NSLayoutConstraint.activate([

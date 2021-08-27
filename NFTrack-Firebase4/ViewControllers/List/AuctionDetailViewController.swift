@@ -522,7 +522,9 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                     switch method {
                                         case .auctionEnd:
                                             self.alert.showDetail("Auction Ended", with: "Congratulations. You have officially ended the auction! The winner can now transfer the item and the beneficiary can withdraw the fund.", for: self)
-                                            self.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
+                                            DispatchQueue.main.async {
+                                                self.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
+                                            }
                                         case .bid:
                                             self.alert.showDetail("Bid Success!", with: "You have made a successful bid. It'll take a few moment to be reflected on the blockchain.", for: self, completion:  {
                                                 self.bidTextField.text?.removeAll()

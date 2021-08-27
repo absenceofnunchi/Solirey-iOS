@@ -341,6 +341,7 @@ struct UserInfo {
     let photoURL: String?
     let uid: String?
     let memberSince: Date?
+    var address: String? = nil
 }
 
 struct UserDefaultKeys {
@@ -606,6 +607,10 @@ struct InfoText {
     """
     static let transferCompleted = """
     Congratulations! You have successfully completed the selling process.
+    """
+    
+    static let pricing = """
+    The price value has to be an even number.
     """
 }
 

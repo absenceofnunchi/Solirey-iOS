@@ -548,30 +548,32 @@ protocol UsernameBannerConfigurable where Self: UIViewController {
 
 extension UsernameBannerConfigurable {
     func fetchUserData(id: String) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let docRef = FirebaseService.shared.db.collection("user").document(id)
-            docRef.getDocument { [weak self] (document, error) in
-                if let document = document, document.exists {
-                    if let data = document.data() {
-                        let displayName = data[UserDefaultKeys.displayName] as? String
-                        let photoURL = data[UserDefaultKeys.photoURL] as? String
-                        let memberSince = data[UserDefaultKeys.memberSince] as? Timestamp
-                        let userInfo = UserInfo(
-                            email: nil,
-                            displayName: displayName!,
-                            photoURL: photoURL,
-                            uid: id,
-                            memberSince: memberSince?.dateValue()
-                        )
-                        self?.userInfo = userInfo
-                    }
-                } else {
-                    self?.hideSpinner {
-                        return
-                    }
+        let docRef = FirebaseService.shared.db.collection("user").document(id)
+        docRef.getDocument { [weak self] (document, error) in
+            if let document = document, document.exists {
+                if let data = document.data() {
+                    let displayName = data[UserDefaultKeys.displayName] as? String
+                    let photoURL = data[UserDefaultKeys.photoURL] as? String
+                    let memberSince = data[UserDefaultKeys.memberSince] as? Timestamp
+                    let userInfo = UserInfo(
+                        email: nil,
+                        displayName: displayName!,
+                        photoURL: photoURL,
+                        uid: id,
+                        memberSince: memberSince?.dateValue()
+                    )
+                    self?.userInfo = userInfo
+                }
+            } else {
+                self?.hideSpinner {
+                    return
                 }
             }
         }
+        
+//        DispatchQueue.global(qos: .userInitiated).async {
+//
+//        }
     }
     
     func processProfileImage() {
@@ -579,6 +581,7 @@ extension UsernameBannerConfigurable {
         if let info = self.userInfo,
            info.photoURL != "NA",
            let photoURL = self.userInfo.photoURL {
+            print("photoURL", photoURL)
             FirebaseService.shared.downloadImage(urlString: photoURL) { [weak self] (image, error) in
                 guard let strongSelf = self else { return }
                 if let _ = error {

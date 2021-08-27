@@ -158,9 +158,6 @@ extension ListDetailViewController {
                                 self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmReceived.rawValue, tag: 3)
                             }
                         } else {
-                            print("post.sellerUserId", post.sellerUserId as Any)
-                            print("post.buyerUserId", post.buyerUserId as Any)
-                            print("userId", userId as Any)
                             if post.sellerUserId == userId {
                                 self?.configureStatusButton(buttonTitle: "Transfer Ownership", tag: 5)
                             } else if post.buyerUserId == userId {

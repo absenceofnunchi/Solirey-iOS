@@ -16,7 +16,6 @@ class IPFSService {
     
     func createBodyWithParameters(parameters: [String: String]?, filePathKey: String, dataKey: Data, boundary: String, isImage: Bool) -> Data {
         let body = NSMutableData()
-        
         var mimetype: String!
         
         if isImage == true {
@@ -36,9 +35,10 @@ class IPFSService {
     }
     
     // MARK: - uploadImage
-    func uploadImage(image: UIImage, title: String, password: String) {
+    func uploadImage(image: UIImage, promise:  @escaping (Result<String?, PostingError>) -> Void) {
         // build request URL
         guard let requestURL = URL(string: "https://express-ipfs-4djcj3hprq-ue.a.run.app/addImage") else {
+            promise(.failure(.generalError(reason: "Could not get the IPFS URL.")))
             return
         }
         
@@ -55,20 +55,27 @@ class IPFSService {
         
         let task =  URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
             if let error = error {
-                debugPrint(error.localizedDescription)
+                promise(.failure(.generalError(reason: error.localizedDescription)))
             }
             
-            
-            let response = response as! HTTPURLResponse
-            if !(200...299).contains(response.statusCode) {
-                // handle HTTP server-side error
-                debugPrint("response", response)
+            if let httpResponse = response as? HTTPURLResponse,
+               let httpStatusCode = APIError.HTTPStatusCode(rawValue: httpResponse.statusCode) {
+                if !(200...299).contains(httpResponse.statusCode) {
+                    promise(.failure(.apiError(APIError.generalError(reason: httpStatusCode.description))))
+                }
             }
-            
-            //            let contentType = response.allHeaderFields["Content-Type"] as? String
-            
+                        
             if let data = data {
-                print("data", data)
+                do {
+                    if let responseObj = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions(rawValue:0)) as? [String:Any],
+                       let status = responseObj["ipfs success"] as? [String: Any],
+                       let path = status["path"] as? String {
+                        print("ipfs success status", status)
+                        promise(.success(path))
+                    }
+                } catch {
+                    promise(.failure(.generalError(reason: error.localizedDescription)))
+                }
             }
         })
         

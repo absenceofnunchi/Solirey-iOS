@@ -27,6 +27,7 @@ enum Header: Int, CaseIterable {
 struct PreviewData {
     let header: Header
     let filePath: URL
+    var originalImage: UIImage? = nil
 }
 
 class ImagePreviewViewController: UIViewController {
@@ -36,7 +37,9 @@ class ImagePreviewViewController: UIViewController {
             if data.count > 0 {
                 data = NSOrderedSet(array: data).array as? [PreviewData]
             }
-            collectionView.reloadData()
+            DispatchQueue.main.async { [weak self] in
+                self?.collectionView.reloadData()
+            }
         }
     }
     

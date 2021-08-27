@@ -612,7 +612,7 @@ extension TransactionService {
 
 // MARK: - helper functions
 extension TransactionService {
-    final func createMintTransaction(_ promise: @escaping (Result<TxPackage, PostingError>) -> Void) {
+    final func prepareMintTransactionWithGasEstimate(_ promise: @escaping (Result<TxPackage, PostingError>) -> Void) {
         self.prepareTransactionForMinting { (transaction, error) in
             if let error = error {
                 promise(.failure(error))
@@ -897,6 +897,7 @@ extension TransactionService {
         paymentMethod: String,
         topics: [String],
         urlStrings: [String?],
+        ipfsURLStrings: [String?],
         promise: @escaping (Result<Int, PostingError>) -> Void
     ) {
         let ref = self.db.collection("post")
@@ -924,6 +925,7 @@ extension TransactionService {
             "deliveryMethod": deliveryMethod,
             "saleFormat": saleFormat,
             "files": urlStrings,
+            "IPFS": ipfsURLStrings,
             "paymentMethod": paymentMethod,
             "bidderTokens": [],
             "bidders": [],

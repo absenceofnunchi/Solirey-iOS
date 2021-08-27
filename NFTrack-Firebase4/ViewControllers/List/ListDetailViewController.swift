@@ -189,6 +189,11 @@ extension ListDetailViewController {
                 updateState(method: PurchaseMethods.abort.methodName, status: .aborted)
             case 2:
                 // confirm purchase or "buy"
+                if let deliveryMethod = listingDetailArr.filter({ $0.propertyName == "Delivery Method" }).first,
+                   deliveryMethod.propertyDesc as? String == DeliveryMethod.shipping.rawValue {
+                    
+                }
+                
                 updateState(method: PurchaseMethods.confirmPurchase.methodName, price: String(post.price), status: .pending)
             case 3:
                 // confirm received
