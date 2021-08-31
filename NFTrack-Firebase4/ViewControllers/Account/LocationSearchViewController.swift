@@ -55,6 +55,7 @@ extension LocationSearchViewController: UISearchResultsUpdating {
             return
         }
         
+        print("run")
 //        let searchCompleter = MKLocalSearchCompleter()
 //        searchCompleter.delegate = self
 //        searchCompleter.region = MKCoordinateRegion(.world)

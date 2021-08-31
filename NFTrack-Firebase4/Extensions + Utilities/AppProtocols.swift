@@ -1202,36 +1202,33 @@ extension ParseAddressDelegate {
         switch scope {
             case .cities:
                 addressLine = String(
-                    format: "%@%@%@%@%@",
+                    format: "%@%@%@",
                     // city
                     selectedItem.locality ?? "",
                     secondSpace,
                     // state or province
-                    selectedItem.administrativeArea ?? "",
-                    " ",
-                    // postal code
-                    selectedItem.postalCode ?? ""
+                    selectedItem.administrativeArea ?? ""
                 )
             default:
-                <#code#>
+                break
         }
-        String(
-            format: "%@%@%@%@%@%@%@%@%@",
-            // street number
-            selectedItem.subThoroughfare ?? "",
-            firstSpace,
-            // street name
-            selectedItem.thoroughfare ?? "",
-            comma,
-            // city
-            selectedItem.locality ?? "",
-            secondSpace,
-            // state or province
-            selectedItem.administrativeArea ?? "",
-            " ",
-            // postal code
-            selectedItem.postalCode ?? ""
-        )
+//        String(
+//            format: "%@%@%@%@%@%@%@%@%@",
+//            // street number
+//            selectedItem.subThoroughfare ?? "",
+//            firstSpace,
+//            // street name
+//            selectedItem.thoroughfare ?? "",
+//            comma,
+//            // city
+//            selectedItem.locality ?? "",
+//            secondSpace,
+//            // state or province
+//            selectedItem.administrativeArea ?? "",
+//            " ",
+//            // postal code
+//            selectedItem.postalCode ?? ""
+//        )
         return addressLine
     }
 }
