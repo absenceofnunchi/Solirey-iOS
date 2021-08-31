@@ -279,12 +279,11 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
     // whereas the digital item can only have their title and the description modified
     // the former will be done in TangibleListEditVC and the latter in DigitalListEditVC
     func configureSellerNavigationBar() {
-        var buttonItemsArr = [UIBarButtonItem]()
-
-        postEditButtonItem = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(buttonPressed(_:)))
-        postEditButtonItem.tag = 11
-        buttonItemsArr.append(postEditButtonItem)
+        // The post edit button should only be allowed up until a buyer purchases the item
+        // after which the ability of a seller to edit the post ceases
+        // For all the other cases, such as transferring or confirming the receipt of the item, there will only be the share button.
         
+        var buttonItemsArr = [UIBarButtonItem]()
         shareButtonItem = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(buttonPressed(_:)))
         shareButtonItem.tag = 12
         buttonItemsArr.append(shareButtonItem)

@@ -274,8 +274,9 @@ extension AccountViewController {
     // MARK: - didUpdateProfile
     func didUpdateProfile() {
         let profileVC = ProfileViewController()
-        profileVC.modalPresentationStyle = .fullScreen
-        present(profileVC, animated: true, completion: nil)
+        let nav = UINavigationController(rootViewController: profileVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true, completion: nil)
     }
     
     func review() {

@@ -74,7 +74,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     }
     
     func configureNavigationItem() {
-        print("isSubscribed", isSubscribed as Any)
         guard let bookmarkImage = UIImage(systemName: isSubscribed ? "bookmark.fill" : "bookmark") else { return }
         subscriptionButtonItem = UIBarButtonItem(image: bookmarkImage, style: .plain, target: self, action: #selector(buttonPressed(_:)))
         subscriptionButtonItem.tag = 0

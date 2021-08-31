@@ -104,6 +104,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var bidDate: Date?
     var auctionEndDate: Date?
     var auctionTransferredDate: Date?
+    var address: String?
     
     init(
         documentId: String,
@@ -134,7 +135,8 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         saleFormat: String,
         bidDate: Date?,
         auctionEndDate: Date?,
-        auctionTransferredDate: Date?
+        auctionTransferredDate: Date?,
+        address: String?
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
@@ -164,6 +166,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.bidDate = bidDate
         self.auctionEndDate = auctionEndDate
         self.auctionTransferredDate = auctionTransferredDate
+        self.address = address
     }
 }
 
@@ -321,6 +324,78 @@ enum ScopeButtonCategory: String, CaseIterable {
     }
 }
 
+enum ShippingRestriction: String, CaseIterable {
+    case cities = "Cities"
+    case state = "State"
+    case country = "Country"
+    case distance = "Distance"
+    
+    static func getCategory(num: Int) -> ShippingRestriction? {
+        guard num >= 0, num < ShippingRestriction.allCases.count else { return nil }
+        switch num {
+            case 0:
+                return .cities
+            case 1:
+                return .state
+            case 2:
+                return .country
+            case 3:
+                return .distance
+            default:
+                return .none
+        }
+    }
+}
+
+extension ShippingRestriction: RawRepresentable, CaseCountable {
+    typealias RawValue = Int
+    
+    var rawValue: RawValue {
+        switch self {
+            case .cities:
+                return 0
+            case .state:
+                return 1
+            case .country:
+                return 2
+            case .distance:
+                return 3
+        }
+    }
+    
+    var stringValue: String {
+        switch self {
+            case .cities:
+                return "Cities"
+            case .state:
+                return "State"
+            case .country:
+                return "Country"
+            case .distance:
+                return "Distance"
+        }
+    }
+    
+    init?(rawValue: Int) {
+        switch rawValue {
+            case 0:
+                self = .cities
+            case 1:
+                self = .state
+            case 2:
+                self = .country
+            case 3:
+                self = .distance
+            default:
+                return nil
+        }
+    }
+    
+    static func getAll() -> [String] {
+        return ShippingRestriction.allCases.map { $0.stringValue }
+    }
+}
+
 // MARK: - CellPosition
 /// ListDetailViewController + History
 enum CellPosition {
@@ -351,6 +426,7 @@ struct UserDefaultKeys {
     static let memberSince: String = "memberSince"
     static let filterSettings: String = "filterSettings"
     static let fcmToken: String = "fcmToken"
+    static let address: String = "address"
 }
 
 // MARK: - Message
@@ -611,6 +687,18 @@ struct InfoText {
     
     static let pricing = """
     The price value has to be an even number.
+    """
+    
+    static let created = """
+    The item is available for a potential buyer to purchase by sending the price * 2 to the escrow contract. Requiring double the amount of the price for both the buyer and the seller is to incentivize both parties to complete the transaction in an efficient manner.  The buyer is also required to the disclose the shipping address to the seller.
+    """
+    
+    static let locked = """
+    The buyer has sent the required ETH to the escrow contract and secured the right to purchase the item.  The seller is in the process of transferring the ownership of the item on the blockchain as well as shipping the actual item to the buyer.
+    """
+    
+    static let inactive = """
+    The buyer has confirmed the receipt of the item and the related funds distributed to the rightful owners.
     """
 }
 

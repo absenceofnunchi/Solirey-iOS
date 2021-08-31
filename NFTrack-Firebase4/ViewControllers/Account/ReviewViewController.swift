@@ -19,6 +19,10 @@ class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
         configureDataFetch(userIdField: "buyerUserId")
     }
     
+    override func setDataStore(postArr: [Post]) {
+        dataStore = PostImageDataStore(posts: postArr)
+    }
+    
     final override func configureUI() {
         super.configureUI()
         title = "Pending Reviews"
@@ -35,6 +39,7 @@ class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
             self.alert.showDetail("Sorry", with: "Please try re-logging back in.", for: self)
             return
         }
+        // only valid for 1 month
         guard let fromDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) else {return}
         postArr.removeAll()
         FirebaseService.shared.db.collection("post")

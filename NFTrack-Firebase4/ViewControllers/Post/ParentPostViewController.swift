@@ -27,6 +27,36 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
     var deliveryMethodTitleLabel: UILabel!
     var deliveryInfoButton: UIButton!
     var deliveryMethodLabel: UILabel!
+    // If the delivery method is shipping, the seller has to set the address and the distance limit
+    var isShipping: Bool! {
+        didSet {
+            if isShipping == true {
+                addressTitleLabel.alpha = 1
+                addressLabel.alpha = 1
+                addressLabel.isUserInteractionEnabled = true
+                addressTitleLabelConstraintHeight.constant = 50
+                addressLabelConstraintHeight.constant = 50
+                
+                UIView.animate(withDuration: 0.5) { [weak self] in
+                    self?.view.layoutIfNeeded()
+                }
+            } else {
+                addressTitleLabel.alpha = 0
+                addressLabel.alpha = 0
+                addressLabel.isUserInteractionEnabled = false
+                addressTitleLabelConstraintHeight.constant = 0
+                addressLabelConstraintHeight.constant = 0
+                
+                UIView.animate(withDuration: 0.5) { [weak self] in
+                    self?.view.layoutIfNeeded()
+                }
+            }
+        }
+    }
+    lazy var addressTitleLabelConstraintHeight: NSLayoutConstraint = addressTitleLabel.heightAnchor.constraint(equalToConstant: 0)
+    lazy var addressLabelConstraintHeight: NSLayoutConstraint = addressLabel.heightAnchor.constraint(equalToConstant: 0)
+    var addressTitleLabel: UILabel!
+    var addressLabel: UILabel!
     var paymentMethodTitleLabel: UILabel!
     var paymentInfoButton: UIButton!
     var paymentMethodLabel: UILabel!
@@ -230,6 +260,15 @@ extension ParentPostViewController {
         let tap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
         deliveryMethodLabel.addGestureRecognizer(tap)
         
+        addressTitleLabel = createTitleLabel(text: "Shipping Restriction")
+        scrollView.addSubview(addressTitleLabel)
+        
+        addressLabel = createLabel(text: "")
+        addressLabel.tag = 11
+        let addressTap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+        addressLabel.addGestureRecognizer(addressTap)
+        scrollView.addSubview(addressLabel)
+        
         paymentMethodTitleLabel = createTitleLabel(text: "Payment Method")
         paymentMethodTitleLabel.isUserInteractionEnabled = true
         scrollView.addSubview(paymentMethodTitleLabel)
@@ -372,7 +411,17 @@ extension ParentPostViewController {
             deliveryMethodLabel.heightAnchor.constraint(equalToConstant: 50),
             deliveryMethodLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             
-            saleMethodTitleLabel.topAnchor.constraint(equalTo: deliveryMethodLabel.bottomAnchor, constant: 20),
+            addressTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            addressTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+            addressTitleLabel.topAnchor.constraint(equalTo: deliveryMethodLabel.bottomAnchor, constant: 20),
+            addressTitleLabelConstraintHeight,
+            
+            addressLabel.topAnchor.constraint(equalTo: addressTitleLabel.bottomAnchor, constant: 0),
+            addressLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
+            addressLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+            addressLabelConstraintHeight,
+            
+            saleMethodTitleLabel.topAnchor.constraint(equalTo: addressLabel.bottomAnchor, constant: 20),
             saleMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             saleMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50),
             saleMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
@@ -504,6 +553,17 @@ extension ParentPostViewController {
                 for: self) {
                 print("something")
             } completion:  {}
+        }
+    }
+    
+    @objc func tapped(_ sender: UITapGestureRecognizer) {
+        guard let v = sender.view else { return }
+        switch v.tag {
+            case 11:
+                let shippingVC = ShippingViewController()
+                navigationController?.pushViewController(shippingVC, animated: true)
+            default:
+                break
         }
     }
     

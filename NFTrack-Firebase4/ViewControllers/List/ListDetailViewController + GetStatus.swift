@@ -145,6 +145,14 @@ extension ListDetailViewController {
                 switch "\(status)" {
                     case "0":
                         if post.sellerUserId == userId {
+                            // The post edit button should only be allowed up until a buyer purchases the item
+                            // after which the ability of a seller to edit the post ceases
+                            DispatchQueue.main.async {
+                                self?.postEditButtonItem = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(self?.buttonPressed(_:)))
+                                self?.postEditButtonItem.tag = 11
+                                guard let postEditButtonItem = self?.postEditButtonItem else { return }
+                                self?.navigationItem.rightBarButtonItems?.append(postEditButtonItem)
+                            }
                             self?.configureStatusButton(buttonTitle: PurchaseMethods.abort.rawValue, tag: 1)
                         } else {
                             self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmPurchase.rawValue, tag: 2)
@@ -159,6 +167,10 @@ extension ListDetailViewController {
                             }
                         } else {
                             if post.sellerUserId == userId {
+                                // show the shipping address of the buyer to the seller so that the item could be shipped
+                                DispatchQueue.main.async {
+                                    self?.showBuyerAddress = true
+                                }
                                 self?.configureStatusButton(buttonTitle: "Transfer Ownership", tag: 5)
                             } else if post.buyerUserId == userId {
                                 self?.configureStatusButton(buttonTitle: "Transfer Pending", tag: 8)

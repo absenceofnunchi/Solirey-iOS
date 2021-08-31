@@ -82,5 +82,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationUsageDescription</key>
+	<string>This app needs your location to use the map feature</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>The app needs your location to use the address feature.</string>
 </dict>
 </plist>

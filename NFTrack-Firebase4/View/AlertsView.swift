@@ -94,7 +94,13 @@ class Alerts {
     
     // MARK: - fading
     /// show a message for a brief period and disappears e.i "Copied"
-    func fading(text: String = "Copied!", controller: UIViewController?, toBePasted: String?, width: CGFloat = 150) {
+    func fading(
+        text: String = "Copied!",
+        controller: UIViewController?,
+        toBePasted: String?,
+        width: CGFloat = 150,
+        completion: (() -> Void)? = nil
+    ) {
         DispatchQueue.main.async {
             guard let controller = controller else { return }
             let dimmingView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
@@ -141,6 +147,8 @@ class Alerts {
                 timer.invalidate()
                 //                controller.dismiss(animated: true, completion: nil)
             }
+            
+            completion?()
         }
     }
 }

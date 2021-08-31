@@ -314,7 +314,7 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
                 case 7:
                     let historyDetailVC = HistoryDetailViewController()
                     historyDetailVC.post = post
-                    historyDetailVC.userInfo = userInfo
+//                    historyDetailVC.userInfo = userInfo
                     self.navigationController?.pushViewController(historyDetailVC, animated: true)
                 case 8:
                     let vc = UIImagePickerController()

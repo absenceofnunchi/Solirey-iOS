@@ -43,13 +43,13 @@ extension HistoryDetailViewController {
         scrollView.addSubview(ownerTitleHash)
         
         ownerHash = createLabel(text: post.sellerHash, hashType: .address, target: self, action: #selector(tapped))
-        ownerHash.tag = 2
+        ownerHash.tag = 3
         ownerHash.lineBreakMode = .byClipping
         ownerHash.numberOfLines = 0
         ownerHash.sizeToFit()
         scrollView.addSubview(ownerHash)
         
-        escrowHashTitleLabel = createTitleLabel(text: "Escrow Address")
+        escrowHashTitleLabel = createTitleLabel(text: "Escrow Tx Hash")
         scrollView.addSubview(escrowHashTitleLabel)
         
         escrowHashLabel = createLabel(text: post.escrowHash ?? "N/A", hashType: .tx, target: self, action: #selector(tapped))
@@ -181,7 +181,14 @@ extension HistoryDetailViewController {
             case 2:
                 if let label = sender.view as? UILabel, let text = label.text {
                     let webVC = WebViewController()
-                    let hashType = label.tag == 0 ? "tx" : "address"
+                    let hashType = "tx"
+                    webVC.urlString = "https://rinkeby.etherscan.io/\(hashType)/\(text)"
+                    self.navigationController?.pushViewController(webVC, animated: true)
+                }
+            case 3:
+                if let label = sender.view as? UILabel, let text = label.text {
+                    let webVC = WebViewController()
+                    let hashType = "address"
                     webVC.urlString = "https://rinkeby.etherscan.io/\(hashType)/\(text)"
                     self.navigationController?.pushViewController(webVC, animated: true)
                 }

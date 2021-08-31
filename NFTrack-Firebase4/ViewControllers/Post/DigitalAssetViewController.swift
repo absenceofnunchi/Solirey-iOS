@@ -300,7 +300,7 @@ class DigitalAssetViewController: ParentPostViewController {
     }
 
     // MARK: - tapped
-    @objc final func tapped(_ sender: UITapGestureRecognizer) {
+    @objc final override func tapped(_ sender: UITapGestureRecognizer) {
         /// payment method label
         alert.showDetail("Payment Method", with: "The payment method for digital items is determined by the sale format. Please select from the picker right below the payment method's field.", alignment: .left, for: self)
     }

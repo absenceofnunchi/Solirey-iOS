@@ -151,352 +151,352 @@
  3. Digital, payment method: beneficiary, sale format: open auction, delivery method: online
  */
 
-import UIKit
-
-class ProgressCell1: CardCell {
-    class override var identifier: String {
-        return "ProgressCell"
-    }
-    final let selectedColor = UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1)
-    
-    final let INSET: CGFloat = 45
-    final var strokeColor: UIColor = .gray {
-        didSet {
-            shapeLayer.strokeColor = strokeColor.cgColor
-        }
-    }
-    final var lineWidth: CGFloat = 0.5 {
-        didSet {
-            updatePath()
-        }
-    }
-    
-    final lazy var shapeLayer: CAShapeLayer = {
-        let shapeLayer = CAShapeLayer()
-        shapeLayer.strokeColor = strokeColor.cgColor
-        shapeLayer.lineWidth = lineWidth
-        return shapeLayer
-    }()
-    
-    final lazy var circleShapeLayer: CAShapeLayer = {
-        let shapeLayer = CAShapeLayer()
-        shapeLayer.strokeColor = strokeColor.cgColor
-        shapeLayer.fillColor = UIColor.white.cgColor
-        shapeLayer.lineWidth = lineWidth
-        return shapeLayer
-    }()
-    
-    final lazy var circleShapeLayer2: CAShapeLayer = {
-        let shapeLayer = CAShapeLayer()
-        shapeLayer.strokeColor = strokeColor.cgColor
-        shapeLayer.fillColor = UIColor.white.cgColor
-        shapeLayer.lineWidth = lineWidth
-        return shapeLayer
-    }()
-    
-    final lazy var circleShapeLayer3: CAShapeLayer = {
-        let shapeLayer = CAShapeLayer()
-        shapeLayer.strokeColor = strokeColor.cgColor
-        shapeLayer.fillColor = UIColor.white.cgColor
-        shapeLayer.lineWidth = lineWidth
-        return shapeLayer
-    }()
-    
-    final var statusLabel1: UILabel!
-    final var dateLabel1: UILabel!
-    final var statusLabel2: UILabel!
-    final var dateLabel2: UILabel!
-    final var statusLabel3: UILabel!
-    final var dateLabel3: UILabel!
-    final var indicatorPanel: UIView!
-    final var meterContainer: UIView!
-    
-    override func configure(_ post: Post?) {
-        super.configure(post)
-        guard let post = post else { return }
-        
-        meterContainer = UIView()
-        meterContainer.layer.addSublayer(shapeLayer)
-        meterContainer.layer.addSublayer(circleShapeLayer)
-        meterContainer.layer.addSublayer(circleShapeLayer2)
-        meterContainer.layer.addSublayer(circleShapeLayer3)
-        meterContainer.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(meterContainer)
-        
-        // category: all except digital
-        // sale format: online direct
-        // delivery method: shipping(Purchased, Transferred, Received), in person
-        
-        // category: digital
-        // sale format: online direct(Purchased, Transferred, Received), open auction(Bid, Auction Ended, Transferred)
-        // delivery method: online transfer
-        
-        if post.saleFormat == SaleFormat.openAuction.rawValue {
-            statusLabel1 = createStatusLabel(text: AuctionStatus.bid.toDisplay)
-            statusLabel2 = createStatusLabel(text: AuctionStatus.ended.toDisplay)
-            statusLabel3 = createStatusLabel(text: AuctionStatus.transferred.toDisplay)
-        } else {
-            statusLabel1 = createStatusLabel(text: "Purchased")
-            statusLabel2 = createStatusLabel(text: "Transferred")
-            statusLabel3 = createStatusLabel(text: "Received")
-        }
-        
-        statusLabel1.textAlignment = .center
-        meterContainer.addSubview(statusLabel1)
-        
-        dateLabel1 = createStatusLabel(text: "")
-        dateLabel1.textAlignment = .center
-        meterContainer.addSubview(dateLabel1)
-        
-        statusLabel2.textAlignment = .center
-        meterContainer.addSubview(statusLabel2)
-        
-        dateLabel2 = createStatusLabel(text: "")
-        dateLabel2.textAlignment = .center
-        meterContainer.addSubview(dateLabel2)
-        
-        statusLabel3.textAlignment = .center
-        meterContainer.addSubview(statusLabel3)
-        
-        dateLabel3 = createStatusLabel(text: "")
-        dateLabel3.textAlignment = .center
-        meterContainer.addSubview(dateLabel3)
-        
-        var progressConstraints = [NSLayoutConstraint]()
-        if let files = post.files, files.count > 0 {
-            progressConstraints += [
-                meterContainer.topAnchor.constraint(equalTo: thumbImageView.bottomAnchor, constant: 10),
-            ]
-        } else {
-            progressConstraints += [
-                meterContainer.topAnchor.constraint(equalTo: descContainer.bottomAnchor, constant: 10),
-            ]
-        }
-        
-        progressConstraints += [
-            meterContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 0),
-            meterContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: 0),
-            meterContainer.heightAnchor.constraint(equalToConstant: 100),
-            
-            dateLabel1.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor, constant: 0),
-            dateLabel1.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: -5),
-            dateLabel1.heightAnchor.constraint(equalToConstant: 30),
-            dateLabel1.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-            
-            statusLabel1.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor, constant: 0),
-            statusLabel1.bottomAnchor.constraint(equalTo: dateLabel1.topAnchor, constant: 0),
-            statusLabel1.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-            
-            dateLabel2.centerXAnchor.constraint(equalTo: meterContainer.centerXAnchor, constant: 20),
-            dateLabel2.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: -5),
-            dateLabel2.heightAnchor.constraint(equalToConstant: 30),
-            dateLabel2.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-            
-            statusLabel2.centerXAnchor.constraint(equalTo: meterContainer.centerXAnchor),
-            statusLabel2.bottomAnchor.constraint(equalTo: dateLabel2.topAnchor, constant: -0),
-            statusLabel2.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-            
-            dateLabel3.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor, constant: 0),
-            dateLabel3.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: -5),
-            dateLabel3.heightAnchor.constraint(equalToConstant: 30),
-            dateLabel3.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-            
-            statusLabel3.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor, constant: 0),
-            statusLabel3.bottomAnchor.constraint(equalTo: dateLabel3.topAnchor, constant: 0),
-            statusLabel3.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-        ]
-        
-        NSLayoutConstraint.activate(progressConstraints)
-        meterContainer.layoutIfNeeded()
-        dateLabel1.layoutIfNeeded()
-        statusLabel1.layoutIfNeeded()
-        updatePath()
-        set(post: post)
-    }
-}
-
-extension ProgressCell1 {
-    final func createStatusLabel(text: String) -> UILabel {
-        let statusLabel = UILabel()
-        statusLabel.text = text
-        statusLabel.textColor = .lightGray
-        statusLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
-        statusLabel.sizeToFit()
-        statusLabel.translatesAutoresizingMaskIntoConstraints = false
-        return statusLabel
-    }
-    
-    final func processDate(date: Date?) -> String? {
-        guard let date = date else { return "" }
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        let formattedDate = formatter.string(from: date)
-        return formattedDate
-    }
-    
-    final func set(post: Post) {
-        // progress sequence for the following:
-        
-        // tangible (escrow) and digital online direct (escrow)
-        // 1. ready (doesn't show on ProgressCell)
-        // 2. pending
-        // 3. transferred
-        // 4. complete
-        
-        // open auction
-        // 1. ready (doesn't show on ProgressCell)
-        // 2. bid
-        // 3. ended (the auctionEnd method after the expiry)
-        // 4. transferred (the digital asset transfer)
-        switch post.status {
-            case PostStatus.ready.rawValue:
-                circleShapeLayer.fillColor = UIColor.white.cgColor
-                circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
-                statusLabel1.textColor = .lightGray
-                
-                dateLabel1.text = ""
-                dateLabel1.textColor = .lightGray
-            // first node
-            case PostStatus.pending.rawValue, AuctionStatus.bid.rawValue:
-                circleShapeLayer.fillColor = selectedColor.cgColor
-                circleShapeLayer.strokeColor = selectedColor.cgColor
-                statusLabel1.textColor = selectedColor
-                
-                if let confirmPurchaseDate = post.confirmPurchaseDate {
-                    dateLabel1.text = processDate(date: confirmPurchaseDate)
-                } else if let bidDate = post.bidDate  {
-                    dateLabel1.text = processDate(date: bidDate)
-                }
-                
-                dateLabel1.textColor = selectedColor
-            // second node
-            case PostStatus.transferred.rawValue, AuctionStatus.ended.rawValue:
-                circleShapeLayer.fillColor = selectedColor.cgColor
-                circleShapeLayer.strokeColor = selectedColor.cgColor
-                statusLabel1.textColor = selectedColor
-                
-                if let confirmPurchaseDate = post.confirmPurchaseDate {
-                    dateLabel1.text = processDate(date: confirmPurchaseDate)
-                } else if let bidDate = post.bidDate {
-                    dateLabel1.text = processDate(date: bidDate)
-                }
-                dateLabel1.textColor = selectedColor
-                
-                circleShapeLayer2.fillColor = selectedColor.cgColor
-                circleShapeLayer2.strokeColor = selectedColor.cgColor
-                statusLabel2.textColor = selectedColor
-                
-                if let transferDate = post.transferDate {
-                    dateLabel2.text = processDate(date: transferDate)
-                } else if let auctionEndDate = post.auctionEndDate {
-                    dateLabel2.text = processDate(date: auctionEndDate)
-                }
-                dateLabel2.textColor = selectedColor
-            case PostStatus.complete.rawValue, AuctionStatus.transferred.rawValue:
-                circleShapeLayer.fillColor = selectedColor.cgColor
-                circleShapeLayer.strokeColor = selectedColor.cgColor
-                statusLabel1.textColor = selectedColor
-                
-                if let confirmPurchaseDate = post.confirmPurchaseDate {
-                    dateLabel1.text = processDate(date: confirmPurchaseDate)
-                } else if let auctionTransferredDate = post.auctionTransferredDate {
-                    dateLabel1.text = processDate(date: auctionTransferredDate)
-                }
-                dateLabel1.textColor = selectedColor
-                
-                circleShapeLayer2.fillColor = selectedColor.cgColor
-                circleShapeLayer2.strokeColor = selectedColor.cgColor
-                statusLabel2.textColor = selectedColor
-                
-                if let transferDate = post.transferDate {
-                    dateLabel2.text = processDate(date: transferDate)
-                } else if let auctionEndDate = post.auctionEndDate {
-                    dateLabel2.text = processDate(date: auctionEndDate)
-                }
-                dateLabel2.textColor = selectedColor
-                
-                circleShapeLayer3.fillColor = selectedColor.cgColor
-                circleShapeLayer3.strokeColor = selectedColor.cgColor
-                statusLabel3.textColor = selectedColor
-                
-                if let confirmReceived = post.confirmReceivedDate {
-                    dateLabel3.text = processDate(date: confirmReceived)
-                } else if let auctionTransferredDate = post.auctionTransferredDate {
-                    dateLabel3.text = processDate(date: auctionTransferredDate)
-                }
-            default:
-                circleShapeLayer.fillColor = UIColor.white.cgColor
-                circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
-                statusLabel1.textColor = .lightGray
-                
-                dateLabel1.text = ""
-                dateLabel1.textColor = .lightGray
-        }
-    }
-    
-    // 2 points
-    // (1 / 2) * (1 / 2) = 1 / 4
-    // 1 / 4, 3 / 4
-    
-    // 3 points
-    // (1 / 3) * (1 / 2) = 1 / 6
-    // 1 / 6, 5 / 5
-    
-    // 4 points
-    // (1 / 4) * (1 / 2) = 1 / 8
-    // 1 / 8, 7 / 8
-    
-    
-    
-    // MARK: - updatePath
-    final func updatePath() {
-        let offset: CGFloat = -20
-        let path = UIBezierPath()
-        path.move(to: CGPoint(x: meterContainer.bounds.width / 6, y: meterContainer.bounds.midY + offset))
-        path.addLine(to: CGPoint(x: (meterContainer.bounds.width / 6) * 5, y: meterContainer.bounds.midY + offset))
-        shapeLayer.path = path.cgPath
-        shapeLayer.lineWidth = lineWidth
-        
-        let circlePath = UIBezierPath(arcCenter: CGPoint(x: meterContainer.bounds.width / 6, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
-        circlePath.lineWidth = lineWidth
-        circleShapeLayer.path = circlePath.cgPath
-        circleShapeLayer.lineWidth = lineWidth
-        
-        let circlePath2 = UIBezierPath(arcCenter: CGPoint(x: meterContainer.bounds.midX, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
-        circlePath.lineWidth = lineWidth
-        circleShapeLayer2.path = circlePath2.cgPath
-        circleShapeLayer2.lineWidth = lineWidth
-        
-        let circlePath3 = UIBezierPath(arcCenter: CGPoint(x: (meterContainer.bounds.width / 6) * 5, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
-        circlePath.lineWidth = lineWidth
-        circleShapeLayer3.path = circlePath3.cgPath
-        circleShapeLayer3.lineWidth = lineWidth
-    }
-    
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        circleShapeLayer.fillColor = UIColor.white.cgColor
-        circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
-        statusLabel1.textColor = .lightGray
-        
-        dateLabel1.text = ""
-        dateLabel1.textColor = .lightGray
-        
-        circleShapeLayer2.fillColor = UIColor.white.cgColor
-        circleShapeLayer2.strokeColor = UIColor.lightGray.cgColor
-        statusLabel2.textColor = selectedColor
-        
-        dateLabel1.text = ""
-        dateLabel1.textColor = selectedColor
-        
-        circleShapeLayer3.fillColor = UIColor.white.cgColor
-        circleShapeLayer3.strokeColor = UIColor.lightGray.cgColor
-        statusLabel3.textColor = selectedColor
-        
-        dateLabel1.text = ""
-        dateLabel1.textColor = selectedColor
-    }
-}
+//import UIKit
+//
+//class ProgressCell1: CardCell {
+//    class override var identifier: String {
+//        return "ProgressCell"
+//    }
+//    final let selectedColor = UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1)
+//
+//    final let INSET: CGFloat = 45
+//    final var strokeColor: UIColor = .gray {
+//        didSet {
+//            shapeLayer.strokeColor = strokeColor.cgColor
+//        }
+//    }
+//    final var lineWidth: CGFloat = 0.5 {
+//        didSet {
+//            updatePath()
+//        }
+//    }
+//
+//    final lazy var shapeLayer: CAShapeLayer = {
+//        let shapeLayer = CAShapeLayer()
+//        shapeLayer.strokeColor = strokeColor.cgColor
+//        shapeLayer.lineWidth = lineWidth
+//        return shapeLayer
+//    }()
+//
+//    final lazy var circleShapeLayer: CAShapeLayer = {
+//        let shapeLayer = CAShapeLayer()
+//        shapeLayer.strokeColor = strokeColor.cgColor
+//        shapeLayer.fillColor = UIColor.white.cgColor
+//        shapeLayer.lineWidth = lineWidth
+//        return shapeLayer
+//    }()
+//
+//    final lazy var circleShapeLayer2: CAShapeLayer = {
+//        let shapeLayer = CAShapeLayer()
+//        shapeLayer.strokeColor = strokeColor.cgColor
+//        shapeLayer.fillColor = UIColor.white.cgColor
+//        shapeLayer.lineWidth = lineWidth
+//        return shapeLayer
+//    }()
+//
+//    final lazy var circleShapeLayer3: CAShapeLayer = {
+//        let shapeLayer = CAShapeLayer()
+//        shapeLayer.strokeColor = strokeColor.cgColor
+//        shapeLayer.fillColor = UIColor.white.cgColor
+//        shapeLayer.lineWidth = lineWidth
+//        return shapeLayer
+//    }()
+//
+//    final var statusLabel1: UILabel!
+//    final var dateLabel1: UILabel!
+//    final var statusLabel2: UILabel!
+//    final var dateLabel2: UILabel!
+//    final var statusLabel3: UILabel!
+//    final var dateLabel3: UILabel!
+//    final var indicatorPanel: UIView!
+//    final var meterContainer: UIView!
+//
+//    override func configure(_ post: Post?) {
+//        super.configure(post)
+//        guard let post = post else { return }
+//
+//        meterContainer = UIView()
+//        meterContainer.layer.addSublayer(shapeLayer)
+//        meterContainer.layer.addSublayer(circleShapeLayer)
+//        meterContainer.layer.addSublayer(circleShapeLayer2)
+//        meterContainer.layer.addSublayer(circleShapeLayer3)
+//        meterContainer.translatesAutoresizingMaskIntoConstraints = false
+//        containerView.addSubview(meterContainer)
+//
+//        // category: all except digital
+//        // sale format: online direct
+//        // delivery method: shipping(Purchased, Transferred, Received), in person
+//
+//        // category: digital
+//        // sale format: online direct(Purchased, Transferred, Received), open auction(Bid, Auction Ended, Transferred)
+//        // delivery method: online transfer
+//
+//        if post.saleFormat == SaleFormat.openAuction.rawValue {
+//            statusLabel1 = createStatusLabel(text: AuctionStatus.bid.toDisplay)
+//            statusLabel2 = createStatusLabel(text: AuctionStatus.ended.toDisplay)
+//            statusLabel3 = createStatusLabel(text: AuctionStatus.transferred.toDisplay)
+//        } else {
+//            statusLabel1 = createStatusLabel(text: "Purchased")
+//            statusLabel2 = createStatusLabel(text: "Transferred")
+//            statusLabel3 = createStatusLabel(text: "Received")
+//        }
+//
+//        statusLabel1.textAlignment = .center
+//        meterContainer.addSubview(statusLabel1)
+//
+//        dateLabel1 = createStatusLabel(text: "")
+//        dateLabel1.textAlignment = .center
+//        meterContainer.addSubview(dateLabel1)
+//
+//        statusLabel2.textAlignment = .center
+//        meterContainer.addSubview(statusLabel2)
+//
+//        dateLabel2 = createStatusLabel(text: "")
+//        dateLabel2.textAlignment = .center
+//        meterContainer.addSubview(dateLabel2)
+//
+//        statusLabel3.textAlignment = .center
+//        meterContainer.addSubview(statusLabel3)
+//
+//        dateLabel3 = createStatusLabel(text: "")
+//        dateLabel3.textAlignment = .center
+//        meterContainer.addSubview(dateLabel3)
+//
+//        var progressConstraints = [NSLayoutConstraint]()
+//        if let files = post.files, files.count > 0 {
+//            progressConstraints += [
+//                meterContainer.topAnchor.constraint(equalTo: thumbImageView.bottomAnchor, constant: 10),
+//            ]
+//        } else {
+//            progressConstraints += [
+//                meterContainer.topAnchor.constraint(equalTo: descContainer.bottomAnchor, constant: 10),
+//            ]
+//        }
+//
+//        progressConstraints += [
+//            meterContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 0),
+//            meterContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: 0),
+//            meterContainer.heightAnchor.constraint(equalToConstant: 100),
+//
+//            dateLabel1.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor, constant: 0),
+//            dateLabel1.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: -5),
+//            dateLabel1.heightAnchor.constraint(equalToConstant: 30),
+//            dateLabel1.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
+//
+//            statusLabel1.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor, constant: 0),
+//            statusLabel1.bottomAnchor.constraint(equalTo: dateLabel1.topAnchor, constant: 0),
+//            statusLabel1.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
+//
+//            dateLabel2.centerXAnchor.constraint(equalTo: meterContainer.centerXAnchor, constant: 20),
+//            dateLabel2.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: -5),
+//            dateLabel2.heightAnchor.constraint(equalToConstant: 30),
+//            dateLabel2.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
+//
+//            statusLabel2.centerXAnchor.constraint(equalTo: meterContainer.centerXAnchor),
+//            statusLabel2.bottomAnchor.constraint(equalTo: dateLabel2.topAnchor, constant: -0),
+//            statusLabel2.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
+//
+//            dateLabel3.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor, constant: 0),
+//            dateLabel3.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: -5),
+//            dateLabel3.heightAnchor.constraint(equalToConstant: 30),
+//            dateLabel3.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
+//
+//            statusLabel3.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor, constant: 0),
+//            statusLabel3.bottomAnchor.constraint(equalTo: dateLabel3.topAnchor, constant: 0),
+//            statusLabel3.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
+//        ]
+//
+//        NSLayoutConstraint.activate(progressConstraints)
+//        meterContainer.layoutIfNeeded()
+//        dateLabel1.layoutIfNeeded()
+//        statusLabel1.layoutIfNeeded()
+//        updatePath()
+//        set(post: post)
+//    }
+//}
+//
+//extension ProgressCell1 {
+//    final func createStatusLabel(text: String) -> UILabel {
+//        let statusLabel = UILabel()
+//        statusLabel.text = text
+//        statusLabel.textColor = .lightGray
+//        statusLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+//        statusLabel.sizeToFit()
+//        statusLabel.translatesAutoresizingMaskIntoConstraints = false
+//        return statusLabel
+//    }
+//
+//    final func processDate(date: Date?) -> String? {
+//        guard let date = date else { return "" }
+//        let formatter = DateFormatter()
+//        formatter.dateStyle = .short
+//        let formattedDate = formatter.string(from: date)
+//        return formattedDate
+//    }
+//
+//    final func set(post: Post) {
+//        // progress sequence for the following:
+//
+//        // tangible (escrow) and digital online direct (escrow)
+//        // 1. ready (doesn't show on ProgressCell)
+//        // 2. pending
+//        // 3. transferred
+//        // 4. complete
+//
+//        // open auction
+//        // 1. ready (doesn't show on ProgressCell)
+//        // 2. bid
+//        // 3. ended (the auctionEnd method after the expiry)
+//        // 4. transferred (the digital asset transfer)
+//        switch post.status {
+//            case PostStatus.ready.rawValue:
+//                circleShapeLayer.fillColor = UIColor.white.cgColor
+//                circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
+//                statusLabel1.textColor = .lightGray
+//
+//                dateLabel1.text = ""
+//                dateLabel1.textColor = .lightGray
+//            // first node
+//            case PostStatus.pending.rawValue, AuctionStatus.bid.rawValue:
+//                circleShapeLayer.fillColor = selectedColor.cgColor
+//                circleShapeLayer.strokeColor = selectedColor.cgColor
+//                statusLabel1.textColor = selectedColor
+//
+//                if let confirmPurchaseDate = post.confirmPurchaseDate {
+//                    dateLabel1.text = processDate(date: confirmPurchaseDate)
+//                } else if let bidDate = post.bidDate  {
+//                    dateLabel1.text = processDate(date: bidDate)
+//                }
+//
+//                dateLabel1.textColor = selectedColor
+//            // second node
+//            case PostStatus.transferred.rawValue, AuctionStatus.ended.rawValue:
+//                circleShapeLayer.fillColor = selectedColor.cgColor
+//                circleShapeLayer.strokeColor = selectedColor.cgColor
+//                statusLabel1.textColor = selectedColor
+//
+//                if let confirmPurchaseDate = post.confirmPurchaseDate {
+//                    dateLabel1.text = processDate(date: confirmPurchaseDate)
+//                } else if let bidDate = post.bidDate {
+//                    dateLabel1.text = processDate(date: bidDate)
+//                }
+//                dateLabel1.textColor = selectedColor
+//
+//                circleShapeLayer2.fillColor = selectedColor.cgColor
+//                circleShapeLayer2.strokeColor = selectedColor.cgColor
+//                statusLabel2.textColor = selectedColor
+//
+//                if let transferDate = post.transferDate {
+//                    dateLabel2.text = processDate(date: transferDate)
+//                } else if let auctionEndDate = post.auctionEndDate {
+//                    dateLabel2.text = processDate(date: auctionEndDate)
+//                }
+//                dateLabel2.textColor = selectedColor
+//            case PostStatus.complete.rawValue, AuctionStatus.transferred.rawValue:
+//                circleShapeLayer.fillColor = selectedColor.cgColor
+//                circleShapeLayer.strokeColor = selectedColor.cgColor
+//                statusLabel1.textColor = selectedColor
+//
+//                if let confirmPurchaseDate = post.confirmPurchaseDate {
+//                    dateLabel1.text = processDate(date: confirmPurchaseDate)
+//                } else if let auctionTransferredDate = post.auctionTransferredDate {
+//                    dateLabel1.text = processDate(date: auctionTransferredDate)
+//                }
+//                dateLabel1.textColor = selectedColor
+//
+//                circleShapeLayer2.fillColor = selectedColor.cgColor
+//                circleShapeLayer2.strokeColor = selectedColor.cgColor
+//                statusLabel2.textColor = selectedColor
+//
+//                if let transferDate = post.transferDate {
+//                    dateLabel2.text = processDate(date: transferDate)
+//                } else if let auctionEndDate = post.auctionEndDate {
+//                    dateLabel2.text = processDate(date: auctionEndDate)
+//                }
+//                dateLabel2.textColor = selectedColor
+//
+//                circleShapeLayer3.fillColor = selectedColor.cgColor
+//                circleShapeLayer3.strokeColor = selectedColor.cgColor
+//                statusLabel3.textColor = selectedColor
+//
+//                if let confirmReceived = post.confirmReceivedDate {
+//                    dateLabel3.text = processDate(date: confirmReceived)
+//                } else if let auctionTransferredDate = post.auctionTransferredDate {
+//                    dateLabel3.text = processDate(date: auctionTransferredDate)
+//                }
+//            default:
+//                circleShapeLayer.fillColor = UIColor.white.cgColor
+//                circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
+//                statusLabel1.textColor = .lightGray
+//
+//                dateLabel1.text = ""
+//                dateLabel1.textColor = .lightGray
+//        }
+//    }
+//
+//    // 2 points
+//    // (1 / 2) * (1 / 2) = 1 / 4
+//    // 1 / 4, 3 / 4
+//
+//    // 3 points
+//    // (1 / 3) * (1 / 2) = 1 / 6
+//    // 1 / 6, 5 / 5
+//
+//    // 4 points
+//    // (1 / 4) * (1 / 2) = 1 / 8
+//    // 1 / 8, 7 / 8
+//
+//
+//
+//    // MARK: - updatePath
+//    final func updatePath() {
+//        let offset: CGFloat = -20
+//        let path = UIBezierPath()
+//        path.move(to: CGPoint(x: meterContainer.bounds.width / 6, y: meterContainer.bounds.midY + offset))
+//        path.addLine(to: CGPoint(x: (meterContainer.bounds.width / 6) * 5, y: meterContainer.bounds.midY + offset))
+//        shapeLayer.path = path.cgPath
+//        shapeLayer.lineWidth = lineWidth
+//
+//        let circlePath = UIBezierPath(arcCenter: CGPoint(x: meterContainer.bounds.width / 6, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
+//        circlePath.lineWidth = lineWidth
+//        circleShapeLayer.path = circlePath.cgPath
+//        circleShapeLayer.lineWidth = lineWidth
+//
+//        let circlePath2 = UIBezierPath(arcCenter: CGPoint(x: meterContainer.bounds.midX, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
+//        circlePath.lineWidth = lineWidth
+//        circleShapeLayer2.path = circlePath2.cgPath
+//        circleShapeLayer2.lineWidth = lineWidth
+//
+//        let circlePath3 = UIBezierPath(arcCenter: CGPoint(x: (meterContainer.bounds.width / 6) * 5, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
+//        circlePath.lineWidth = lineWidth
+//        circleShapeLayer3.path = circlePath3.cgPath
+//        circleShapeLayer3.lineWidth = lineWidth
+//    }
+//
+//    override func prepareForReuse() {
+//        super.prepareForReuse()
+//        circleShapeLayer.fillColor = UIColor.white.cgColor
+//        circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
+//        statusLabel1.textColor = .lightGray
+//
+//        dateLabel1.text = ""
+//        dateLabel1.textColor = .lightGray
+//
+//        circleShapeLayer2.fillColor = UIColor.white.cgColor
+//        circleShapeLayer2.strokeColor = UIColor.lightGray.cgColor
+//        statusLabel2.textColor = selectedColor
+//
+//        dateLabel1.text = ""
+//        dateLabel1.textColor = selectedColor
+//
+//        circleShapeLayer3.fillColor = UIColor.white.cgColor
+//        circleShapeLayer3.strokeColor = UIColor.lightGray.cgColor
+//        statusLabel3.textColor = selectedColor
+//
+//        dateLabel1.text = ""
+//        dateLabel1.textColor = selectedColor
+//    }
+//}
 
 //// auction first node
 //if let bidDate = post.bidDate {
@@ -1060,5 +1060,100 @@ extension ProgressCell1 {
 //                }
 //            } completion: {}
 //        }
+//    }
+//}
+
+//
+//  LocationSearchViewController.swift
+//  NFTrack-Firebase4
+//
+//  Created by J C on 2021-08-27.
+//
+
+
+//import UIKit
+//import MapKit
+//
+//class LocationSearchViewController: UITableViewController {
+//    var matchingItems = [MKMapItem]()
+//    var mapView : MKMapView? = nil
+//    var handleMapSearchDelegate: HandleMapSearch? = nil
+//    
+//    init(mapView: MKMapView) {
+//        super.init(nibName: nil, bundle: nil)
+//        self.mapView = mapView
+//    }
+//    
+//    required init?(coder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
+//    
+//    override func viewDidLoad() {
+//        super.viewDidLoad()
+//        tableView.register(AddressCell.self, forCellReuseIdentifier: AddressCell.reuseIdentifier)
+//        tableView.rowHeight = 70
+//    }
+//}
+//
+//// MARK:- Location search results
+//extension LocationSearchViewController: UISearchResultsUpdating {
+//    func updateSearchResults(for searchController: UISearchController) {
+//        guard let mapView = mapView, let searchBarText = searchController.searchBar.text else { return }
+//        
+//        let searchCompleter = MKLocalSearchCompleter()
+//        searchCompleter.delegate = self
+//        searchCompleter.region = MKCoordinateRegion(.world)
+//        searchCompleter.resultTypes = MKLocalSearchCompleter.ResultType([.address])
+//        searchCompleter.queryFragment = searchBarText
+//        
+//        //        let request = MKLocalSearch.Request()
+//        //        request.naturalLanguageQuery = searchBarText
+//        //        request.region = mapView.region
+//        //
+//        //        let search = MKLocalSearch(request: request)
+//        //        search.start { [weak self] (response, error) in
+//        //            guard let response = response else { return }
+//        //            self?.matchingItems.removeAll()
+//        //            self?.matchingItems.append(contentsOf: response.mapItems)
+//        //            self?.tableView.reloadData()
+//        //        }
+//    }
+//}
+//
+//extension LocationSearchViewController: MKLocalSearchCompleterDelegate {
+//    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+//        print("completer", completer)
+//        
+//        self.matchingItems.removeAll()
+//        self.matchingItems.append(contentsOf: completer.results)
+//        self.tableView.reloadData()
+//    }
+//    
+//    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+//        print("error", error)
+//    }
+//}
+//
+//// MARK: - Table view data source
+//extension LocationSearchViewController: ParseAddressDelegate {
+//    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+//        return matchingItems.count
+//    }
+//    
+//    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+//        guard let cell = tableView.dequeueReusableCell(withIdentifier: AddressCell.reuseIdentifier, for: indexPath) as? AddressCell else {
+//            fatalError()
+//        }
+//        
+//        let selectedItem = matchingItems[indexPath.row].placemark
+//        cell.mainLabel.text = selectedItem.name
+//        cell.detailLabel.text = parseAddress(selectedItem: selectedItem)
+//        return cell
+//    }
+//    
+//    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+//        let selectedItem = matchingItems[indexPath.row].placemark
+//        handleMapSearchDelegate?.dropPinZoomIn(placemark: selectedItem)
+//        dismiss(animated: true, completion: nil)
 //    }
 //}

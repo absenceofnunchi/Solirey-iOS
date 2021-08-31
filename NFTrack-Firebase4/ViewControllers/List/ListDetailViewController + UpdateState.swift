@@ -363,7 +363,7 @@ extension ListDetailViewController {
                                             break
                                         case .finished:
                                             self?.hideSpinner({
-                                                print("finished")
+                                                
                                             })
                                             break
                                     }

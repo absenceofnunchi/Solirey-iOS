@@ -200,9 +200,18 @@ extension AppDelegate : UNUserNotificationCenterDelegate, PostParseDelegate {
                     if let docId = userInfo["docId"] as? String,
                        let sellerUserId = userInfo["uid"] as? String,
                        let buyerUserId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId),
-                       let displayName = userInfo["displayName"] as? String {
+                       let displayName = userInfo[UserDefaultKeys.displayName] as? String {
+                        let address = userInfo[UserDefaultKeys.address] as? String
                         let chatModelCore = PostCoreModel(documentId: docId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
-                        let userInfo = UserInfo(email: nil, displayName: displayName, photoURL: nil, uid: nil, memberSince: nil)
+                        
+                        let userInfo = UserInfo(
+                            email: nil,
+                            displayName: displayName,
+                            photoURL: nil,
+                            uid: nil,
+                            memberSince: nil,
+                            address: address
+                        )
                         
                         if let tabBarController = rootViewController as? UITabBarController,
                            let navController = tabBarController.selectedViewController as? UINavigationController {

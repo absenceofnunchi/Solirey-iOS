@@ -58,7 +58,7 @@ class AlertViewController: UIPageViewController {
 }
 
 extension AlertViewController: DataFetchDelegate {
-    private func configure() {
+    private func configure() {        
         // used for indexing page vc's
         indexArray = contentArray.map { $0.index }
         

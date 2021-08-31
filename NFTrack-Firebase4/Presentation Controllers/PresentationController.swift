@@ -38,6 +38,7 @@ class PresentationController: UIPresentationController {
 //        presentedView?.translatesAutoresizingMaskIntoConstraints = true
         
         addKeyboardObserver()
+        hideKeyboardWhenTappedAround()
         
         guard let presentedView = presentedView, let containerView = containerView else { return }
         presentedView.translatesAutoresizingMaskIntoConstraints = false
@@ -51,13 +52,42 @@ class PresentationController: UIPresentationController {
     deinit {
         removeKeyboardObserver()
     }
+    
+    func hideKeyboardWhenTappedAround() {
+        guard let presentedView = presentedView else { return }
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        presentedView.addGestureRecognizer(tap)
+    }
+    
+    @objc func dismissKeyboard() {
+        guard let presentedView = presentedView,
+              let containerView = containerView else { return }
+        presentedView.endEditing(true)
+        
+        NSLayoutConstraint.deactivate(constraints)
+        presentedView.translatesAutoresizingMaskIntoConstraints = false
+        constraints.removeAll()
+        constraints.append(contentsOf: [
+            presentedView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            presentedView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            presentedView.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.8),
+            presentedView.heightAnchor.constraint(equalToConstant: height)
+        ])
+        
+        NSLayoutConstraint.activate(constraints)
+        
+        UIView.animate(withDuration: 0.5) {
+            containerView.layoutIfNeeded()
+        }
+    }
 }
 
 extension PresentationController {
     override func presentationTransitionWillBegin() {
         super.presentationTransitionWillBegin()
         
-        let superview = presentingViewController.view!
+        guard let superview = presentingViewController.view else { return }
         superview.addSubview(dimmingView)
         NSLayoutConstraint.activate([
             dimmingView.leadingAnchor.constraint(equalTo: superview.leadingAnchor),
@@ -98,13 +128,15 @@ extension PresentationController {
         NSLayoutConstraint.deactivate(constraints)
         guard let presentedView = presentedView, let containerView = containerView else { return }
         presentedView.translatesAutoresizingMaskIntoConstraints = false
-        let newConstraints = [
+        constraints.removeAll()
+        constraints.append(contentsOf: [
             presentedView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             presentedView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 100),
             presentedView.widthAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 0.8),
             presentedView.heightAnchor.constraint(equalToConstant: height)
-        ]
-        NSLayoutConstraint.activate(newConstraints)
+        ])
+        
+        NSLayoutConstraint.activate(constraints)
         
         UIView.animate(withDuration: 0.5) {
             containerView.layoutIfNeeded()

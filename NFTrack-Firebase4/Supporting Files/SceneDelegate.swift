@@ -7,10 +7,12 @@
 
 import UIKit
 import Firebase
+import Combine
 
-class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserAddressConfigurable {
 
     var window: UIWindow?
+    var storage = Set<AnyCancellable>()
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
@@ -20,11 +22,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 
         if let windowScene = scene as? UIWindowScene {
             self.window = UIWindow(windowScene: windowScene)
-            Auth.auth().addStateDidChangeListener { (auth, user) in
+            Auth.auth().addStateDidChangeListener { [weak self] (auth, user) in
                 if let user = user {
                     UserDefaults.standard.set(user.uid, forKey: UserDefaultKeys.userId)
                     UserDefaults.standard.set(user.displayName, forKey: UserDefaultKeys.displayName)
-                    
+                                        
                     if let photoURL = user.photoURL {
                         let photoURL = "\(String(describing: photoURL))"
                         UserDefaults.standard.set(photoURL, forKey: UserDefaultKeys.photoURL)
@@ -32,6 +34,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                         UserDefaults.standard.set("NA", forKey: UserDefaultKeys.photoURL)
                     }
                     
+                    Future<String?, PostingError> { promise in
+                        self?.fetchAddress(userId: user.uid, promise: promise)
+                    }
+                    .sink { (completion) in
+                        print(completion)
+                    } receiveValue: { (address) in
+                        UserDefaults.standard.set(address, forKey: UserDefaultKeys.address)
+                    }
+                    .store(in: &self!.storage)
+
 //                    var urlString: String!
 //
 //                    if user.photoURL != nil {
@@ -82,12 +94,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     let acctNav = UINavigationController(rootViewController: acctVC)
                     tabBar.addChild(acctNav)
                     
-                    self.window!.rootViewController = tabBar
+                    self?.window!.rootViewController = tabBar
                 } else {
-                    self.window!.rootViewController = SignInViewController()
+                    self?.window!.rootViewController = SignInViewController()
                 }
                 
-                self.window!.makeKeyAndVisible()
+                self?.window!.makeKeyAndVisible()
             }
         }
     }

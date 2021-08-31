@@ -8,6 +8,7 @@
 import UIKit
 import FirebaseFirestore
 import FirebaseStorage
+import MapKit
 
 // WalletViewController
 protocol WalletDelegate: AnyObject {
@@ -169,6 +170,7 @@ protocol FileUploadable where Self:UIViewController {
     func uploadFile(fileURL: URL, userId: String, completion: @escaping (URL) -> Void)
     func uploadFile(fileName: String, userId: String, completion: @escaping (URL) -> Void)
     func uploadFileWithPromise(fileURL: URL, userId: String, promise: @escaping (Result<String?, PostingError>) -> Void)
+    func uploadFileWithPromise(fileName: String, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void)
     func deleteFile(fileName: String)
     func saveImage(imageName: String, image: UIImage) -> URL?
     func saveFile(fileName: String, data: Data)
@@ -398,6 +400,66 @@ extension FileUploadable {
         }
     }
     
+    func uploadFileWithPromise(fileName: String, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void) {
+        FirebaseService.shared.uploadFile(fileName: fileName, userId: userId) { [weak self](uploadTask, fileUploadError) in
+            if let error = fileUploadError {
+                switch error {
+                    case .fileManagerError(let msg):
+                        promise(.failure(.generalError(reason: msg)))
+                    case .fileNotAvailable:
+                        promise(.failure(.generalError(reason: "Image file not found.")))
+                    case .userNotLoggedIn:
+                        promise(.failure(.generalError(reason: "You need to be logged in!")))
+                }
+            }
+            
+            if let uploadTask = uploadTask {
+                // Listen for state changes, errors, and completion of the upload.
+                uploadTask.observe(.success) { snapshot in
+                    // Upload completed successfully
+                    self?.deleteFile(fileName: fileName)
+                    snapshot.reference.downloadURL { (url, error) in
+                        if let _ = error {
+                            promise(.failure(.generalError(reason: "Unable to upload.")))
+                        }
+                        
+                        promise(.success(url))
+                    }
+                }
+                
+                uploadTask.observe(.failure) { snapshot in
+                    if let error = snapshot.error as NSError? {
+                        switch (StorageErrorCode(rawValue: error.code)!) {
+                            case .objectNotFound:
+                                // File doesn't exist
+                                promise(.failure(.generalError(reason: "Object not found")))
+                                break
+                            case .unauthorized:
+                                // User doesn't have permission to access file
+                                promise(.failure(.generalError(reason: "Upload unauthorized")))
+                                break
+                            case .cancelled:
+                                // User canceled the upload
+                                promise(.failure(.generalError(reason: "Upload cancelled")))
+                                break
+                                
+                            /* ... */
+                            
+                            case .unknown:
+                                // Unknown error occurred, inspect the server response
+                                promise(.failure(.generalError(reason: "Unknown Error")))
+                                break
+                            default:
+                                // A separate error occurred. This is a good place to retry the upload.
+                                promise(.failure(.generalError(reason: "Unknown error. Please try again.")))
+                                break
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     // MARK: - deleteFile
     func deleteFile(fileName: String) {
         // delete images from the system
@@ -555,12 +617,14 @@ extension UsernameBannerConfigurable {
                     let displayName = data[UserDefaultKeys.displayName] as? String
                     let photoURL = data[UserDefaultKeys.photoURL] as? String
                     let memberSince = data[UserDefaultKeys.memberSince] as? Timestamp
+                    let address = data[UserDefaultKeys.address] as? String
                     let userInfo = UserInfo(
                         email: nil,
                         displayName: displayName!,
                         photoURL: photoURL,
                         uid: id,
-                        memberSince: memberSince?.dateValue()
+                        memberSince: memberSince?.dateValue(),
+                        address: address
                     )
                     self?.userInfo = userInfo
                 }
@@ -577,11 +641,10 @@ extension UsernameBannerConfigurable {
     }
     
     func processProfileImage() {
-        displayNameLabel.text = userInfo.displayName
+        displayNameLabel?.text = userInfo.displayName
         if let info = self.userInfo,
            info.photoURL != "NA",
            let photoURL = self.userInfo.photoURL {
-            print("photoURL", photoURL)
             FirebaseService.shared.downloadImage(urlString: photoURL) { [weak self] (image, error) in
                 guard let strongSelf = self else { return }
                 if let _ = error {
@@ -672,6 +735,40 @@ extension UsernameBannerConfigurable {
             underLineView.trailingAnchor.constraint(equalTo: usernameContainer.trailingAnchor),
             underLineView.heightAnchor.constraint(equalToConstant: 0.2)
         ])
+    }
+}
+
+protocol FetchUserAddressConfigurable {
+    func fetchAddress(userId: String, promise: @escaping (Result<String?, PostingError>) -> Void)
+}
+
+extension FetchUserAddressConfigurable {
+    func fetchAddress(
+        userId: String,
+        promise: @escaping (Result<String?, PostingError>) -> Void
+    ) {
+        FirebaseService.shared.db
+            .collection("user")
+            .document(userId)
+            .getDocument { (document, error) in
+                guard error == nil else {
+                    promise(.failure(.generalError(reason: "Unable to retrieve the account info.")))
+                    return
+                }
+                
+                guard let document = document,
+                      document.exists,
+                      let data = document.data() else {
+                    promise(.failure(.generalError(reason: "Unable to retrieve the account info.")))
+                    return
+                }
+                
+                if let address = data["address"] as? String {
+                    promise(.success(address))
+                } else {
+                    promise(.success(nil))
+                }
+            }
     }
 }
 
@@ -773,7 +870,7 @@ extension PostParseDelegate {
         guard let querySnapshot = querySnapshot else { return nil }
         for document in querySnapshot.documents {
             let data = document.data()
-            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat: String!
+            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
             var files, savedBy: [String]?
             data.forEach { (item) in
@@ -841,6 +938,8 @@ extension PostParseDelegate {
                     case "auctionTransferredDate":
                         let timeStamp = item.value as? Timestamp
                         auctionTransferredDate = timeStamp?.dateValue()
+                    case "address":
+                        address = item.value as? String
                     default:
                         break
                 }
@@ -875,7 +974,8 @@ extension PostParseDelegate {
                 saleFormat: saleFormat,
                 bidDate: bidDate,
                 auctionEndDate: auctionEndDate,
-                auctionTransferredDate: auctionTransferredDate
+                auctionTransferredDate: auctionTransferredDate,
+                address: address
             )
             
             postArr.append(post)
@@ -885,7 +985,7 @@ extension PostParseDelegate {
     
     func parseDocument(document: DocumentSnapshot) -> Post? {
         guard let data = document.data() else { return nil }
-        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat: String!
+        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address: String!
         var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
         var files, savedBy: [String]?
         data.forEach { (item) in
@@ -953,6 +1053,8 @@ extension PostParseDelegate {
                 case "auctionTransferredDate":
                     let timeStamp = item.value as? Timestamp
                     auctionTransferredDate = timeStamp?.dateValue()
+                case "address":
+                    address = item.value as? String
                 default:
                     break
             }
@@ -987,7 +1089,8 @@ extension PostParseDelegate {
             saleFormat: saleFormat,
             bidDate: bidDate,
             auctionEndDate: auctionEndDate,
-            auctionTransferredDate: auctionTransferredDate
+            auctionTransferredDate: auctionTransferredDate,
+            address: address
         )
         return post
     }
@@ -1053,5 +1156,82 @@ extension SharableDelegate {
             pop.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.height, width: 0, height: 0)
             pop.permittedArrowDirections = []
         }
+    }
+}
+
+protocol HandleMapSearch {
+    func dropPinZoomIn(placemark: MKPlacemark)
+}
+
+protocol ParseAddressDelegate {
+    func parseAddress<T: MKPlacemark>(selectedItem: T) -> String
+}
+
+extension ParseAddressDelegate {
+    func parseAddress<T: MKPlacemark>(selectedItem: T) -> String {
+        let firstSpace = (selectedItem.thoroughfare != nil && selectedItem.subThoroughfare != nil) ? " ": ""
+        let comma = (selectedItem.subThoroughfare != nil || selectedItem.thoroughfare != nil) && (selectedItem.subAdministrativeArea != nil || selectedItem.administrativeArea != nil) ? ", ": ""
+        let secondSpace = (selectedItem.subAdministrativeArea != nil && selectedItem.administrativeArea != nil) ? " ": ""
+        let addressLine = String(
+            format: "%@%@%@%@%@%@%@%@%@",
+            // street number
+            selectedItem.subThoroughfare ?? "",
+            firstSpace,
+            // street name
+            selectedItem.thoroughfare ?? "",
+            comma,
+            // city
+            selectedItem.locality ?? "",
+            secondSpace,
+            // state or province
+            selectedItem.administrativeArea ?? "",
+            " ",
+            // postal code
+            selectedItem.postalCode ?? ""
+        )
+        return addressLine
+    }
+    
+    func parseAddress<T: MKPlacemark>(selectedItem: T, scope: ShippingRestriction) -> String {
+        let firstSpace = (selectedItem.thoroughfare != nil && selectedItem.subThoroughfare != nil) ? " ": ""
+        let comma = (selectedItem.subThoroughfare != nil || selectedItem.thoroughfare != nil) && (selectedItem.subAdministrativeArea != nil || selectedItem.administrativeArea != nil) ? ", ": ""
+        let secondSpace = (selectedItem.subAdministrativeArea != nil && selectedItem.administrativeArea != nil) ? " ": ""
+        
+        var addressLine: String!
+        
+        switch scope {
+            case .cities:
+                addressLine = String(
+                    format: "%@%@%@%@%@",
+                    // city
+                    selectedItem.locality ?? "",
+                    secondSpace,
+                    // state or province
+                    selectedItem.administrativeArea ?? "",
+                    " ",
+                    // postal code
+                    selectedItem.postalCode ?? ""
+                )
+            default:
+                <#code#>
+        }
+        String(
+            format: "%@%@%@%@%@%@%@%@%@",
+            // street number
+            selectedItem.subThoroughfare ?? "",
+            firstSpace,
+            // street name
+            selectedItem.thoroughfare ?? "",
+            comma,
+            // city
+            selectedItem.locality ?? "",
+            secondSpace,
+            // state or province
+            selectedItem.administrativeArea ?? "",
+            " ",
+            // postal code
+            selectedItem.postalCode ?? ""
+        )
+        return addressLine
     }
 }
