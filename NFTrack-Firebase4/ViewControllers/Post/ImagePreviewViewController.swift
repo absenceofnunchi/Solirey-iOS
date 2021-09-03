@@ -33,7 +33,6 @@ struct PreviewData {
 class ImagePreviewViewController: UIViewController {
     var data: [PreviewData]! = [] {
         didSet {
-            guard let collectionView = collectionView else { return }
             if data.count > 0 {
                 data = NSOrderedSet(array: data).array as? [PreviewData]
             }

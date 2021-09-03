@@ -898,16 +898,24 @@ extension TransactionService {
         topics: [String],
         urlStrings: [String?],
         ipfsURLStrings: [String?],
+        shippingInfo: ShippingInfo? = nil,
         promise: @escaping (Result<Int, PostingError>) -> Void
     ) {
         let ref = self.db.collection("post")
         let id = ref.document().documentID
         // for deleting photos afterwards
         documentId = id
+                
+        let shippingInfoData: [String: Any] = [
+            "scope": shippingInfo?.scope.stringValue ?? "NA" as String,
+            "addresses": shippingInfo?.addresses ?? [] as [String],
+            "radius": shippingInfo?.radius ?? 0,
+            "longitude": shippingInfo?.longitude ?? 0,
+            "latitude": shippingInfo?.latitude ?? 0
+        ]
         
-        // txHash is either minting or transferring the ownership
-        self.db.collection("post").document(id).setData([
-            "sellerUserId": userId,
+        let postData: [String: Any] = [
+            "sellerUserId": userId as Any,
             "senderAddress": senderAddress,
             "escrowHash": escrowHash,
             "auctionHash": auctionHash,
@@ -929,7 +937,11 @@ extension TransactionService {
             "paymentMethod": paymentMethod,
             "bidderTokens": [],
             "bidders": [],
-        ]) { (error) in
+            "shippingInfo": shippingInfoData
+        ]
+        
+        // txHash is either minting or transferring the ownership
+        ref.document(id).setData(postData) { (error) in
             if let error = error {
                 promise(.failure(.generalError(reason: error.localizedDescription)))
             } else {

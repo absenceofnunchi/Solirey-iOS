@@ -155,7 +155,15 @@ extension ListDetailViewController {
                             }
                             self?.configureStatusButton(buttonTitle: PurchaseMethods.abort.rawValue, tag: 1)
                         } else {
-                            self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmPurchase.rawValue, tag: 2)
+                            // The purchase button should only be available to the potential buyer that meets the shipping criteria.
+
+                            if self?.post.shippingInfo?.scope != .none {
+                            
+                                
+                                self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmPurchase.rawValue, tag: 2)
+                            } else {
+                                self?.configureStatusButton(buttonTitle: "Unspecified Shipping Information", tag: 50000)
+                            }
                         }
                         break
                     case "1":

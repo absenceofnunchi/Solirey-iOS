@@ -160,6 +160,11 @@ class PostViewController: ParentPostViewController {
 //            return
 //        }
         
+        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+            return
+        }
+        
         guard let NFTrackAddress = NFTrackAddress else {
             self.alert.showDetail("Sorry", with: "There was an error loading the minting contract address.", for: self)
             return
@@ -311,6 +316,7 @@ class PostViewController: ParentPostViewController {
                                             senderAddress = txResult.senderAddress
                                         }
                                         print("STEP 8")
+                                        print("self.shippingInfo", self.shippingInfo as Any)
                                         
                                         return Future<Int, PostingError> { promise in
                                             self.transactionService.createFireStoreEntry(
@@ -332,6 +338,7 @@ class PostViewController: ParentPostViewController {
                                                 topics: topicsRetainer,
                                                 urlStrings: urlStrings,
                                                 ipfsURLStrings: [],
+                                                shippingInfo: self.shippingInfo,
                                                 promise: promise
                                             )
                                         }
@@ -390,6 +397,13 @@ class PostViewController: ParentPostViewController {
                                                 self.pickerLabel.text?.removeAll()
                                                 self.tagTextField.tokens.removeAll()
                                                 self.paymentMethodLabel.text?.removeAll()
+                                                self.addressLabel.text?.removeAll()
+                                                self.addressLabelConstraintHeight.constant = 0
+                                                self.addressTitleLabel.alpha = 0
+                                                self.addressLabel.alpha = 0
+                                                self.addressLabel.isUserInteractionEnabled = false
+                                                self.addressTitleLabelConstraintHeight.constant = 0
+                                                self.addressLabelConstraintHeight.constant = 0
                                             }
                                             
                                             // remove the image and file previews

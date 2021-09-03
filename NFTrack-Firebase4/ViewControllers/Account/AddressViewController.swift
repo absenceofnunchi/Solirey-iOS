@@ -52,6 +52,7 @@ class AddressViewController: UIViewController {
         searchBar.sizeToFit()
         searchBar.placeholder = "Search for places"
         navigationItem.titleView = searchBar
+//        navigationItem.searchController = resultSearchController
         resultSearchController?.hidesNavigationBarDuringPresentation = false
         resultSearchController?.obscuresBackgroundDuringPresentation = true
         definesPresentationContext = true
@@ -111,7 +112,6 @@ extension AddressViewController {
 
 extension AddressViewController: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        print("Location services authorization request")
         // When the authorization is given, the location should be updated.
         // But even before the authorization is given, the LocationVC shouldn't be prevented from being instantiated.
         locationSearchVC.location = location

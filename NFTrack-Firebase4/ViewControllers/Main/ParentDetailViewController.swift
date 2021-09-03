@@ -89,6 +89,8 @@ class ParentDetailViewController: UIViewController, SharableDelegate {
         configureImageDisplay(post: post, v: scrollView)
         configureUI()
         setConstraints()
+        
+        print("post", post)
     }
     
     // called when fetchUserData fetched data and assigns it to userInfo

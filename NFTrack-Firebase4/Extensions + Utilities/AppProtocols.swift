@@ -870,9 +870,12 @@ extension PostParseDelegate {
         guard let querySnapshot = querySnapshot else { return nil }
         for document in querySnapshot.documents {
             let data = document.data()
-            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address: String!
+            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, longitude, latitude: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
-            var files, savedBy: [String]?
+            var files, savedBy, addresses: [String]?
+            var scope: ShippingRestriction!
+            var radius: Double!
+            var shippingInfo: ShippingInfo!
             data.forEach { (item) in
                 switch item.key {
                     case "sellerUserId":
@@ -940,6 +943,38 @@ extension PostParseDelegate {
                         auctionTransferredDate = timeStamp?.dateValue()
                     case "address":
                         address = item.value as? String
+                    case "shippingInfo":
+                        if let si = item.value as? [String: Any] {
+                            guard let shippingRestriction = si["scope"] as? String,
+                                  let scope = ShippingRestriction(rawValue: shippingRestriction),
+                                  let addresses = si["addresses"] as? [String],
+                                  let radius = si["radius"] as? Double,
+                                  let longitude = si["longitude"] as? Double,
+                                  let latitude = si["latitude"] as? Double else { return }
+
+                            shippingInfo = ShippingInfo(
+                                scope: scope,
+                                addresses: addresses,
+                                radius: radius,
+                                longitude: longitude,
+                                latitude: latitude
+                            )
+                        }
+                        
+//                        print("item.value as? String", item.value as? String as Any)
+//                        if let temp = item.value as? String, let shippingRestriction = ShippingRestriction(rawValue: temp) {
+//                            scope = shippingRestriction
+//                        }
+//                    case "addresses":
+//                        // shipping addresses specified by the seller, which addresses they're willing to ship to
+//                        addresses = item.value as? [String]
+//                    case "radius":
+//                        radius = item.value as? Double
+//                    case "longitude":
+//                        longitude = item.value as? String
+//                    case "latitude":
+//                        latitude = item.value as? String
+                        break
                     default:
                         break
                 }
@@ -975,7 +1010,8 @@ extension PostParseDelegate {
                 bidDate: bidDate,
                 auctionEndDate: auctionEndDate,
                 auctionTransferredDate: auctionTransferredDate,
-                address: address
+                address: address,
+                shippingInfo: shippingInfo
             )
             
             postArr.append(post)
@@ -985,9 +1021,12 @@ extension PostParseDelegate {
     
     func parseDocument(document: DocumentSnapshot) -> Post? {
         guard let data = document.data() else { return nil }
-        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address: String!
+        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, longitude, latitude: String!
         var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
-        var files, savedBy: [String]?
+        var files, savedBy, addresses: [String]?
+        var scope: ShippingRestriction!
+        var radius: Double!
+        var shippingInfo: ShippingInfo!
         data.forEach { (item) in
             switch item.key {
                 case "sellerUserId":
@@ -1054,11 +1093,33 @@ extension PostParseDelegate {
                     let timeStamp = item.value as? Timestamp
                     auctionTransferredDate = timeStamp?.dateValue()
                 case "address":
+                    // the shipping address of the buyer
                     address = item.value as? String
+                case "scope":
+                    if let temp = item.value as? String, let shippingRestriction = ShippingRestriction(rawValue: temp) {
+                        scope = shippingRestriction
+                    }
+                case "addresses":
+                    // shipping addresses specified by the seller, which addresses they're willing to ship to
+                    addresses = item.value as? [String]
+                case "radius":
+                    radius = item.value as? Double
+//                case "longitude":
+//                    longitude = item.value as? String
+//                case "latitude":
+//                    latitude = item.value as? String
                 default:
                     break
             }
         }
+        
+//        let shippingInfo = ShippingInfo(
+//            scope: scope,
+//            addresses: addresses ?? [],
+//            radius: radius,
+//            longitude: longitude,
+//            latitude: latitude
+//        )
         
         let post = Post(
             documentId: document.documentID,
@@ -1090,7 +1151,8 @@ extension PostParseDelegate {
             bidDate: bidDate,
             auctionEndDate: auctionEndDate,
             auctionTransferredDate: auctionTransferredDate,
-            address: address
+            address: address,
+            shippingInfo: shippingInfo
         )
         return post
     }
@@ -1159,8 +1221,42 @@ extension SharableDelegate {
     }
 }
 
-protocol HandleMapSearch {
-    func dropPinZoomIn(placemark: MKPlacemark)
+protocol HandleMapSearch: AnyObject {
+    func dropPinZoomIn(placemark: MKPlacemark,
+                       addressString: String?,
+                       scope: ShippingRestriction?)
+    func getPlacemark( addressString : String,
+                       completionHandler: @escaping(MKPlacemark?, NSError?) -> Void )
+    func resetSearchResults()
+}
+
+extension HandleMapSearch {
+    func dropPinZoomIn(placemark: MKPlacemark,
+                       addressString: String? = nil,
+                       scope: ShippingRestriction? = .cities) {
+        
+    }
+    
+    func getPlacemark( addressString : String,
+                       completionHandler: @escaping(MKPlacemark?, NSError?) -> Void ) {
+        let geocoder = CLGeocoder()
+        geocoder.geocodeAddressString(addressString) { (placemarks, error) in
+            if error == nil {
+                if let placemark = placemarks?.first,
+                   let location = placemark.location {
+                    let pm = MKPlacemark(coordinate: location.coordinate)
+                    completionHandler(pm, nil)
+                    return
+                }
+            }
+            
+            completionHandler(nil, error as NSError?)
+        }
+    }
+    
+    func resetSearchResults() {
+        
+    }
 }
 
 protocol ParseAddressDelegate {
@@ -1196,39 +1292,99 @@ extension ParseAddressDelegate {
         let firstSpace = (selectedItem.thoroughfare != nil && selectedItem.subThoroughfare != nil) ? " ": ""
         let comma = (selectedItem.subThoroughfare != nil || selectedItem.thoroughfare != nil) && (selectedItem.subAdministrativeArea != nil || selectedItem.administrativeArea != nil) ? ", ": ""
         let secondSpace = (selectedItem.subAdministrativeArea != nil && selectedItem.administrativeArea != nil) ? " ": ""
-        
         var addressLine: String!
-        
+                
         switch scope {
             case .cities:
                 addressLine = String(
-                    format: "%@%@%@",
+                    format: "%@%@%@%@%@",
                     // city
                     selectedItem.locality ?? "",
                     secondSpace,
                     // state or province
-                    selectedItem.administrativeArea ?? ""
+                    selectedItem.administrativeArea ?? "",
+                    " ",
+                    // country
+                    selectedItem.country ?? ""
                 )
-            default:
+            case .state:
+                addressLine = String(
+                    format: "%@%@%@",
+                    // state or province
+                    selectedItem.administrativeArea ?? "",
+                    " ",
+                    // country
+                    selectedItem.country ?? ""
+                )
+                break
+            case .country:
+                addressLine = selectedItem.country ?? ""
+                break
+            case .distance:
+                addressLine = String(
+                    format: "%@%@%@%@%@%@%@%@%@",
+                    // street number
+                    selectedItem.subThoroughfare ?? "",
+                    firstSpace,
+                    // street name
+                    selectedItem.thoroughfare ?? "",
+                    comma,
+                    // city
+                    selectedItem.locality ?? "",
+                    secondSpace,
+                    // state or province
+                    selectedItem.administrativeArea ?? "",
+                    " ",
+                    // postal code
+                    selectedItem.postalCode ?? ""
+                )
                 break
         }
-//        String(
-//            format: "%@%@%@%@%@%@%@%@%@",
-//            // street number
-//            selectedItem.subThoroughfare ?? "",
-//            firstSpace,
-//            // street name
-//            selectedItem.thoroughfare ?? "",
-//            comma,
-//            // city
-//            selectedItem.locality ?? "",
-//            secondSpace,
-//            // state or province
-//            selectedItem.administrativeArea ?? "",
-//            " ",
-//            // postal code
-//            selectedItem.postalCode ?? ""
-//        )
+
         return addressLine
+    }
+}
+
+protocol TokenConfigurable {
+    func createSearchToken(text: String, index: Int) -> UISearchToken
+    func suggestedColor(fromIndex: Int) -> UIColor
+}
+
+extension TokenConfigurable {
+    func createSearchToken(text: String, index: Int) -> UISearchToken {
+        let tokenColor = suggestedColor(fromIndex: index)
+        let image = UIImage(systemName: "circle.fill")?.withTintColor(tokenColor, renderingMode: .alwaysOriginal)
+        let searchToken = UISearchToken(icon: image, text: text)
+        searchToken.representedObject = text
+        return searchToken
+    }
+    
+    // colors for the tokens
+    func suggestedColor(fromIndex: Int) -> UIColor {
+        var suggestedColor: UIColor!
+        switch fromIndex {
+            case 0:
+                suggestedColor = UIColor.red
+            case 1:
+                suggestedColor = UIColor.orange
+            case 2:
+                suggestedColor = UIColor.yellow
+            case 3:
+                suggestedColor = UIColor.green
+            case 4:
+                suggestedColor = UIColor.blue
+            case 5:
+                suggestedColor = UIColor.purple
+            case 6:
+                suggestedColor = UIColor.brown
+            case 7:
+                suggestedColor = UIColor(red: 93/255, green: 109/255, blue: 126/255, alpha: 1)
+            case 8:
+                suggestedColor = UIColor(red: 245/255, green: 176/255, blue: 65/255, alpha: 1)
+            default:
+                suggestedColor = UIColor.cyan
+        }
+        
+        return suggestedColor
     }
 }

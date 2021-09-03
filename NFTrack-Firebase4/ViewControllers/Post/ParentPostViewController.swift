@@ -12,7 +12,7 @@ import Firebase
 import web3swift
 import QuickLook
 
-class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
+class ParentPostViewController: UIViewController, ButtonPanelConfigurable, TokenConfigurable, ShippingDelegate {
     let db = FirebaseService.shared.db!
     var scrollView: UIScrollView!
     var titleLabel: UILabel!
@@ -36,7 +36,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
                 addressLabel.isUserInteractionEnabled = true
                 addressTitleLabelConstraintHeight.constant = 50
                 addressLabelConstraintHeight.constant = 50
-                
+                saleMethodTopConstraint.constant = 20
                 UIView.animate(withDuration: 0.5) { [weak self] in
                     self?.view.layoutIfNeeded()
                 }
@@ -46,6 +46,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
                 addressLabel.isUserInteractionEnabled = false
                 addressTitleLabelConstraintHeight.constant = 0
                 addressLabelConstraintHeight.constant = 0
+                saleMethodTopConstraint.constant = 0
                 
                 UIView.animate(withDuration: 0.5) { [weak self] in
                     self?.view.layoutIfNeeded()
@@ -60,6 +61,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
     var paymentMethodTitleLabel: UILabel!
     var paymentInfoButton: UIButton!
     var paymentMethodLabel: UILabel!
+    lazy var saleMethodTopConstraint: NSLayoutConstraint! = saleMethodTitleLabel.topAnchor.constraint(equalTo: addressLabel.bottomAnchor, constant: 0)
     var saleMethodInfoButton: UIButton!
     var saleMethodTitleLabel: UILabel!
     var saleMethodLabelContainer: UIView!
@@ -83,7 +85,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
                 DispatchQueue.main.async { [weak self] in
                     self?.imagePreviewVC.view.isHidden = false
                     self?.imagePreviewConstraintHeight.constant = self!.IMAGE_PREVIEW_HEIGHT
-                    UIView.animate(withDuration: 0.5) {
+                    UIView.animate(withDuration: 0.4) {
                         self?.view.layoutIfNeeded()
                     } completion: { (_) in
                         guard let `self` = self else { return }
@@ -94,7 +96,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
                 DispatchQueue.main.async { [weak self] in
                     self?.imagePreviewVC.view.isHidden = true
                     self?.imagePreviewConstraintHeight.constant = 0
-                    UIView.animate(withDuration: 0.5) {
+                    UIView.animate(withDuration: 0.4) {
                         self?.view.layoutIfNeeded()
                     } completion: { (_) in
                         guard let `self` = self else { return }
@@ -151,6 +153,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable {
     var escrowHash: String!
     var mintHash: String!
     var senderAddress: String!
+    var shippingInfo: ShippingInfo!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -421,7 +424,7 @@ extension ParentPostViewController {
             addressLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             addressLabelConstraintHeight,
             
-            saleMethodTitleLabel.topAnchor.constraint(equalTo: addressLabel.bottomAnchor, constant: 20),
+            saleMethodTopConstraint,
             saleMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
             saleMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50),
             saleMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
@@ -561,47 +564,19 @@ extension ParentPostViewController {
         switch v.tag {
             case 11:
                 let shippingVC = ShippingViewController()
+                shippingVC.shippingDelegate = self
                 navigationController?.pushViewController(shippingVC, animated: true)
             default:
                 break
         }
     }
     
-    func createSearchToken(text: String, index: Int) -> UISearchToken {
-        let tokenColor = suggestedColor(fromIndex: index)
-        let image = UIImage(systemName: "circle.fill")?.withTintColor(tokenColor, renderingMode: .alwaysOriginal)
-        let searchToken = UISearchToken(icon: image, text: text)
-        searchToken.representedObject = text
-        return searchToken
-    }
-    
-    // colors for the tokens
-    func suggestedColor(fromIndex: Int) -> UIColor {
-        var suggestedColor: UIColor!
-        switch fromIndex {
-            case 0:
-                suggestedColor = UIColor.red
-            case 1:
-                suggestedColor = UIColor.orange
-            case 2:
-                suggestedColor = UIColor.yellow
-            case 3:
-                suggestedColor = UIColor.green
-            case 4:
-                suggestedColor = UIColor.blue
-            case 5:
-                suggestedColor = UIColor.purple
-            case 6:
-                suggestedColor = UIColor.brown
-            case 7:
-                suggestedColor = UIColor(red: 93/255, green: 109/255, blue: 126/255, alpha: 1)
-            case 8:
-                suggestedColor = UIColor(red: 245/255, green: 176/255, blue: 65/255, alpha: 1)
-            default:
-                suggestedColor = UIColor.cyan
-        }
+    func didFetchShippingInfo(_ shippingInfo: ShippingInfo) {
+        self.shippingInfo = shippingInfo
         
-        return suggestedColor
+        if let address = shippingInfo.addresses.first {
+            addressLabel.text = address
+        }
     }
 }
 

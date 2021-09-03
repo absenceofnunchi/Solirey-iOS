@@ -105,6 +105,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var auctionEndDate: Date?
     var auctionTransferredDate: Date?
     var address: String?
+    var shippingInfo: ShippingInfo?
     
     init(
         documentId: String,
@@ -136,7 +137,8 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         bidDate: Date?,
         auctionEndDate: Date?,
         auctionTransferredDate: Date?,
-        address: String?
+        address: String?,
+        shippingInfo: ShippingInfo?
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
@@ -167,6 +169,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.auctionEndDate = auctionEndDate
         self.auctionTransferredDate = auctionTransferredDate
         self.address = address
+        self.shippingInfo = shippingInfo
     }
 }
 
@@ -385,6 +388,21 @@ extension ShippingRestriction: RawRepresentable, CaseCountable {
             case 2:
                 self = .country
             case 3:
+                self = .distance
+            default:
+                return nil
+        }
+    }
+    
+    init?(rawValue: String) {
+        switch rawValue {
+            case ShippingRestriction.cities.stringValue:
+                self = .cities
+            case ShippingRestriction.state.stringValue:
+                self = .state
+            case ShippingRestriction.country.stringValue:
+                self = .country
+            case ShippingRestriction.distance.stringValue:
                 self = .distance
             default:
                 return nil
@@ -700,6 +718,10 @@ struct InfoText {
     static let inactive = """
     The buyer has confirmed the receipt of the item and the related funds distributed to the rightful owners.
     """
+    
+    static let shippingInfo = """
+    Specify which areas you are willing to ship your item to by cities, states/provinces, countries or by distance from your location.  You can specify multiple areas of the same scope, such as Toronto (a city) and Mississauga (a city), but you cannot combine localities of different scopes, such as Toronto (a city) and Manitoba (a province).  \n\nIt's the seller's sole responsibility to ensure that the logistics of shipping is properly implemented, therefore it is very important to research how much the shipping cost is going to be and if it's within how much you're willing to pay for since once the purchase is made by a buyer, you are obligated to carry out the shipping or risk losing of the deposit. \n\nThere is no way to dynamically change the shipping limitation according to the location of the buyer since the escrow smart contract and the deposit is created prior to a buyer's purchase.  No buyers outside of your shipping limitation can purchase your item.\n\nThe order of the transaction is as follows:\n\n1. The seller posts the item along with the escrow smart contract and the deposit.\n\n2. The buyer purchases the item by sending the required amount of ether to the smart contract.\n\n3. The seller ships the item by bearing the cost of the shipping and transfers the ownership on the blockchain.\n\n4. The buyer confirms the receipt of the item and the smart contract allows each party to withdraw the deposits.\n\nNote that if you want to specify a greater city area such as the Greater Toronto Area, you will have to include all the relevant cities individually such as York, North York, etc. 
+    """
 }
 
 // MARK: - SmartContractProperty
@@ -757,4 +779,12 @@ struct Topics {
     static let PurchaseConfirmed = "0xd5d55c8a68912e9a110618df8d5e2e83b8d83211c57a8ddd1203df92885dc881"
     static let ItemReceived = "0xe89152acd703c9d8c7d28829d443260b411454d45394e7995815140c8cbcbcf7"
     static let Aborted = ""
+}
+
+struct ShippingInfo {
+    let scope: ShippingRestriction
+    let addresses: [String]
+    let radius: Double
+    let longitude: Double?
+    let latitude: Double?
 }

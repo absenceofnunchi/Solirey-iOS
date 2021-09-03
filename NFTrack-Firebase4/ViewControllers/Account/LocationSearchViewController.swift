@@ -55,14 +55,13 @@ extension LocationSearchViewController: UISearchResultsUpdating {
             return
         }
         
-        print("run")
 //        let searchCompleter = MKLocalSearchCompleter()
 //        searchCompleter.delegate = self
 //        searchCompleter.region = MKCoordinateRegion(.world)
 //        searchCompleter.resultTypes = MKLocalSearchCompleter.ResultType([.address])
 //        searchCompleter.queryFragment = searchBarText
 
-        let request = MKLocalSearch.Request()
+        request = MKLocalSearch.Request()
         request.naturalLanguageQuery = searchBarText
         request.region = MKCoordinateRegion.init(center: location, latitudinalMeters: regionRadius, longitudinalMeters: regionRadius)
         request.pointOfInterestFilter = .excludingAll

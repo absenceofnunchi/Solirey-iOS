@@ -255,7 +255,7 @@ extension ListDetailViewController {
     }
 }
 
-extension ListDetailViewController: FetchUserAddressConfigurable {
+extension ListDetailViewController: FetchUserAddressConfigurable, HandleMapSearch {
     // MARK: - buttonPressed
     @objc final override func buttonPressed(_ sender: UIButton) {
         super.buttonPressed(sender)
@@ -397,24 +397,7 @@ extension ListDetailViewController: FetchUserAddressConfigurable {
                 break
         }
     }
-    
-    func getPlacemark( addressString : String,
-                        completionHandler: @escaping(MKPlacemark?, NSError?) -> Void ) {
-        let geocoder = CLGeocoder()
-        geocoder.geocodeAddressString(addressString) { (placemarks, error) in
-            if error == nil {
-                if let placemark = placemarks?[0] {
-                    let location = placemark.location!
-                    let pm = MKPlacemark(coordinate: location.coordinate)
-                    completionHandler(pm, nil)
-                    return
-                }
-            }
-            
-            completionHandler(nil, error as NSError?)
-        }
-    }
-    
+
     // MARK: - configureStatusButton
     final func configureStatusButton(buttonTitle: String = "Buy", tag: Int = 2) {
         DispatchQueue.main.async { [weak self] in

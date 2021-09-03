@@ -8,7 +8,7 @@
 import UIKit
 import MapKit
 
-class MapViewController: AddressViewController, MKMapViewDelegate, SharableDelegate {
+class MapViewController: AddressViewController, MKMapViewDelegate, SharableDelegate, HandleMapSearch {
     var mapView: MKMapView!
     var selectedPin: MKPlacemark? = nil
     var shareButtonItem: UIBarButtonItem!
@@ -22,17 +22,28 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        configureNavigationBar()
+    }
+    
     override func configureUI() {
         super.configureUI()
         title = "Shipping Address"
-
-        view.addSubview(mapView)
-        mapView.fill()
-        mapView.delegate = self
         
+        configureMapView()
+    }
+    
+    func configureNavigationBar() {
         shareButtonItem = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(mapButtonPressed))
         shareButtonItem.tag = 2
         self.navigationItem.rightBarButtonItem = shareButtonItem
+    }
+    
+    func configureMapView() {
+        view.addSubview(mapView)
+        mapView.fill()
+        mapView.delegate = self
     }
     
     override func configureSearch() {
@@ -81,7 +92,6 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
             default:
                 break
         }
-
     }
     
     override func centerMapOnLocation() {
@@ -91,10 +101,9 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         mapView.setRegion(coorindateRegion, animated: true)
         let _ = self.navigationController?.popViewController(animated: true)
     }
-}
-
-extension MapViewController: HandleMapSearch {
-    func dropPinZoomIn(placemark: MKPlacemark) {
+    
+    func dropPinZoomIn(placemark: MKPlacemark, addressString: String?, scope: ShippingRestriction?) {
+        
         // cache the pin
         selectedPin = placemark
         
@@ -106,5 +115,7 @@ extension MapViewController: HandleMapSearch {
         let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
         mapView.setRegion(region, animated: true)
     }
+    
+    func resetSearchResults() {
+    }
 }
-
