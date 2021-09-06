@@ -35,6 +35,7 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate {
         ]
     ]
     var SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat!
+    weak var delegate: PostEditDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -69,8 +70,7 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate {
         titleLabel.sizeToFit()
         scrollView.addSubview(titleLabel)
         
-        titleNameTextField = createTextField(delegate: self)
-        titleNameTextField.text = post.title
+        titleNameTextField = createTextField(content: post.title, delegate: self)
         scrollView.addSubview(titleNameTextField)
         
         descTitleLabel = createTitleLabel(text: "Description")

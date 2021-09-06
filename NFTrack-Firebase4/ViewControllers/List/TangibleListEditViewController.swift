@@ -16,9 +16,11 @@ import QuickLook
 import Combine
 
 class TangibleListEditViewController: ParentListEditViewController, PreviewDelegate, ButtonPanelConfigurable, FileUploadable {
-    var imagePreviewVC: ImagePreviewViewController!
-    var imagePreviewConstraintHeight: NSLayoutConstraint!
-    var previewDataArr: [PreviewData]! {
+    final var imagePreviewVC: ImagePreviewViewController!
+    final var imagePreviewConstraintHeight: NSLayoutConstraint!
+    // for the tangible list, the address title and the address field have to be added
+    
+    final var previewDataArr: [PreviewData]! {
         didSet {
             guard let previewDataArr = previewDataArr else { return }
             /// shows the image preview when an image or a doc is selected
@@ -49,11 +51,11 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
         }
     }
     
-    var IMAGE_PREVIEW_HEIGHT: CGFloat! = 180
-    lazy var SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW: CGFloat! = SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT + IMAGE_PREVIEW_HEIGHT
+    final var IMAGE_PREVIEW_HEIGHT: CGFloat! = 180
+    final lazy var SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW: CGFloat! = SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT + IMAGE_PREVIEW_HEIGHT
 
-    let configuration = UIImage.SymbolConfiguration(pointSize: 50, weight: .light, scale: .medium)
-    var pickerImageName: String! {
+    final let configuration = UIImage.SymbolConfiguration(pointSize: 50, weight: .light, scale: .medium)
+    final var pickerImageName: String! {
         var imageName: String!
         if #available(iOS 14.0, *) {
             imageName = "rectangle.fill.on.rectangle.fill.circle"
@@ -62,7 +64,7 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
         }
         return imageName
     }
-    var buttonPanel: UIStackView!
+    final var buttonPanel: UIStackView!
     final var panelButtons: [PanelButton] {
         let buttonPanels = [
             PanelButton(imageName: "camera.circle", imageConfig: configuration, tintColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), tag: 8),
@@ -71,30 +73,58 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
         ]
         return buttonPanels
     }
-    var constraints: [NSLayoutConstraint]!
-    var documentPicker: DocumentPicker!
-    var url: URL!
-    var userId: String!
-    var storage = Set<AnyCancellable>()
-    var storageRef: StorageReference! {
+    final var constraints: [NSLayoutConstraint]!
+    final var documentPicker: DocumentPicker!
+    final var url: URL!
+    final var userId: String!
+    final var storage = Set<AnyCancellable>()
+    final var storageRef: StorageReference! {
         let storage = Storage.storage()
         return storage.reference()
     }
+    final var addressTitleLabel: UILabel!
+    final var addressLabel: UILabel!
+    final var addressDeleteButton: UIButton!
+    final var shippingInfo: ShippingInfo!
     
-    override func viewDidAppear(_ animated: Bool) {
+    // The tangible item needs the address modified
+    final override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let addressHeight: CGFloat = addressTitleLabel.bounds.size.height + addressLabel.bounds.size.height + 80
+        SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT = addressHeight + getDefaultHeight()
+    }
+    
+    final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         if imagePreviewVC != nil {
             /// whenever the image picker is dismissed, the collection view has to be updated
             imagePreviewVC.data = previewDataArr
         }
-
     }
 
-    override func configureUI() {
+    final override func configureUI() {
         super.configureUI()
         constraints = [NSLayoutConstraint]()
         previewDataArr = [PreviewData]()
+        
+        guard let deleteImage = UIImage(systemName: "minus.circle.fill")?.withTintColor(.red, renderingMode: .alwaysOriginal) else {
+            return
+        }
+        addressDeleteButton = UIButton.systemButton(with: deleteImage, target: self, action: #selector(buttonPressed(_:)))
+        addressDeleteButton.tag = 12
+        addressDeleteButton.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(addressDeleteButton)
+        
+        addressTitleLabel = createTitleLabel(text: "Shipping Restriction")
+        scrollView.addSubview(addressTitleLabel)
+        
+        addressLabel = createLabel(text: post.shippingInfo?.addresses.first ?? "")
+        addressLabel.isUserInteractionEnabled = true
+        addressLabel.tag = 11
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+        addressLabel.addGestureRecognizer(tap)
+        scrollView.addSubview(addressLabel)
         
         createButtonPanel(panelButtons: panelButtons, superView: scrollView) { (buttonsArr) in
             buttonsArr.forEach { (button) in
@@ -124,10 +154,10 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
         }
     }
     
-    override func setConstraints() {
+    final override func setConstraints() {
         super.setConstraints()
         
-        setButtonPanelConstraints(topView: descTextView)
+        setButtonPanelConstraints(topView: addressLabel)
         
         // if you set the height to the image height here, self?.imagePreviewConstraintHeight.constant = 0 in the property observer of previewDataArr for the empty array gets called
         // AFTER previewDataArr.count > 0 is called.
@@ -135,6 +165,18 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
         imagePreviewConstraintHeight = imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 0)
 
         constraints.append(contentsOf: [
+            addressTitleLabel.topAnchor.constraint(equalTo: descTextView.bottomAnchor, constant: 40),
+            addressTitleLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            addressTitleLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            
+            addressDeleteButton.topAnchor.constraint(equalTo: descTextView.bottomAnchor, constant: 40),
+            addressDeleteButton.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            
+            addressLabel.topAnchor.constraint(equalTo: addressTitleLabel.bottomAnchor, constant: 10),
+            addressLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            addressLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            addressLabel.heightAnchor.constraint(equalToConstant: 50),
+                        
             imagePreviewVC.view.topAnchor.constraint(equalTo: buttonPanel.bottomAnchor, constant: 40),
             imagePreviewVC.view.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
             imagePreviewVC.view.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -149,7 +191,7 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
         NSLayoutConstraint.activate(constraints)
     }
     
-    @objc override func buttonPressed(_ sender: UIButton) {
+    @objc final override func buttonPressed(_ sender: UIButton) {
         guard previewDataArr.count < 6 else {
             self.alert.showDetail(
                 "Upload Limit",
@@ -160,125 +202,7 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                 
         switch sender.tag {
             case 0:
-                guard let itemTitle = titleNameTextField.text,
-                      let desc = descTextView.text else { return }
-                
-                let content = [
-                    StandardAlertContent(
-                        index: 0,
-                        titleString: "Update Post",
-                        body: ["": "Are you sure you want to update your post?"],
-                        fieldViewHeight: 100,
-                        messageTextAlignment: .left,
-                        alertStyle: .withCancelButton
-                    )
-                ]
-                
-                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
-                alertVC.action = { [weak self] (modal, mainVC) in
-                    // responses to the main vc's button
-                    mainVC.buttonAction = { _ in
-                        guard let postId = self?.post.documentId,
-                              let userId = self?.userId else { return }
-
-                        // if there are files to upload
-                        func withFiles(_ data: [PreviewData]) -> AnyPublisher<[String?], PostingError> {
-                            let fileURLs = data.map { (previewData) -> AnyPublisher<String?, PostingError> in
-                                return Future<String?, PostingError> { promise in
-                                    self?.uploadFileWithPromise(
-                                        fileURL: previewData.filePath,
-                                        userId: userId,
-                                        promise: promise
-                                    )
-                                }.eraseToAnyPublisher()
-                            }
-                            return Publishers.MergeMany(fileURLs)
-                                .collect()
-                                .eraseToAnyPublisher()
-                                .flatMap { (urlStrings) -> AnyPublisher<[String?], PostingError> in
-                                    Future<[String?], PostingError> { promise in
-                                        self?.db.collection("post").document(postId).updateData([
-                                            "title": itemTitle,
-                                            "description": desc,
-                                            "files": urlStrings
-                                        ]) { (error) in
-                                            if let error = error {
-                                                promise(.failure(.generalError(reason: error.localizedDescription)))
-                                            }
-                                            
-                                            promise(.success(urlStrings))
-                                        }
-                                    }
-                                    .eraseToAnyPublisher()
-                                }
-                                .eraseToAnyPublisher()
-                        }
-                        
-                        // if there are no files to upload
-                        func withoutFiles() -> AnyPublisher<[String?], PostingError> {
-                            Future<[String?], PostingError> { promise in
-                                self?.db.collection("post").document(postId).updateData([
-                                    "title": itemTitle,
-                                    "description": desc,
-                                    "files": ""
-                                ]) { (error) in
-                                    if let error = error {
-                                        promise(.failure(.generalError(reason: error.localizedDescription)))
-                                    }
-                                    
-                                    promise(.success([]))
-                                }
-                            }
-                            .eraseToAnyPublisher()
-                        }
-
-                        //
-                        self?.dismiss(animated: true, completion: {
-                            self?.showSpinner({
-                                var updatePublisher: AnyPublisher<[String?], PostingError>!
-                                if let previewDataArr = self?.previewDataArr {
-                                    // the path either starts from "https://" or "file://"
-                                    // the former implies that it's already uploaded in Firebase Storage, therefore doesn't need to be uploaded
-                                    let filtered = previewDataArr.filter { $0.filePath.absoluteString.lowercased().hasPrefix("file:") }
-                                    updatePublisher = withFiles(filtered)
-                                } else {
-                                    updatePublisher = withoutFiles()
-                                }
-                                
-                                updatePublisher
-                                    .sink { (completion) in
-                                        switch completion {
-                                            case .failure(let error):
-                                                self?.alert.showDetail("Update Error", with: error.localizedDescription, for: self)
-                                                break
-                                            case .finished:
-                                                self?.alert.showDetail("Success!", with: "Your post has been successfully updated.", for: self, buttonAction: {
-                                                    self?.dismiss(animated: true, completion: {
-                                                        self?.deleteAllStorageFiles()
-
-                                                        guard let window = UIApplication.shared.windows.first,
-                                                              let tabBarController = window.rootViewController as? UITabBarController else { return }
-                                                        
-                                                        print("self?.navigationController?", self?.navigationController as Any)
-                                                        self?.navigationController?.popToRootViewController(animated: true)
-                                                        tabBarController.selectedIndex = 1
-                                                        guard let vcs = tabBarController.viewControllers, let listVC = vcs[0] as? ListViewController else { return }
-                                                        listVC.segmentedControl.selectedSegmentIndex = 3
-                                                        listVC.segmentedControl.sendActions(for: UIControl.Event.valueChanged)
-                                                    })
-                                                }, completion:  {
-                                                    
-                                                })
-                                                break
-                                        }
-                                    } receiveValue: { _ in }
-                                    .store(in: &self!.storage)
-                            }) // show spinner
-                        }) // dismiss
-                    } // button action
-                } // alert action
-                self.present(alertVC, animated: true, completion: nil)
-                
+                update()
             case 1:
                 let content = [
                     StandardAlertContent(
@@ -330,12 +254,201 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
             case 10:
                 documentPicker = DocumentPicker(presentationController: self, delegate: self)
                 documentPicker.displayPicker()
+                break
+            case 12:
+                // delete the address text field
+                addressLabel.text = ""
+                break
             default:
                 break
         }
     }
     
-    func deleteAllStorageFiles() {
+    private func update() {
+        let whitespaceCharacterSet = CharacterSet.whitespaces
+        
+        guard let itemTitle = titleNameTextField.text else {
+            self.alert.showDetail("Missing Information", with: "Title cannot be empty", for: self)
+            return
+        }
+        
+        let strippedTitle = itemTitle.trimmingCharacters(in: whitespaceCharacterSet)
+        guard strippedTitle != "" else {
+            self.alert.showDetail("Missing Information", with: "Title cannot be empty", for: self)
+            return
+        }
+        
+        guard let desc = descTextView.text else {
+            self.alert.showDetail("Missing Information", with: "Description cannot be empty.", for: self)
+            return
+        }
+        
+        let strippedDesc = desc.trimmingCharacters(in: whitespaceCharacterSet)
+        guard strippedDesc != "" else {
+            self.alert.showDetail("Missing Information", with: "Description cannot be empty", for: self)
+            return
+        }
+        
+        guard let address = addressLabel.text else {
+            self.alert.showDetail("Missing Information", with: "Shipping information cannot be empty.", for: self)
+            return
+        }
+        
+        let strippedAddress = address.trimmingCharacters(in: whitespaceCharacterSet)
+        guard strippedAddress != "" else {
+            self.alert.showDetail("Missing Information", with: "Shipping information cannot be empty", for: self)
+            return
+        }
+        
+        let content = [
+            StandardAlertContent(
+                index: 0,
+                titleString: "Update Post",
+                body: ["": "Are you sure you want to update your post?"],
+                fieldViewHeight: 100,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            )
+        ]
+        
+        let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+        alertVC.action = { [weak self] (modal, mainVC) in
+            // responses to the main vc's button
+            mainVC.buttonAction = { _ in
+                guard let postId = self?.post.documentId,
+                      let userId = self?.userId else { return }
+                
+                // if there are files to upload
+                func withFiles(_ data: [PreviewData]) -> AnyPublisher<[String?], PostingError> {
+                    let fileURLs = data.map { (previewData) -> AnyPublisher<String?, PostingError> in
+                        return Future<String?, PostingError> { promise in
+                            self?.uploadFileWithPromise(
+                                fileURL: previewData.filePath,
+                                userId: userId,
+                                promise: promise
+                            )
+                        }.eraseToAnyPublisher()
+                    }
+                    return Publishers.MergeMany(fileURLs)
+                        .collect()
+                        .eraseToAnyPublisher()
+                        .flatMap { (urlStrings) -> AnyPublisher<[String?], PostingError> in
+                            Future<[String?], PostingError> { promise in
+                                var updateData: [String: Any] = [
+                                    "title": itemTitle,
+                                    "description": desc,
+                                    "files": urlStrings,
+                                ]
+                                
+                                if let si = self?.shippingInfo {
+                                    let shippingInfoData: [String: Any] = [
+                                        "scope": si.scope.stringValue,
+                                        "addresses": si.addresses,
+                                        "radius": si.radius,
+                                        "longitude": si.longitude ?? 0,
+                                        "latitude": si.latitude ?? 0
+                                    ]
+                                    
+                                    updateData.updateValue(shippingInfoData, forKey: "shippingInfo")
+                                }
+                                                                
+                                self?.db.collection("post").document(postId).updateData(updateData) { (error) in
+                                    if let error = error {
+                                        promise(.failure(.generalError(reason: error.localizedDescription)))
+                                    }
+                                    
+                                    promise(.success(urlStrings))
+                                }
+                            }
+                            .eraseToAnyPublisher()
+                        }
+                        .eraseToAnyPublisher()
+                }
+                
+                // if there are no files to upload
+                func withoutFiles() -> AnyPublisher<[String?], PostingError> {
+                    Future<[String?], PostingError> { promise in
+                        var updateData: [String: Any] = [
+                            "title": itemTitle,
+                            "description": desc,
+                            "files": "",
+                        ]
+                        
+                        if let si = self?.shippingInfo {
+                            let shippingInfoData: [String: Any] = [
+                                "scope": si.scope.stringValue,
+                                "addresses": si.addresses,
+                                "radius": si.radius,
+                                "longitude": si.longitude ?? 0,
+                                "latitude": si.latitude ?? 0
+                            ]
+                            
+                            updateData.updateValue(shippingInfoData, forKey: "shippingInfo")
+                        }
+                                                
+                        self?.db.collection("post").document(postId).updateData(updateData) { (error) in
+                            if let error = error {
+                                promise(.failure(.generalError(reason: error.localizedDescription)))
+                            }
+                            
+                            promise(.success([]))
+                        }
+                    }
+                    .eraseToAnyPublisher()
+                }
+                
+                //
+                self?.dismiss(animated: true, completion: {
+                    self?.showSpinner({
+                        var updatePublisher: AnyPublisher<[String?], PostingError>!
+                        if let previewDataArr = self?.previewDataArr {
+                            // the path either starts from "https://" or "file://"
+                            // the former implies that it's already uploaded in Firebase Storage, therefore doesn't need to be uploaded
+                            let filtered = previewDataArr.filter { $0.filePath.absoluteString.lowercased().hasPrefix("file:") }
+                            updatePublisher = withFiles(filtered)
+                        } else {
+                            updatePublisher = withoutFiles()
+                        }
+                        
+                        updatePublisher
+                            .sink { (completion) in
+                                switch completion {
+                                    case .failure(let error):
+                                        self?.alert.showDetail("Update Error", with: error.localizedDescription, for: self)
+                                        break
+                                    case .finished:
+                                        self?.alert.showDetail("Success!", with: "Your post has been successfully updated.", for: self, buttonAction: {
+                                            self?.dismiss(animated: true, completion: {
+                                                self?.deleteAllStorageFiles()
+                                                self?.navigationController?.popViewController(animated: true)
+//                                                guard let window = UIApplication.shared.windows.first,
+//                                                      let tabBarController = window.rootViewController as? UITabBarController else { return }
+//
+//                                                self?.navigationController?.popToRootViewController(animated: true)
+//                                                tabBarController.selectedIndex = 1
+//                                                guard let vcs = tabBarController.viewControllers, let listVC = vcs[0] as? ListViewController else { return }
+//                                                listVC.segmentedControl.selectedSegmentIndex = 3
+//                                                listVC.segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+                                            })
+                                        }, completion:  {
+                                            
+                                        })
+                                        break
+                                }
+                            } receiveValue: { [weak self] (urlStrings) in
+                                print("urlStrings", urlStrings)
+                                let imagesString: [String] = urlStrings.compactMap { $0 }
+                                self?.delegate?.didUpdatePost(title: itemTitle, desc: desc, imagesString: imagesString)
+                            }
+                            .store(in: &self!.storage)
+                    }) // show spinner
+                }) // dismiss
+            } // button action
+        } // alert action
+        self.present(alertVC, animated: true, completion: nil)
+    }
+    
+    private func deleteAllStorageFiles() {
         // delete the image and pdf files in the storage
         if let files = self.post.files {
             for file in files {
@@ -355,11 +468,23 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
             }
         }
     }
+    
+    @objc private func tapped(_ sender: UITapGestureRecognizer) {
+        guard let v = sender.view else { return }
+        switch v.tag {
+            case 11:
+                let shippingVC = ShippingViewController()
+                shippingVC.shippingDelegate = self
+                navigationController?.pushViewController(shippingVC, animated: true)
+            default:
+                break
+        }
+    }
 }
 
 // MARK: - Image picker
 extension TangibleListEditViewController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+    final func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
 
         guard let filePath = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
@@ -371,17 +496,17 @@ extension TangibleListEditViewController: UIImagePickerControllerDelegate & UINa
         previewDataArr.append(previewData)
     }
 
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+    final func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         dismiss(animated: true, completion: nil)
     }
 }
 
 extension TangibleListEditViewController: DocumentDelegate, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
-    func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
+    final func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
         return 1
     }
     
-    func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+    final func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
         //        return self.url as QLPreviewItem
         let docTitle = UUID().uuidString
         let previewItem = CustomPreviewItem(url: url, title: docTitle)
@@ -389,7 +514,7 @@ extension TangibleListEditViewController: DocumentDelegate, QLPreviewControllerD
     }
     
     // MARK: - didPickDocument
-    func didPickDocument(document: Document?) {
+    final func didPickDocument(document: Document?) {
         if let pickedDoc = document {
             let fileURL = pickedDoc.fileURL
             guard fileURL.pathExtension == "pdf" else {
@@ -410,13 +535,13 @@ extension TangibleListEditViewController: DocumentDelegate, QLPreviewControllerD
 
 extension TangibleListEditViewController {
     // MARK: - didDeleteImage
-    func didDeleteFileFromPreview(filePath: URL) {
+    final func didDeleteFileFromPreview(filePath: URL) {
         previewDataArr = previewDataArr.filter { $0.filePath != filePath }
     }
 }
 
 extension TangibleListEditViewController {
-    func downloadFiles(files: [String]) {
+    final func downloadFiles(files: [String]) {
         let previewDataPublishers = files.map { (file) -> AnyPublisher<PreviewData, PostingError> in
             if file.contains("pdf") {
                 return downloadFiles(urlString: file, type: .document)
@@ -446,7 +571,7 @@ extension TangibleListEditViewController {
             .store(in: &self.storage)
     }
     
-    func saveFile(fileName: String, data: Data, promise: @escaping (Result<PreviewData, PostingError>) -> Void) {
+    final func saveFile(fileName: String, data: Data, promise: @escaping (Result<PreviewData, PostingError>) -> Void) {
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             promise(.failure(.generalError(reason: "Could not create a URL to save the image.")))
             return
@@ -471,7 +596,7 @@ extension TangibleListEditViewController {
         }
     }
     
-    func saveImage(imageName: String, image: UIImage, promise: @escaping (Result<PreviewData, PostingError>) -> Void) {
+    final func saveImage(imageName: String, image: UIImage, promise: @escaping (Result<PreviewData, PostingError>) -> Void) {
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             promise(.failure(.generalError(reason: "Could not create a URL to save the image.")))
             return
@@ -501,7 +626,7 @@ extension TangibleListEditViewController {
         }
     }
     
-    func downloadFiles(urlString: String, type: Header) -> AnyPublisher<PreviewData, PostingError> {
+    final func downloadFiles(urlString: String, type: Header) -> AnyPublisher<PreviewData, PostingError> {
         Future<Data, PostingError> { promise in
             FirebaseService.shared.downloadURL(urlString: urlString, promise: promise)
         }
@@ -522,41 +647,20 @@ extension TangibleListEditViewController {
         }
         .eraseToAnyPublisher()
     }
-    
-    //    func downloadFiles(urlString: String, type: Header) {
-    //        Future<Data, PostingError> { promise in
-    //            FirebaseService.shared.downloadURL(urlString: urlString, promise: promise)
-    //        }
-    //        .eraseToAnyPublisher()
-    //        .flatMap { [weak self] (data) -> AnyPublisher<URL, PostingError> in
-    //            Future<URL, PostingError> { promise in
-    //                if type == .document {
-    //                    self?.saveFile(fileName: UUID().uuidString, data: data, promise: promise)
-    //                } else {
-    //                    guard let image = UIImage(data: data) else {
-    //                        promise(.failure(.generalError(reason: "Unable to process the image preivew.")))
-    //                        return
-    //                    }
-    //                    self?.saveImage(imageName: UUID().uuidString, image: image, promise: promise)
-    //                }
-    //            }
-    //            .eraseToAnyPublisher()
-    //        }
-    //        .map { (url) -> PreviewData in
-    //            return PreviewData(header: type, filePath: url)
-    //        }
-    //        .sink { [weak self] (completion) in
-    //            switch completion {
-    //                case .failure(.generalError(reason: let error)):
-    //                    self?.alert.showDetail("Image/Doc Fetch Error", with: error, for: self)
-    //                case .finished:
-    //                    print("download finished")
-    //                default:
-    //                    self?.alert.showDetail("Image/Doc Fetch Error", with: "Unable to fetch the data.", for: self)
-    //            }
-    //        } receiveValue: { [weak self] (previewData) in
-    //            self?.previewDataArr.append(previewData)
-    //        }
-    //        .store(in: &self.storage)
-    //    }
 }
+
+extension TangibleListEditViewController: ShippingDelegate {
+    final func didFetchShippingInfo(_ shippingInfo: ShippingInfo) {
+        self.shippingInfo = shippingInfo
+        if let address = shippingInfo.addresses.first {
+            addressLabel.text = address
+        }
+    }
+}
+
+// ca US
+// 38.577
+// -121.4848
+// 1000
+// state
+// ready

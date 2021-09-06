@@ -30,6 +30,7 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
     override func configureUI() {
         super.configureUI()
         title = "Shipping Address"
+        hideKeyboardWhenTappedAround()
         
         configureMapView()
     }
@@ -68,7 +69,7 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
             annotationView.calloutOffset = CGPoint(x: -5, y: 5)
             
             let mapButton = UIButton(frame: CGRect(origin: CGPoint.zero, size: CGSize(width: 30, height: 30)))
-            mapButton.setBackgroundImage(UIImage(systemName: "book"), for: UIControl.State())
+            mapButton.setBackgroundImage(UIImage(systemName: "checkmark.circle"), for: UIControl.State())
             mapButton.addTarget(self, action: #selector(mapButtonPressed), for: .touchUpInside)
             mapButton.tag = 1
             annotationView.rightCalloutAccessoryView = mapButton
@@ -81,7 +82,7 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         switch sender.tag {
             case 1:
                 if let selectedPin = selectedPin {
-                    fetchPlacemarkDelegate?.dropPinZoomIn(placemark: selectedPin)
+                    fetchPlacemarkDelegate?.dropPinZoomIn(placemark: selectedPin, addressString: nil, scope: nil)
                     _ = navigationController?.popViewController(animated: true)
                 }
                 break
@@ -103,7 +104,6 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
     }
     
     func dropPinZoomIn(placemark: MKPlacemark, addressString: String?, scope: ShippingRestriction?) {
-        
         // cache the pin
         selectedPin = placemark
         

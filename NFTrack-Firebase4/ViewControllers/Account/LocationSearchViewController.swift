@@ -47,10 +47,10 @@ extension LocationSearchViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
         guard let searchBarText = searchController.searchBar.text else { return }
         guard let location = location else {
-            self.alert.fading(text: "Please enable your location.", controller: self, toBePasted: nil, width: 250) {
-                self.delay(0.5) {
-                    searchController.searchBar.searchTextField.resignFirstResponder()
-                }
+            self.alert.fading(text: "Please enable your location.", controller: self, toBePasted: nil, width: 250, location: .top) {
+//                self.delay(0.5) {
+//                    searchController.searchBar.searchTextField.resignFirstResponder()
+//                }
             }
             return
         }
@@ -95,7 +95,7 @@ extension LocationSearchViewController: ParseAddressDelegate {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedItem = matchingItems[indexPath.row].placemark
-        handleMapSearchDelegate?.dropPinZoomIn(placemark: selectedItem)
+        handleMapSearchDelegate?.dropPinZoomIn(placemark: selectedItem, addressString: nil, scope: nil)
         dismiss(animated: true, completion: nil)
     }
 }

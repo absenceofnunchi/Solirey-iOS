@@ -34,12 +34,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserAddressConfigu
                         UserDefaults.standard.set("NA", forKey: UserDefaultKeys.photoURL)
                     }
                     
-                    Future<String?, PostingError> { promise in
+                    Future<ShippingAddress?, PostingError> { promise in
                         self?.fetchAddress(userId: user.uid, promise: promise)
                     }
                     .sink { (completion) in
                         print(completion)
-                    } receiveValue: { (address) in
+                    } receiveValue: { (shippingAddress) in
+                        guard let address = shippingAddress?.address else { return }
                         UserDefaults.standard.set(address, forKey: UserDefaultKeys.address)
                     }
                     .store(in: &self!.storage)

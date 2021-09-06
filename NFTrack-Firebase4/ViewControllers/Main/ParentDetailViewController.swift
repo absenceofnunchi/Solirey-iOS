@@ -16,7 +16,7 @@ import FirebaseFirestore
 import BigInt
 import Combine
 
-class ParentDetailViewController: UIViewController, SharableDelegate {
+class ParentDetailViewController: UIViewController, SharableDelegate, PostEditDelegate {
     // MARK: - Properties
     var alert: Alerts!
     let transactionService = TransactionService()
@@ -51,7 +51,6 @@ class ParentDetailViewController: UIViewController, SharableDelegate {
     var postEditButtonItem: UIBarButtonItem!
     var shareButtonItem: UIBarButtonItem!
     var reportButtonItem: UIBarButtonItem!
-    
     var isSaved: Bool! = false {
         didSet {
             configureBuyerNavigationBar()
@@ -89,14 +88,17 @@ class ParentDetailViewController: UIViewController, SharableDelegate {
         configureImageDisplay(post: post, v: scrollView)
         configureUI()
         setConstraints()
-        
-        print("post", post)
     }
     
     // called when fetchUserData fetched data and assigns it to userInfo
     // modular so that children view controllers can override it
     func userInfoDidSet() {
         processProfileImage()
+    }
+    
+    // Called when the TangibleListEditVC or DigitalListEditVC is finished and popped
+    func didUpdatePost(title: String, desc: String, imagesString: [String]?) {
+        
     }
 }
 

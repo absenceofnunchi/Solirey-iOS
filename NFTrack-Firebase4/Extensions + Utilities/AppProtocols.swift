@@ -24,7 +24,7 @@ protocol DeletePreviewDelegate: AnyObject {
 // MARK: - PreviewDelegate1
 // To show the preview images 
 protocol PreviewDelegate: DeletePreviewDelegate {
-    var SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat! { get }
+    var SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat! { get set }
     var IMAGE_PREVIEW_HEIGHT: CGFloat! { get }
     var SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW: CGFloat! { get set }
     var imagePreviewConstraintHeight: NSLayoutConstraint! { get set }
@@ -617,14 +617,21 @@ extension UsernameBannerConfigurable {
                     let displayName = data[UserDefaultKeys.displayName] as? String
                     let photoURL = data[UserDefaultKeys.photoURL] as? String
                     let memberSince = data[UserDefaultKeys.memberSince] as? Timestamp
-                    let address = data[UserDefaultKeys.address] as? String
+                    var shippingAddress: ShippingAddress!
+                    if let sa = data["shippingAddress"] as? [String: Any],
+                       let address = sa[UserDefaultKeys.address] as? String,
+                       let longitude = sa["longitude"] as? Double,
+                       let latitude = sa["latitude"] as? Double {
+                        shippingAddress = ShippingAddress(address: address, longitude: longitude, latitude: latitude)
+                    }
+                    
                     let userInfo = UserInfo(
                         email: nil,
                         displayName: displayName!,
                         photoURL: photoURL,
                         uid: id,
                         memberSince: memberSince?.dateValue(),
-                        address: address
+                        shippingAddress: shippingAddress
                     )
                     self?.userInfo = userInfo
                 }
@@ -634,10 +641,6 @@ extension UsernameBannerConfigurable {
                 }
             }
         }
-        
-//        DispatchQueue.global(qos: .userInitiated).async {
-//
-//        }
     }
     
     func processProfileImage() {
@@ -739,13 +742,13 @@ extension UsernameBannerConfigurable {
 }
 
 protocol FetchUserAddressConfigurable {
-    func fetchAddress(userId: String, promise: @escaping (Result<String?, PostingError>) -> Void)
+    func fetchAddress(userId: String, promise: @escaping (Result<ShippingAddress?, PostingError>) -> Void)
 }
 
 extension FetchUserAddressConfigurable {
     func fetchAddress(
         userId: String,
-        promise: @escaping (Result<String?, PostingError>) -> Void
+        promise: @escaping (Result<ShippingAddress?, PostingError>) -> Void
     ) {
         FirebaseService.shared.db
             .collection("user")
@@ -763,8 +766,12 @@ extension FetchUserAddressConfigurable {
                     return
                 }
                 
-                if let address = data["address"] as? String {
-                    promise(.success(address))
+                if let shippingAddress = data["shippingAddress"] as? [String: Any],
+                   let address = shippingAddress["address"] as? String,
+                   let longitude = shippingAddress["longitude"] as? Double,
+                   let latitude = shippingAddress["latitude"] as? Double {
+                    let sa = ShippingAddress(address: address, longitude: longitude, latitude: latitude)
+                    promise(.success(sa))
                 } else {
                     promise(.success(nil))
                 }
@@ -870,11 +877,9 @@ extension PostParseDelegate {
         guard let querySnapshot = querySnapshot else { return nil }
         for document in querySnapshot.documents {
             let data = document.data()
-            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, longitude, latitude: String!
+            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
-            var files, savedBy, addresses: [String]?
-            var scope: ShippingRestriction!
-            var radius: Double!
+            var files, savedBy: [String]?
             var shippingInfo: ShippingInfo!
             data.forEach { (item) in
                 switch item.key {
@@ -960,20 +965,6 @@ extension PostParseDelegate {
                                 latitude: latitude
                             )
                         }
-                        
-//                        print("item.value as? String", item.value as? String as Any)
-//                        if let temp = item.value as? String, let shippingRestriction = ShippingRestriction(rawValue: temp) {
-//                            scope = shippingRestriction
-//                        }
-//                    case "addresses":
-//                        // shipping addresses specified by the seller, which addresses they're willing to ship to
-//                        addresses = item.value as? [String]
-//                    case "radius":
-//                        radius = item.value as? Double
-//                    case "longitude":
-//                        longitude = item.value as? String
-//                    case "latitude":
-//                        latitude = item.value as? String
                         break
                     default:
                         break
@@ -1021,11 +1012,9 @@ extension PostParseDelegate {
     
     func parseDocument(document: DocumentSnapshot) -> Post? {
         guard let data = document.data() else { return nil }
-        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, longitude, latitude: String!
+        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address: String!
         var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
-        var files, savedBy, addresses: [String]?
-        var scope: ShippingRestriction!
-        var radius: Double!
+        var files, savedBy: [String]?
         var shippingInfo: ShippingInfo!
         data.forEach { (item) in
             switch item.key {
@@ -1095,31 +1084,28 @@ extension PostParseDelegate {
                 case "address":
                     // the shipping address of the buyer
                     address = item.value as? String
-                case "scope":
-                    if let temp = item.value as? String, let shippingRestriction = ShippingRestriction(rawValue: temp) {
-                        scope = shippingRestriction
+                case "shippingInfo":
+                    if let si = item.value as? [String: Any] {
+                        guard let shippingRestriction = si["scope"] as? String,
+                              let scope = ShippingRestriction(rawValue: shippingRestriction),
+                              let addresses = si["addresses"] as? [String],
+                              let radius = si["radius"] as? Double,
+                              let longitude = si["longitude"] as? Double,
+                              let latitude = si["latitude"] as? Double else { return }
+                        
+                        shippingInfo = ShippingInfo(
+                            scope: scope,
+                            addresses: addresses,
+                            radius: radius,
+                            longitude: longitude,
+                            latitude: latitude
+                        )
                     }
-                case "addresses":
-                    // shipping addresses specified by the seller, which addresses they're willing to ship to
-                    addresses = item.value as? [String]
-                case "radius":
-                    radius = item.value as? Double
-//                case "longitude":
-//                    longitude = item.value as? String
-//                case "latitude":
-//                    latitude = item.value as? String
+                    break
                 default:
                     break
             }
         }
-        
-//        let shippingInfo = ShippingInfo(
-//            scope: scope,
-//            addresses: addresses ?? [],
-//            radius: radius,
-//            longitude: longitude,
-//            latitude: latitude
-//        )
         
         let post = Post(
             documentId: document.documentID,
@@ -1261,6 +1247,7 @@ extension HandleMapSearch {
 
 protocol ParseAddressDelegate {
     func parseAddress<T: MKPlacemark>(selectedItem: T) -> String
+    func parseAddress<T: MKPlacemark>(selectedItem: T, scope: ShippingRestriction) -> String
 }
 
 extension ParseAddressDelegate {
@@ -1387,4 +1374,8 @@ extension TokenConfigurable {
         
         return suggestedColor
     }
+}
+
+protocol PostEditDelegate: AnyObject {
+    func didUpdatePost(title: String, desc: String, imagesString: [String]?)
 }

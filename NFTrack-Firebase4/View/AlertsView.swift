@@ -92,6 +92,10 @@ class Alerts {
 //        }
     }
     
+    enum FadingLocation {
+        case center, top
+    }
+    
     // MARK: - fading
     /// show a message for a brief period and disappears e.i "Copied"
     func fading(
@@ -99,6 +103,7 @@ class Alerts {
         controller: UIViewController?,
         toBePasted: String?,
         width: CGFloat = 150,
+        location: FadingLocation = .center,
         completion: (() -> Void)? = nil
     ) {
         DispatchQueue.main.async {
@@ -126,7 +131,6 @@ class Alerts {
             }
             
             NSLayoutConstraint.activate([
-                dimmingView.centerYAnchor.constraint(equalTo: controller.view.centerYAnchor),
                 dimmingView.centerXAnchor.constraint(equalTo: controller.view.centerXAnchor),
                 dimmingView.widthAnchor.constraint(equalToConstant: width),
                 dimmingView.heightAnchor.constraint(equalToConstant: 150),
@@ -134,6 +138,16 @@ class Alerts {
                 label.centerXAnchor.constraint(equalTo: dimmingView.contentView.centerXAnchor),
                 label.centerYAnchor.constraint(equalTo: dimmingView.contentView.centerYAnchor)
             ])
+            
+            if location == .center {
+                NSLayoutConstraint.activate([
+                    dimmingView.centerYAnchor.constraint(equalTo: controller.view.centerYAnchor)
+                ])
+            } else if location == .top {
+                NSLayoutConstraint.activate([
+                    dimmingView.topAnchor.constraint(equalTo: controller.view.topAnchor, constant: 200)
+                ])
+            }
             
             UIView.animate(withDuration: 0.3) {
                 label.alpha = 1

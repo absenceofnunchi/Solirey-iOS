@@ -99,10 +99,18 @@ extension UIViewController {
     }
     
     // MARK: - createTextField
-    func createTextField(placeHolder: String? = nil, content: String? = nil, borderColor: CGColor = UIColor.lightGray.cgColor ,delegate: UITextFieldDelegate) -> UITextField {
+    func createTextField(
+        placeHolder: String? = nil,
+        content: String? = nil,
+        borderColor: CGColor = UIColor.lightGray.cgColor,
+        delegate: UITextFieldDelegate? = nil
+    ) -> UITextField {
         let textField = UITextField()
         textField.setLeftPaddingPoints(10)
-        textField.delegate = delegate
+        
+        if let delegate = delegate {
+            textField.delegate = delegate
+        }
         
         if let placeHolder = placeHolder {
             textField.placeholder = placeHolder

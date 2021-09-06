@@ -32,7 +32,6 @@ class AddressViewController: UIViewController {
     
     func configureUI() {
         view.backgroundColor = .white
-        navigationItem.rightBarButtonItem = nil
         
         locationManager = CLLocationManager()
         locationManager.delegate = self

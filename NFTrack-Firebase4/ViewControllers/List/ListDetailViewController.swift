@@ -146,6 +146,23 @@ class ListDetailViewController: ParentDetailViewController {
             configureSellerNavigationBar()
         }
     }
+    
+    final override func didUpdatePost(title: String, desc: String, imagesString: [String]?) {
+        self.title = title
+        descLabel.text = desc
+        
+        if let imagesString = imagesString, imagesString.count > 0 {
+            self.galleries.removeAll()
+            self.galleries.append(contentsOf: imagesString)
+            singlePageVC = ImagePageViewController(gallery: galleries[0])
+            imageHeightConstraint.constant = 250
+        } else {
+            self.galleries.removeAll()
+            singlePageVC = ImagePageViewController(gallery: nil)
+            imageHeightConstraint.constant = 0
+        }
+        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)        
+    }
 }
 
 extension ListDetailViewController {
@@ -268,6 +285,7 @@ extension ListDetailViewController: FetchUserAddressConfigurable, HandleMapSearc
                 // confirm purchase or "buy"
                 if let deliveryMethod = listingDetailArr.filter({ $0.propertyName == "Delivery Method" }).first,
                    deliveryMethod.propertyDesc as? String == DeliveryMethod.shipping.rawValue {
+                    // if the delivery method is shipping, first check with the buyer that they'll have to disclose the shipping address
                     self.alert.showDetail(
                         "Shipping Address Disclosure",
                         with: "This item is delivered through shipping and requires sharing your shipping address with the seller. Would you like to proceed?",
@@ -277,7 +295,7 @@ extension ListDetailViewController: FetchUserAddressConfigurable, HandleMapSearc
                             guard let price = self?.post.price,
                                   let userId = self?.userId else { return }
                             
-                            Future<String?, PostingError> { promise in
+                            Future<ShippingAddress?, PostingError> { promise in
                                 self?.fetchAddress(userId: userId, promise: promise)
                             }
                             .sink { (completion) in
@@ -291,8 +309,8 @@ extension ListDetailViewController: FetchUserAddressConfigurable, HandleMapSearc
                                         self?.alert.showDetail("Error", with: "There was an error fetching the address info.", for: self)
                                         break
                                 }
-                            } receiveValue: { (address) in
-                                if let address = address, address != "NA" {
+                            } receiveValue: { (shippingAddress) in
+                                if let address = shippingAddress?.address, address != "NA" {
                                     self?.updateState(method: PurchaseMethods.confirmPurchase.methodName, price: String(price), status: .pending)
                                     self?.updateAddress(address: address)
                                 } else {
@@ -348,6 +366,7 @@ extension ListDetailViewController: FetchUserAddressConfigurable, HandleMapSearc
                 break
             case 11:
                 let listEditVC = TangibleListEditViewController()
+                listEditVC.delegate = self
                 listEditVC.post = post
                 listEditVC.userId = userId
                 self.navigationController?.pushViewController(listEditVC, animated: true)
@@ -358,6 +377,22 @@ extension ListDetailViewController: FetchUserAddressConfigurable, HandleMapSearc
                         InfoModel(title: "Created", detail: InfoText.created),
                         InfoModel(title: "Locked", detail: InfoText.locked),
                         InfoModel(title: "Inactive", detail: InfoText.inactive)
+                    ]
+                )
+                self.present(infoVC, animated: true, completion: nil)
+            case 200:
+                DispatchQueue.main.async {
+                    let profileVC = ProfileViewController()
+                    profileVC.delegate = self
+                    let nav = UINavigationController(rootViewController: profileVC)
+                    nav.modalPresentationStyle = .fullScreen
+                    self.present(nav, animated: true, completion: nil)
+                }
+                break
+            case 201:
+                let infoVC = InfoViewController(
+                    infoModelArr: [
+                        InfoModel(title: "Shipping Unavailable", detail: InfoText.shippingUnavailable)
                     ]
                 )
                 self.present(infoVC, animated: true, completion: nil)
@@ -407,7 +442,7 @@ extension ListDetailViewController: FetchUserAddressConfigurable, HandleMapSearc
         }
     }
     
-    func updateAddress(address: String) {
+    final func updateAddress(address: String) {
         FirebaseService.shared.db
             .collection("post")
             .document(self.post.documentId)
@@ -422,7 +457,7 @@ extension ListDetailViewController: FetchUserAddressConfigurable, HandleMapSearc
 }
 
 extension ListDetailViewController {
-    func createSocket(contractAddress: EthereumAddress, topics: [String]? = nil) {
+    final func createSocket(contractAddress: EthereumAddress, topics: [String]? = nil) {
         guard socketDelegate == nil else { return }
         socketDelegate = SocketDelegate(
             contractAddress: contractAddress,
@@ -474,5 +509,19 @@ extension ListDetailViewController {
                 }
             })
             .store(in: &storage)
+    }
+}
+
+// Called when ProfileVC is closed
+// ProfileVC called on two occasions:
+// 1. Before the potential buyer decides to buy. The address of the buyer is analyzed against the shipping limitation, but if the buyer doesn't have their shipping address registered,
+//    the Buy button will lead the buyer to ProfileVC
+// 2. After the potential buyer decides to buy. The "Buy" button will prompt the buyer to let them know that their shipping address will be shared. If they decide to proceed and doesn't have a shipping addres,
+//    they will be led to ProfileVC
+// After they register the shipping address and the ProfileVC model closes, getStatus() will be refetched to reflect the Buy button status.
+extension ListDetailViewController: RefetchDataDelegate {
+    final func didFetchData() {
+        print("getStatus")
+        getStatus()
     }
 }

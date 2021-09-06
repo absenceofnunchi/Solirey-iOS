@@ -200,9 +200,11 @@ extension AppDelegate : UNUserNotificationCenterDelegate, PostParseDelegate {
                     if let docId = userInfo["docId"] as? String,
                        let sellerUserId = userInfo["uid"] as? String,
                        let buyerUserId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId),
-                       let displayName = userInfo[UserDefaultKeys.displayName] as? String {
-                        let address = userInfo[UserDefaultKeys.address] as? String
+                       let displayName = userInfo[UserDefaultKeys.displayName] as? String,
+                       let address = userInfo[UserDefaultKeys.address] as? String {
+                        
                         let chatModelCore = PostCoreModel(documentId: docId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
+                        let shippingAddress = ShippingAddress(address: address)
                         
                         let userInfo = UserInfo(
                             email: nil,
@@ -210,7 +212,7 @@ extension AppDelegate : UNUserNotificationCenterDelegate, PostParseDelegate {
                             photoURL: nil,
                             uid: nil,
                             memberSince: nil,
-                            address: address
+                            shippingAddress: shippingAddress
                         )
                         
                         if let tabBarController = rootViewController as? UITabBarController,

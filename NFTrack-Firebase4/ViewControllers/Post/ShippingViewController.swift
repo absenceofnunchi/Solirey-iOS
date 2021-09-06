@@ -200,13 +200,16 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
     }
     
     override func mapButtonPressed(_ sender: UIButton) {
-        super.mapButtonPressed(sender)
+//        super.mapButtonPressed(sender)
         
         switch sender.tag {
+            case 1:
+                self.alert.showDetail("", with: "Press Update below to finalize your shipping information.", for: self)
             case 3:
                 let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Shipping Info", detail: InfoText.shippingInfo)])
                 self.present(infoVC, animated: true, completion: nil)
             case 4:
+                // Longitude and latitude are only relevant for the distance scope
                 let shippingInfo = ShippingInfo(
                     scope: scopeRetainer,
                     addresses: dataSource,

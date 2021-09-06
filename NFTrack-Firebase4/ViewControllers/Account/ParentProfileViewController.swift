@@ -13,8 +13,8 @@ class ParentProfileViewController: UIViewController, UIScrollViewDelegate {
     var displayNameTextField = UITextField()
     var userInfo: UserInfo! {
         didSet {
-            if userInfo.photoURL != "NA" {
-                configureCustomProfileImage(from: userInfo.photoURL!)
+            if let photoURL = userInfo.photoURL, photoURL != "NA" {
+                configureCustomProfileImage(from: photoURL)
             } else {
                 guard let image = UIImage(systemName: "person.crop.circle.fill") else {
                     self.dismiss(animated: true, completion: nil)

@@ -434,7 +434,13 @@ struct UserInfo {
     let photoURL: String?
     let uid: String?
     let memberSince: Date?
-    var address: String? = nil
+    var shippingAddress: ShippingAddress? = nil
+}
+
+struct ShippingAddress {
+    var address: String
+    var longitude: Double? = nil
+    var latitude: Double? = nil
 }
 
 struct UserDefaultKeys {
@@ -445,6 +451,8 @@ struct UserDefaultKeys {
     static let filterSettings: String = "filterSettings"
     static let fcmToken: String = "fcmToken"
     static let address: String = "address"
+    static let longitude: String = "longitude"
+    static let latitude: String = "latitude"
 }
 
 // MARK: - Message
@@ -721,6 +729,10 @@ struct InfoText {
     
     static let shippingInfo = """
     Specify which areas you are willing to ship your item to by cities, states/provinces, countries or by distance from your location.  You can specify multiple areas of the same scope, such as Toronto (a city) and Mississauga (a city), but you cannot combine localities of different scopes, such as Toronto (a city) and Manitoba (a province).  \n\nIt's the seller's sole responsibility to ensure that the logistics of shipping is properly implemented, therefore it is very important to research how much the shipping cost is going to be and if it's within how much you're willing to pay for since once the purchase is made by a buyer, you are obligated to carry out the shipping or risk losing of the deposit. \n\nThere is no way to dynamically change the shipping limitation according to the location of the buyer since the escrow smart contract and the deposit is created prior to a buyer's purchase.  No buyers outside of your shipping limitation can purchase your item.\n\nThe order of the transaction is as follows:\n\n1. The seller posts the item along with the escrow smart contract and the deposit.\n\n2. The buyer purchases the item by sending the required amount of ether to the smart contract.\n\n3. The seller ships the item by bearing the cost of the shipping and transfers the ownership on the blockchain.\n\n4. The buyer confirms the receipt of the item and the smart contract allows each party to withdraw the deposits.\n\nNote that if you want to specify a greater city area such as the Greater Toronto Area, you will have to include all the relevant cities individually such as York, North York, etc. 
+    """
+
+    static let shippingUnavailable = """
+    The seller has specified that the shipping is unavailable to your area.
     """
 }
 

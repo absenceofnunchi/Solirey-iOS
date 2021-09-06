@@ -25,7 +25,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 .whereField("bidders", notIn: [userId])
                 .order(by: "bidders")
                 .order(by: "date", descending: true)
-                .getDocuments() { [weak self](querySnapshot, err) in
+                .addSnapshotListener({ [weak self] (querySnapshot, err) in
                     if let err = err {
                         print(err)
                         self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
@@ -41,7 +41,25 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                             self?.dataStore = PostImageDataStore(posts: data)
                         }
                     }
-                }
+                })
+            
+//                .getDocuments() { [weak self](querySnapshot, err) in
+//                    if let err = err {
+//                        print(err)
+//                        self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
+//                    } else {
+//                        defer {
+//                            DispatchQueue.main.async {
+//                                self?.tableView.reloadData()
+//                            }
+//                        }
+//
+//                        if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+//                            self?.postArr = data
+//                            self?.dataStore = PostImageDataStore(posts: data)
+//                        }
+//                    }
+//                }
         }
     }
     var subscriptionButtonItem: UIBarButtonItem!
