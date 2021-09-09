@@ -55,18 +55,9 @@ class SearchResultsController: ParentListViewController<Post> {
         self.navigationController?.pushViewController(listDetailVC, animated: true)
     }
     
-    override func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        let offset = scrollView.contentOffset
-        let bounds = scrollView.bounds
-        let size = scrollView.contentSize
-        let inset = scrollView.contentInset
-        let y = offset.y + bounds.size.height - inset.bottom
-        let h = size.height
-        let reload_distance:CGFloat = 10.0
-        if y > (h + reload_distance) {
-            if postArr.count > 0 {
-                delegate?.didFetchData()
-            }
+    override func executeAfterDragging() {
+        if postArr.count > 0 {
+            delegate?.didFetchData()
         }
     }
 }

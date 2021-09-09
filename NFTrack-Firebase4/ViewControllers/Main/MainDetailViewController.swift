@@ -19,47 +19,40 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                   let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) else { return }
             
             title = category
-            FirebaseService.shared.db.collection("post")
+            firstListener = FirebaseService.shared.db.collection("post")
                 .whereField("category", isEqualTo: category as String)
                 .whereField("status", isEqualTo: "ready")
                 .whereField("bidders", notIn: [userId])
                 .order(by: "bidders")
                 .order(by: "date", descending: true)
+                .limit(to: 12)
                 .addSnapshotListener({ [weak self] (querySnapshot, err) in
-                    if let err = err {
-                        print(err)
-                        self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
-                    } else {
-                        defer {
-                            DispatchQueue.main.async {
-                                self?.tableView.reloadData()
-                            }
-                        }
-                        
-                        if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                            self?.postArr = data
-                            self?.dataStore = PostImageDataStore(posts: data)
+                if let err = err {
+                    self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
+                } else {
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
                         }
                     }
-                })
-            
-//                .getDocuments() { [weak self](querySnapshot, err) in
-//                    if let err = err {
-//                        print(err)
-//                        self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
-//                    } else {
-//                        defer {
-//                            DispatchQueue.main.async {
-//                                self?.tableView.reloadData()
-//                            }
-//                        }
-//
-//                        if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-//                            self?.postArr = data
-//                            self?.dataStore = PostImageDataStore(posts: data)
-//                        }
-//                    }
-//                }
+
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        self?.postArr = data
+//                        self?.dataStore = PostImageDataStore(posts: data)
+                    }
+                }
+            })
         }
     }
     var subscriptionButtonItem: UIBarButtonItem!
@@ -87,6 +80,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         super.configureUI()
         tableView = configureTableView(delegate: self, dataSource: self, height: 330, cellType: CardCell.self, identifier: CardCell.identifier)
         tableView.prefetchDataSource = self
+        
         view.addSubview(tableView)
         tableView.fill()
     }
@@ -127,6 +121,51 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                     }
                 }
             }
+    }
+    
+    func refetch(lastSnapshot: QueryDocumentSnapshot) {
+        guard let userId = userId else { return }
+        
+        nextListener = FirebaseService.shared.db.collection("post")
+            .whereField("category", isEqualTo: category as String)
+            .whereField("status", isEqualTo: "ready")
+            .whereField("bidders", notIn: [userId])
+            .order(by: "bidders")
+            .order(by: "date", descending: true)
+            .limit(to: 12)
+            .start(afterDocument: lastSnapshot)
+            .addSnapshotListener({ [weak self] (querySnapshot, err) in
+            if let err = err {
+                self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
+            } else {
+                guard let querySnapshot = querySnapshot else {
+                    return
+                }
+                
+                guard let lastSnapshot = querySnapshot.documents.last else {
+                    // The collection is empty.
+                    return
+                }
+                
+                self?.lastSnapshot = lastSnapshot
+                
+                defer {
+                    DispatchQueue.main.async {
+                        self?.tableView.reloadData()
+                    }
+                }
+                
+                if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                    self?.postArr.append(contentsOf: data)
+//                    self?.dataStore = PostImageDataStore(posts: data)
+                }
+            }
+        })
+    }
+    
+    // refetch after the scrolled to the end
+    override func executeAfterDragging() {
+        refetch(lastSnapshot: self.lastSnapshot)
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -187,7 +226,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
 
 extension MainDetailViewController {
     @objc func buttonPressed(_ sender: UIButton) {
-
         switch sender.tag {
             case 0:
                 guard let title = self.title else { return }

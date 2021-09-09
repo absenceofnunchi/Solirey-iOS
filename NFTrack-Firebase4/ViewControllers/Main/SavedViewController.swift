@@ -8,20 +8,43 @@
 import UIKit
 import FirebaseFirestore
 
-class SavedViewController: ParentListViewController<Post>, RefetchDataDelegate, PostParseDelegate {
+class SavedViewController: ParentListViewController<Post>, PostParseDelegate {
+    var first: Query!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Saved Items"
         fetchData()
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if isMovingToParent {
+            firstListener.remove()
+            nextListener.remove()
+        }
+    }
+
     func fetchData() {
-        FirebaseService.shared.db.collection("post")
+        firstListener = FirebaseService.shared.db.collection("post")
             .whereField("savedBy", arrayContainsAny: [userId!])
-            .getDocuments() { [weak self](querySnapshot, err) in
-                if let err = err {
-                    print("Error getting documents: \(err)")
+            .limit(to: 15)
+            .addSnapshotListener() { [weak self](querySnapshot, err) in
+                if let _ = err {
+                    self?.alert.showDetail("Data Fetch Error", with: "There was an error fetching the saved posts.", for: self)
                 } else {
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                         self?.postArr = data
                         DispatchQueue.main.async {
@@ -65,14 +88,37 @@ class SavedViewController: ParentListViewController<Post>, RefetchDataDelegate, 
         let post = postArr[indexPath.row]
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = post
-        listDetailVC.delegate = self
         listDetailVC.tableViewRefreshDelegate = self
         self.navigationController?.pushViewController(listDetailVC, animated: true)
-        
     }
-    
-    /// when the save button is toggled
-    func didFetchData() {
-        fetchData()
+
+    override func executeAfterDragging() {
+        nextListener = FirebaseService.shared.db.collection("post")
+            .whereField("savedBy", arrayContainsAny: [userId!])
+            .limit(to: 15)
+            .start(afterDocument: lastSnapshot)
+            .addSnapshotListener() { [weak self](querySnapshot, err) in
+                if let _ = err {
+                    self?.alert.showDetail("Data Fetch Error", with: "There was an error fetching the saved posts.", for: self)
+                } else {
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        self?.postArr.append(contentsOf: data)
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                        }
+                    }
+                }
+            }
     }
 }

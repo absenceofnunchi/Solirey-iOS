@@ -102,7 +102,7 @@ class DataLoadOperation: Operation {
             let configuration = UIImage.SymbolConfiguration(pointSize: 20, weight: .light, scale: .small)
             let configuredImage = _image.withTintColor(.lightGray, renderingMode: .alwaysOriginal).withConfiguration(configuration)
             DispatchQueue.main.async { [weak self] in
-                guard let `self` = self else { return }
+                guard let self = self else { return }
                 if self.isCancelled { return }
                 self.image = configuredImage
                 self.loadingCompleteHandler?(self.image)
@@ -110,7 +110,7 @@ class DataLoadOperation: Operation {
         } else {
             downloadImageFrom(url) { (image) in
                 DispatchQueue.main.async() { [weak self] in
-                    guard let `self` = self else { return }
+                    guard let self = self else { return }
                     if self.isCancelled { return }
                     self.image = image
                     self.loadingCompleteHandler?(self.image)

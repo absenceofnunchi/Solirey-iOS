@@ -225,7 +225,7 @@ extension FirebaseService: PostParseDelegate {
             .whereField("sellerUserId", isEqualTo: uid)
             .whereField("status", isEqualTo: "ready")
             .order(by: "date", descending: true)
-            .limit(to: 8)
+            .limit(to: 3)
             
         first?.getDocuments { [weak self] (querySnapshot, err) in
             guard let querySnapshot = querySnapshot else {
@@ -252,7 +252,7 @@ extension FirebaseService: PostParseDelegate {
             .whereField("sellerUserId", isEqualTo: uid)
             .whereField("status", isEqualTo: "ready")
             .order(by: "date", descending: true)
-            .limit(to: 8)
+            .limit(to: 3)
             .start(afterDocument: lastSnapshot)
         
         next?.getDocuments { [weak self] (querySnapshot, err) in

@@ -12,19 +12,18 @@ import web3swift
 
 class ListViewController: ParentListViewController<Post> {
     private let userDefaults = UserDefaults.standard
-    var segmentedControl: UISegmentedControl!
+    final var segmentedControl: UISegmentedControl!
     private var currentIndex: Int! = 0
     private var db: Firestore! {
         return FirebaseService.shared.db
     }
     private var storage = Set<AnyCancellable>()
+    private var segmentRetainer: Segment!
     
     final override func viewDidLoad() {
         super.viewDidLoad()
-        
         configureNavigationBar(vc: self)
         configureSwitch()
-        configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
         
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
         swipeLeft.direction = .left
@@ -33,6 +32,26 @@ class ListViewController: ParentListViewController<Post> {
         let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
         swipeRight.direction = .right
         view.addGestureRecognizer(swipeRight)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if firstListener != nil {
+            firstListener.remove()
+        }
+        
+        if nextListener != nil {
+            nextListener.remove()
+        }
+        
+        lastSnapshot = nil
+        loadingQueue.cancelAllOperations()
+        loadingOperations.removeAll()
     }
     
     @objc func swiped(_ sender: UISwipeGestureRecognizer) {
@@ -129,7 +148,11 @@ class ListViewController: ParentListViewController<Post> {
     final override func didRefreshTableView(index: Int = 0) {
         segmentedControl.selectedSegmentIndex = index
         segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+        view.layoutIfNeeded()
+        
+        // for swiping left and right so that the index doesn't overflow
         currentIndex = index
+        
         switch index {
             case 0:
                 // buying
@@ -143,6 +166,19 @@ class ListViewController: ParentListViewController<Post> {
             case 3:
                 // posts
                 configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
+            default:
+                break
+        }
+    }
+    
+    final override func executeAfterDragging() {
+        switch segmentRetainer {
+            case .buying:
+                    configureDataRefetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue], lastSnapshot: lastSnapshot)
+            case .selling:
+                    configureDataRefetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue], lastSnapshot: lastSnapshot)
+            case .posts:
+                    configureDataRefetch(isBuyer: false, status: [PostStatus.ready.rawValue], lastSnapshot: lastSnapshot)
             default:
                 break
         }
@@ -192,7 +228,18 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
     @objc final func segmentedControlSelectionDidChange(_ sender: UISegmentedControl) {
         guard let segment = Segment(rawValue: sender.selectedSegmentIndex)
         else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
+        
+        // for the swipe gestures
         currentIndex = sender.selectedSegmentIndex
+        
+        // for pagination
+        segmentRetainer = segment
+        lastSnapshot = nil
+        
+        // any leftover operations will still be shown on the wrong tab expecially if the new tab is shorter
+        loadingQueue.cancelAllOperations()
+        loadingOperations.removeAll()
+        
         switch segment {
             case .buying:
                 transitionView { [weak self] in
@@ -216,19 +263,29 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
     // MARK: - configureDataFetch
     final func configureDataFetch(isBuyer: Bool, status: [String]) {
         guard let userId = userId else { return }
-        
         self.dataStore = nil
-        //        self.loadingQueue.cancelAllOperations()
-        //        self.loadingOperations.removeAll()
         self.postArr.removeAll()
         
-        db.collection("post")
+        firstListener = db.collection("post")
             .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
             .whereField("status", in: status)
-            .getDocuments() { [weak self] (querySnapshot, error) in
-                if let error = error {
-                    self?.alert.showDetail("Error in Fetching Data", with: error.localizedDescription, for: self)
+            .order(by: "date", descending: true)
+            .limit(to: 10)
+            .addSnapshotListener() { [weak self] (querySnapshot, error) in
+                if let _ = error {
+                    self?.alert.showDetail("Error in Fetching Data", with: "There was an error fetching the posts", for: self)
                 } else {
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
                     defer {
                         DispatchQueue.main.async {
                             self?.tableView.reloadData()
@@ -249,13 +306,57 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
             }
     }
     
+    func configureDataRefetch(isBuyer: Bool, status: [String], lastSnapshot: QueryDocumentSnapshot) {
+        guard let userId = userId else { return }
+        
+        nextListener = db.collection("post")
+            .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
+            .whereField("status", in: status)
+            .order(by: "date", descending: true)
+            .limit(to: 10)
+            .start(afterDocument: lastSnapshot)
+            .addSnapshotListener() { [weak self] (querySnapshot, error) in
+                if let error = error {
+                    print(error.localizedDescription)
+                    self?.alert.showDetail("Error in Fetching Data", with: error.localizedDescription, for: self)
+                } else {
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                            self?.delay(1.0) {
+                                DispatchQueue.main.async {
+                                    self?.refreshControl.endRefreshing()
+                                }
+                            }
+                        }
+                    }
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        DispatchQueue.main.async {
+                            self?.postArr.append(contentsOf: data)
+                        }
+                    }
+                }
+            }
+    }
+    
+    
+    
     // MARK: - configureAuctionFetch()
     final func configureAuctionFetch() {
         guard let userId = userId else { return }
-        
         self.dataStore = nil
-//        self.loadingQueue.cancelAllOperations()
-//        self.loadingOperations.removeAll()
         self.postArr.removeAll()
         
         db.collection("post")
@@ -286,7 +387,7 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
             }
     }
     
-    func transitionView(completion: @escaping () -> Void) {
+    final func transitionView(completion: @escaping () -> Void) {
         let newTableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
         newTableView.prefetchDataSource = self
         UIView.transition(from: tableView, to: newTableView, duration: 0, options: .transitionCrossDissolve) { (_) in

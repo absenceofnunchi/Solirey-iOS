@@ -17,7 +17,8 @@ class QuickUICheckViewController: ParentListViewController<Post> {
     var postButton: UIButton!
     let CELL_HEIGHT: CGFloat = 330
     var statusLabel: UILabel!
-        
+    var infoButtonItem: UIBarButtonItem!
+    
     override func setDataStore(postArr: [Post]) {
         dataStore = PostImageDataStore(posts: postArr)
     }
@@ -25,22 +26,15 @@ class QuickUICheckViewController: ParentListViewController<Post> {
     override func viewDidLoad() {
         super.viewDidLoad()
         setConstraint()
+        configureNavigationBar()
     }
     
-//    override func viewWillAppear(_ animated: Bool) {
-//        super.viewWillAppear(animated)
-//        addKeyboardObserver()
-//    }
-//
-//    override func viewWillDisappear(_ animated: Bool) {
-//        super.viewWillDisappear(animated)
-//        removeKeyboardObserver()
-//    }
-    
-//    override func viewDidLayoutSubviews() {
-//        super.viewDidLayoutSubviews()
-//        scrollView.contentSize = .zero
-//    }
+    func configureNavigationBar() {
+        guard let infoImage = UIImage(systemName: "info.circle") else { return }
+        infoButtonItem = UIBarButtonItem(image: infoImage, style: .plain, target: self, action: #selector(buttonPressed(_:)))
+        infoButtonItem.tag = 3
+        self.navigationItem.rightBarButtonItem = infoButtonItem
+    }
     
     override func configureUI() {
         super.configureUI()
@@ -147,6 +141,9 @@ class QuickUICheckViewController: ParentListViewController<Post> {
                 self.present(scannerVC, animated: true, completion: nil)
             case 2:
                 fetchData()
+            case 3:
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Unique Identifier", detail: InfoText.quickUICheck)])
+                self.present(infoVC, animated: true, completion: nil)
             default:
                 break
         }
@@ -188,31 +185,6 @@ extension QuickUICheckViewController: UITextFieldDelegate {
             self?.scrollView.layoutIfNeeded()
         }
     }
-//    // MARK: - addKeyboardObserver
-//    private func addKeyboardObserver() {
-//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
-//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-//    }
-//
-//    // MARK: - removeKeyboardObserver
-//    private func removeKeyboardObserver(){
-//        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
-//        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
-//    }
-//
-//    @objc private func keyboardWillShow(notification: NSNotification) {
-//        idTitleTextFieldConstraints.constant = 40
-//        UIView.animate(withDuration: 0.5) { [weak self] in
-//            self?.scrollView.layoutIfNeeded()
-//        }
-//    }
-//
-//    @objc private func keyboardWillHide(notification: NSNotification) {
-//        idTitleTextFieldConstraints.constant = 80
-//        UIView.animate(withDuration: 0.5) { [weak self] in
-//            self?.scrollView.layoutIfNeeded()
-//        }
-//    }
 }
 
 extension QuickUICheckViewController: PostParseDelegate {
@@ -223,6 +195,7 @@ extension QuickUICheckViewController: PostParseDelegate {
         }
         FirebaseService.shared.db.collection("post")
             .whereField("itemIdentifier", isEqualTo: text)
+            .limit(to: 20)
             .getDocuments() { [weak self](querySnapshot, err) in
                 guard let `self` = self else { return }
                 if let err = err {

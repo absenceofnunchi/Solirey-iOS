@@ -632,15 +632,42 @@ extension ParentPostViewController {
             }
     }
     
-//    @objc func mint() {
-//        self.test()
-//    }
-
-    @objc func test() {
-        
-    }
+    // gs://nftrack-69488.appspot.com/ZT6HvzMcoRg1gOjNz6iS9uVf7Hq1/E7AAEBD5-C15B-4786-AA88-BAB40C87E3BC.png
+    // https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2F2CA3EC02-450D-4DB1-BF71-E86338CE1135.jpeg?alt=media&token=66fc9e87-09a6-4db6-813b-2a763ce1f5dd
     
     @objc func mint() {
+        for i in 0...20 {
+            FirebaseService.shared.db
+                .collection("post")
+                .document("\(i)")
+                .setData([
+                    "sellerUserId": "vcHixrcSsLMpLiafMYrAmCvnlLU2",
+                    "senderAddress": "\(i)",
+                    "escrowHash": "\(i)",
+                    "auctionHash": "\(i)",
+                    "mintHash": "\(i)",
+                    "date": Date(),
+                    "title": "\(i)",
+                    "description": "\(i)",
+                    "price": "\(i)",
+                    "category": Category.realEstate.asString(),
+                    "status": AuctionStatus.ready.rawValue,
+                    "tags": ["example"],
+                    "itemIdentifier": "\(i)",
+                    "isReviewed": false,
+                    "type": "tangible",
+                    "deliveryMethod": "Shipping",
+                    "saleFormat": "Online Direct",
+                    "files": ["https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2FE366991C-B770-4A68-9CC7-862B793455CB.jpeg?alt=media&token=bbe4a96a-c5ea-4a77-8291-4357a7fc6963"],
+                    "IPFS": "NA",
+                    "paymentMethod": "Escrow",
+                    "bidderTokens": [],
+                    "bidders": []
+                ])
+        }
+    }
+    
+    @objc func mint1() {
         self.showSpinner { [weak self] in
             guard let userId = self?.userDefaults.string(forKey: UserDefaultKeys.userId) else {
                 self?.alert.showDetail("Sorry", with: "You need to be logged in.", for: self)

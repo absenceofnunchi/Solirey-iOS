@@ -32,14 +32,35 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     var userId: String! {
         return UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
     }
-    
+    var firstListener: ListenerRegistration!
+    var nextListener: ListenerRegistration!
+    var lastSnapshot: QueryDocumentSnapshot!
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        detachListeners()
+    }
+    
     func setDataStore(postArr: [T]) {
         dataStore = ImageDataStore(posts: postArr)
+    }
+    
+    func detachListeners() {
+        if isMovingToParent {
+            if firstListener != nil {
+                firstListener.remove()
+            }
+            
+            if nextListener != nil {
+                nextListener.remove()
+            }
+        }
     }
     
     // MARK: - configureUI
@@ -59,12 +80,13 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         cell.selectionStyle = .none
         let post = postArr[indexPath.row]
         cell.updateAppearanceFor(.pending(post))
+        
         return cell
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         guard let cell = cell as? ParentTableCell<T> else { return }
-        
+                
         // How should the operation update the cell once the data has been loaded?
         let updateCellClosure: (UIImage?) -> () = { [weak self] (image) in
             cell.updateAppearanceFor(.fetched(image))
@@ -91,7 +113,15 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
                 loadingOperations[indexPath] = dataLoader
             }
         }
+        
+//        print("loadingOperations", loadingOperations)
     }
+    
+    // 1. The entire data is loaded to the data store
+    // 2. For every cell, prefetch the Operation that pertains to indexPath.row
+    // 3. Add the operation to the loading queue (addOperation)
+    // 4. Add the opertaion to the loadingOperation dictionary
+    // 5. If the data has been loaded already, delete it form the loadingOperations queue
     
     func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         // If there's a data loader for this index path we don't need it any more. Cancel and dispose
@@ -129,7 +159,23 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     // MARK: - didRefreshTableView
     @objc func didRefreshTableView(index: Int = 0) {}
     
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {}
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        let offset = scrollView.contentOffset
+        let bounds = scrollView.bounds
+        let size = scrollView.contentSize
+        let inset = scrollView.contentInset
+        let y = offset.y + bounds.size.height - inset.bottom
+        let h = size.height
+        let reload_distance:CGFloat = 10.0
+        if y > (h + reload_distance) {
+            guard self.postArr.count > 0 else { return }
+            executeAfterDragging()
+        }
+    }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {}
+    
+    func executeAfterDragging() {
+        
+    }
 }

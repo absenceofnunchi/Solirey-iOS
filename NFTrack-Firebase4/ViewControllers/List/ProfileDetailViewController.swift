@@ -117,10 +117,14 @@ extension ProfileDetailViewController {
             case .postings:
                 removeBaseViewController(profileReviewVC)
                 profilePostingsVC = addBaseViewController(ProfilePostingsViewController.self)
+                profilePostingsVC.loadingQueue.cancelAllOperations()
+                profilePostingsVC.loadingOperations.removeAll()
                 db.getCurrentPosts(uid: uid)
             case .reviews:
                 removeBaseViewController(profilePostingsVC)
                 profileReviewVC = addBaseViewController(ProfileReviewListViewController.self)
+                profileReviewVC.loadingQueue.cancelAllOperations()
+                profileReviewVC.loadingOperations.removeAll()
                 db.getReviews(uid: uid)
         }
     }
@@ -169,6 +173,9 @@ extension ProfileDetailViewController: PaginateFetchDelegate {
         let h = size.height
         let reload_distance:CGFloat = 10.0
         if y > (h + reload_distance) {
+            
+            print("userInfo.uid", userInfo.uid)
+            print("self.lastSnapshot", self.lastSnapshot)
             guard let uid = userInfo.uid,
                   let lastSnapshot = self.lastSnapshot else { return }
             db.refetchReviews(uid: uid, lastSnapshot: lastSnapshot)

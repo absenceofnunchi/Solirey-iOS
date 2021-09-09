@@ -124,6 +124,7 @@
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
 		497F1F2D26DC920800E0F967 /* ShippingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F1F2C26DC920800E0F967 /* ShippingViewController.swift */; };
 		497F1F3226DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F1F3126DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift */; };
+		4983BB2026E5B3D200A45703 /* ShippingAddressChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983BB1F26E5B3D200A45703 /* ShippingAddressChecker.swift */; };
 		4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */; };
 		4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */; };
 		4984292226CDBD9A0062CD43 /* DigitalListEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4984292126CDBD9A0062CD43 /* DigitalListEditViewController.swift */; };
@@ -305,6 +306,7 @@
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		497F1F2C26DC920800E0F967 /* ShippingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShippingViewController.swift; sourceTree = "<group>"; };
 		497F1F3126DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilteredLocationSearchViewController.swift; sourceTree = "<group>"; };
+		4983BB1F26E5B3D200A45703 /* ShippingAddressChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShippingAddressChecker.swift; sourceTree = "<group>"; };
 		4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecDisplayView.swift; sourceTree = "<group>"; };
 		4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyLoader.swift; sourceTree = "<group>"; };
 		4984292126CDBD9A0062CD43 /* DigitalListEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigitalListEditViewController.swift; sourceTree = "<group>"; };
@@ -635,6 +637,7 @@
 				49DEFF5A268649A2004C2DD0 /* DocumentPicker.swift */,
 				49DEFF5F26864CA4004C2DD0 /* Document.swift */,
 				495FD2CD2687B33600F1D81D /* CustomPreviewItem.swift */,
+				4983BB1F26E5B3D200A45703 /* ShippingAddressChecker.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1096,6 +1099,7 @@
 				493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */,
 				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
 				499702B5267459D8001DD80A /* ChatListViewController.swift in Sources */,
+				4983BB2026E5B3D200A45703 /* ShippingAddressChecker.swift in Sources */,
 				49721DA226D58385009BA7E7 /* ReportViewController.swift in Sources */,
 				4997030A2676CC00001DD80A /* SavedViewController.swift in Sources */,
 				499702AB2673F75E001DD80A /* MessageCell.swift in Sources */,

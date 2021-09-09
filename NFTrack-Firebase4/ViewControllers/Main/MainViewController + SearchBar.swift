@@ -100,21 +100,22 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
 extension MainViewController: RefetchDataDelegate, PostParseDelegate {
     func getLatestSearchPosts(searchItems: [String]) {
         var first = db?.collection("post")
-            .limit(to: 8)
+            .limit(to: 10)
             .order(by: "date", descending: true)
         
         if !searchItems.isEmpty, searchItems.count > 0 {
+            // tag also contains the separated array of the title sentence
             first = first?.whereField("tags", arrayContainsAny: searchItems)
         }
         
-        first?.getDocuments {[weak self] (querySnapshot, error) in
+        first?.getDocuments (completion: {[weak self] (querySnapshot, error) in
             guard let querySnapshot = querySnapshot else {
-                self?.alert.showDetail("Sorry", with: error?.localizedDescription, for: self)
+                self?.alert.showDetail("Sorry", with: "There was an error fetching the search result.", for: self)
                 return
             }
             
-            if let error = error {
-                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+            if let _ = error {
+                self?.alert.showDetail("Sorry", with: "There was an error fetching the search result.", for: self)
             }
             
             if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
@@ -124,13 +125,13 @@ extension MainViewController: RefetchDataDelegate, PostParseDelegate {
             if let lastSnapshot = querySnapshot.documents.last {
                 self?.lastSnapshot = lastSnapshot
             }
-        }
+        })
     }
 
     func refetchLatestSearchPost() {
         var next = db?.collection("post")
             .order(by: "date", descending: true)
-            .limit(to: 8)
+            .limit(to: 10)
             .start(afterDocument: lastSnapshot)
         
         if !searchItems.isEmpty, searchItems.count > 0 {

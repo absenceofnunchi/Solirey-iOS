@@ -27,10 +27,12 @@ class MainViewController: UIViewController {
     final let alert = Alerts()
     final var category: ScopeButtonCategory! = .latest
     private var optionsBarItem: UIBarButtonItem!
+    private var saveBarButton: UIBarButtonItem!
+    private var idCheckBarButton: UIBarButtonItem!
     final let db = FirebaseService.shared.db
     final var searchItems: [String]!
     final var lastSnapshot: QueryDocumentSnapshot!
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -126,18 +128,26 @@ extension MainViewController: UICollectionViewDataSource {
 
 extension MainViewController {
     private func configureOptionsBar() {
-        let barButtonMenu = UIMenu(title: "", children: [
-            UIAction(title: NSLocalizedString("Saved Items", comment: ""), image: UIImage(systemName: "square.grid.2x2"), handler: menuHandler),
-            UIAction(title: NSLocalizedString("Quick UI Check", comment: ""), image: UIImage(systemName: "c.circle"), handler: menuHandler),
-        ])
         
-        let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
         if #available(iOS 14.0, *) {
+            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
+            let barButtonMenu = UIMenu(title: "", children: [
+                UIAction(title: NSLocalizedString("Saved Items", comment: ""), image: UIImage(systemName: "star"), handler: menuHandler),
+                UIAction(title: NSLocalizedString("Quick UI Check", comment: ""), image: UIImage(systemName: "barcode.viewfinder"), handler: menuHandler),
+            ])
             optionsBarItem = UIBarButtonItem(title: nil, image: image, primaryAction: nil, menu: barButtonMenu)
             navigationItem.rightBarButtonItem = optionsBarItem
         } else {
-            optionsBarItem = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(menuHandler(action:)))
-            navigationItem.rightBarButtonItem = optionsBarItem
+            guard let saveImage = UIImage(systemName: "star"),
+                  let idCheckImage = UIImage(systemName: "barcode.viewfinder") else { return }
+            
+            saveBarButton = UIBarButtonItem(image: saveImage, style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            saveBarButton.tag = 0
+            
+            idCheckBarButton = UIBarButtonItem(image: idCheckImage, style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            idCheckBarButton.tag = 1
+            
+            navigationItem.rightBarButtonItems = [saveBarButton, idCheckBarButton]
         }
     }
     
@@ -147,6 +157,19 @@ extension MainViewController {
                 let savedVC = SavedViewController()
                 self.navigationController?.pushViewController(savedVC, animated: true)
             case "Quick UI Check":
+                let checkVC = QuickUICheckViewController()
+                self.navigationController?.pushViewController(checkVC, animated: true)
+            default:
+                break
+        }
+    }
+    
+    @objc private func buttonPressed(_ sender: UIButton) {
+        switch sender.tag {
+            case 0:
+                let savedVC = SavedViewController()
+                self.navigationController?.pushViewController(savedVC, animated: true)
+            case 1:
                 let checkVC = QuickUICheckViewController()
                 self.navigationController?.pushViewController(checkVC, animated: true)
             default:

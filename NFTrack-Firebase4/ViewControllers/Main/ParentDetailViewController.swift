@@ -357,7 +357,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
                     }
                 } completion: {}
             } else {
-                self.delegate?.didFetchData()
+//                self.delegate?.didFetchData()
             }
         }
     }

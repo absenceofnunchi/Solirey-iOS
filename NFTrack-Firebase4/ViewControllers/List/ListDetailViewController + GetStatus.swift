@@ -17,7 +17,6 @@ import UIKit
 import Combine
 import web3swift
 import BigInt
-import MapKit
 
 extension ListDetailViewController: ParseAddressDelegate {
     // MARK: - getStatus
@@ -56,7 +55,7 @@ extension ListDetailViewController: ParseAddressDelegate {
                     let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(escrowHash)
                     promise(.success(receipt))
                 } catch {
-                    promise(.failure(.generalError(reason: "Could not load the contract adderss")))
+                    promise(.failure(.generalError(reason: "Could not load the contract address")))
                 }
             }
         }
@@ -88,11 +87,11 @@ extension ListDetailViewController: ParseAddressDelegate {
                 case .failure(.createTransactionIssue):
                     self?.alert.showDetail("Transaction Error", with: "Unable to create the transaction.", for: self)
                 case .failure(.generalError(reason: let msg)):
-                    self?.alert.showDetail("Auction Info Retrieval Error", with: msg, for: self)
+                    self?.alert.showDetail("Info Retrieval Error", with: msg, for: self)
                 case .finished:
                     print("status info finished")
                 default:
-                    self?.alert.showDetail("Auction Info Retrieval Error", with: "Unable to fetch the auction contract information.", for: self)
+                    self?.alert.showDetail("Info Retrieval Error", with: "Unable to fetch the contract information.", for: self)
             }
         } receiveValue: { [weak self] (propertyFetchModels: [SmartContractProperty]) in
             self?.parseFetchResultToDisplay(propertyFetchModels)
@@ -134,7 +133,6 @@ extension ListDetailViewController: ParseAddressDelegate {
                 }
                 
                 guard let status = model.propertyDesc as? BigUInt else { return }
-                
                 if let purchaseStatus = PurchaseStatus(rawValue: Int(status)) {
                     DispatchQueue.main.async {
                         if self?.statusLabel != nil {
@@ -142,7 +140,9 @@ extension ListDetailViewController: ParseAddressDelegate {
                         }
                     }
                 }
-                                               
+                                   
+                // The status that corresponds to 0, 1, and 2 refers to the variable on the Remote Purchase smart contract Created, Locked, or Inactive
+                // They indicate the purchase status or where the transaction is at in the process of purchasing the item.
                 switch "\(status)" {
                     case "0":
                         if post.sellerUserId == userId {
@@ -157,43 +157,27 @@ extension ListDetailViewController: ParseAddressDelegate {
                             self?.configureStatusButton(buttonTitle: PurchaseMethods.abort.rawValue, tag: 1)
                         } else {
                             // The purchase button should only be available to the potential buyer that meets the shipping criteria.
-                            if self?.post.shippingInfo?.scope != .none {
-                                guard let shippingInfo = self?.post.shippingInfo else { return }
-                                guard let address = UserDefaults.standard.string(forKey: UserDefaultKeys.address), address != "", address != "NA" else {
-                                    // The buyer has not registered their shipping address, therefore cannot be compared to the seller's shipping info.
-                                    self?.configureStatusButton(buttonTitle: "Requires Shipping Info", tag: 200)
-                                    return
-                                }
-                                
-                                let longitude = UserDefaults.standard.double(forKey: UserDefaultKeys.longitude)
-                                let latitude = UserDefaults.standard.double(forKey: UserDefaultKeys.latitude)
-
-                                guard longitude != 0 || latitude != 0 else {
-                                    self?.alert.showDetail("No Shipping Address", with: "You have not set the shipping address.", for: self)
-                                    return
-                                }
-                                
-                                let location = CLLocation(latitude: latitude, longitude: longitude)
-                                let geocoder = CLGeocoder()
-                                
-                                // Convert the CLLocation to placemark, not String to placemark because the latter only gives you the coordinates, not the address divided into city, country, etc
-                                geocoder.reverseGeocodeLocation(location) { (placemarks, error) in
-                                    if let _ = error {
-                                        self?.alert.showDetail("Error in Buyer's Address", with: "There was an error processing your shipping address.", for: self)
+                            guard let shippingInfo = post.shippingInfo else { return }
+                            if post.shippingInfo?.scope != .none {
+                                let shippingAddressChecker = ShippingAddressChecker(shippingInfo: shippingInfo)
+                                shippingAddressChecker.checkAddress()
+                                    .sink { (_) in
+                                    } receiveValue: { (shippingEligibility) in
+                                        switch shippingEligibility {
+                                            case .eligible:
+                                                // the buyer's address is within the seller's shipping limitation
+                                                self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmPurchase.rawValue, tag: 2)
+                                            case .notEligible:
+                                                // the buyer's address is outside the seller's shipping limitation
+                                                self?.configureStatusButton(buttonTitle: "Shipping Unavailbable", tag: 201)
+                                            case .requiresBuyersShippingInfo:
+                                                self?.configureStatusButton(buttonTitle: "Requires Shipping Info", tag: 200)
+                                            case .unableToProcessAddress:
+                                                self?.alert.showDetail("Error in Buyer's Address", with: "There was an error processing your shipping address.", for: self)
+                                                self?.configureStatusButton(buttonTitle: "Error", tag: 202)
+                                        }
                                     }
-
-                                    guard let placemark = placemarks?.first else { return }
-                                    let mk = MKPlacemark(placemark: placemark)
-                                    // parses the buyer's address according to the scope that the seller has specified.
-                                    if let buyersAddress = self?.parseAddress(selectedItem: mk , scope: shippingInfo.scope),
-                                       shippingInfo.addresses.contains(buyersAddress) {
-                                        // the buyer's address is within the seller's shipping limitation
-                                        self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmPurchase.rawValue, tag: 2)
-                                    } else {
-                                        // the buyer's address is outside the seller's shipping limitation
-                                        self?.configureStatusButton(buttonTitle: "Shipping Unavailbable", tag: 201)
-                                    }
-                                }
+                                    .store(in: &storage)
                             } else {
                                 // The seller hasn't specified the shipping address. This should never reach.
                                 self?.configureStatusButton(buttonTitle: "Unspecified Shipping Information", tag: 50000)
@@ -234,71 +218,44 @@ extension ListDetailViewController: ParseAddressDelegate {
     }
 }
 
-enum ShippingEligibility {
-    case eligible
-    case notEligible
-    case requiresBuyersShippingInfo
-//    case requiresSellersShippingInfo
-    case unableToProcessAddress
-}
-
-class ShippingAddressChecker: ParseAddressDelegate {
-    var shippingInfo: ShippingInfo!
-    
-    init(shippingInfo: ShippingInfo) {
-        self.shippingInfo = shippingInfo
-    }
-    
-    func checkAddress() -> ShippingEligibility {
-        guard let address = UserDefaults.standard.string(forKey: UserDefaultKeys.address), address != "", address != "NA" else {
-            // The buyer has not registered their shipping address, therefore cannot be compared to the seller's shipping info.
-            return .requiresBuyersShippingInfo
-        }
-        
-        let longitude = UserDefaults.standard.double(forKey: UserDefaultKeys.longitude)
-        let latitude = UserDefaults.standard.double(forKey: UserDefaultKeys.latitude)
-        
-        guard longitude != 0 || latitude != 0 else {
-            return .requiresBuyersShippingInfo
-        }
-        
-        let buyerLocation = CLLocation(latitude: latitude, longitude: longitude)
-        let geocoder = CLGeocoder()
-        
-        // Convert the CLLocation to placemark, not String to placemark because the latter only gives you the coordinates, not the address divided into city, country, etc
-        geocoder.reverseGeocodeLocation(buyerLocation) { (placemarks, error) in
-            if let _ = error {
-                //                    return .unableToProcessAddress
-            }
-            
-            guard let placemark = placemarks?.first else { return }
-            let mk = MKPlacemark(placemark: placemark)
-            // parses the buyer's address according to the scope that the seller has specified.
-            let buyersAddress = self.parseAddress(selectedItem: mk , scope: self.shippingInfo.scope)
-            
-            if self.shippingInfo.scope == .distance {
-                guard let sellerLongitude = self.shippingInfo.longitude,
-                      let sellerLatitude = self.shippingInfo.latitude else { return }
-                
-                let sellerLocation = CLLocation(latitude: sellerLatitude, longitude: sellerLongitude)
-                let distanceInMeters: CLLocationDistance = sellerLocation.distance(from: buyerLocation)
-                
-                if distanceInMeters < self.shippingInfo.radius {
-                    print("within raidus")
-                } else {
-                    print("outside raidus")
-                }
-            } else {
-                if self.shippingInfo.addresses.contains(buyersAddress) {
-                    // the buyer's address is within the seller's shipping limitation
-                    //                    self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmPurchase.rawValue, tag: 2)
-                } else {
-                    // the buyer's address is outside the seller's shipping limitation
-                    //                    self?.configureStatusButton(buttonTitle: "Shipping Unavailbable", tag: 201)
-                }
-            }
-            
-        }
-        return .eligible
-    }
-}
+//if self?.post.shippingInfo?.scope != .none {
+//    guard let shippingInfo = self?.post.shippingInfo else { return }
+//    guard let address = UserDefaults.standard.string(forKey: UserDefaultKeys.address), address != "", address != "NA" else {
+//        // The buyer has not registered their shipping address, therefore cannot be compared to the seller's shipping info.
+//        self?.configureStatusButton(buttonTitle: "Requires Shipping Info", tag: 200)
+//        return
+//    }
+//
+//    let longitude = UserDefaults.standard.double(forKey: UserDefaultKeys.longitude)
+//    let latitude = UserDefaults.standard.double(forKey: UserDefaultKeys.latitude)
+//
+//    guard longitude != 0 || latitude != 0 else {
+//        self?.alert.showDetail("No Shipping Address", with: "You have not set the shipping address.", for: self)
+//        return
+//    }
+//
+//    let location = CLLocation(latitude: latitude, longitude: longitude)
+//    let geocoder = CLGeocoder()
+//
+//    // Convert the CLLocation to placemark, not String to placemark because the latter only gives you the coordinates, not the address divided into city, country, etc
+//    geocoder.reverseGeocodeLocation(location) { (placemarks, error) in
+//        if let _ = error {
+//            self?.alert.showDetail("Error in Buyer's Address", with: "There was an error processing your shipping address.", for: self)
+//        }
+//
+//        guard let placemark = placemarks?.first else { return }
+//        let mk = MKPlacemark(placemark: placemark)
+//        // parses the buyer's address according to the scope that the seller has specified.
+//        if let buyersAddress = self?.parseAddress(selectedItem: mk , scope: shippingInfo.scope),
+//           shippingInfo.addresses.contains(buyersAddress) {
+//            // the buyer's address is within the seller's shipping limitation
+//            self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmPurchase.rawValue, tag: 2)
+//        } else {
+//            // the buyer's address is outside the seller's shipping limitation
+//            self?.configureStatusButton(buttonTitle: "Shipping Unavailbable", tag: 201)
+//        }
+//    }
+//} else {
+//    // The seller hasn't specified the shipping address. This should never reach.
+//    self?.configureStatusButton(buttonTitle: "Unspecified Shipping Information", tag: 50000)
+//}

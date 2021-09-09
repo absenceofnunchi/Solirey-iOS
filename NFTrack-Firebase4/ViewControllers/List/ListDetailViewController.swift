@@ -161,7 +161,12 @@ class ListDetailViewController: ParentDetailViewController {
             singlePageVC = ImagePageViewController(gallery: nil)
             imageHeightConstraint.constant = 0
         }
-        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)        
+        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+        
+        // in case TangibleListEditVC gets pushed again
+        post.title = title
+        post.description = desc
+        post.files = imagesString
     }
 }
 
@@ -396,6 +401,9 @@ extension ListDetailViewController: FetchUserAddressConfigurable, HandleMapSearc
                     ]
                 )
                 self.present(infoVC, animated: true, completion: nil)
+            case 202:
+                navigationController?.popViewController(animated: true)
+                break
             default:
                 break
         }
