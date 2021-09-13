@@ -10,7 +10,7 @@ import FirebaseFirestore
 
 class SavedViewController: ParentListViewController<Post>, PostParseDelegate {
     var first: Query!
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Saved Items"
@@ -29,8 +29,8 @@ class SavedViewController: ParentListViewController<Post>, PostParseDelegate {
     func fetchData() {
         firstListener = FirebaseService.shared.db.collection("post")
             .whereField("savedBy", arrayContainsAny: [userId!])
-            .limit(to: 15)
-            .addSnapshotListener() { [weak self](querySnapshot, err) in
+            .limit(to: PAGINATION_LIMIT)
+            .addSnapshotListener() { [weak self](querySnapshot: QuerySnapshot?, err: Error?) in
                 if let _ = err {
                     self?.alert.showDetail("Data Fetch Error", with: "There was an error fetching the saved posts.", for: self)
                 } else {
@@ -95,9 +95,9 @@ class SavedViewController: ParentListViewController<Post>, PostParseDelegate {
     override func executeAfterDragging() {
         nextListener = FirebaseService.shared.db.collection("post")
             .whereField("savedBy", arrayContainsAny: [userId!])
-            .limit(to: 15)
+            .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)
-            .addSnapshotListener() { [weak self](querySnapshot, err) in
+            .addSnapshotListener() { [weak self](querySnapshot: QuerySnapshot?, err: Error?) in
                 if let _ = err {
                     self?.alert.showDetail("Data Fetch Error", with: "There was an error fetching the saved posts.", for: self)
                 } else {

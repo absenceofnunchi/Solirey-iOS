@@ -12,7 +12,7 @@ import Firebase
 import web3swift
 import QuickLook
 
-class ParentPostViewController: UIViewController, ButtonPanelConfigurable, TokenConfigurable, ShippingDelegate {
+class ParentPostViewController: UIViewController, ButtonPanelConfigurable, TokenConfigurable, ShippingDelegate, CoreSpotlightDelegate {
     let db = FirebaseService.shared.db!
     var scrollView: UIScrollView!
     var titleLabel: UILabel!
@@ -635,7 +635,7 @@ extension ParentPostViewController {
     // gs://nftrack-69488.appspot.com/ZT6HvzMcoRg1gOjNz6iS9uVf7Hq1/E7AAEBD5-C15B-4786-AA88-BAB40C87E3BC.png
     // https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2F2CA3EC02-450D-4DB1-BF71-E86338CE1135.jpeg?alt=media&token=66fc9e87-09a6-4db6-813b-2a763ce1f5dd
     
-    @objc func mint() {
+    @objc func mint1() {
         for i in 0...20 {
             FirebaseService.shared.db
                 .collection("post")
@@ -667,7 +667,7 @@ extension ParentPostViewController {
         }
     }
     
-    @objc func mint1() {
+    @objc func mint() {
         self.showSpinner { [weak self] in
             guard let userId = self?.userDefaults.string(forKey: UserDefaultKeys.userId) else {
                 self?.alert.showDetail("Sorry", with: "You need to be logged in.", for: self)
@@ -769,7 +769,18 @@ extension ParentPostViewController {
         } // 
     }
     
-    @objc func processMint(price: String?, itemTitle: String, desc: String, category: String, convertedId: String, tokensArr: Set<String>, userId: String, deliveryMethod: String, saleFormat: String, paymentMethod: String) {
+    @objc func processMint(
+        price: String?,
+        itemTitle: String,
+        desc: String,
+        category: String,
+        convertedId: String,
+        tokensArr: Set<String>,
+        userId: String,
+        deliveryMethod: String,
+        saleFormat: String,
+        paymentMethod: String
+    ) {
         
     }
     

@@ -31,7 +31,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserAddressConfigu
                         let photoURL = "\(String(describing: photoURL))"
                         UserDefaults.standard.set(photoURL, forKey: UserDefaultKeys.photoURL)
                     } else {
-                        UserDefaults.standard.set("NA", forKey: UserDefaultKeys.photoURL)
+                        UserDefaults.standard.set(nil, forKey: UserDefaultKeys.photoURL)
                     }
                     
                     Future<ShippingAddress?, PostingError> { promise in

@@ -630,6 +630,14 @@ class DigitalAssetViewController: ParentPostViewController {
                                                 self.paymentMethodLabel.text?.removeAll()
                                             }
                                             
+                                            // index Core Spotlight
+                                            self.indexSpotlight(
+                                                itemTitle: itemTitle,
+                                                desc: desc,
+                                                tokensArr: tokensArr,
+                                                convertedId: convertedId
+                                            )
+                                            
                                             if self.previewDataArr.count > 0 {
                                                 self.previewDataArr.removeAll()
                                                 self.imagePreviewVC.data.removeAll()
@@ -951,6 +959,14 @@ class DigitalAssetViewController: ParentPostViewController {
                                         case .finished:
                                             let update: [String: PostProgress] = ["update": .initializeAuction]
                                             NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                            
+                                            // index Core Spotlight
+                                            self.indexSpotlight(
+                                                itemTitle: itemTitle,
+                                                desc: desc,
+                                                tokensArr: tokensArr,
+                                                convertedId: convertedId
+                                            )
                                             
                                             DispatchQueue.main.async {
                                                 self.titleTextField.text?.removeAll()

@@ -5,8 +5,17 @@
 //  Created by J C on 2021-06-10.
 //
 
+/*
+ Abstract:
+ Real time chat between two users.
+ There are two ways to arrive on this view controller:
+    1) ListDetailVC: A previous chat might not exists, in which case a new chat is created using getDocId(), a unique identifer for each chat channel
+    2) ChatListVC: The chat already exists. ChatListVC passes post (PostCoreModel), which sets the document ID, which in turn, fetches the chat data using the document ID
+ */
+
 import UIKit
 import CryptoKit
+import FirebaseFirestore
 
 class ChatViewController: UIViewController, FileUploadable {
     var userInfo: UserInfo!
@@ -22,20 +31,24 @@ class ChatViewController: UIViewController, FileUploadable {
 //            }
         }
     }
-    final var messages = [Message]()
-    final var toolBarView: ToolBarView!
-    final var heightConstraint: NSLayoutConstraint!
+    private var messages = [Message]()
+    private var toolBarView: ToolBarView!
+    private var heightConstraint: NSLayoutConstraint!
     var alert: Alerts!
-    final var tableView: UITableView!
-    final var userId: String!
-    final var photoURL: String! {
+    private var tableView: UITableView!
+    private var userId: String!
+    private var photoURL: String! {
         return UserDefaults.standard.string(forKey: UserDefaultKeys.photoURL)
     }
-    final var displayName: String!
-    final var lastCell: CGRect!
-    final var imageName: String!
+    private var displayName: String!
+    private var lastCell: CGRect!
+    private var imageName: String!
+    private let refreshControl = UIRefreshControl()
+    private var lastSnapshot: QueryDocumentSnapshot!
+    private var firstListener: ListenerRegistration!
+    private var nextListener: ListenerRegistration!
     
-    override func viewDidLoad() {
+    final override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationItem.largeTitleDisplayMode = .never
         
@@ -51,18 +64,26 @@ class ChatViewController: UIViewController, FileUploadable {
         }
     }
     
-    override func viewWillAppear(_ animated: Bool) {
+    final override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         addKeyboardObserver()
         self.tabBarController?.tabBar.isHidden = true
     }
     
-    override func viewWillDisappear(_ animated: Bool) {
+    final override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
+        
+        if firstListener != nil {
+            firstListener.remove()
+        }
+        
+        if nextListener != nil {
+            nextListener.remove()
+        }
     }
     
-    override func viewDidDisappear(_ animated: Bool) {
+    final override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         removeKeyboardObserver()
     }
@@ -95,9 +116,7 @@ extension ChatViewController {
         tableView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
         tableView.automaticallyAdjustsScrollIndicatorInsets = false
         tableView.frame = CGRect(origin: .zero, size: view.bounds.size)
-//        tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
-//        tableView.fill()
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ChatViewController.dismissKeyboard))
         tap.cancelsTouchesInView = false
@@ -122,6 +141,11 @@ extension ChatViewController {
         toolBarView.translatesAutoresizingMaskIntoConstraints = false
         //        toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: toolBarView.bounds.size.height + 60))
         view.addSubview(toolBarView)
+        
+        let refreshTitle = NSAttributedString(string: "Text Message", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray])
+        refreshControl.attributedTitle = refreshTitle
+        refreshControl.addTarget(self, action: #selector(didRefreshTableView), for: .valueChanged)
+        tableView.addSubview(refreshControl) // not required when using UITableViewController
     }
     
     private func setConstraints() {
@@ -131,17 +155,17 @@ extension ChatViewController {
             toolBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             toolBarView.heightAnchor.constraint(greaterThanOrEqualToConstant: 60),
             heightConstraint
-            
-            //            tableView.topAnchor.constraint(equalTo: view.topAnchor),
-            //            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            //            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            //            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+    
+    @objc func didRefreshTableView() {
+        print("refreshed")
     }
 }
 
 extension ChatViewController {
-    // should only fun when the chat is run for the first time. i.e., from ListDetailVC
+    // To create the unique ID for each chat channel.
+    // Should only run when the chat is run for the first time. i.e., from ListDetailVC.
     private func getDocId() {
         let sellerUid = userInfo.uid!
         
@@ -160,39 +184,96 @@ extension ChatViewController {
     }
     
     private func fetchData(docId: String) {
-        DispatchQueue.global(qos: .background).async { [weak self] in
-            FirebaseService.shared.db.collection("chatrooms").document(docId).collection("messages")
-                .order(by: "sentAt", descending: false).addSnapshotListener { (snapShot, error) in
-                    if let error = error {
-                        self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
-                    }
-                    
-                    guard let documents = snapShot?.documents else {
-                        return
-                    }
-                    
-                    defer {
-                        DispatchQueue.main.async {
-                            self?.tableView.reloadData()
-                            self?.tableView.scrollToBottom()
-                        }
-                    }
-                    
-                    self?.messages = documents.map { docSnapshot -> Message in
-                        let data = docSnapshot.data()
-                        let senderId = data["sender"] as? String ?? ""
-                        let content = data["content"] as? String ?? ""
-                        let displayName = data["displayName"] as? String ?? ""
-                        let sentAt = data["sentAt"] as? Date ?? Date()
-                        let imageURL = data["imageURL"] as? String
-                        
-                        let formatter = DateFormatter()
-                        formatter.dateFormat = "HH:mm"
-                        let formattedDate = formatter.string(from: sentAt)
-                        
-                        return Message(id: senderId, content: content, displayName: displayName, sentAt: formattedDate, imageURL: imageURL)
+        firstListener = FirebaseService.shared.db
+            .collection("chatrooms")
+            .document(docId)
+            .collection("messages")
+            .limit(to: 3)
+            .order(by: "sentAt", descending: false)
+            .addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
+                if let error = error {
+                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                }
+                
+                defer {
+                    DispatchQueue.main.async {
+                        self?.tableView.reloadData()
+                        self?.tableView.scrollToBottom()
                     }
                 }
+                
+                guard let querySnapshot = querySnapshot else {
+                    return
+                }
+                
+                guard let lastSnapshot = querySnapshot.documents.last else {
+                    // The collection is empty.
+                    return
+                }
+                
+                self?.lastSnapshot = lastSnapshot
+                
+                if let messages = self?.parseMessage(querySnapshot.documents) {
+                    self?.messages = messages
+                }
+            }
+    }
+    
+    private func refetchData(_ lastSnapshot: QueryDocumentSnapshot, docId: String) {
+        nextListener = FirebaseService.shared.db
+            .collection("chatrooms")
+            .document(docId)
+            .collection("messages")
+            .limit(to: 3)
+            .order(by: "sentAt", descending: false)
+            .addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
+                if let error = error {
+                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                }
+                
+                defer {
+                    DispatchQueue.main.async {
+                        self?.tableView.reloadData()
+                        self?.tableView.scrollToBottom()
+                        self?.delay(1.0) {
+                            DispatchQueue.main.async {
+                                self?.refreshControl.endRefreshing()
+                            }
+                        }
+                    }
+                }
+                
+                guard let querySnapshot = querySnapshot else {
+                    return
+                }
+                
+                guard let lastSnapshot = querySnapshot.documents.last else {
+                    // The collection is empty.
+                    return
+                }
+                
+                self?.lastSnapshot = lastSnapshot
+                
+                if let messages = self?.parseMessage(querySnapshot.documents) {
+                    self?.messages = messages
+                }
+            }
+    }
+    
+    private func parseMessage(_ documents: [QueryDocumentSnapshot]) -> [Message] {
+        return documents.map { docSnapshot -> Message in
+            let data = docSnapshot.data()
+            let senderId = data["sender"] as? String ?? ""
+            let content = data["content"] as? String ?? ""
+            let displayName = data["displayName"] as? String ?? ""
+            let sentAt = data["sentAt"] as? Date ?? Date()
+            let imageURL = data["imageURL"] as? String
+            
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm"
+            let formattedDate = formatter.string(from: sentAt)
+            
+            return Message(id: senderId, content: content, displayName: displayName, sentAt: formattedDate, imageURL: imageURL)
         }
     }
     
@@ -201,7 +282,10 @@ extension ChatViewController {
             return
         }
 
-        let ref = FirebaseService.shared.db.collection("chatrooms").document(docId)
+        let ref = FirebaseService.shared.db
+            .collection("chatrooms")
+            .document(docId)
+        
         if self.messages.count == 0 {
             /// docId is the hashedId that corresponds to the unique ID of the chat room
             guard let sellerUserId = userInfo.uid else {
@@ -263,7 +347,10 @@ extension ChatViewController {
     }
     
     private func sendImage(url: URL) {
-        let ref = FirebaseService.shared.db.collection("chatrooms").document(docId)
+        let ref = FirebaseService.shared.db
+            .collection("chatrooms")
+            .document(docId)
+        
         if self.messages.count == 0 {
             /// docId is the hashedId that corresponds to the unique ID of the chat room
             guard let sellerUserId = userInfo.uid else {
@@ -336,8 +423,6 @@ extension ChatViewController {
             let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! Double
             let curve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! UInt
 
-            print("show")
-
             self.tableView.frame = CGRect(origin: .zero, size: CGSize(width: self.view.bounds.size.width, height: self.view.bounds.size.height - keyboardHeight - toolBarView.bounds.size
                                                                         .height))
 //            let insets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
@@ -351,41 +436,6 @@ extension ChatViewController {
                 self.view.layoutIfNeeded()
             })
             tableView.scrollToBottom()
-
-//                guard let lastIndexPath = self.tableView.indexPathsForVisibleRows?.last else {
-//                    return
-//                }
-//                print("lastIndexPath", lastIndexPath)
-//                let rectOfCell = self.tableView.rectForRow(at: lastIndexPath)
-//                print("rectOfCell", rectOfCell)
-//                let lastCellFrame = self.view.convert(rectOfCell, to: self.view.window)
-//                print("lastCellFrame", lastCellFrame)
-//                print("lastCellFrame.size.height", lastCellFrame.size.height)
-//                print("lastCellFrame.origin.y", lastCellFrame.origin.y)
-                print("keyboardHeight", keyboardHeight)
-                
-//                DispatchQueue.main.async {
-//                    self.tableView.frame = CGRect(origin: .zero, size: CGSize(width: self.view.bounds.size.width, height: self.view.bounds.size.height - keyboardHeight))
-//                    let insets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
-//                    self.tableView.contentInset = insets
-//                    self.tableView.scrollIndicatorInsets = insets
-//                }
-
-//                if let lastCell = self.view.viewWithTag(100) {
-//                    let lastCellFrame = lastCell.convert(lastCell.frame, to: self.view.superview)
-//                    if lastCellFrame.origin.y + lastCellFrame.size.height > keyboardViewEndFrame.origin.y {
-//                        let overlap = lastCellFrame.origin.y + lastCellFrame.size.height - keyboardViewEndFrame.origin.y + self.toolBarView.bounds.size.height + 10
-//
-////                        lastCellFrame.intersects(keyBoardFrame)
-//                        self.tableView.frame.origin.y = -overlap
-//                    }
-//                }
-//                self.delay(0.5) {
-//                    if self.lastCellFrame.origin.y + lastCellFrame.size.height > keyboardViewEndFrame.origin.y {
-//                        let overlap = lastCellFrame.origin.y + lastCellFrame.size.height - keyboardViewEndFrame.origin.y + self.toolBarView.bounds.size.height + 10
-//                        self.tableView.frame.origin.y = -overlap
-//                    }
-//                }
         }
     }
     
@@ -408,62 +458,6 @@ extension ChatViewController {
             self.view.layoutIfNeeded()
         })
     }
-    
-    // MARK: - keyboardNotifications
-//    @objc private func keyboardNotifications(notification: NSNotification) {
-//        if let userInfo = notification.userInfo {
-//            let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
-//            let keyboardViewEndFrame = view.convert(keyBoardFrame!, from: view.window)
-//            let keyboardHeight = keyboardViewEndFrame.height
-//
-//            let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! Double
-//            let curve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! UInt
-//
-//            if notification.name == UIResponder.keyboardWillHideNotification {
-//                self.tableView.frame.origin.y = .zero
-//                //                toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: view.bounds.size.height - 60), size: CGSize(width: view.bounds.size.width, height: 60))
-//
-//                self.heightConstraint.constant = 0
-//                view.setNeedsLayout()
-//                let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
-//                UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
-//                    //                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
-//                    self.view.layoutIfNeeded()
-//                })
-//            } else if notification.name == UIResponder.keyboardWillShowNotification {
-//                print("unhide")
-////                tableView.scrollToBottom() {
-//                    self.heightConstraint.constant = -keyboardHeight
-//                    self.view.setNeedsLayout()
-//                    let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
-//                    UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
-//                        //                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
-//                        self.view.layoutIfNeeded()
-//                    })
-//
-//                    //                if let lastCell = tableView.getTheLastCell() {
-//                    //
-//                    //                }
-//
-//                    if let lastCell = self.tableView.getTheLastCell() {
-//                        print("lastCell", lastCell)
-//                        let lastCellFrame = lastCell.convert(lastCell.frame, from: self.view.window)
-//                        print("lastCellFrame", lastCellFrame)
-//                        print("lastCellFrame.size.height", lastCellFrame.size.height)
-//                        print("lastCellFrame.origin.y", lastCellFrame.origin.y)
-//                        if lastCellFrame.origin.y + lastCellFrame.size.height > keyboardViewEndFrame.origin.y {
-//                            print("lastCellFrame.origin.y + lastCellFrame.size.height", lastCellFrame.origin.y + lastCellFrame.size.height)
-//                            print("eyboardViewEndFrame.origin.y", keyboardViewEndFrame.origin.y)
-//                            let overlap = lastCellFrame.origin.y + lastCellFrame.size.height - keyboardViewEndFrame.origin.y + self.toolBarView.bounds.size.height + 10
-//                            print("overlap", overlap)
-//                            self.tableView.frame.origin.y = -overlap
-//                            print("moved")
-//                        }
-//                    }
-////                }
-//            }
-//        }
-//    }
 }
 
 extension ChatViewController: TableViewConfigurable, UITableViewDataSource {

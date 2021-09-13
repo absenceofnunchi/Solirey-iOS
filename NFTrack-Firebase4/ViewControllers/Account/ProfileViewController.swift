@@ -320,7 +320,8 @@ extension ProfileViewController: UIImagePickerControllerDelegate & UINavigationC
     final func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
         
-        guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else {
+        guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage,
+              let filePath = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
             print("No image found")
             return
         }
@@ -563,7 +564,7 @@ extension ProfileViewController {
         FirebaseService.shared.db
             .collection("user")
             .document(uid)
-            .updateData(userData, completion: { [weak self] (error) in
+            .updateData(userData, completion: { [weak self] (error: Error?) in
             if let error = error {
                 completion(error)
             } else {

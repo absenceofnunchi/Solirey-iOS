@@ -25,34 +25,34 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 .whereField("bidders", notIn: [userId])
                 .order(by: "bidders")
                 .order(by: "date", descending: true)
-                .limit(to: 12)
-                .addSnapshotListener({ [weak self] (querySnapshot, err) in
-                if let err = err {
-                    self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
-                } else {
-                    guard let querySnapshot = querySnapshot else {
-                        return
-                    }
-                    
-                    guard let lastSnapshot = querySnapshot.documents.last else {
-                        // The collection is empty.
-                        return
-                    }
-                    
-                    self?.lastSnapshot = lastSnapshot
-                    
-                    defer {
-                        DispatchQueue.main.async {
-                            self?.tableView.reloadData()
+                .limit(to: PAGINATION_LIMIT)
+                .addSnapshotListener({ [weak self] (querySnapshot: QuerySnapshot?, err: Error?) in
+                    if let err = err {
+                        self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
+                    } else {
+                        defer {
+                            DispatchQueue.main.async {
+                                self?.tableView.reloadData()
+                            }
+                        }
+                        
+                        guard let querySnapshot = querySnapshot else {
+                            return
+                        }
+                        
+                        guard let lastSnapshot = querySnapshot.documents.last else {
+                            // The collection is empty.
+                            return
+                        }
+                        
+                        self?.lastSnapshot = lastSnapshot
+
+                        if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                            self?.postArr = data
+    //                        self?.dataStore = PostImageDataStore(posts: data)
                         }
                     }
-
-                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                        self?.postArr = data
-//                        self?.dataStore = PostImageDataStore(posts: data)
-                    }
-                }
-            })
+                })
         }
     }
     var subscriptionButtonItem: UIBarButtonItem!
@@ -80,7 +80,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         super.configureUI()
         tableView = configureTableView(delegate: self, dataSource: self, height: 330, cellType: CardCell.self, identifier: CardCell.identifier)
         tableView.prefetchDataSource = self
-        
         view.addSubview(tableView)
         tableView.fill()
     }
@@ -96,7 +95,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         FirebaseService.shared.db
             .collection("deviceToken")
             .document(userId)
-            .getDocument { [weak self] (document, error) in
+            .getDocument { [weak self] (document: DocumentSnapshot?, error: Error?) in
                 if let _ = error {
                     self?.alert.showDetail("Error", with: "Unable to fetch the status of your subscription. Please try again later.", for: self)
                 }
@@ -132,35 +131,35 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
             .whereField("bidders", notIn: [userId])
             .order(by: "bidders")
             .order(by: "date", descending: true)
-            .limit(to: 12)
+            .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)
-            .addSnapshotListener({ [weak self] (querySnapshot, err) in
-            if let err = err {
-                self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
-            } else {
-                guard let querySnapshot = querySnapshot else {
-                    return
-                }
-                
-                guard let lastSnapshot = querySnapshot.documents.last else {
-                    // The collection is empty.
-                    return
-                }
-                
-                self?.lastSnapshot = lastSnapshot
-                
-                defer {
-                    DispatchQueue.main.async {
-                        self?.tableView.reloadData()
+            .addSnapshotListener({ [weak self] (querySnapshot: QuerySnapshot?, err: Error?) in
+                if let err = err {
+                    self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
+                } else {
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                        }
+                    }
+                    
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        self?.postArr.append(contentsOf: data)
+    //                    self?.dataStore = PostImageDataStore(posts: data)
                     }
                 }
-                
-                if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                    self?.postArr.append(contentsOf: data)
-//                    self?.dataStore = PostImageDataStore(posts: data)
-                }
-            }
-        })
+            })
     }
     
     // refetch after the scrolled to the end
@@ -244,15 +243,13 @@ extension MainDetailViewController {
                             
                             FirebaseService.shared.db.collection("deviceToken").document(self.userId).setData([
                                 "subscription": FieldValue.arrayUnion(["\(convertedTitle)"])
-                            ], merge: true) { [weak self] (error) in
+                            ], merge: true) { [weak self] (error: Error?) in
                                 if let _ = error {
                                     self?.alert.showDetail("Subscription Error", with: "Unable to subscribe. Please try again later.", for: self)
                                 } else {
                                     Messaging.messaging().subscribe(toTopic: convertedTitle) { error in
                                         print("Subscribed to \(title) topic")
                                     }
-                                    
-                                    print("sub")
                                 }
                             }
                         }
@@ -262,15 +259,13 @@ extension MainDetailViewController {
                     
                     FirebaseService.shared.db.collection("deviceToken").document(self.userId).setData([
                         "subscription": FieldValue.arrayRemove(["\(convertedTitle)"])
-                    ], merge: true) { [weak self] (error) in
+                    ], merge: true) { [weak self] (error: Error?) in
                         if let _ = error {
                             self?.alert.showDetail("Subscription Error", with: "Unable to subscribe. Please try again later.", for: self)
                         } else {
                             Messaging.messaging().unsubscribe(fromTopic: convertedTitle) { error in
                                 print("unsubscribed to \(title) topic")
                             }
-                            
-                            print("unsub")
                         }
                     }
                 }

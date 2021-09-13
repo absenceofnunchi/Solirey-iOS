@@ -7,7 +7,6 @@
 
 import Foundation
 import FirebaseStorage
-import Firebase
 import FirebaseFirestore
 import Combine
 
@@ -27,9 +26,6 @@ class FirebaseService {
     let storage = Storage.storage()
     lazy var storageRef = storage.reference()
     var imageRef: StorageReference!
-    weak var profileReviewDelegate: ProfileReviewListViewController?
-    weak var profilePostDelegate: ProfilePostingsViewController?
-    weak var lastSnapshotDelegate: ProfileDetailViewController?
     var cancellable: AnyCancellable!
 }
 
@@ -55,6 +51,27 @@ extension FirebaseService: PostParseDelegate {
         }
     }
     
+//    final func uploadFile(fileName: String, userId: String, completion: @escaping (StorageUploadTask?, FileUploadError?) -> Void) {
+//        do {
+//            let documentDirectory = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+//            let localFile = documentDirectory.appendingPathComponent(fileName).appendingPathExtension("")
+//            if FileManager.default.fileExists(atPath: localFile.path) {
+//                let metadata = StorageMetadata()
+//                //                metadata.contentType = "image/*"
+//                
+//                imageRef = storageRef.child(userId).child(fileName)
+//                // Upload file and metadata to the object 'images/mountains.jpg'
+//                let uploadTask = imageRef.putFile(from: localFile, metadata: metadata)
+//                
+//                completion(uploadTask, nil)
+//            } else {
+//                completion(nil, .fileNotAvailable)
+//            }
+//        } catch {
+//            completion(nil, .fileManagerError(error.localizedDescription))
+//        }
+//    }
+        
     final func uploadFile(fileURL: URL, userId: String, completion: @escaping (StorageUploadTask?, FileUploadError?) -> Void) {
         if FileManager.default.fileExists(atPath: fileURL.path) {
             let metadata = StorageMetadata()
@@ -99,178 +116,6 @@ extension FirebaseService: PostParseDelegate {
                 // Data for "images/island.jpg" is returned
                 let image = UIImage(data: data!)
                 completion(image, nil)
-            }
-        }
-    }
-    
-    final func getReviews(uid: String) {
-        let first = db?.collection("review").document(uid).collection("details")
-            .order(by: "date", descending: true)
-            .limit(to: 8)
-        
-        first?.getDocuments(completion: { [weak self] (snapshot: QuerySnapshot?, error: Error?) in
-            self?.profileReviewDelegate?.didFetchPaginate(data: nil, error: error)
-            
-            guard let snapshot = snapshot else {
-                print("snapshot error")
-                return
-            }
-            
-            let documents = snapshot.documents
-            var reviewArr = [Review]()
-            documents.forEach { (querySnapshot) in
-                let data = querySnapshot.data()
-                var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash: String!
-                /// finalized date, confirmRecievedDate
-                var date: Date!
-                var starRating: Int!
-                var files: [String]?
-                data.forEach({ (item) in
-                    switch item.key {
-                        case "revieweeUserId":
-                            revieweeUserId = item.value as? String
-                        case "reviewerDisplayName":
-                            reviewerDisplayName = item.value as? String
-                        case "reviewerPhotoURL":
-                            reviewerPhotoURL = item.value as? String
-                        case "reviewerUserId":
-                            reviewerUserId = item.value as? String
-                        case "starRating":
-                            starRating = item.value as? Int
-                        case "review":
-                            review = item.value as? String
-                        case "files":
-                            files = item.value as? [String]
-                        case "confirmReceivedHash":
-                            confirmReceivedHash = item.value as? String
-                        case "date":
-                            let timeStamp = item.value as? Timestamp
-                            date = timeStamp?.dateValue()
-                        default:
-                            break
-                    }
-                })
-                let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, files: files, confirmReceivedHash: confirmReceivedHash, date: date)
-                reviewArr.append(reviewModel)
-            }
-                        
-            if let lastSnapshot = snapshot.documents.last {
-                self?.lastSnapshotDelegate?.didGetLastSnapshot(lastSnapshot)
-                self?.profileReviewDelegate?.didFetchPaginate(data: reviewArr, error: nil)
-            }
-        })
-    }
-    
-    final func refetchReviews(uid: String, lastSnapshot: QueryDocumentSnapshot) {
-        let next = db?.collection("review").document(uid).collection("details")
-            .order(by: "date", descending: true)
-            .limit(to: 8)
-            .start(afterDocument: lastSnapshot)
-        
-        next?.getDocuments(completion: { [weak self] (snapshot, error) in
-            self?.profileReviewDelegate?.didFetchPaginate(data: nil, error: error)
-
-            guard let snapshot = snapshot else {
-                print("snapshot error")
-                return
-            }
-            
-            let documents = snapshot.documents
-            var reviewArr = [Review]()
-            documents.forEach { (querySnapshot) in
-                let data = querySnapshot.data()
-                var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash: String!
-                var date: Date!
-                var starRating: Int!
-                var files: [String]?
-                data.forEach({ (item) in
-                    switch item.key {
-                        case "revieweeUserId":
-                            revieweeUserId = item.value as? String
-                        case "reviewerDisplayName":
-                            reviewerDisplayName = item.value as? String
-                        case "reviewerPhotoURL":
-                            reviewerPhotoURL = item.value as? String
-                        case "reviewerUserId":
-                            reviewerUserId = item.value as? String
-                        case "starRating":
-                            starRating = item.value as? Int
-                        case "review":
-                            review = item.value as? String
-                        case "files":
-                            files = item.value as? [String]
-                        case "confirmReceivedHash":
-                            confirmReceivedHash = item.value as? String
-                        case "date":
-                            let timeStamp = item.value as? Timestamp
-                            date = timeStamp?.dateValue()
-                        default:
-                            break
-                    }
-                })
-                
-                let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, files: files, confirmReceivedHash: confirmReceivedHash, date: date)
-                reviewArr.append(reviewModel)
-            }
-
-            if let lastSnapshot = snapshot.documents.last {
-                self?.lastSnapshotDelegate?.didGetLastSnapshot(lastSnapshot)
-                self?.profileReviewDelegate?.didFetchPaginate(data: reviewArr, error: nil)
-            }
-        })
-    }
-    
-    final func getCurrentPosts(uid: String) {
-        let first = db?.collection("post")
-            .whereField("sellerUserId", isEqualTo: uid)
-            .whereField("status", isEqualTo: "ready")
-            .order(by: "date", descending: true)
-            .limit(to: 3)
-            
-        first?.getDocuments { [weak self] (querySnapshot, err) in
-            guard let querySnapshot = querySnapshot else {
-                print("snapshot error")
-                return
-            }
-            
-            if let err = err {
-                self?.profilePostDelegate?.didFetchPaginate(data: nil, error: err)
-            } else {
-                if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
-                    self?.profilePostDelegate?.didFetchPaginate(data: postArr, error: nil)
-                }
-            }
-            
-            if let lastSnapshot = querySnapshot.documents.last {
-                self?.lastSnapshotDelegate?.didGetLastSnapshot(lastSnapshot)
-            }
-        }
-    }
-    
-    final func refetchPosts(uid: String, lastSnapshot: QueryDocumentSnapshot) {
-        let next = db?.collection("post")
-            .whereField("sellerUserId", isEqualTo: uid)
-            .whereField("status", isEqualTo: "ready")
-            .order(by: "date", descending: true)
-            .limit(to: 3)
-            .start(afterDocument: lastSnapshot)
-        
-        next?.getDocuments { [weak self] (querySnapshot, err) in
-            guard let querySnapshot = querySnapshot else {
-                print("snapshot error")
-                return
-            }
-            
-            if let err = err {
-                self?.profilePostDelegate?.didFetchPaginate(data: nil, error: err)
-            } else {
-                if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
-                    self?.profilePostDelegate?.didFetchPaginate(data: postArr, error: nil)
-                }
-            }
-            
-            if let lastSnapshot = querySnapshot.documents.last {
-                self?.lastSnapshotDelegate?.didGetLastSnapshot(lastSnapshot)
             }
         }
     }

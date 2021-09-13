@@ -9,6 +9,8 @@ import UIKit
 import FirebaseFirestore
 import FirebaseStorage
 import MapKit
+import CoreSpotlight
+import MobileCoreServices
 
 // WalletViewController
 protocol WalletDelegate: AnyObject {
@@ -610,7 +612,10 @@ protocol UsernameBannerConfigurable where Self: UIViewController {
 
 extension UsernameBannerConfigurable {
     func fetchUserData(id: String) {
-        let docRef = FirebaseService.shared.db.collection("user").document(id)
+        let docRef = FirebaseService.shared.db
+            .collection("user")
+            .document(id)
+        
         docRef.getDocument { [weak self] (document, error) in
             if let document = document, document.exists {
                 if let data = document.data() {
@@ -627,7 +632,7 @@ extension UsernameBannerConfigurable {
                     
                     let userInfo = UserInfo(
                         email: nil,
-                        displayName: displayName!,
+                        displayName: displayName ?? "N/A",
                         photoURL: photoURL,
                         uid: id,
                         memberSince: memberSince?.dateValue(),
@@ -1378,4 +1383,51 @@ extension TokenConfigurable {
 
 protocol PostEditDelegate: AnyObject {
     func didUpdatePost(title: String, desc: String, imagesString: [String]?)
+}
+
+// Index and deindex from Core Spotlight when posting a new item, deleting the item from Edit, or aborting the smart contract
+protocol CoreSpotlightDelegate {
+    func indexSpotlight(
+        itemTitle: String,
+        desc: String,
+        tokensArr: Set<String>,
+        convertedId: String
+    )
+    func deindexSpotlight(identifier: String)
+}
+
+extension CoreSpotlightDelegate {
+    func indexSpotlight(
+        itemTitle: String,
+        desc: String,
+        tokensArr: Set<String>,
+        convertedId: String
+    ) {
+        // Core Spotlight indexing
+        let attributeSet = CSSearchableItemAttributeSet(itemContentType: kUTTypeText as String)
+        attributeSet.title = itemTitle
+        attributeSet.contentCreationDate = Date()
+        attributeSet.contentDescription = desc
+        attributeSet.keywords = Array(tokensArr)
+        
+        let item = CSSearchableItem(uniqueIdentifier: convertedId, domainIdentifier: "com.ovis.NFTrack10", attributeSet: attributeSet)
+        item.expirationDate = Date.distantFuture
+        CSSearchableIndex.default().indexSearchableItems([item]) { (error) in
+            if let error = error {
+                print("Indexing error: \(error.localizedDescription)")
+            } else {
+                print("Search item for Goal successfully indexed")
+            }
+        }
+    }
+    
+    func deindexSpotlight(identifier: String) {
+        CSSearchableIndex.default().deleteSearchableItems(withIdentifiers: [identifier]) { (error) in
+            if let error = error {
+                print("Deindexing error: \(error.localizedDescription)")
+            } else {
+                print("Goal successfully deindexed")
+            }
+        }
+    }
 }

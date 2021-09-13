@@ -6,7 +6,13 @@
 //
 
 /*
- Abstract: ParencVC for MainDetailVC and ListVC. Former fetches data according to the category passed on from MainVC. The latter fetches data according to the segmented switch.
+ Abstract:
+ ParentVC for all view controllers that require asynchronous data fetch, such as image fetching or pdf file fetching, for table view controllers.
+ The table view cell has to be subclassed.
+ The data store, which houses the entirety of the large size or remote data that need to be fetched, need to be subclassed to suit the type of data that are to be fetched
+ ParentVC for view controllers like MainDetailVC, ProfileListVC and ListVC.
+ MainDetailVC fetches data according to the category passed on from MainVC.
+ ListVC fetches data according to the segmented switch.
  */
 
 import UIKit
@@ -35,15 +41,15 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     var firstListener: ListenerRegistration!
     var nextListener: ListenerRegistration!
     var lastSnapshot: QueryDocumentSnapshot!
-        
+    let PAGINATION_LIMIT: Int = 15
+
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
+        super.viewWillDisappear(animated)
         detachListeners()
     }
     
@@ -80,7 +86,6 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         cell.selectionStyle = .none
         let post = postArr[indexPath.row]
         cell.updateAppearanceFor(.pending(post))
-        
         return cell
     }
     
@@ -89,6 +94,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
                 
         // How should the operation update the cell once the data has been loaded?
         let updateCellClosure: (UIImage?) -> () = { [weak self] (image) in
+            print("updateCellClosure")
             cell.updateAppearanceFor(.fetched(image))
             guard let self = self else { return }
             self.loadingOperations.removeValue(forKey: indexPath)
@@ -113,8 +119,6 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
                 loadingOperations[indexPath] = dataLoader
             }
         }
-        
-//        print("loadingOperations", loadingOperations)
     }
     
     // 1. The entire data is loaded to the data store
@@ -122,7 +126,6 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     // 3. Add the operation to the loading queue (addOperation)
     // 4. Add the opertaion to the loadingOperation dictionary
     // 5. If the data has been loaded already, delete it form the loadingOperations queue
-    
     func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         // If there's a data loader for this index path we don't need it any more. Cancel and dispose
         if let dataLoader = loadingOperations[indexPath] {
@@ -174,8 +177,5 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {}
-    
-    func executeAfterDragging() {
-        
-    }
+    func executeAfterDragging() {}
 }

@@ -6,9 +6,10 @@
 //
 
 import UIKit
-import Firebase
+import FirebaseFirestore
+import FirebaseStorage
 
-class ParentListEditViewController: UIViewController, UITextFieldDelegate {
+class ParentListEditViewController: UIViewController, UITextFieldDelegate, CoreSpotlightDelegate {
     var scrollView = UIScrollView()
     var post: Post!
     let TOP_MARGIN: CGFloat = 40
@@ -139,7 +140,7 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate {
                         self?.db.collection("post").document(postId).updateData([
                             "title": itemTitle,
                             "description": desc
-                        ]) { [weak self] (error) in
+                        ]) { [weak self] (error: Error?) in
                             if let error = error {
                                 self?.alert.showDetail("Update Error", with: error.localizedDescription, height: 400, for: self)
                             }
@@ -172,37 +173,45 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate {
                     // responses to the main vc's button
                     mainVC.buttonAction = { _ in
                         guard let postId = self?.post.documentId else { return }
-                        self?.db.collection("post").document(postId).delete(completion: { (error) in
-                            if let error = error {
-                                self?.alert.showDetail("Update Error", with: error.localizedDescription, height: 400, for: self)
-                            }
-                            
-                            if let files = self?.post.files {
-                                for file in files {
-                                    // Create a reference to the file to delete
-                                    let storage = Storage.storage()
-                                    let storageRef = storage.reference()
-                                    let mediaRef = storageRef.child(file)
-                                    
-                                    // Delete the file
-                                    mediaRef.delete { error in
-                                        if let error = error {
-                                            // Uh-oh, an error occurred!
-                                            print("storage delete error", error)
-                                        } else {
-                                            // File deleted successfully
-                                            print("storage delete success")
+                        self?.db
+                            .collection("post")
+                            .document(postId)
+                            .delete(completion: { (error) in
+                                if let _ = error {
+                                    self?.alert.showDetail("Update Error", with: "There was an error deleting your post. Please try again.", height: 400, for: self)
+                                }
+                                
+                                if let files = self?.post.files {
+                                    for file in files {
+                                        // Create a reference to the file to delete
+                                        let storage = Storage.storage()
+                                        let storageRef = storage.reference()
+                                        let mediaRef = storageRef.child(file)
+                                        
+                                        // Delete the file
+                                        mediaRef.delete { error in
+                                            if let error = error {
+                                                // Uh-oh, an error occurred!
+                                                print("storage delete error", error)
+                                            } else {
+                                                // File deleted successfully
+                                                print("storage delete success")
+                                                
+                                                // deindex from Core Spotlight
+                                                if let identifier = self?.post.id {
+                                                    self?.deindexSpotlight(identifier: identifier)
+                                                }
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            
-                            self?.alert.showDetail("Success!", with: "Your post has been successfully deleted.", for: self, buttonAction: {
-                                self?.dismiss(animated: true, completion: {
-                                    self?.navigationController?.popToRootViewController(animated: true)
-                                })
-                            }, completion:  {})
-                        })
+                                
+                                self?.alert.showDetail("Success!", with: "Your post has been successfully deleted.", for: self, buttonAction: {
+                                    self?.dismiss(animated: true, completion: {
+                                        self?.navigationController?.popToRootViewController(animated: true)
+                                    })
+                                }, completion:  {})
+                            })
                     }
                 }
                 self.present(alertVC, animated: true, completion: nil)

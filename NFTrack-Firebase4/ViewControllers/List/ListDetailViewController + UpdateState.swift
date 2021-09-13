@@ -6,11 +6,11 @@
 //
 
 import UIKit
-import Firebase
+import FirebaseFirestore
 import web3swift
 import Combine
 
-extension ListDetailViewController {
+extension ListDetailViewController: CoreSpotlightDelegate {
     final func updateState(method: String, price: String = "0", status: PostStatus? = nil) {
         transactionService.prepareTransactionForWriting(
             method: method,
@@ -135,6 +135,11 @@ extension ListDetailViewController {
                                                             if let err = err {
                                                                 self?.alert.showDetail("Error", with: err.localizedDescription, for: self)
                                                             } else {
+                                                                // deindex from Core Spotlight (CoreSpotlightDelegate)
+                                                                if let identifier = self?.post.id {
+                                                                    self?.deindexSpotlight(identifier: identifier)
+                                                                }
+                                                                
                                                                 self?.alert.showDetail("Success!", with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.", for: self, completion:  {
                                                                     DispatchQueue.main.async {
                                                                         self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
@@ -317,7 +322,7 @@ extension ListDetailViewController {
                                         "transferHash": result.hash,
                                         "transferDate": Date(),
                                         "status": PostStatus.transferred.rawValue
-                                        ], completion: { (error) in
+                                    ], completion: { (error: Error?) in
                                             if let error = error {
                                                 promise(.failure(.generalError(reason: error.localizedDescription)))
                                             } else {

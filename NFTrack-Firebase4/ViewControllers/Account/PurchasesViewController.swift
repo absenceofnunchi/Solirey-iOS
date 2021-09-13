@@ -14,11 +14,11 @@
  */
 
 import UIKit
-import Firebase
+import FirebaseFirestore
 
 class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate {
     let CELL_HEIGHT: CGFloat = 450
-    weak final var delegate: RefetchDataDelegate?
+
     override var postArr: [Post] {
         didSet {
             tableView.contentSize = CGSize(width: self.view.bounds.size.width, height: CGFloat(postArr.count) * CELL_HEIGHT + 80)
@@ -28,6 +28,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
     
     override func configureUI() {
         super.configureUI()
+        title = "Purchases"
         tableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
         tableView.prefetchDataSource = self
         view.addSubview(tableView)
@@ -48,7 +49,9 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
             .whereField("status", in: [PostStatus.complete.rawValue])
-            .getDocuments() { [weak self] (querySnapshot, error) in
+            .order(by: "date", descending: true)
+            .limit(to: PAGINATION_LIMIT)
+            .getDocuments() { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
                 if let error = error {
                     self?.alert.showDetail("Error in Fetching Data", with: error.localizedDescription, for: self)
                 } else {
@@ -63,9 +66,61 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
                         }
                     }
                     
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                         self?.postArr.removeAll()
                         self?.postArr = data
+                    }
+                }
+            }
+    }
+    
+    func refetchData(lastSnapshot: QueryDocumentSnapshot) {
+        guard let userId = userId else { return }
+        FirebaseService.shared.db.collection("post")
+            .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
+            .whereField("status", in: [PostStatus.complete.rawValue])
+            .order(by: "date", descending: true)
+            .limit(to: PAGINATION_LIMIT)
+            .start(afterDocument: lastSnapshot)
+            .getDocuments() { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
+                if let error = error {
+                    self?.alert.showDetail("Error in Fetching Data", with: error.localizedDescription, for: self)
+                } else {
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                            self?.delay(1.0) {
+                                DispatchQueue.main.async {
+                                    self?.refreshControl.endRefreshing()
+                                }
+                            }
+                        }
+                    }
+                    
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        self?.postArr.append(contentsOf: data)
                     }
                 }
             }
@@ -87,18 +142,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
         self.navigationController?.pushViewController(listDetailVC, animated: true)
     }
     
-    override func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        let offset = scrollView.contentOffset
-        let bounds = scrollView.bounds
-        let size = scrollView.contentSize
-        let inset = scrollView.contentInset
-        let y = offset.y + bounds.size.height - inset.bottom
-        let h = size.height
-        let reload_distance:CGFloat = 10.0
-        if y > (h + reload_distance) {
-            if postArr.count > 0 {
-                delegate?.didFetchData()
-            }
-        }
+    override func executeAfterDragging() {
+        refetchData(lastSnapshot: lastSnapshot)
     }
 }

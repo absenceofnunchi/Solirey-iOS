@@ -32,6 +32,7 @@
 		49333361268281B800B8BFC2 /* ProfilePostingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49333360268281B800B8BFC2 /* ProfilePostingsViewController.swift */; };
 		493333662682860000B8BFC2 /* ReviewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493333652682860000B8BFC2 /* ReviewCell.swift */; };
 		4933336B26828E4600B8BFC2 /* ProfileListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933336A26828E4600B8BFC2 /* ProfileListViewController.swift */; };
+		4938D17726ED478D00624A60 /* UserDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4938D17626ED478C00624A60 /* UserDetailViewController.swift */; };
 		493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */; };
 		493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */; };
 		493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */; };
@@ -208,6 +209,7 @@
 		49333360268281B800B8BFC2 /* ProfilePostingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePostingsViewController.swift; sourceTree = "<group>"; };
 		493333652682860000B8BFC2 /* ReviewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewCell.swift; sourceTree = "<group>"; };
 		4933336A26828E4600B8BFC2 /* ProfileListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileListViewController.swift; sourceTree = "<group>"; };
+		4938D17626ED478C00624A60 /* UserDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDetailViewController.swift; sourceTree = "<group>"; };
 		493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletGenerationController.swift; sourceTree = "<group>"; };
 		493BF9B9264AC28D00B9C9D2 /* AppDataTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDataTypes.swift; sourceTree = "<group>"; };
 		493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
@@ -709,6 +711,7 @@
 				495FD2DF26895B3300F1D81D /* ProfileReviewListViewController.swift */,
 				495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */,
 				49721DA126D58384009BA7E7 /* ReportViewController.swift */,
+				4938D17626ED478C00624A60 /* UserDetailViewController.swift */,
 			);
 			path = List;
 			sourceTree = "<group>";
@@ -1126,6 +1129,7 @@
 				49054D3D26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift in Sources */,
 				499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */,
 				497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */,
+				4938D17726ED478D00624A60 /* UserDetailViewController.swift in Sources */,
 				4964E56D2649694A005B3268 /* CoreDataServices.swift in Sources */,
 				49221B79266FE4CB0031A756 /* ProfileDetailViewController.swift in Sources */,
 				493BF9C8264C166000B9C9D2 /* CreditCardView.swift in Sources */,

@@ -387,6 +387,14 @@ class PostViewController: ParentPostViewController {
                                                 docId: self.documentId
                                             )
                                             
+                                            // index Core Spotlight
+                                            self.indexSpotlight(
+                                                itemTitle: itemTitle,
+                                                desc: desc,
+                                                tokensArr: tokensArr,
+                                                convertedId: convertedId
+                                            )
+                                            
                                             // reset the fields
                                             DispatchQueue.main.async {
                                                 self.titleTextField.text?.removeAll()

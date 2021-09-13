@@ -42,6 +42,7 @@ class ParentDetailViewController: UIViewController, SharableDelegate, PostEditDe
     var fetchedImage: UIImage!
     var userInfo: UserInfo! {
         didSet {
+            print("userInfo", userInfo)
             userInfoDidSet()
         }
     }

@@ -36,11 +36,6 @@ class ParentProfileViewController: UIViewController, UIScrollViewDelegate {
         super.viewDidLoad()
         configureUI()
     }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-//        self.scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: self.view.bounds.size.height)
-    }
 }
 
 extension ParentProfileViewController {
@@ -48,8 +43,8 @@ extension ParentProfileViewController {
         alert = Alerts()
         view.backgroundColor = .white
         scrollView = UIScrollView()
-        scrollView.automaticallyAdjustsScrollIndicatorInsets = false
-        scrollView.contentInsetAdjustmentBehavior = .never
+//        scrollView.automaticallyAdjustsScrollIndicatorInsets = false
+//        scrollView.contentInsetAdjustmentBehavior = .never
         scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: 1200)
         scrollView.delegate = self
         view.addSubview(scrollView)
@@ -73,7 +68,7 @@ extension ParentProfileViewController {
         scrollView.addSubview(displayNameTextField)
         
         NSLayoutConstraint.activate([
-            profileImageButton.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 150),
+            profileImageButton.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 80),
             profileImageButton.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             profileImageButton.heightAnchor.constraint(equalToConstant: 100),
             profileImageButton.widthAnchor.constraint(equalToConstant: 100),
@@ -88,8 +83,30 @@ extension ParentProfileViewController {
             displayNameTextField.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
             displayNameTextField.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
         ])
+        
+//        NSLayoutConstraint.activate([
+//            profileImageButton.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 150),
+//            profileImageButton.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
+//            profileImageButton.heightAnchor.constraint(equalToConstant: 100),
+//            profileImageButton.widthAnchor.constraint(equalToConstant: 100),
+//
+//            displayNameTitleLabel.topAnchor.constraint(equalTo: profileImageButton.bottomAnchor, constant: 50),
+//            displayNameTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+//            displayNameTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
+//            displayNameTitleLabel.heightAnchor.constraint(equalToConstant: 50),
+//
+//            displayNameTextField.topAnchor.constraint(equalTo: displayNameTitleLabel.bottomAnchor, constant: 10),
+//            displayNameTextField.heightAnchor.constraint(equalToConstant: 50),
+//            displayNameTextField.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
+//            displayNameTextField.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
+            
+//            segmentedControl.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 50),
+//            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+//            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+//            segmentedControl.heightAnchor.constraint(equalToConstant: 50),
+//        ])
     }
-    
+
     @objc func configureCustomProfileImage(from url: String) {
         
     }
