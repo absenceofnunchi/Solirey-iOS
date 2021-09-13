@@ -28,7 +28,7 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
     private var addressTitleLabel: UILabel!
     private var addressDeleteButton: UIButton!
     private var addressLabel: UILabel!
-    private var profileImageName: String!
+    private var profileImageURL: URL!
     private var updateButton: UIButton!
     private var storage = Set<AnyCancellable>()
     private var coordinates: CLLocationCoordinate2D!
@@ -321,7 +321,7 @@ extension ProfileViewController: UIImagePickerControllerDelegate & UINavigationC
         picker.dismiss(animated: true)
         
         guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage,
-              let filePath = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
+              let url = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
             print("No image found")
             return
         }
@@ -331,8 +331,7 @@ extension ProfileViewController: UIImagePickerControllerDelegate & UINavigationC
         profileImageButton.imageView?.layer.cornerRadius = profileImageButton.bounds.height/2.0
         profileImageButton.imageView?.contentMode = .scaleToFill
         
-        profileImageName = UUID().uuidString
-        let _ = saveImage(imageName: profileImageName, image: image)
+        profileImageURL = url
         
         if deleteImageButton == nil {
             guard let deleteImage = deleteImage else { return }
@@ -360,10 +359,21 @@ extension ProfileViewController: UIImagePickerControllerDelegate & UINavigationC
 }
 
 extension ProfileViewController: FileUploadable {
+//    final func uploadProfileImage(uid: String) -> AnyPublisher<URL?, PostingError> {
+//        if self.profileImageName != nil {
+//            return Future<URL?, PostingError> { promise in
+//                self.uploadFileWithPromise(fileName: self.profileImageName, userId: uid, promise: promise)
+//            }
+//            .eraseToAnyPublisher()
+//        } else {
+//            return Result.Publisher(nil).eraseToAnyPublisher()
+//        }
+//    }
+    
     final func uploadProfileImage(uid: String) -> AnyPublisher<URL?, PostingError> {
-        if self.profileImageName != nil {
+        if self.profileImageURL != nil {
             return Future<URL?, PostingError> { promise in
-                self.uploadFileWithPromise(fileName: self.profileImageName, userId: uid, promise: promise)
+                self.uploadImage(url: self.profileImageURL, userId: uid, promise: promise)
             }
             .eraseToAnyPublisher()
         } else {
@@ -391,13 +401,8 @@ extension ProfileViewController: FileUploadable {
                     let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
                     changeRequest?.displayName = displayName
                     changeRequest?.photoURL = url
-                    changeRequest?.commitChanges { [weak self] (error) in
+                    changeRequest?.commitChanges { (error) in
                         if let _ = error {
-                            guard let profileImageName = self?.profileImageName else{
-                                promise(.failure(.generalError(reason: "Unable to update the profile.")))
-                                return
-                            }
-                            self?.deleteFile(fileName: profileImageName)
                             promise(.failure(.generalError(reason: "Unable to update your profile.")))
                         }
                         
@@ -406,15 +411,10 @@ extension ProfileViewController: FileUploadable {
                 }
                 .eraseToAnyPublisher()
             }
-            .flatMap { [weak self] (url) -> AnyPublisher<URL?, PostingError> in
+            .flatMap { (url) -> AnyPublisher<URL?, PostingError> in
                 Future<URL?, PostingError> { promise in
                     Auth.auth().currentUser?.updateEmail(to: email) { (error) in
                         if let _ = error {
-                            guard let profileImageName = self?.profileImageName else{
-                                promise(.failure(.generalError(reason: "Unable to update the profile.")))
-                                return
-                            }
-                            self?.deleteFile(fileName: profileImageName)
                             promise(.failure(.generalError(reason: "Unable to update the email.")))
                         }
                         
@@ -453,9 +453,7 @@ extension ProfileViewController: FileUploadable {
                         self?.alert.showDetail("Update Error", with: "There was an error updating your profile", for: self)
                         break
                 }
-            } receiveValue: { [weak self] (url) in
-                guard let profileImageName = self?.profileImageName else { return }
-                self?.deleteFile(fileName: profileImageName)
+            } receiveValue: { (_) in
             }
             .store(in: &storage)
     }
@@ -511,7 +509,7 @@ extension ProfileViewController: FileUploadable {
                 DispatchQueue.main.async {
                     self?.profileImageButton.setImage(configuredImage, for: .normal)
                     self?.deleteImageButton.isHidden = true
-                    self?.profileImageName = nil
+                    self?.profileImageURL = nil
                 }
             })
         }

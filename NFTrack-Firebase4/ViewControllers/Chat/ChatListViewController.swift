@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import Firebase
 import FirebaseFirestore
 
 class ChatListViewController: ParentListViewController<ChatListModel> {
@@ -31,7 +30,7 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
         view.addSubview(tableView)
         tableView.fill()
     }
-    
+
     final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: ChatListCell.identifier) as? ChatListCell else {
             fatalError("Sorry, could not load cell")
@@ -45,14 +44,14 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
 
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
-        
+
         var displayName: String!
         if post.sellerUserId != userId {
             displayName = post.sellerDisplayName
         } else {
             displayName = post.buyerDisplayName
         }
-        
+
         let userInfo = UserInfo(
             email: nil,
             displayName: displayName,
@@ -60,30 +59,11 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
             uid: userId,
             memberSince: nil
         )
-        
+
         let chatVC = ChatViewController()
         chatVC.post = post
         chatVC.userInfo = userInfo
         self.navigationController?.pushViewController(chatVC, animated: true)
-    }
-    
-    private func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-//            postArr.remove(at: indexPath.row)
-//            tableView.deleteSections([indexPath.row], with: .fade)
-            let chatRoom = postArr[indexPath.row]
-            
-            FirebaseService.shared.db
-                .collection("chatrooms")
-                .document(chatRoom.documentId)
-                .delete(completion: { (error) in
-                    if let error = error {
-                        print(error)
-                    } else {
-                        print("delete success")
-                    }
-                })
-        }
     }
 
     private func fetchChatList() {
@@ -184,6 +164,7 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
                         break
                 }
             }
+            
             let chatListModel = ChatListModel(
                 documentId: doc.documentID,
                 latestMessage: latestMessage,
@@ -203,4 +184,163 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
     final override func executeAfterDragging() {
         refetchChatList(lastSnapshot: lastSnapshot)
     }
+    
+    
+    final override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        guard let cell = cell as? ParentTableCell<ChatListCell> else { return }
+        
+        // How should the operation update the cell once the data has been loaded?
+        let updateCellClosure: (UIImage?) -> () = { [weak self] (image) in
+            print("updateCellClosure")
+            cell.updateAppearanceFor(.fetched(image))
+            guard let self = self else { return }
+            self.loadingOperations.removeValue(forKey: indexPath)
+        }
+        
+        // Try to find an existing data loader
+        if let dataLoader = loadingOperations[indexPath] {
+            // Has the data already been loaded?
+            if let image = dataLoader.image {
+                cell.updateAppearanceFor(.fetched(image))
+                loadingOperations.removeValue(forKey: indexPath)
+            } else {
+                // No data loaded yet, so add the completion closure to update the cell once the data arrives
+                dataLoader.loadingCompleteHandler = updateCellClosure
+            }
+        } else {
+            // Need to create a data loaded for this index path
+            if let dataLoader = dataStore.loadImage(at: indexPath.row) {
+                // Provide the completion closure, and kick off the loading operation
+                dataLoader.loadingCompleteHandler = updateCellClosure
+                loadingQueue.addOperation(dataLoader)
+                loadingOperations[indexPath] = dataLoader
+            }
+        }
+    }
+    
+    // 1. The entire data is loaded to the data store
+    // 2. For every cell, prefetch the Operation that pertains to indexPath.row
+    // 3. Add the operation to the loading queue (addOperation)
+    // 4. Add the opertaion to the loadingOperation dictionary
+    // 5. If the data has been loaded already, delete it form the loadingOperations queue
+    final override func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        // If there's a data loader for this index path we don't need it any more. Cancel and dispose
+        if let dataLoader = loadingOperations[indexPath] {
+            dataLoader.cancel()
+            loadingOperations.removeValue(forKey: indexPath)
+        }
+    }
+    
+    // MARK:- TableView Prefetching DataSource
+    final override func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
+        for indexPath in indexPaths {
+            if let _ = loadingOperations[indexPath] { return }
+            if let dataLoader = dataStore.loadImage(at: indexPath.row) {
+                loadingQueue.addOperation(dataLoader)
+                loadingOperations[indexPath] = dataLoader
+            }
+        }
+    }
+    
+    final override func tableView(_ tableView: UITableView, cancelPrefetchingForRowsAt indexPaths: [IndexPath]) {
+        for indexPath in indexPaths {
+            if let dataLoader = loadingOperations[indexPath] {
+                dataLoader.cancel()
+                loadingOperations.removeValue(forKey: indexPath)
+            }
+        }
+    }
+}
+
+// MARK: - Trailing action
+extension ChatListViewController {
+    final override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
+    final override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        //
+    }
+    
+    final override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { _, _, completionHandler in
+            print("delete action")
+            completionHandler(true)
+        }
+        deleteAction.backgroundColor = .red
+        let configuration = UISwipeActionsConfiguration(actions: [deleteAction])
+        configuration.performsFirstActionWithFullSwipe = false
+        return configuration
+    }
+    
+    final override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        return UISwipeActionsConfiguration(actions: [
+            makeDeleteContextualAction(forRowAt: indexPath)
+        ])
+    }
+    
+    private func makeDeleteContextualAction(forRowAt indexPath: IndexPath) -> UIContextualAction {
+        return UIContextualAction(style: .destructive, title: "Delete") { (action, swipeButtonView, completion) in
+            print("DELETE HERE")
+            
+            completion(true)
+        }
+    }
+    
+    final override func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        return nil
+    }
+    
+    final override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let post = postArr[indexPath.row]
+        
+        var displayName: String!
+        if post.sellerUserId != userId {
+            displayName = post.sellerDisplayName
+        } else {
+            displayName = post.buyerDisplayName
+        }
+        
+        let userInfo = UserInfo(
+            email: nil,
+            displayName: displayName,
+            photoURL: nil,
+            uid: userId,
+            memberSince: nil
+        )
+        
+        let delete = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] action in
+            print("delete")
+        }
+        
+        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSString, previewProvider: { [weak self] in self?.getPreviewVC(for: indexPath, post: post, userInfo: userInfo) }) { _ in
+            UIMenu(title: "", children: [delete])
+        }
+    }
+    
+    private func getPreviewVC(for indexPath: IndexPath, post: ChatListModel, userInfo: UserInfo) -> UIViewController? {
+        let post = postArr[indexPath.row]
+        
+        var displayName: String!
+        if post.sellerUserId != userId {
+            displayName = post.sellerDisplayName
+        } else {
+            displayName = post.buyerDisplayName
+        }
+        
+        let userInfo = UserInfo(
+            email: nil,
+            displayName: displayName,
+            photoURL: nil,
+            uid: userId,
+            memberSince: nil
+        )
+        
+        let chatVC = ChatViewController()
+        chatVC.post = post
+        chatVC.userInfo = userInfo
+        return chatVC
+    }
+    
+    
 }

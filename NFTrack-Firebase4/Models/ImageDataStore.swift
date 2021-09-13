@@ -135,30 +135,32 @@ func downloadImageFrom(_ url: URL, completeHandler: @escaping (UIImage?) -> ()) 
             print("1")
             return
         }
-        
-//        guard let mimeType = response?.mimeType, mimeType.hasPrefix("image") else {
-//            print("2")
-//            return
-//        }
-        
+
         print("response?.mimeType", response?.mimeType)
+        
+        guard let mimeType = response?.mimeType, mimeType.hasPrefix("image") else {
+            print("2")
+            return
+        }
         
         guard let data = data else {
             print("3")
             return
         }
-        
+
         guard error == nil else {
             print("4")
             return
         }
-        
+
         guard let _image = UIImage(data: data) else {
             print("5")
             return
         }
-        
+
         print("_image", _image)
         completeHandler(_image)
     }.resume()
 }
+
+// https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2FF0DDF8AF-0378-45A0-BD07-75F6B92BC1B1.jpeg?alt=media&token=dd7a24df-a184-4ec9-a720-9f777280980a

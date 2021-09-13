@@ -173,6 +173,7 @@ protocol FileUploadable where Self:UIViewController {
     func uploadFile(fileName: String, userId: String, completion: @escaping (URL) -> Void)
     func uploadFileWithPromise(fileURL: URL, userId: String, promise: @escaping (Result<String?, PostingError>) -> Void)
     func uploadFileWithPromise(fileName: String, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void)
+    func uploadImage(url: URL, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void)
     func deleteFile(fileName: String)
     func saveImage(imageName: String, image: UIImage) -> URL?
     func saveFile(fileName: String, data: Data)
@@ -420,6 +421,65 @@ extension FileUploadable {
                 uploadTask.observe(.success) { snapshot in
                     // Upload completed successfully
                     self?.deleteFile(fileName: fileName)
+                    snapshot.reference.downloadURL { (url, error) in
+                        if let _ = error {
+                            promise(.failure(.generalError(reason: "Unable to upload.")))
+                        }
+                        
+                        promise(.success(url))
+                    }
+                }
+                
+                uploadTask.observe(.failure) { snapshot in
+                    if let error = snapshot.error as NSError? {
+                        switch (StorageErrorCode(rawValue: error.code)!) {
+                            case .objectNotFound:
+                                // File doesn't exist
+                                promise(.failure(.generalError(reason: "Object not found")))
+                                break
+                            case .unauthorized:
+                                // User doesn't have permission to access file
+                                promise(.failure(.generalError(reason: "Upload unauthorized")))
+                                break
+                            case .cancelled:
+                                // User canceled the upload
+                                promise(.failure(.generalError(reason: "Upload cancelled")))
+                                break
+                                
+                            /* ... */
+                            
+                            case .unknown:
+                                // Unknown error occurred, inspect the server response
+                                promise(.failure(.generalError(reason: "Unknown Error")))
+                                break
+                            default:
+                                // A separate error occurred. This is a good place to retry the upload.
+                                promise(.failure(.generalError(reason: "Unknown error. Please try again.")))
+                                break
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func uploadImage(url: URL, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void) {
+        FirebaseService.shared.uploadImage(fileURL: url, userId: userId) { (uploadTask, fileUploadError) in
+            if let error = fileUploadError {
+                switch error {
+                    case .fileManagerError(let msg):
+                        promise(.failure(.generalError(reason: msg)))
+                    case .fileNotAvailable:
+                        promise(.failure(.generalError(reason: "Image file not found.")))
+                    case .userNotLoggedIn:
+                        promise(.failure(.generalError(reason: "You need to be logged in!")))
+                }
+            }
+            
+            if let uploadTask = uploadTask {
+                // Listen for state changes, errors, and completion of the upload.
+                uploadTask.observe(.success) { snapshot in
+                    // Upload completed successfully
                     snapshot.reference.downloadURL { (url, error) in
                         if let _ = error {
                             promise(.failure(.generalError(reason: "Unable to upload.")))

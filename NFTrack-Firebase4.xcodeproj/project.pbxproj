@@ -54,6 +54,8 @@
 		4958118A26D978EF002C8F3B /* LocationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958118926D978EF002C8F3B /* LocationSearchViewController.swift */; };
 		4958118F26D9B082002C8F3B /* AddressCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958118E26D9B082002C8F3B /* AddressCell.swift */; };
 		4958119426DB4EFB002C8F3B /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958119326DB4EFB002C8F3B /* MapViewController.swift */; };
+		495CCBD526EFAEBA00650EAE /* TestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495CCBD426EFAEBA00650EAE /* TestViewController.swift */; };
+		495CCBDA26EFBF2600650EAE /* ParentTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495CCBD926EFBF2600650EAE /* ParentTestViewController.swift */; };
 		495D5E08268FE92F00F5DF71 /* InfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495D5E07268FE92E00F5DF71 /* InfoViewController.swift */; };
 		495FB33B26B70D000047E91D /* AuctionDeploymentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */; };
 		495FB36826B9F9500047E91D /* NFTrack_Firebase4Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FB36726B9F9500047E91D /* NFTrack_Firebase4Tests.swift */; };
@@ -231,6 +233,8 @@
 		4958118926D978EF002C8F3B /* LocationSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSearchViewController.swift; sourceTree = "<group>"; };
 		4958118E26D9B082002C8F3B /* AddressCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressCell.swift; sourceTree = "<group>"; };
 		4958119326DB4EFB002C8F3B /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
+		495CCBD426EFAEBA00650EAE /* TestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestViewController.swift; sourceTree = "<group>"; };
+		495CCBD926EFBF2600650EAE /* ParentTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentTestViewController.swift; sourceTree = "<group>"; };
 		495D5E07268FE92E00F5DF71 /* InfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoViewController.swift; sourceTree = "<group>"; };
 		495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionDeploymentTests.swift; sourceTree = "<group>"; };
 		495FB36726B9F9500047E91D /* NFTrack_Firebase4Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NFTrack_Firebase4Tests.swift; sourceTree = "<group>"; };
@@ -401,6 +405,8 @@
 				49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */,
 				49E7D64B267AA73F00E8815A /* ChatViewController1.swift */,
 				499702B4267459D8001DD80A /* ChatListViewController.swift */,
+				495CCBD426EFAEBA00650EAE /* TestViewController.swift */,
+				495CCBD926EFBF2600650EAE /* ParentTestViewController.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -1090,6 +1096,7 @@
 				492A00B326A4AA7B008B9B34 /* AlertViewController.swift in Sources */,
 				4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */,
 				495FD329268D284E00F1D81D /* MainViewController + SearchBar.swift in Sources */,
+				495CCBD526EFAEBA00650EAE /* TestViewController.swift in Sources */,
 				499F9958266B2ADB00FC6CDE /* WebViewController.swift in Sources */,
 				496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */,
 				4964E4602641B001005B3268 /* SignInViewController.swift in Sources */,
@@ -1181,6 +1188,7 @@
 				49765A5226ADEE850094A8EC /* TestSocketDelegate.swift in Sources */,
 				495FD31C268B9DCA00F1D81D /* NewPostViewController.swift in Sources */,
 				49054D4226CA310300ECCB58 /* PendingIndicatorView.swift in Sources */,
+				495CCBDA26EFBF2600650EAE /* ParentTestViewController.swift in Sources */,
 				499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */,
 				49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */,
 				4964E568264968A7005B3268 /* Errors.swift in Sources */,

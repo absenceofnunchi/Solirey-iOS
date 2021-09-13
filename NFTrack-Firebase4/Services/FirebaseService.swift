@@ -50,32 +50,26 @@ extension FirebaseService: PostParseDelegate {
             completion(nil, .fileManagerError(error.localizedDescription))
         }
     }
-    
-//    final func uploadFile(fileName: String, userId: String, completion: @escaping (StorageUploadTask?, FileUploadError?) -> Void) {
-//        do {
-//            let documentDirectory = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-//            let localFile = documentDirectory.appendingPathComponent(fileName).appendingPathExtension("")
-//            if FileManager.default.fileExists(atPath: localFile.path) {
-//                let metadata = StorageMetadata()
-//                //                metadata.contentType = "image/*"
-//                
-//                imageRef = storageRef.child(userId).child(fileName)
-//                // Upload file and metadata to the object 'images/mountains.jpg'
-//                let uploadTask = imageRef.putFile(from: localFile, metadata: metadata)
-//                
-//                completion(uploadTask, nil)
-//            } else {
-//                completion(nil, .fileNotAvailable)
-//            }
-//        } catch {
-//            completion(nil, .fileManagerError(error.localizedDescription))
-//        }
-//    }
         
     final func uploadFile(fileURL: URL, userId: String, completion: @escaping (StorageUploadTask?, FileUploadError?) -> Void) {
         if FileManager.default.fileExists(atPath: fileURL.path) {
             let metadata = StorageMetadata()
             //                metadata.contentType = "image/*"
+            
+            imageRef = storageRef.child(userId).child(fileURL.lastPathComponent)
+            // Upload file and metadata to the object 'images/mountains.jpg'
+            let uploadTask = imageRef.putFile(from: fileURL, metadata: metadata)
+            
+            completion(uploadTask, nil)
+        } else {
+            completion(nil, .fileNotAvailable)
+        }
+    }
+    
+    final func uploadImage(fileURL: URL, userId: String, completion: @escaping (StorageUploadTask?, FileUploadError?) -> Void) {
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            let metadata = StorageMetadata()
+            metadata.contentType = "image/*"
             
             imageRef = storageRef.child(userId).child(fileURL.lastPathComponent)
             // Upload file and metadata to the object 'images/mountains.jpg'

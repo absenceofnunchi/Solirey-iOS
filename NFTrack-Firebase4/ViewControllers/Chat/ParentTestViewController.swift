@@ -1,80 +1,42 @@
 //
-//  ParentListViewController.swift
+//  ParentTestViewController.swift
 //  NFTrack-Firebase4
 //
-//  Created by J C on 2021-06-09.
+//  Created by J C on 2021-09-13.
 //
-
-/*
- Abstract:
- ParentVC for all view controllers that require asynchronous data fetch, such as image fetching or pdf file fetching, for table view controllers.
- The table view cell has to be subclassed.
- The data store, which houses the entirety of the large size or remote data that need to be fetched, need to be subclassed to suit the type of data that are to be fetched
- ParentVC for view controllers like MainDetailVC, ProfileListVC and ListVC.
- MainDetailVC fetches data according to the category passed on from MainVC.
- ListVC fetches data according to the segmented switch.
- */
 
 import UIKit
 import FirebaseFirestore
 
-protocol DataStoreDelegate: AnyObject {
-    associatedtype T
-    func setDataStore(postArr: [T])
-}
-
-class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITableViewDataSource, UITableViewDelegate, UITableViewDataSourcePrefetching, TableViewRefreshDelegate, UIContextMenuInteractionDelegate {
+class ParentTestViewController<T>: UIViewController, TableViewConfigurable, UITableViewDataSource, UITableViewDataSourcePrefetching, UITableViewDelegate {
     var dataStore: ImageDataStore<T>!
     var loadingQueue = OperationQueue()
     var loadingOperations = [IndexPath : DataLoadOperation]()
-    let refreshControl = UIRefreshControl()
-    var alert: Alerts!
     var postArr = [T]() {
         didSet {
             setDataStore(postArr: postArr)
         }
     }
     var tableView: UITableView!
-    var userId: String! {
-        return UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
-    }
     var firstListener: ListenerRegistration!
     var nextListener: ListenerRegistration!
     var lastSnapshot: QueryDocumentSnapshot!
     let PAGINATION_LIMIT: Int = 15
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        configureUI()
-    }
     
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        detachListeners()
+    var userId: String! {
+        return UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
     }
     
     func setDataStore(postArr: [T]) {
         dataStore = ImageDataStore(posts: postArr)
     }
     
-    func detachListeners() {
-        if isMovingToParent {
-            if firstListener != nil {
-                firstListener.remove()
-            }
-            
-            if nextListener != nil {
-                nextListener.remove()
-            }
-        }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // Do any additional setup after loading the view.
     }
-    
-    // MARK: - configureUI
-    func configureUI() {
-        view.backgroundColor = .white
-        alert = Alerts()
-    }
-    
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return postArr.count
     }
@@ -90,8 +52,8 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        guard let cell = cell as? ParentTableCell<T> else { return }
-                
+        guard let cell = cell as? ParentTableCell<ChatListCell> else { return }
+
         // How should the operation update the cell once the data has been loaded?
         let updateCellClosure: (UIImage?) -> () = { [weak self] (image) in
             print("updateCellClosure")
@@ -99,7 +61,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
             guard let self = self else { return }
             self.loadingOperations.removeValue(forKey: indexPath)
         }
-        
+
         // Try to find an existing data loader
         if let dataLoader = loadingOperations[indexPath] {
             // Has the data already been loaded?
@@ -120,12 +82,12 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
             }
         }
     }
-    
-    // 1. The entire data is loaded to the data store
-    // 2. For every cell, prefetch the Operation that pertains to indexPath.row
-    // 3. Add the operation to the loading queue (addOperation)
-    // 4. Add the opertaion to the loadingOperation dictionary
-    // 5. If the data has been loaded already, delete it form the loadingOperations queue
+//
+//    // 1. The entire data is loaded to the data store
+//    // 2. For every cell, prefetch the Operation that pertains to indexPath.row
+//    // 3. Add the operation to the loading queue (addOperation)
+//    // 4. Add the opertaion to the loadingOperation dictionary
+//    // 5. If the data has been loaded already, delete it form the loadingOperations queue
     func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         // If there's a data loader for this index path we don't need it any more. Cancel and dispose
         if let dataLoader = loadingOperations[indexPath] {
@@ -133,12 +95,12 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
             loadingOperations.removeValue(forKey: indexPath)
         }
     }
-    
+
     // MARK:- TableView Delegate
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 
     }
-    
+
     // MARK:- TableView Prefetching DataSource
     func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
         for indexPath in indexPaths {
@@ -149,7 +111,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
             }
         }
     }
-    
+
     func tableView(_ tableView: UITableView, cancelPrefetchingForRowsAt indexPaths: [IndexPath]) {
         for indexPath in indexPaths {
             if let dataLoader = loadingOperations[indexPath] {
@@ -174,32 +136,4 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     @objc dynamic func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         return nil
     }
-    
-    @objc dynamic func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
-        return nil
-    }
-    
-    @objc dynamic func tableView(_ tableView: UITableView,contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-        return nil
-    }
-    
-    // MARK: - didRefreshTableView
-    @objc func didRefreshTableView(index: Int = 0) {}
-    
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        let offset = scrollView.contentOffset
-        let bounds = scrollView.bounds
-        let size = scrollView.contentSize
-        let inset = scrollView.contentInset
-        let y = offset.y + bounds.size.height - inset.bottom
-        let h = size.height
-        let reload_distance:CGFloat = 10.0
-        if y > (h + reload_distance) {
-            guard self.postArr.count > 0 else { return }
-            executeAfterDragging()
-        }
-    }
-    
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {}
-    func executeAfterDragging() {}
 }
