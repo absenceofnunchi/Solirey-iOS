@@ -181,8 +181,20 @@ class ChatListModel: PostCoreModel {
     var buyerPhotoURL: String!
     var sellerDisplayName: String!
     var sellerPhotoURL: String!
+    var members: [String]!
     
-    init(documentId: String, latestMessage: String, date: Date, buyerDisplayName: String, buyerPhotoURL: String, buyerUserId: String?, sellerDisplayName: String, sellerPhotoURL: String, sellerUserId: String) {
+    init(
+        documentId: String,
+        latestMessage: String,
+        date: Date,
+        buyerDisplayName: String,
+        buyerPhotoURL: String,
+        buyerUserId: String?,
+        sellerDisplayName: String,
+        sellerPhotoURL: String,
+        sellerUserId: String,
+        members:[String]
+    ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         self.latestMessage = latestMessage
         self.date = date
@@ -190,8 +202,10 @@ class ChatListModel: PostCoreModel {
         self.buyerPhotoURL = buyerPhotoURL
         self.sellerDisplayName = sellerDisplayName
         self.sellerPhotoURL = sellerPhotoURL
+        self.members = members
     }
 }
+
 // MARK: - UILabelPadding
 /// ListDetailVC
 class UILabelPadding: UILabel {

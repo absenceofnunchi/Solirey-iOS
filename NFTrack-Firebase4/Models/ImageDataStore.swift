@@ -124,41 +124,13 @@ class DataLoadOperation: Operation {
 
 func downloadImageFrom(_ url: URL, completeHandler: @escaping (UIImage?) -> ()) {
     URLSession.shared.dataTask(with: url) { data, response, error in
-//        guard
-//            let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200,
-//            let mimeType = response?.mimeType, mimeType.hasPrefix("image"),
-//            let data = data, error == nil,
-//            let _image = UIImage(data: data)
-//        else { return }
-        
-        guard let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200 else {
-            print("1")
-            return
-        }
+        guard
+            let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200,
+            let mimeType = response?.mimeType, mimeType.hasPrefix("image"),
+            let data = data, error == nil,
+            let _image = UIImage(data: data)
+        else { return }
 
-        print("response?.mimeType", response?.mimeType)
-        
-        guard let mimeType = response?.mimeType, mimeType.hasPrefix("image") else {
-            print("2")
-            return
-        }
-        
-        guard let data = data else {
-            print("3")
-            return
-        }
-
-        guard error == nil else {
-            print("4")
-            return
-        }
-
-        guard let _image = UIImage(data: data) else {
-            print("5")
-            return
-        }
-
-        print("_image", _image)
         completeHandler(_image)
     }.resume()
 }

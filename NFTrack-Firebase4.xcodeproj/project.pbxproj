@@ -25,6 +25,7 @@
 		492A007D26A3AE44008B9B34 /* PaginatedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A007C26A3AE44008B9B34 /* PaginatedViewController.swift */; };
 		492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */; };
 		492A00B326A4AA7B008B9B34 /* AlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A00B226A4AA7B008B9B34 /* AlertViewController.swift */; };
+		492C81E526F2312F0083C3B5 /* ChatInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81E426F2312F0083C3B5 /* ChatInitializer.swift */; };
 		49314F5F4CF8EC19FC270279 /* Pods_NFTrack_Firebase4Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */; };
 		4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933332C268033D900B8BFC2 /* ReviewViewController.swift */; };
 		493333322681116F00B8BFC2 /* ReviewPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493333312681116F00B8BFC2 /* ReviewPostViewController.swift */; };
@@ -205,6 +206,7 @@
 		492A007C26A3AE44008B9B34 /* PaginatedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginatedViewController.swift; sourceTree = "<group>"; };
 		492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardAlertViewController.swift; sourceTree = "<group>"; };
 		492A00B226A4AA7B008B9B34 /* AlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertViewController.swift; sourceTree = "<group>"; };
+		492C81E426F2312F0083C3B5 /* ChatInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInitializer.swift; sourceTree = "<group>"; };
 		4933332C268033D900B8BFC2 /* ReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewController.swift; sourceTree = "<group>"; };
 		493333312681116F00B8BFC2 /* ReviewPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPostViewController.swift; sourceTree = "<group>"; };
 		4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSegmentedControl.swift; sourceTree = "<group>"; };
@@ -646,6 +648,7 @@
 				49DEFF5F26864CA4004C2DD0 /* Document.swift */,
 				495FD2CD2687B33600F1D81D /* CustomPreviewItem.swift */,
 				4983BB1F26E5B3D200A45703 /* ShippingAddressChecker.swift */,
+				492C81E426F2312F0083C3B5 /* ChatInitializer.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1162,6 +1165,7 @@
 				496D56CA265A0BD700C3E7FD /* ChatListCell.swift in Sources */,
 				496D56B62659E6F900C3E7FD /* MyDoneButtonVC.swift in Sources */,
 				4964E56226496852005B3268 /* KeysService.swift in Sources */,
+				492C81E526F2312F0083C3B5 /* ChatInitializer.swift in Sources */,
 				49DEFF6A26868065004C2DD0 /* ImagePreviewHeaderView.swift in Sources */,
 				49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */,
 				49D59C762663326500107F79 /* SocketDelegate.swift in Sources */,

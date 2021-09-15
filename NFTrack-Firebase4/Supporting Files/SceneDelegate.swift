@@ -83,11 +83,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserAddressConfigu
                     let postNav = UINavigationController(rootViewController: newPostVC)
                     tabBar.addChild(postNav)
                     
-//                    let chatListVC = ChatListViewController()
-//                    chatListVC.title = "Inbox"
-                    
-                    let chatListVC = TestViewController()
+                    let chatListVC = ChatListViewController()
                     chatListVC.title = "Inbox"
+                    
+//                    let chatListVC = TestViewController()
+//                    chatListVC.title = "Inbox"
                     
                     let chatListNav = UINavigationController(rootViewController: chatListVC)
                     tabBar.addChild(chatListNav)

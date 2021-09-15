@@ -12,7 +12,6 @@
  */
 
 import UIKit
-import Firebase
 import FirebaseAuth
 import web3swift
 

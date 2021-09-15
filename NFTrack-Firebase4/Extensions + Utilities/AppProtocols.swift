@@ -934,9 +934,11 @@ extension PaginateFetchDelegate {
 protocol PostParseDelegate {
     func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post]?
     func parseDocument(document: DocumentSnapshot) -> Post?
+    func parseChatListModels(_ documents: [QueryDocumentSnapshot]) -> [ChatListModel]
 }
 
 extension PostParseDelegate {
+    // Parse multiple query results
     func parseDocuments(querySnapshot: QuerySnapshot?) -> [Post]? {
         var postArr = [Post]()
         guard let querySnapshot = querySnapshot else { return nil }
@@ -1075,6 +1077,7 @@ extension PostParseDelegate {
         return postArr
     }
     
+    // Parse single document query
     func parseDocument(document: DocumentSnapshot) -> Post? {
         guard let data = document.data() else { return nil }
         var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address: String!
@@ -1206,6 +1209,60 @@ extension PostParseDelegate {
             shippingInfo: shippingInfo
         )
         return post
+    }
+    
+    // Parse ChatListModel
+    func parseChatListModels(_ documents: [QueryDocumentSnapshot]) -> [ChatListModel] {
+        var results = [ChatListModel]()
+        for doc in documents {
+            let data = doc.data()
+            var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId: String!
+            var date: Date!
+            var members: [String]!
+            
+            data.forEach { (item) in
+                switch item.key {
+                    case "buyerDisplayName":
+                        buyerDisplayName = item.value as? String
+                    case "buyerPhotoURL":
+                        buyerPhotoURL = item.value as? String
+                    case "buyerUserId":
+                        buyerUserId = item.value as? String
+                    case "latestMessage":
+                        latestMessage = item.value as? String
+                    case "sellerDisplayName":
+                        sellerDisplayName = item.value as? String
+                    case "sellerPhotoURL":
+                        sellerPhotoURL = item.value as? String
+                    case "sentAt":
+                        let timeStamp = item.value as? Timestamp
+                        date = timeStamp?.dateValue()
+                    case "sellerUserId":
+                        sellerUserId = item.value as? String
+                    case "members":
+                        members = item.value as? [String]
+                    default:
+                        break
+                }
+            }
+            
+            let chatListMode = ChatListModel(
+                documentId: doc.documentID,
+                latestMessage: latestMessage,
+                date: date,
+                buyerDisplayName: buyerDisplayName,
+                buyerPhotoURL: buyerPhotoURL,
+                buyerUserId: buyerUserId,
+                sellerDisplayName: sellerDisplayName,
+                sellerPhotoURL: sellerPhotoURL,
+                sellerUserId: sellerUserId,
+                members: members
+            )
+            
+            results.append(chatListMode)
+        }
+        
+        return results
     }
 }
 

@@ -8,7 +8,7 @@
 import UIKit
 import FirebaseFirestore
 
-class ChatListViewController: ParentListViewController<ChatListModel> {
+class ChatListViewController: ParentListViewController<ChatListModel>, PostParseDelegate {
     final override func viewDidLoad() {
         super.viewDidLoad()
         configureNavigationBar(vc: self)
@@ -45,23 +45,17 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
 
-        var displayName: String!
-        if post.sellerUserId != userId {
-            displayName = post.sellerDisplayName
-        } else {
-            displayName = post.buyerDisplayName
-        }
-
+        // The recipient's user info
         let userInfo = UserInfo(
             email: nil,
-            displayName: displayName,
-            photoURL: nil,
-            uid: userId,
+            displayName: post.sellerUserId != userId ? post.sellerDisplayName : post.buyerDisplayName,
+            photoURL: post.sellerUserId != userId ? post.sellerPhotoURL : post.buyerPhotoURL,
+            uid: post.sellerUserId != userId ? post.sellerUserId : post.buyerUserId,
             memberSince: nil
         )
 
         let chatVC = ChatViewController()
-        chatVC.post = post
+        chatVC.docId = post.documentId
         chatVC.userInfo = userInfo
         self.navigationController?.pushViewController(chatVC, animated: true)
     }
@@ -97,7 +91,9 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
                 }
                 
                 self?.postArr.removeAll()
-                self?.parseDocuments(querySnapshot.documents)
+                if let chatListModels = self?.parseChatListModels(querySnapshot.documents) {
+                    self?.postArr.append(contentsOf: chatListModels)
+                }
             }
     }
     
@@ -132,123 +128,14 @@ class ChatListViewController: ParentListViewController<ChatListModel> {
                     return
                 }
                 
-                self?.parseDocuments(querySnapshot.documents)
-            }
-    }
-    
-    private func parseDocuments(_ documents: [QueryDocumentSnapshot]) {
-        for doc in documents {
-            let data = doc.data()
-            var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId: String!
-            var date: Date!
-            data.forEach { (item) in
-                switch item.key {
-                    case "buyerDisplayName":
-                        buyerDisplayName = item.value as? String
-                    case "buyerPhotoURL":
-                        buyerPhotoURL = item.value as? String
-                    case "buyerUserId":
-                        buyerUserId = item.value as? String
-                    case "latestMessage":
-                        latestMessage = item.value as? String
-                    case "sellerDisplayName":
-                        sellerDisplayName = item.value as? String
-                    case "sellerPhotoURL":
-                        sellerPhotoURL = item.value as? String
-                    case "sentAt":
-                        let timeStamp = item.value as? Timestamp
-                        date = timeStamp?.dateValue()
-                    case "sellerUserId":
-                        sellerUserId = item.value as? String
-                    default:
-                        break
+                if let chatListModels = self?.parseChatListModels(querySnapshot.documents) {
+                    self?.postArr.append(contentsOf: chatListModels)
                 }
             }
-            
-            let chatListModel = ChatListModel(
-                documentId: doc.documentID,
-                latestMessage: latestMessage,
-                date: date,
-                buyerDisplayName: buyerDisplayName,
-                buyerPhotoURL: buyerPhotoURL,
-                buyerUserId: buyerUserId,
-                sellerDisplayName: sellerDisplayName,
-                sellerPhotoURL: sellerPhotoURL,
-                sellerUserId: sellerUserId
-            )
-            
-            self.postArr.append(chatListModel)
-        }
     }
     
     final override func executeAfterDragging() {
         refetchChatList(lastSnapshot: lastSnapshot)
-    }
-    
-    
-    final override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        guard let cell = cell as? ParentTableCell<ChatListCell> else { return }
-        
-        // How should the operation update the cell once the data has been loaded?
-        let updateCellClosure: (UIImage?) -> () = { [weak self] (image) in
-            print("updateCellClosure")
-            cell.updateAppearanceFor(.fetched(image))
-            guard let self = self else { return }
-            self.loadingOperations.removeValue(forKey: indexPath)
-        }
-        
-        // Try to find an existing data loader
-        if let dataLoader = loadingOperations[indexPath] {
-            // Has the data already been loaded?
-            if let image = dataLoader.image {
-                cell.updateAppearanceFor(.fetched(image))
-                loadingOperations.removeValue(forKey: indexPath)
-            } else {
-                // No data loaded yet, so add the completion closure to update the cell once the data arrives
-                dataLoader.loadingCompleteHandler = updateCellClosure
-            }
-        } else {
-            // Need to create a data loaded for this index path
-            if let dataLoader = dataStore.loadImage(at: indexPath.row) {
-                // Provide the completion closure, and kick off the loading operation
-                dataLoader.loadingCompleteHandler = updateCellClosure
-                loadingQueue.addOperation(dataLoader)
-                loadingOperations[indexPath] = dataLoader
-            }
-        }
-    }
-    
-    // 1. The entire data is loaded to the data store
-    // 2. For every cell, prefetch the Operation that pertains to indexPath.row
-    // 3. Add the operation to the loading queue (addOperation)
-    // 4. Add the opertaion to the loadingOperation dictionary
-    // 5. If the data has been loaded already, delete it form the loadingOperations queue
-    final override func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        // If there's a data loader for this index path we don't need it any more. Cancel and dispose
-        if let dataLoader = loadingOperations[indexPath] {
-            dataLoader.cancel()
-            loadingOperations.removeValue(forKey: indexPath)
-        }
-    }
-    
-    // MARK:- TableView Prefetching DataSource
-    final override func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
-        for indexPath in indexPaths {
-            if let _ = loadingOperations[indexPath] { return }
-            if let dataLoader = dataStore.loadImage(at: indexPath.row) {
-                loadingQueue.addOperation(dataLoader)
-                loadingOperations[indexPath] = dataLoader
-            }
-        }
-    }
-    
-    final override func tableView(_ tableView: UITableView, cancelPrefetchingForRowsAt indexPaths: [IndexPath]) {
-        for indexPath in indexPaths {
-            if let dataLoader = loadingOperations[indexPath] {
-                dataLoader.cancel()
-                loadingOperations.removeValue(forKey: indexPath)
-            }
-        }
     }
 }
 
@@ -263,8 +150,8 @@ extension ChatListViewController {
     }
     
     final override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { _, _, completionHandler in
-            print("delete action")
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, completionHandler in
+            self?.deleteChat(indexPath: indexPath)
             completionHandler(true)
         }
         deleteAction.backgroundColor = .red
@@ -273,19 +160,19 @@ extension ChatListViewController {
         return configuration
     }
     
-    final override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        return UISwipeActionsConfiguration(actions: [
-            makeDeleteContextualAction(forRowAt: indexPath)
-        ])
-    }
-    
-    private func makeDeleteContextualAction(forRowAt indexPath: IndexPath) -> UIContextualAction {
-        return UIContextualAction(style: .destructive, title: "Delete") { (action, swipeButtonView, completion) in
-            print("DELETE HERE")
-            
-            completion(true)
-        }
-    }
+//    final override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+//        return UISwipeActionsConfiguration(actions: [
+//            makeDeleteContextualAction(forRowAt: indexPath)
+//        ])
+//    }
+//
+//    private func makeDeleteContextualAction(forRowAt indexPath: IndexPath) -> UIContextualAction {
+//        return UIContextualAction(style: .destructive, title: "Delete") { (action, swipeButtonView, completion) in
+//            print("DELETE HERE")
+//
+//            completion(true)
+//        }
+//    }
     
     final override func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
         return nil
@@ -293,54 +180,61 @@ extension ChatListViewController {
     
     final override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let post = postArr[indexPath.row]
-        
-        var displayName: String!
-        if post.sellerUserId != userId {
-            displayName = post.sellerDisplayName
-        } else {
-            displayName = post.buyerDisplayName
-        }
-        
-        let userInfo = UserInfo(
-            email: nil,
-            displayName: displayName,
-            photoURL: nil,
-            uid: userId,
-            memberSince: nil
-        )
-        
+
         let delete = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] action in
-            print("delete")
+            self?.deleteChat(indexPath: indexPath)
         }
         
-        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSString, previewProvider: { [weak self] in self?.getPreviewVC(for: indexPath, post: post, userInfo: userInfo) }) { _ in
+        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSString, previewProvider: { [weak self] in self?.getPreviewVC(for: indexPath, post: post) }) { _ in
             UIMenu(title: "", children: [delete])
         }
     }
     
-    private func getPreviewVC(for indexPath: IndexPath, post: ChatListModel, userInfo: UserInfo) -> UIViewController? {
+    private func getPreviewVC(for indexPath: IndexPath, post: ChatListModel) -> UIViewController? {
         let post = postArr[indexPath.row]
         
-        var displayName: String!
-        if post.sellerUserId != userId {
-            displayName = post.sellerDisplayName
-        } else {
-            displayName = post.buyerDisplayName
-        }
-        
+        // The recipient's user info
         let userInfo = UserInfo(
             email: nil,
-            displayName: displayName,
-            photoURL: nil,
-            uid: userId,
+            displayName: post.sellerUserId != userId ? post.sellerDisplayName : post.buyerDisplayName,
+            photoURL: post.sellerUserId != userId ? post.sellerPhotoURL : post.buyerPhotoURL,
+            uid: post.sellerUserId != userId ? post.sellerUserId : post.buyerUserId,
             memberSince: nil
         )
         
         let chatVC = ChatViewController()
-        chatVC.post = post
+        chatVC.docId = post.documentId
         chatVC.userInfo = userInfo
         return chatVC
     }
     
-    
+    private func deleteChat(indexPath: IndexPath) {
+        guard let userId = self.userId else { return }
+        let chatroom = self.postArr[indexPath.row]
+        
+        let buyerMsg = "The seller will not be able to message you anymore. Proceed?"
+        let sellerMsg = "Are you sure you want to clear this conversation?"
+        
+        self.alert.showDetail(
+            "Delete Chat",
+            with: userId == chatroom.buyerUserId ? buyerMsg : sellerMsg,
+            for: self,
+            alertStyle: .withCancelButton,
+            buttonAction: {
+                FirebaseService.shared.db
+                    .collection("chatrooms")
+                    .document(chatroom.documentId)
+                    .updateData([
+                        "members": FieldValue.arrayRemove([userId])
+                    ]) { [weak self] (error) in
+                        if let _ = error {
+                            self?.alert.showDetail("Error", with: "There was an error deleting the chat.", for: self)
+                        } else {
+                            DispatchQueue.main.async {
+                                self?.tableView.reloadData()
+                            }
+                        }
+                    }
+            })
+    }
 }

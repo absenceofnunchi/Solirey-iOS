@@ -8,7 +8,6 @@
 import UIKit
 import FirebaseFirestore
 import FirebaseStorage
-import Firebase
 import web3swift
 import QuickLook
 

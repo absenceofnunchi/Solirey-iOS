@@ -165,4 +165,5 @@ enum PostingError: Error {
     case web3Error(Web3Error)
     case apiError(APIError)
     case fileUploadError(FileUploadError)
+    case chatDisabled
 }

@@ -11,10 +11,10 @@
 
 import UIKit
 import web3swift
-import Firebase
 import FirebaseFirestore
 import BigInt
 import Combine
+import CryptoKit
 
 class ParentDetailViewController: UIViewController, SharableDelegate, PostEditDelegate {
     // MARK: - Properties
@@ -42,7 +42,6 @@ class ParentDetailViewController: UIViewController, SharableDelegate, PostEditDe
     var fetchedImage: UIImage!
     var userInfo: UserInfo! {
         didSet {
-            print("userInfo", userInfo)
             userInfoDidSet()
         }
     }
@@ -296,7 +295,6 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         self.navigationItem.rightBarButtonItems = buttonItemsArr
     }
     
-    
     @objc func menuHandler(action: UIAction) {
         switch action.title {
             case "Message":
@@ -335,17 +333,46 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         }
     }
     
-    func navToChatVC() {
-        let chatVC = ChatViewController()
-        chatVC.userInfo = userInfo
-        chatVC.post = post
-        // to display the title on ChatList when multiple items under the same owner
-        // or maybe search for pre-existing chat room first and join the same one
-        // chatVC.itemName = title
-        self.navigationController?.pushViewController(chatVC, animated: true)
+    private func navToChatVC() {
+        Future<String, PostingError> { [weak self] promise in
+            self?.getDocId(promise)
+        }
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .failure(.generalError(reason: let err)):
+                    self?.alert.showDetail("Error", with: err, for: self)
+                case .finished:
+                    break
+                default:
+                    self?.alert.showDetail("Error", with: "There was an error generating a chat ID.", for: self)
+            }
+        } receiveValue: { [weak self] (docId) in
+            let chatVC = ChatViewController()
+            chatVC.userInfo = self?.userInfo
+            chatVC.docId = docId
+            // to display the title on ChatList when multiple items under the same owner
+            // or maybe search for pre-existing chat room first and join the same one
+            // chatVC.itemName = title
+            self?.navigationController?.pushViewController(chatVC, animated: true)
+        }
+        .store(in: &storage)
     }
     
-    func savePost() {
+    private func getDocId(_ promise: @escaping (Result<String, PostingError>) -> Void) {
+        guard let sellerUid = userInfo.uid,
+              let buyerUid = userId else {
+            promise(.failure(.generalError(reason: "You're currently not logged in. Please log in and try again.")))
+            return
+        }
+        
+        let combinedString = sellerUid + buyerUid + post.documentId
+        let inputData = Data(combinedString.utf8)
+        let hashedId = SHA256.hash(data: inputData)
+        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+        promise(.success(hashString))
+    }
+    
+    private func savePost() {
         // saving the favourite post
         isSaved = !isSaved
         FirebaseService.shared.db.collection("post").document(post.documentId).updateData([
@@ -363,7 +390,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         }
     }
     
-    func sharePost() {
+    private func sharePost() {
         guard let title = title,
               let itemDescription = descLabel?.text else { return }
         
@@ -415,7 +442,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
 
     }
     
-    func navToReport() {
+    private func navToReport() {
         let reportVC = ReportViewController()
         reportVC.post = post
         reportVC.userId = userId

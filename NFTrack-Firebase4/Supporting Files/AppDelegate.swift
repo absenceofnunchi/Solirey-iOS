@@ -198,12 +198,8 @@ extension AppDelegate : UNUserNotificationCenterDelegate, PostParseDelegate {
                     // going with how the chat room currently has sellerUserId/buyerUserId labels for now
                     // ChatVC will compare them against UserId to determine whether to display the message on the right side or the left side
                     if let docId = userInfo["docId"] as? String,
-                       let sellerUserId = userInfo["uid"] as? String,
-                       let buyerUserId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId),
                        let displayName = userInfo[UserDefaultKeys.displayName] as? String,
                        let address = userInfo[UserDefaultKeys.address] as? String {
-                        
-                        let chatModelCore = PostCoreModel(documentId: docId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
                         let shippingAddress = ShippingAddress(address: address)
                         
                         let userInfo = UserInfo(
@@ -219,7 +215,7 @@ extension AppDelegate : UNUserNotificationCenterDelegate, PostParseDelegate {
                            let navController = tabBarController.selectedViewController as? UINavigationController {
                             
                             let chatVC = ChatViewController()
-                            chatVC.post = chatModelCore
+                            chatVC.docId = docId
                             chatVC.userInfo = userInfo
                             navController.pushViewController(chatVC, animated: true)
                         }
