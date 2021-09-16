@@ -71,11 +71,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         configureNavigationItem()
         fetchSubscriptionStatus()
     }
-    
-    // MARK: - didRefreshTableView
-    override func didRefreshTableView(index: Int) {
-    }
-    
+
     override func configureUI() {
         super.configureUI()
         tableView = configureTableView(delegate: self, dataSource: self, height: 330, cellType: CardCell.self, identifier: CardCell.identifier)
@@ -191,7 +187,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 let listDetailVC = ListDetailViewController()
                 listDetailVC.post = post
                 // refreshes the MainDetailVC table when the user updates the status
-                listDetailVC.tableViewRefreshDelegate = self
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
             case .openAuction:
                 guard let auctionHash = post.auctionHash else { return }

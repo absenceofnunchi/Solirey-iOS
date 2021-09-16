@@ -182,6 +182,9 @@ class ChatListModel: PostCoreModel {
     var sellerDisplayName: String!
     var sellerPhotoURL: String!
     var members: [String]!
+    var postingId: String!
+    var sellerMemberSince: Date!
+    var buyerMemberSince: Date!
     
     init(
         documentId: String,
@@ -193,7 +196,10 @@ class ChatListModel: PostCoreModel {
         sellerDisplayName: String,
         sellerPhotoURL: String,
         sellerUserId: String,
-        members:[String]
+        members:[String],
+        postingId: String,
+        sellerMemberSince: Date,
+        buyerMemberSince: Date
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         self.latestMessage = latestMessage
@@ -203,6 +209,9 @@ class ChatListModel: PostCoreModel {
         self.sellerDisplayName = sellerDisplayName
         self.sellerPhotoURL = sellerPhotoURL
         self.members = members
+        self.postingId = postingId
+        self.sellerMemberSince = sellerMemberSince
+        self.buyerMemberSince = buyerMemberSince
     }
 }
 

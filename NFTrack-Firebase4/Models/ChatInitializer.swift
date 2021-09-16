@@ -99,6 +99,7 @@ class ChatInitializer {
     private var chatListModel: ChatListModel!
     private var chatInfo: [String: Any]!
     private var docId: String!
+    private var postingId: String
     
     init(
         chatIsNew: Bool = true,
@@ -106,7 +107,8 @@ class ChatInitializer {
         userInfo: UserInfo,
         messageContent: String,
         chatListModel: ChatListModel?,
-        docId: String
+        docId: String,
+        postingId: String
     ) {
         self.chatIsNew = chatIsNew
         self.ref = ref
@@ -114,6 +116,7 @@ class ChatInitializer {
         self.messageContent = messageContent
         self.chatListModel = chatListModel
         self.docId = docId
+        self.postingId = postingId
     }
     
     final func createChatInfo() -> Future<DocumentReference, PostingError> {
@@ -131,7 +134,10 @@ class ChatInitializer {
                 // If the chat is new, create a new chat info
                 // Only the buyer can initate the chat from ListDetailVC so no need to check whether the chat user is the buyer or the seller
                 guard let docId = self?.docId,
-                      let sellerUserId = self?.userInfo.uid else {
+                      let sellerUserId = self?.userInfo.uid,
+                      let sellerMemberSince = userInfo.memberSince,
+                      let buyerMemberSince = UserDefaults.standard.object(forKey: UserDefaultKeys.memberSince) as? Date,
+                      let postingId = self?.postingId else {
                     promise(.failure(.generalError(reason: "Unable to retrieve the seller's info. Please try again.")))
                     return
                 }
@@ -149,7 +155,10 @@ class ChatInitializer {
                     "buyerPhotoURL": photoURL ?? "NA",
                     "docId": docId,
                     "latestMessage": messageContent,
-                    "sentAt": Date()
+                    "sentAt": Date(),
+                    "sellerMemberSince": sellerMemberSince,
+                    "buyerMemberSince": buyerMemberSince,
+                    "postingId": postingId
                 ]
             } else {
                 // If the chat is not new, determine whether the sender is a seller or the buyer and how many members are in the chat currently

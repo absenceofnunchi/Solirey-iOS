@@ -9,8 +9,7 @@ import UIKit
 import Firebase
 import Combine
 
-class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserAddressConfigurable {
-
+class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
     var window: UIWindow?
     var storage = Set<AnyCancellable>()
 
@@ -34,14 +33,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserAddressConfigu
                         UserDefaults.standard.set(nil, forKey: UserDefaultKeys.photoURL)
                     }
                     
-                    Future<ShippingAddress?, PostingError> { promise in
-                        self?.fetchAddress(userId: user.uid, promise: promise)
+                    Future<UserInfo, PostingError> { promise in
+                        self?.fetchUserData(userId: user.uid, promise: promise)
                     }
                     .sink { (completion) in
                         print(completion)
-                    } receiveValue: { (shippingAddress) in
-                        guard let address = shippingAddress?.address else { return }
+                    } receiveValue: { (userInfo) in
+                        guard let address = userInfo.shippingAddress?.address,
+                              let memberSince = userInfo.memberSince else { return }
                         UserDefaults.standard.set(address, forKey: UserDefaultKeys.address)
+                        UserDefaults.standard.set(memberSince, forKey: UserDefaultKeys.memberSince)
                     }
                     .store(in: &self!.storage)
 

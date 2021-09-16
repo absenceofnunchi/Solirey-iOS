@@ -219,7 +219,6 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
                 // tapping on the user profile
                 let profileDetailVC = ProfileDetailViewController()
                 profileDetailVC.userInfo = userInfo
-                profileDetailVC.profileImage = fetchedImage
                 self.navigationController?.pushViewController(profileDetailVC, animated: true)
             default:
                 break
@@ -349,10 +348,10 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         } receiveValue: { [weak self] (docId) in
             let chatVC = ChatViewController()
             chatVC.userInfo = self?.userInfo
+            // docId is the chat's unique ID
             chatVC.docId = docId
-            // to display the title on ChatList when multiple items under the same owner
-            // or maybe search for pre-existing chat room first and join the same one
-            // chatVC.itemName = title
+            // The unique ID of the posting so that when ChatVC is pushed from ChatListVC, the ChatListVC can push ReportVC
+            chatVC.postingId = self?.post.documentId
             self?.navigationController?.pushViewController(chatVC, animated: true)
         }
         .store(in: &storage)

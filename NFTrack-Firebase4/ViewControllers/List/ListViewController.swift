@@ -111,8 +111,6 @@ class ListViewController: ParentListViewController<Post> {
             case .onlineDirect:
                 let listDetailVC = ListDetailViewController()
                 listDetailVC.post = post
-                // refreshes the MainDetailVC table when the user updates the status
-                listDetailVC.tableViewRefreshDelegate = self
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
             case .openAuction:
                 guard let auctionHash = post.auctionHash else { return }
@@ -136,7 +134,6 @@ class ListViewController: ParentListViewController<Post> {
                     DispatchQueue.main.async {
                         let auctionDetailVC = AuctionDetailViewController(auctionContractAddress: contractAddress, myContractAddress: currentAddress)
                         auctionDetailVC.post = post
-                        auctionDetailVC.tableViewRefreshDelegate = self
                         self?.navigationController?.pushViewController(auctionDetailVC, animated: true)
                     }
                 }
@@ -144,32 +141,32 @@ class ListViewController: ParentListViewController<Post> {
         }
     }
     
-    // MARK: - didRefreshTableView
-    final override func didRefreshTableView(index: Int = 0) {
-        segmentedControl.selectedSegmentIndex = index
-        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
-        view.layoutIfNeeded()
-        
-        // for swiping left and right so that the index doesn't overflow
-        currentIndex = index
-        
-        switch index {
-            case 0:
-                // buying
-                configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
-            case 1:
-                // selling
-                configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
-            case 2:                
-                // auction
-                configureAuctionFetch()
-            case 3:
-                // posts
-                configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
-            default:
-                break
-        }
-    }
+//    // MARK: - didRefreshTableView
+//    final override func didRefreshTableView(index: Int = 0) {
+//        segmentedControl.selectedSegmentIndex = index
+//        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+//        view.layoutIfNeeded()
+//        
+//        // for swiping left and right so that the index doesn't overflow
+//        currentIndex = index
+//        
+//        switch index {
+//            case 0:
+//                // buying
+//                configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+//            case 1:
+//                // selling
+//                configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+//            case 2:                
+//                // auction
+//                configureAuctionFetch()
+//            case 3:
+//                // posts
+//                configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
+//            default:
+//                break
+//        }
+//    }
     
     final override func executeAfterDragging() {
         switch segmentRetainer {

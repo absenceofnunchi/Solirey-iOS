@@ -42,18 +42,17 @@ class ProfilePostingsViewController: ProfileListViewController<Post>, PostParseD
         let post = postArr[indexPath.row]
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = post
-        listDetailVC.tableViewRefreshDelegate = self
         self.navigationController?.pushViewController(listDetailVC, animated: true)
     }
     
     final override func fetchData() {
         guard let uid = userInfo.uid else { return }
-        db?.collection("post")
+        firstListener = db?.collection("post")
             .whereField("sellerUserId", isEqualTo: uid)
             .whereField("status", isEqualTo: "ready")
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
-            .getDocuments { [weak self] (querySnapshot, err) in
+            .addSnapshotListener { [weak self] (querySnapshot, err) in
                 defer {
                     DispatchQueue.main.async {
                         self?.tableView.reloadData()
@@ -83,13 +82,13 @@ class ProfilePostingsViewController: ProfileListViewController<Post>, PostParseD
     
     final override func refetchData(lastSnapshot: QueryDocumentSnapshot) {
         guard let uid = userInfo.uid else { return }
-        db?.collection("post")
+        nextListener = db?.collection("post")
             .whereField("sellerUserId", isEqualTo: uid)
             .whereField("status", isEqualTo: "ready")
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)
-            .getDocuments { [weak self] (querySnapshot, err) in
+            .addSnapshotListener { [weak self] (querySnapshot, err) in
                 defer {
                     DispatchQueue.main.async {
                         self?.tableView.reloadData()

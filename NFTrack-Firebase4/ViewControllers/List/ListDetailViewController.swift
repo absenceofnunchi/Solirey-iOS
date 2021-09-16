@@ -277,7 +277,7 @@ extension ListDetailViewController {
     }
 }
 
-extension ListDetailViewController: FetchUserAddressConfigurable, HandleMapSearch {
+extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
     // MARK: - buttonPressed
     @objc final override func buttonPressed(_ sender: UIButton) {
         super.buttonPressed(sender)

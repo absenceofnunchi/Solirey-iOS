@@ -13,7 +13,6 @@ import UIKit
 import FirebaseFirestore
 
 class ProfileDetailViewController: ParentProfileViewController {
-    var profileImage: UIImage!
     private var memberHistoryTitleLabel: UILabel!
     private var memberHistoryTextField: UITextField!
     private var detailButton: UIButton!
@@ -52,11 +51,15 @@ extension ProfileDetailViewController {
         memberHistoryTitleLabel = createTitleLabel(text: "Member Since")
         scrollView.addSubview(memberHistoryTitleLabel)
 
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        let formattedDate = formatter.string(from: userInfo.memberSince ?? Date())
+        if let memberSince = userInfo.memberSince {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            let formattedDate = formatter.string(from: memberSince)
+            memberHistoryTextField = createTextField(content: formattedDate, delegate: self)
+        } else {
+            memberHistoryTextField = createTextField(content: "", delegate: self)
+        }
 
-        memberHistoryTextField = createTextField(content: formattedDate, delegate: self)
         memberHistoryTextField.isUserInteractionEnabled = false
         scrollView.addSubview(memberHistoryTextField)
         

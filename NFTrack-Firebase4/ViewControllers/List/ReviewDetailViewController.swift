@@ -124,7 +124,7 @@ extension ReviewDetailViewController: PageVCConfigurable, UsernameBannerConfigur
                 // tapping on the user profile
                 let profileDetailVC = ProfileDetailViewController()
                 profileDetailVC.userInfo = userInfo
-                profileDetailVC.profileImage = fetchedImage
+//                profileDetailVC.profileImage = fetchedImage
                 self.navigationController?.pushViewController(profileDetailVC, animated: true)
             default:
                 break

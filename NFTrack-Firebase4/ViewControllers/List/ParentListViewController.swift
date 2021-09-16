@@ -182,6 +182,10 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         return nil
     }
     
+    @objc dynamic func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+        
+    }
+    
     // MARK: - didRefreshTableView
     @objc func didRefreshTableView(index: Int = 0) {}
     

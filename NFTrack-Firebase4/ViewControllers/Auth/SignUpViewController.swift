@@ -400,6 +400,7 @@ extension SignUpViewController {
                                 if let error = error {
                                     self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                                 } else {
+                                    UserDefaults.standard.set(Date(), forKey: UserDefaultKeys.memberSince)
                                     DispatchQueue.main.async {
                                         self?.navigationController?.popViewController(animated: true)
                                     }

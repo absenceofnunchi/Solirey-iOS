@@ -59,11 +59,6 @@ class SavedViewController: ParentListViewController<Post>, PostParseDelegate {
         dataStore = PostImageDataStore(posts: postArr)
     }
     
-    // MARK: - didRefreshTableView
-    override func didRefreshTableView(index: Int = 0) {
-        
-    }
-    
     override func configureUI() {
         super.configureUI()
         
@@ -88,7 +83,6 @@ class SavedViewController: ParentListViewController<Post>, PostParseDelegate {
         let post = postArr[indexPath.row]
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = post
-        listDetailVC.tableViewRefreshDelegate = self
         self.navigationController?.pushViewController(listDetailVC, animated: true)
     }
 

@@ -30,18 +30,18 @@ import UIKit
 import FirebaseFirestore
 import Combine
 
-class ChatViewController: UIViewController, FileUploadable {
+class ChatViewController: UIViewController, FileUploadable, SingleDocumentFetchDelegate {
     var userInfo: UserInfo!
     var docId: String! {
         didSet {
             if docId != nil {
                 fetchMessages(docId)
-                fetchChanelInfo(docId)
             } else {
                 alert.showDetail("Error", with: "Unable to generate the chat ID.", for: self)
             }
         }
     }
+    var postingId: String!
     private var messages = [Message]()
     private var toolBarView: ToolBarView!
     private var toolBarBottomConstraint: NSLayoutConstraint!
@@ -52,23 +52,34 @@ class ChatViewController: UIViewController, FileUploadable {
     }
     private var lastCell: CGRect!
     private var imageName: String!
-    private let refreshControl = UIRefreshControl()
     private var lastSnapshot: QueryDocumentSnapshot!
     private var firstListener: ListenerRegistration!
     private var nextListener: ListenerRegistration!
     private var chatInfoListener: ListenerRegistration!
-    private var chatListModel: ChatListModel!
+    // If chatListModel is set, it means the channel info already exists, therefore the chat is not new
+    var chatListModel: ChatListModel! {
+        didSet {
+            chatIsNew = false
+            postingId = chatListModel.postingId
+            docId = chatListModel.documentId
+        }
+    }
     // Toggled on and off by fetchChanelInfo() depending on whether the channel info exists or not
     // If new, create the channel info along with the very first message.
     private var chatIsNew: Bool! = true
-    private var storage = Set<AnyCancellable>()
+    private var spinner: UIActivityIndicatorView!
+    private let PAGINATION_LIMIT: Int = 40
+    private var optionsBarItem: UIBarButtonItem!
+    private var postBarButton: UIBarButtonItem!
+    private var reportBarButton: UIBarButtonItem!
+    final var storage: Set<AnyCancellable>!
+    final var cache: NSCache<NSString, Post>!
     
     final override func viewDidLoad() {
         super.viewDidLoad()
-        self.navigationItem.largeTitleDisplayMode = .never
         
-//        getProfileInfo()
         configureUI()
+        configureNavigationBar()
         setConstraints()
     }
     
@@ -93,6 +104,10 @@ class ChatViewController: UIViewController, FileUploadable {
         if chatInfoListener != nil {
             chatInfoListener.remove()
         }
+        
+        if isMovingFromParent {
+            cache.removeObject(forKey: "CachedPost")
+        }
     }
     
     final override func viewDidDisappear(_ animated: Bool) {
@@ -101,7 +116,7 @@ class ChatViewController: UIViewController, FileUploadable {
     }
 }
 
-extension ChatViewController {
+extension ChatViewController: PostParseDelegate {
 //    private func getProfileInfo() {
 //        if let uid = UserDefaults.standard.string(forKey: UserDefaultKeys.userId),
 //           let displayName = UserDefaults.standard.string(forKey: UserDefaultKeys.displayName) {
@@ -114,19 +129,68 @@ extension ChatViewController {
 //        }
 //    }
     
+    private func configureNavigationBar() {
+        self.navigationItem.largeTitleDisplayMode = .never
+
+        let button =  UIButton()
+        //        button.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
+        button.setTitle(userInfo.displayName, for: .normal)
+        button.setTitleColor(.gray, for: .normal)
+        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        button.tag = 0
+        navigationItem.titleView = button
+
+        guard let postBarImage = UIImage(systemName: "list.bullet.below.rectangle"),
+              let reportImage = UIImage(systemName: "flag") else {
+            return
+        }
+        
+        // Chat should only be able to navigate to the posting if the view controller was pushed from ChatListVC because if it was pushed from ListDetailVC, it's entirely redundant
+        if #available(iOS 14.0, *) {
+            var buttonArr: [UIAction] = [UIAction(title: NSLocalizedString("Report", comment: ""), image: reportImage, handler: menuHandler)]
+            if let navController = self.navigationController, navController.viewControllers.count >= 2 {
+                let viewController = navController.viewControllers[navController.viewControllers.count - 2]
+                if let _ = viewController as? ChatListViewController {
+                    buttonArr.append(UIAction(title: NSLocalizedString("Posting", comment: ""), image: postBarImage, handler: menuHandler))
+                }
+            }
+            let barButtonMenu = UIMenu(title: "", children: buttonArr)
+            
+            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
+            optionsBarItem = UIBarButtonItem(title: nil, image: image, primaryAction: nil, menu: barButtonMenu)
+            navigationItem.rightBarButtonItem = optionsBarItem
+        } else {
+            var buttonArr = [UIBarButtonItem]()
+            reportBarButton = UIBarButtonItem(image: reportImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            reportBarButton.tag = 1
+            buttonArr.append(reportBarButton)
+
+            if let navController = self.navigationController, navController.viewControllers.count >= 2 {
+                let viewController = navController.viewControllers[navController.viewControllers.count - 2]
+                if let _ = viewController as? ChatListViewController {
+                    postBarButton = UIBarButtonItem(image: postBarImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+                    postBarButton.tag = 2
+                    buttonArr.append(postBarButton)
+                }
+            }
+
+            self.navigationItem.rightBarButtonItems = buttonArr
+        }
+    }
+    
     private func configureUI() {
         view.backgroundColor = .white
-        title = userInfo.displayName
-        
         alert = Alerts()
-        
+        cache = NSCache<NSString, Post>()
+        storage = Set<AnyCancellable>()
+                
         tableView = UITableView()
         tableView.register(MessageCell.self, forCellReuseIdentifier: MessageCell.identifier)
+        tableView.delegate = self
         tableView.dataSource = self
         tableView.separatorStyle = .none
         tableView.keyboardDismissMode = .onDrag
-        tableView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
-        tableView.automaticallyAdjustsScrollIndicatorInsets = false
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 50, right: 0)
         tableView.frame = CGRect(origin: .zero, size: view.bounds.size)
         tableView.transform = CGAffineTransform(scaleX: 1, y: -1)
         view.addSubview(tableView)
@@ -154,10 +218,11 @@ extension ChatViewController {
         toolBarView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(toolBarView)
         
-        let refreshTitle = NSAttributedString(string: "Text Message", attributes: [NSAttributedString.Key.foregroundColor: UIColor.lightGray])
-        refreshControl.attributedTitle = refreshTitle
-        refreshControl.addTarget(self, action: #selector(didRefreshTableView), for: .valueChanged)
-        tableView.addSubview(refreshControl) // not required when using UITableViewController
+        spinner = UIActivityIndicatorView()
+        spinner.stopAnimating()
+        spinner.hidesWhenStopped = true
+        spinner.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.size.width, height: 60)
+        tableView.tableFooterView = spinner
     }
     
     private func setConstraints() {
@@ -170,96 +235,147 @@ extension ChatViewController {
         ])
     }
     
-    @objc func didRefreshTableView() {
-        print("refreshed")
+    @objc func buttonPressed(_ sender: UIButton) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
+        switch sender.tag {
+            case 0:
+                let profileDetailVC = ProfileDetailViewController()
+                profileDetailVC.userInfo = userInfo
+                self.navigationController?.pushViewController(profileDetailVC, animated: true)
+                break
+            case 1:
+                getPost(with: postingId) { [weak self] (fetchedPost) in
+                    let reportVC = ReportViewController()
+                    reportVC.post = fetchedPost
+                    reportVC.userId = self?.userId
+                    self?.navigationController?.pushViewController(reportVC, animated: true)
+                }
+                break
+            case 2:
+                getPost(with: postingId) { [weak self] (fetchedPost) in
+                    let listDetailVC = ListDetailViewController()
+                    listDetailVC.post = fetchedPost
+                    self?.navigationController?.pushViewController(listDetailVC, animated: true)
+                }
+            default:
+                break
+        }
+    }
+    
+    @objc func menuHandler(action: UIAction) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
+        guard let postingId = postingId else { return }
+        switch action.title {
+            case "Posting":
+                getPost(with: postingId) { [weak self] (fetchedPost) in
+                    let listDetailVC = ListDetailViewController()
+                    listDetailVC.post = fetchedPost
+                    self?.navigationController?.pushViewController(listDetailVC, animated: true)
+                }
+                break
+            case "Report":
+                getPost(with: postingId) { [weak self] (fetchedPost) in
+                    let reportVC = ReportViewController()
+                    reportVC.post = fetchedPost
+                    reportVC.userId = self?.userId
+                    self?.navigationController?.pushViewController(reportVC, animated: true)
+                }
+                break
+            default:
+                break
+        }
     }
 }
 
 extension ChatViewController {
-    private func fetchChanelInfo(_ docId: String) {
-        FirebaseService.shared.db
-            .collection("chatrooms")
-            .document(docId)
-            .addSnapshotListener { [weak self] (querySnapshot, error) in
-                if let _ = error {
-                    self?.alert.showDetail("Error", with: "There was an error getting the chat information.", for: self)
-                    return
-                }
- 
-                guard let querySnapshot = querySnapshot else {
-                    return
-                }
-                
-                guard querySnapshot.exists else {
-                    self?.chatIsNew = true
-                    return
-                }
-                
-                guard let data = querySnapshot.data() else {
-                    return
-                }
-                
-                guard !data.isEmpty else {
-                    return
-                }
-                
-                self?.chatIsNew = false
-                self?.chatListModel = self?.parseChatListModel(querySnapshot)
-            }
-    }
+//    private func fetchChanelInfo(_ docId: String) {
+//        FirebaseService.shared.db
+//            .collection("chatrooms")
+//            .document(docId)
+//            .addSnapshotListener { [weak self] (querySnapshot, error) in
+//                if let _ = error {
+//                    self?.alert.showDetail("Error", with: "There was an error getting the chat information.", for: self)
+//                    return
+//                }
+//
+//                guard let querySnapshot = querySnapshot else {
+//                    return
+//                }
+//
+//                guard querySnapshot.exists else {
+//                    self?.chatIsNew = true
+//                    return
+//                }
+//
+//                guard let data = querySnapshot.data() else {
+//                    return
+//                }
+//
+//                guard !data.isEmpty else {
+//                    return
+//                }
+//
+//                self?.chatIsNew = false
+//                self?.chatListModel = self?.parseChatListModel(querySnapshot)
+//            }
+//    }
     
-    private func parseChatListModel(_ document: DocumentSnapshot) -> ChatListModel? {
-        guard let data = document.data() else { return nil }
-        var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId: String!
-        var date: Date!
-        var members: [String]!
-        
-        data.forEach { (item) in
-            switch item.key {
-                case "buyerDisplayName":
-                    buyerDisplayName = item.value as? String
-                case "buyerPhotoURL":
-                    buyerPhotoURL = item.value as? String
-                case "buyerUserId":
-                    buyerUserId = item.value as? String
-                case "latestMessage":
-                    latestMessage = item.value as? String
-                case "sellerDisplayName":
-                    sellerDisplayName = item.value as? String
-                case "sellerPhotoURL":
-                    sellerPhotoURL = item.value as? String
-                case "sentAt":
-                    let timeStamp = item.value as? Timestamp
-                    date = timeStamp?.dateValue()
-                case "sellerUserId":
-                    sellerUserId = item.value as? String
-                case "members":
-                    members = item.value as? [String]
-                default:
-                    break
-            }
-        }
-        
-        return ChatListModel(
-            documentId: document.documentID,
-            latestMessage: latestMessage,
-            date: date,
-            buyerDisplayName: buyerDisplayName,
-            buyerPhotoURL: buyerPhotoURL,
-            buyerUserId: buyerUserId,
-            sellerDisplayName: sellerDisplayName,
-            sellerPhotoURL: sellerPhotoURL,
-            sellerUserId: sellerUserId,
-            members: members
-        )
-    }
+//    private func parseChatListModel(_ document: DocumentSnapshot) -> ChatListModel? {
+//        guard let data = document.data() else { return nil }
+//        var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId: String!
+//        var date: Date!
+//        var members: [String]!
+//
+//        data.forEach { (item) in
+//            switch item.key {
+//                case "buyerDisplayName":
+//                    buyerDisplayName = item.value as? String
+//                case "buyerPhotoURL":
+//                    buyerPhotoURL = item.value as? String
+//                case "buyerUserId":
+//                    buyerUserId = item.value as? String
+//                case "latestMessage":
+//                    latestMessage = item.value as? String
+//                case "sellerDisplayName":
+//                    sellerDisplayName = item.value as? String
+//                case "sellerPhotoURL":
+//                    sellerPhotoURL = item.value as? String
+//                case "sentAt":
+//                    let timeStamp = item.value as? Timestamp
+//                    date = timeStamp?.dateValue()
+//                case "sellerUserId":
+//                    sellerUserId = item.value as? String
+//                case "members":
+//                    members = item.value as? [String]
+//                default:
+//                    break
+//            }
+//        }
+//
+//        return ChatListModel(
+//            documentId: document.documentID,
+//            latestMessage: latestMessage,
+//            date: date,
+//            buyerDisplayName: buyerDisplayName,
+//            buyerPhotoURL: buyerPhotoURL,
+//            buyerUserId: buyerUserId,
+//            sellerDisplayName: sellerDisplayName,
+//            sellerPhotoURL: sellerPhotoURL,
+//            sellerUserId: sellerUserId,
+//            members: members
+//        )
+//    }
     
     private func fetchMessages(_ docId: String) {
         firstListener = FirebaseService.shared.db
             .collection("chatrooms")
             .document(docId)
             .collection("messages")
-            .limit(to: 20)
+            .limit(to: 5)
             .order(by: "sentAt", descending: true)
             .addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
                 if let _ = error {
@@ -269,7 +385,7 @@ extension ChatViewController {
                 defer {
                     DispatchQueue.main.async {
                         self?.tableView.reloadData()
-                        self?.tableView.scrollToBottom()
+                        self?.tableView.scrollToTop()
                     }
                 }
                 
@@ -295,8 +411,9 @@ extension ChatViewController {
             .collection("chatrooms")
             .document(docId)
             .collection("messages")
-            .limit(to: 3)
-            .order(by: "sentAt", descending: false)
+            .order(by: "sentAt", descending: true)
+            .limit(to: 5)
+            .start(afterDocument: lastSnapshot)
             .addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
                 if let _ = error {
                     self?.alert.showDetail("Sorry", with: "Unable to receive messages at the moment.", for: self)
@@ -306,10 +423,8 @@ extension ChatViewController {
                     DispatchQueue.main.async {
                         self?.tableView.reloadData()
                         self?.tableView.scrollToBottom()
-                        self?.delay(1.0) {
-                            DispatchQueue.main.async {
-                                self?.refreshControl.endRefreshing()
-                            }
+                        DispatchQueue.main.async {
+                            self?.spinner.stopAnimating()
                         }
                     }
                 }
@@ -326,7 +441,7 @@ extension ChatViewController {
                 self?.lastSnapshot = lastSnapshot
                 
                 if let messages = self?.parseMessage(querySnapshot.documents) {
-                    self?.messages = messages
+                    self?.messages.append(contentsOf: messages)
                 }
             }
     }
@@ -372,7 +487,8 @@ extension ChatViewController {
             userInfo: userInfo,
             messageContent: messageContent,
             chatListModel: chatListModel,
-            docId: docId
+            docId: docId,
+            postingId: postingId
         )
 
         chatInitializer.createChatInfo()
@@ -425,8 +541,8 @@ extension ChatViewController {
     
     @objc private func keyboardWillShow(notification: NSNotification) {
         if let userInfo = notification.userInfo {
-            let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
-            let keyboardViewEndFrame = view.convert(keyBoardFrame!, from: view.window)
+            guard let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else { return }
+            let keyboardViewEndFrame = view.convert(keyBoardFrame, from: view.window)
             let keyboardHeight = keyboardViewEndFrame.height
 
             let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! Double
@@ -436,12 +552,11 @@ extension ChatViewController {
                 origin: .zero,
                 size: CGSize(
                     width: self.view.bounds.size.width,
-                    height: self.view.bounds.size.height - keyboardHeight - toolBarView.bounds.size.height
+                    height: self.view.bounds.size.height - keyboardHeight
                 )
             )
-            
-//            self.tableView.frame = CGRect(origin: .zero, size: CGSize(width: self.view.bounds.size.width, height: self.view.bounds.size.height - keyboardHeight - toolBarView.bounds.size
-//                                                                        .height))
+
+// - toolBarView.bounds.size.height
 //            let insets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
 //            self.tableView.contentInset = insets
 //            self.tableView.scrollIndicatorInsets = insets
@@ -452,7 +567,6 @@ extension ChatViewController {
             UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
                 self.view.layoutIfNeeded()
             })
-//            tableView.scrollToBottom()
             tableView.scrollToTop()
         }
     }
@@ -523,6 +637,26 @@ extension ChatViewController: UIImagePickerControllerDelegate & UINavigationCont
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         dismiss(animated: true, completion: nil)
+    }
+}
+
+extension ChatViewController: UITableViewDelegate {
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        let offset = scrollView.contentOffset
+        let bounds = scrollView.bounds
+        let size = scrollView.contentSize
+        let inset = scrollView.contentInset
+        let y = offset.y + bounds.size.height - inset.bottom
+        let h = size.height
+        let reload_distance:CGFloat = 10.0
+        if y > (h + reload_distance) {
+            spinner.startAnimating()
+            delay(0.5) { [weak self] in
+                guard let lastSnapshot = self?.lastSnapshot,
+                      let docId = self?.docId else { return }
+                self?.refetchMessages(lastSnapshot, docId: docId)
+            }
+        }
     }
 }
 

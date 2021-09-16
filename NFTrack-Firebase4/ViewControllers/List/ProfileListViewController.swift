@@ -27,15 +27,15 @@ class ProfileListViewController<T>: ParentListViewController<T> {
         fatalError("init(coder:) has not been implemented")
     }
     
-//    override func viewDidAppear(_ animated: Bool) {
-//        super.viewDidAppear(animated)
-//        fetchData()
-//    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         fetchData()
     }
+    
+//    override func viewDidLoad() {
+//        super.viewDidLoad()
+//        fetchData()
+//    }
     
     func fetchData() {}
     func refetchData(lastSnapshot: QueryDocumentSnapshot) {}

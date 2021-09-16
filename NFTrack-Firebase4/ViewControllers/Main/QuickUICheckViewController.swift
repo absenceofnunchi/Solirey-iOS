@@ -164,7 +164,6 @@ class QuickUICheckViewController: ParentListViewController<Post> {
         let post = postArr[indexPath.row]
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = post
-        listDetailVC.tableViewRefreshDelegate = self
         self.navigationController?.pushViewController(listDetailVC, animated: true)
     }
 }

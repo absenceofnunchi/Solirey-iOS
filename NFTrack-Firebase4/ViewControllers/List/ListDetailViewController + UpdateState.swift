@@ -61,6 +61,12 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                 self?.showSpinner {
                                     DispatchQueue.global(qos: .userInitiated).async {
                                         do {
+                                            
+                                            guard let documentId = self?.post.documentId else {
+                                                self?.alert.showDetail("Sorry", with: "Missing ID for the post.", for: self)
+                                                return
+                                            }
+                                            
                                             let result = try transaction.send(password: password, transactionOptions: nil)
                                             if let status = status {
                                                 switch status {
@@ -70,7 +76,7 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                         /// tag 2
                                                         /// confirmedPurchase
                                                         let buyerHash = Web3swiftService.currentAddressString
-                                                        FirebaseService.shared.db.collection("post").document(self!.post.documentId).updateData([
+                                                        FirebaseService.shared.db.collection("post").document(documentId).updateData([
                                                             "status": status.rawValue,
                                                             "buyerHash": buyerHash ?? "NA",
                                                             "buyerUserId": self?.userId ?? "NA",
@@ -102,7 +108,7 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                     case .complete:
                                                         /// tag 3
                                                         /// confirmRecieved
-                                                        FirebaseService.shared.db.collection("post").document(self!.post.documentId).updateData([
+                                                        FirebaseService.shared.db.collection("post").document(documentId).updateData([
                                                             "status": status.rawValue,
                                                             "\(method)Hash": result.hash,
                                                             "\(method)Date": Date()
@@ -123,7 +129,7 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                                     }
                                                                     self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", alignment: .left, for: self, completion:  {
                                                                         DispatchQueue.main.async {
-                                                                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
+//                                                                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
                                                                             self?.navigationController?.popViewController(animated: true)
                                                                         }
                                                                     })
@@ -131,7 +137,7 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                             }
                                                         })
                                                     case .aborted:
-                                                        FirebaseService.shared.db.collection("post").document(self!.post.documentId).delete() { err in
+                                                        FirebaseService.shared.db.collection("post").document(documentId).delete() { err in
                                                             if let err = err {
                                                                 self?.alert.showDetail("Error", with: err.localizedDescription, for: self)
                                                             } else {
@@ -142,7 +148,7 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                                 
                                                                 self?.alert.showDetail("Success!", with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.", for: self, completion:  {
                                                                     DispatchQueue.main.async {
-                                                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
+//                                                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
                                                                         self?.navigationController?.popViewController(animated: true)
                                                                     }
                                                                 })
@@ -374,7 +380,7 @@ extension ListDetailViewController {
                                     }
                                 } receiveValue: { (isFinished) in
                                     DispatchQueue.main.async {
-                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
+//                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
                                         self?.navigationController?.popViewController(animated: true)
                                     }
                                 }

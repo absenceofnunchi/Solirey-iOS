@@ -11,6 +11,7 @@ import FirebaseStorage
 import MapKit
 import CoreSpotlight
 import MobileCoreServices
+import Combine
 
 // WalletViewController
 protocol WalletDelegate: AnyObject {
@@ -668,6 +669,7 @@ protocol UsernameBannerConfigurable where Self: UIViewController {
     func processProfileImage()
     func tapped(_ sender: UITapGestureRecognizer!)
     func configureNameDisplay<T: Post, U: UIView>(post: T, v: U, callback: (_ profileImageView: UIImageView, _ displayNameLabel: UILabel) -> Void)
+    func fetchUserData(id: String)
 }
 
 extension UsernameBannerConfigurable {
@@ -675,7 +677,7 @@ extension UsernameBannerConfigurable {
         let docRef = FirebaseService.shared.db
             .collection("user")
             .document(id)
-        
+
         docRef.getDocument { [weak self] (document, error) in
             if let document = document, document.exists {
                 if let data = document.data() {
@@ -689,7 +691,7 @@ extension UsernameBannerConfigurable {
                        let latitude = sa["latitude"] as? Double {
                         shippingAddress = ShippingAddress(address: address, longitude: longitude, latitude: latitude)
                     }
-                    
+
                     let userInfo = UserInfo(
                         email: nil,
                         displayName: displayName ?? "N/A",
@@ -714,24 +716,24 @@ extension UsernameBannerConfigurable {
            info.photoURL != "NA",
            let photoURL = self.userInfo.photoURL {
             FirebaseService.shared.downloadImage(urlString: photoURL) { [weak self] (image, error) in
-                guard let strongSelf = self else { return }
+                guard let self = self else { return }
                 if let _ = error {
                     // if there is a discrepency between the photoURL of the "user" collection
                     // and the data in Firebase Storage, this error will occur
-                    strongSelf.profileImageView.isUserInteractionEnabled = true
-                    strongSelf.displayNameLabel.isUserInteractionEnabled = true
+                    self.profileImageView.isUserInteractionEnabled = true
+                    self.displayNameLabel.isUserInteractionEnabled = true
                     return
                 }
                 
                 if let image = image {
-                    strongSelf.fetchedImage = image
-                    strongSelf.profileImageView.image = image
-                    strongSelf.profileImageView.layer.cornerRadius = strongSelf.profileImageView.bounds.height/2.0
-                    strongSelf.profileImageView.contentMode = .scaleToFill
-                    strongSelf.profileImageView.clipsToBounds = true
+                    self.fetchedImage = image
+                    self.profileImageView.image = image
+                    self.profileImageView.layer.cornerRadius = self.profileImageView.bounds.height/2.0
+                    self.profileImageView.contentMode = .scaleToFill
+                    self.profileImageView.clipsToBounds = true
                     
-                    strongSelf.profileImageView.isUserInteractionEnabled = true
-                    strongSelf.displayNameLabel.isUserInteractionEnabled = true
+                    self.profileImageView.isUserInteractionEnabled = true
+                    self.displayNameLabel.isUserInteractionEnabled = true
                 }
             }
         } else {
@@ -806,11 +808,48 @@ extension UsernameBannerConfigurable {
     }
 }
 
-protocol FetchUserAddressConfigurable {
+protocol FetchUserConfigurable {
+    func fetchUserData(userId: String, promise: @escaping (Result<UserInfo, PostingError>) -> Void)
     func fetchAddress(userId: String, promise: @escaping (Result<ShippingAddress?, PostingError>) -> Void)
 }
 
-extension FetchUserAddressConfigurable {
+extension FetchUserConfigurable {
+    func fetchUserData(userId: String, promise: @escaping (Result<UserInfo, PostingError>) -> Void) {
+        let docRef = FirebaseService.shared.db
+            .collection("user")
+            .document(userId)
+
+        docRef.getDocument { (document, error) in
+            if let document = document, document.exists {
+                if let data = document.data() {
+                    let displayName = data[UserDefaultKeys.displayName] as? String
+                    let photoURL = data[UserDefaultKeys.photoURL] as? String
+                    let memberSince = data[UserDefaultKeys.memberSince] as? Timestamp
+                    var shippingAddress: ShippingAddress!
+                    if let sa = data["shippingAddress"] as? [String: Any],
+                       let address = sa[UserDefaultKeys.address] as? String,
+                       let longitude = sa["longitude"] as? Double,
+                       let latitude = sa["latitude"] as? Double {
+                        shippingAddress = ShippingAddress(address: address, longitude: longitude, latitude: latitude)
+                    }
+
+                    let userInfo = UserInfo(
+                        email: nil,
+                        displayName: displayName ?? "N/A",
+                        photoURL: photoURL,
+                        uid: userId,
+                        memberSince: memberSince?.dateValue(),
+                        shippingAddress: shippingAddress
+                    )
+                    
+                    promise(.success(userInfo))
+                }
+            } else {
+                promise(.failure(.generalError(reason: "Unable to load the profile information.")))
+            }
+        }
+    }
+    
     func fetchAddress(
         userId: String,
         promise: @escaping (Result<ShippingAddress?, PostingError>) -> Void
@@ -1216,8 +1255,8 @@ extension PostParseDelegate {
         var results = [ChatListModel]()
         for doc in documents {
             let data = doc.data()
-            var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId: String!
-            var date: Date!
+            var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId, postingId: String!
+            var date, sellerMemberSince, buyerMemberSince: Date!
             var members: [String]!
             
             data.forEach { (item) in
@@ -1241,6 +1280,14 @@ extension PostParseDelegate {
                         sellerUserId = item.value as? String
                     case "members":
                         members = item.value as? [String]
+                    case "postingId":
+                        postingId = item.value as? String
+                    case "sellerMemberSince":
+                        let timeStamp = item.value as? Timestamp
+                        sellerMemberSince = timeStamp?.dateValue()
+                    case "buyerMemberSince":
+                        let timeStamp = item.value as? Timestamp
+                        buyerMemberSince = timeStamp?.dateValue()
                     default:
                         break
                 }
@@ -1256,7 +1303,10 @@ extension PostParseDelegate {
                 sellerDisplayName: sellerDisplayName,
                 sellerPhotoURL: sellerPhotoURL,
                 sellerUserId: sellerUserId,
-                members: members
+                members: members,
+                postingId: postingId,
+                sellerMemberSince: sellerMemberSince,
+                buyerMemberSince: buyerMemberSince
             )
             
             results.append(chatListMode)
@@ -1546,5 +1596,71 @@ extension CoreSpotlightDelegate {
                 print("Goal successfully deindexed")
             }
         }
+    }
+}
+
+protocol SingleDocumentFetchDelegate where Self: UIViewController & PostParseDelegate {
+    associatedtype T where T: Post
+    
+    var storage: Set<AnyCancellable>! { get set }
+    var alert: Alerts! { get set }
+    var cache: NSCache<NSString, T>! { get set }
+    func getPost(with postingId: String, completionHandler: @escaping (Post) -> Void)
+}
+
+extension SingleDocumentFetchDelegate {
+    func getPostFromFirestore(
+        with postingId: String,
+        promise: @escaping (Result<Post, PostingError>) -> Void
+    ) {
+        FirebaseService.shared.db
+            .collection("post")
+            .document(postingId)
+            .getDocument { [weak self] (querySnapshot, error) in
+                if let _ = error {
+                    promise(.failure(.generalError(reason: "Unable to get the item data to initialize the chat.")))
+                }
+                
+                guard let document = querySnapshot,
+                      let post = self?.parseDocument(document: document) else {
+                    promise(.failure(.generalError(reason: "Unable to get the item data to initialize the chat.")))
+                    return
+                }
+                
+                guard let p = post as? Self.T else { return }
+                print("p", p)
+                self?.cache.setObject(p, forKey: "CachedPost")
+                
+                promise(.success(post))
+            }
+    }
+    
+    func getPost(with postingId: String, completionHandler: @escaping (Post) -> Void) {
+        return Future<Post, PostingError> { [weak self] promise in
+            print("self?.cache.object", self?.cache.object(forKey: "CachedPost"))
+            if let cachedVersion = self?.cache.object(forKey: "CachedPost") {
+                print("cached", cachedVersion)
+                // use the cached version
+                promise(.success(cachedVersion))
+            } else {
+                print("not cached")
+                self?.getPostFromFirestore(with: postingId, promise: promise)
+            }
+        }
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .failure(.generalError(reason: let err)):
+                    self?.alert.showDetail("Error", with: err, for: self)
+                case .finished:
+                    break
+                default:
+                    break
+            }
+        } receiveValue: { (fetchedPost) in
+            DispatchQueue.main.async {
+                completionHandler(fetchedPost)
+            }
+        }
+        .store(in: &storage)
     }
 }

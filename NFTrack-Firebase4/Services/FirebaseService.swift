@@ -26,7 +26,7 @@ class FirebaseService {
     let storage = Storage.storage()
     lazy var storageRef = storage.reference()
     var imageRef: StorageReference!
-    var cancellable: AnyCancellable!
+    var cancellable = Set<AnyCancellable>()
 }
 
 extension FirebaseService: PostParseDelegate {
@@ -436,4 +436,3 @@ extension FirebaseService {
         task.resume()
     }
 }
-
