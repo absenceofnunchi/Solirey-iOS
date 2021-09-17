@@ -64,6 +64,41 @@ class ChatImageDataStore: ImageDataStore<ChatListModel> {
     }
 }
 
+// 1. Determine whether the chat is pinned or unpinned
+// 2. Determine whether the image exists in the datastore
+// 3. Determine whether the image belongs to the sender or the recipient
+class SectionDataStore {
+    final var userId: String!
+    private var posts: SectionedChatList!
+
+    final func loadImage(at indexPath: IndexPath) -> DataLoadOperation? {
+        if indexPath.section == 0, (0..<posts.pinned.count).contains(indexPath.row) {
+            // pinned
+            return dataLoadBuffer(posts.pinned[indexPath.row])
+        } else if indexPath.section == 1, (0..<posts.unpinned.count).contains(indexPath.row) {
+            // unpinned
+            return dataLoadBuffer(posts.unpinned[indexPath.row])
+        } else {
+            return .none
+        }
+    }
+
+    final func dataLoadBuffer(_ post: ChatListModel) -> DataLoadOperation? {
+        if post.sellerUserId != userId, post.sellerPhotoURL != "NA" {
+            return DataLoadOperation(post.sellerPhotoURL)
+        } else if post.buyerPhotoURL != "NA" {
+            return DataLoadOperation(post.buyerPhotoURL)
+        } else {
+            return nil
+        }
+    }
+
+    init(posts: SectionedChatList, userId: String) {
+        self.userId = userId
+        self.posts = posts
+    }
+}
+
 class MessageImageDataStore: ImageDataStore<Message> {
     override func dataLoadBuffer(_ post: Message) -> DataLoadOperation? {
         if let imageURL = post.imageURL {

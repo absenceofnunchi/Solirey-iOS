@@ -26,6 +26,7 @@
 		492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */; };
 		492A00B326A4AA7B008B9B34 /* AlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A00B226A4AA7B008B9B34 /* AlertViewController.swift */; };
 		492C81E526F2312F0083C3B5 /* ChatInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81E426F2312F0083C3B5 /* ChatInitializer.swift */; };
+		492C81F226F3EB2E0083C3B5 /* ParentChatListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81F126F3EB2E0083C3B5 /* ParentChatListViewController.swift */; };
 		49314F5F4CF8EC19FC270279 /* Pods_NFTrack_Firebase4Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */; };
 		4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933332C268033D900B8BFC2 /* ReviewViewController.swift */; };
 		493333322681116F00B8BFC2 /* ReviewPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493333312681116F00B8BFC2 /* ReviewPostViewController.swift */; };
@@ -55,7 +56,6 @@
 		4958118A26D978EF002C8F3B /* LocationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958118926D978EF002C8F3B /* LocationSearchViewController.swift */; };
 		4958118F26D9B082002C8F3B /* AddressCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958118E26D9B082002C8F3B /* AddressCell.swift */; };
 		4958119426DB4EFB002C8F3B /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958119326DB4EFB002C8F3B /* MapViewController.swift */; };
-		495CCBD526EFAEBA00650EAE /* TestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495CCBD426EFAEBA00650EAE /* TestViewController.swift */; };
 		495CCBDA26EFBF2600650EAE /* ParentTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495CCBD926EFBF2600650EAE /* ParentTestViewController.swift */; };
 		495D5E08268FE92F00F5DF71 /* InfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495D5E07268FE92E00F5DF71 /* InfoViewController.swift */; };
 		495FB33B26B70D000047E91D /* AuctionDeploymentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */; };
@@ -207,6 +207,7 @@
 		492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardAlertViewController.swift; sourceTree = "<group>"; };
 		492A00B226A4AA7B008B9B34 /* AlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertViewController.swift; sourceTree = "<group>"; };
 		492C81E426F2312F0083C3B5 /* ChatInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInitializer.swift; sourceTree = "<group>"; };
+		492C81F126F3EB2E0083C3B5 /* ParentChatListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentChatListViewController.swift; sourceTree = "<group>"; };
 		4933332C268033D900B8BFC2 /* ReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewController.swift; sourceTree = "<group>"; };
 		493333312681116F00B8BFC2 /* ReviewPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPostViewController.swift; sourceTree = "<group>"; };
 		4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSegmentedControl.swift; sourceTree = "<group>"; };
@@ -235,7 +236,6 @@
 		4958118926D978EF002C8F3B /* LocationSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSearchViewController.swift; sourceTree = "<group>"; };
 		4958118E26D9B082002C8F3B /* AddressCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressCell.swift; sourceTree = "<group>"; };
 		4958119326DB4EFB002C8F3B /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
-		495CCBD426EFAEBA00650EAE /* TestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestViewController.swift; sourceTree = "<group>"; };
 		495CCBD926EFBF2600650EAE /* ParentTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentTestViewController.swift; sourceTree = "<group>"; };
 		495D5E07268FE92E00F5DF71 /* InfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoViewController.swift; sourceTree = "<group>"; };
 		495FB33A26B70D000047E91D /* AuctionDeploymentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionDeploymentTests.swift; sourceTree = "<group>"; };
@@ -404,10 +404,10 @@
 		49221B9B2671DE8C0031A756 /* Chat */ = {
 			isa = PBXGroup;
 			children = (
+				492C81F126F3EB2E0083C3B5 /* ParentChatListViewController.swift */,
 				49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */,
 				49E7D64B267AA73F00E8815A /* ChatViewController1.swift */,
 				499702B4267459D8001DD80A /* ChatListViewController.swift */,
-				495CCBD426EFAEBA00650EAE /* TestViewController.swift */,
 				495CCBD926EFBF2600650EAE /* ParentTestViewController.swift */,
 			);
 			path = Chat;
@@ -1099,7 +1099,6 @@
 				492A00B326A4AA7B008B9B34 /* AlertViewController.swift in Sources */,
 				4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */,
 				495FD329268D284E00F1D81D /* MainViewController + SearchBar.swift in Sources */,
-				495CCBD526EFAEBA00650EAE /* TestViewController.swift in Sources */,
 				499F9958266B2ADB00FC6CDE /* WebViewController.swift in Sources */,
 				496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */,
 				4964E4602641B001005B3268 /* SignInViewController.swift in Sources */,
@@ -1198,6 +1197,7 @@
 				4964E568264968A7005B3268 /* Errors.swift in Sources */,
 				493333322681116F00B8BFC2 /* ReviewPostViewController.swift in Sources */,
 				4964E50F264767A6005B3268 /* ImagePreviewViewController.swift in Sources */,
+				492C81F226F3EB2E0083C3B5 /* ParentChatListViewController.swift in Sources */,
 				4964E50A2644B07D005B3268 /* PostViewController.swift in Sources */,
 				495FD32E268D292E00F1D81D /* FilterViewController.swift in Sources */,
 				496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */,

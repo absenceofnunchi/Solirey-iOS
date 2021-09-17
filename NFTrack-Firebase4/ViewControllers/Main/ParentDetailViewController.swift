@@ -438,7 +438,6 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
                 }
                 .store(in: &self.storage)
         }
-
     }
     
     private func navToReport() {

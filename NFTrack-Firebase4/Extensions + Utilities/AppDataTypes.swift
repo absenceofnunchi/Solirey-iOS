@@ -185,6 +185,7 @@ class ChatListModel: PostCoreModel {
     var postingId: String!
     var sellerMemberSince: Date!
     var buyerMemberSince: Date!
+    var isPinned: Bool!
     
     init(
         documentId: String,
@@ -199,7 +200,8 @@ class ChatListModel: PostCoreModel {
         members:[String],
         postingId: String,
         sellerMemberSince: Date,
-        buyerMemberSince: Date
+        buyerMemberSince: Date,
+        isPinned: Bool = false
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         self.latestMessage = latestMessage
@@ -213,6 +215,11 @@ class ChatListModel: PostCoreModel {
         self.sellerMemberSince = sellerMemberSince
         self.buyerMemberSince = buyerMemberSince
     }
+}
+
+struct SectionedChatList {
+    var pinned: [ChatListModel]
+    var unpinned: [ChatListModel]
 }
 
 // MARK: - UILabelPadding
@@ -347,6 +354,28 @@ enum ScopeButtonCategory: String, CaseIterable {
     
     static func getAll() -> [String] {
         return ScopeButtonCategory.allCases.map { $0.rawValue }
+    }
+}
+
+// MARK: - ChatListCategory
+enum ChatListCategory: String, CaseIterable {
+    case seller = "Seller"
+    case buyer = "Buyer"
+    
+    static func getCategory(num: Int) -> ChatListCategory? {
+        guard num >= 0, num < ChatListCategory.allCases.count else { return nil }
+        switch num {
+            case 0:
+                return .seller
+            case 1:
+                return .buyer
+            default:
+                return .none
+        }
+    }
+    
+    static func getAll() -> [String] {
+        return ChatListCategory.allCases.map { $0.rawValue }
     }
 }
 

@@ -34,7 +34,7 @@ extension MessageCell {
         contentLabel = UILabelPadding()
         contentLabel.numberOfLines = 0
         contentLabel.font = UIFont.systemFont(ofSize: 15)
-        contentLabel.layer.cornerRadius = 15
+        contentLabel.layer.cornerRadius = 11
         contentLabel.clipsToBounds = true
         contentLabel.adjustsFontForContentSizeCategory = true
         

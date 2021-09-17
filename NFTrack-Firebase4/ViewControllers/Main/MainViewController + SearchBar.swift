@@ -38,8 +38,8 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
         let searchTextField = searchBar.searchTextField
         searchTextField.borderStyle = .roundedRect
         searchTextField.layer.cornerRadius = 8
-        searchTextField.layer.borderWidth = 1
-        searchTextField.layer.borderColor = UIColor(red: 224/255, green: 224/255, blue: 224/255, alpha: 1).cgColor
+//        searchTextField.layer.borderWidth = 1
+//        searchTextField.layer.borderColor = UIColor(red: 224/255, green: 224/255, blue: 224/255, alpha: 1).cgColor
         searchTextField.textColor = .gray
         searchTextField.attributedPlaceholder = NSAttributedString(string: "Enter Search Here", attributes: [NSAttributedString.Key.foregroundColor : UIColor.gray])
     }

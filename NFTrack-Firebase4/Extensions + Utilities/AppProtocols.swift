@@ -1293,7 +1293,7 @@ extension PostParseDelegate {
                 }
             }
             
-            let chatListMode = ChatListModel(
+            let chatListModel = ChatListModel(
                 documentId: doc.documentID,
                 latestMessage: latestMessage,
                 date: date,
@@ -1309,7 +1309,7 @@ extension PostParseDelegate {
                 buyerMemberSince: buyerMemberSince
             )
             
-            results.append(chatListMode)
+            results.append(chatListModel)
         }
         
         return results

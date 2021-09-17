@@ -185,6 +185,7 @@ extension ChatViewController: PostParseDelegate {
         storage = Set<AnyCancellable>()
                 
         tableView = UITableView()
+        tableView.allowsSelection = false
         tableView.register(MessageCell.self, forCellReuseIdentifier: MessageCell.identifier)
         tableView.delegate = self
         tableView.dataSource = self
@@ -591,7 +592,7 @@ extension ChatViewController {
     }
 }
 
-extension ChatViewController: TableViewConfigurable, UITableViewDataSource {
+extension ChatViewController: TableViewConfigurable, UITableViewDataSource, UIContextMenuInteractionDelegate, SharableDelegate {
     final func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return messages.count
     }
@@ -602,19 +603,41 @@ extension ChatViewController: TableViewConfigurable, UITableViewDataSource {
         }
         
         cell.selectionStyle = .none
-        cell.contentView.tag = 0
         let message = messages[indexPath.row]
         cell.set(with: message, myId: userId)
-        
-        let totalRows = tableView.numberOfRows(inSection: indexPath.section)
-        //first get total rows in that section by current indexPath.
-        if indexPath.row == totalRows - 1 {
-            //this is the last row in section.
-            cell.contentView.tag = 100
-        }
+
+        let interaction = UIContextMenuInteraction(delegate: self)
+        cell.contentLabel.isUserInteractionEnabled = true
+        cell.contentLabel.addInteraction(interaction)
         
         cell.contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
         return cell
+    }
+    
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+            guard let contentLabel = interaction.view as? UILabel,
+                  let message = contentLabel.text else { return nil }
+            
+            return self.createMenu(message: message)
+        }
+    }
+    
+    func createMenu(message: String) -> UIMenu {
+        // Create a UIAction for sharing
+        let share = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up")) { [weak self] action in
+            let objectsToShare: [AnyObject] = [message as AnyObject]
+            self?.share(objectsToShare)
+        }
+        
+        // Create an action for renaming
+        let copy = UIAction(title: "Copy", image: UIImage(systemName: "doc.on.doc")) { action in
+            let pasteboard = UIPasteboard.general
+            pasteboard.string = message
+        }
+        
+        // Create and return a UIMenu with all of the actions as children
+        return UIMenu(title: "", children: [share, copy])
     }
 }
 
@@ -622,21 +645,84 @@ extension ChatViewController: TableViewConfigurable, UITableViewDataSource {
 extension ChatViewController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
-//        
-//        guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else {
-//            print("No image found")
-//            return
-//        }
-//        
-//        imageName = UUID().uuidString
-//        saveImage(imageName: imageName, image: image)
-//        uploadFile(fileName: imageName, userId: userId) { [weak self] (url) in
-//            self?.sendImage(url: url)
-//        }
+        
+        guard let url = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
+            print("No image found")
+            return
+        }
+        
+        alert.showDetail(
+            "Picture Message",
+            with: "Would you like to send the image?",
+            for: self,
+            alertStyle: .withCancelButton,
+            buttonAction: { [weak self] in
+                guard let userId = self?.userId else { return }
+                Future<URL?, PostingError> { promise in
+                    self?.uploadImage(url: url, userId: userId, promise: promise)
+                }
+                .eraseToAnyPublisher()
+            }
+        )
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         dismiss(animated: true, completion: nil)
+    }
+    
+    private func sendImage() {
+        guard
+            let messageContent = toolBarView.textView.text,
+            !messageContent.isEmpty,
+            let userId = userId else {
+            return
+        }
+        
+        let ref = FirebaseService.shared.db
+            .collection("chatrooms")
+            .document(docId)
+        
+        let chatInitializer = ChatInitializer(
+            chatIsNew: chatIsNew,
+            ref: ref,
+            userInfo: userInfo,
+            messageContent: messageContent,
+            chatListModel: chatListModel,
+            docId: docId,
+            postingId: postingId
+        )
+        
+        chatInitializer.createChatInfo()
+            .sink { [weak self] (completion) in
+                switch completion {
+                    case .failure(.generalError(reason: let err)):
+                        self?.alert.showDetail("Error", with: err, for: self)
+                    case .failure(.chatDisabled):
+                        guard let displayName = self?.userInfo.displayName else { return }
+                        self?.alert.showDetail("Undelivered Message", with: "The message couldn't be delivered because \(displayName) has left the chat.", for: self)
+                    case .finished:
+                        break
+                    default:
+                        break
+                }
+            } receiveValue: { [weak self] (ref) in
+                // send text message
+                guard let recipient = self?.userInfo.uid else { return }
+                
+                ref.collection("messages").addDocument(data: [
+                    "sentAt": Date(),
+                    "content": messageContent,
+                    "sender": userId,
+                    "recipient": recipient,
+                ]) { (error) in
+                    if let _ = error {
+                        self?.alert.showDetail("Sorry", with: "Unable to send the message at the moment.", for: self)
+                    } else {
+                        self?.toolBarView.textView.text.removeAll()
+                    }
+                }
+            }
+            .store(in: &storage)
     }
 }
 
