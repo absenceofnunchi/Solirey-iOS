@@ -55,7 +55,6 @@ class ImageMessageCell: ParentTableCell<Message> {
             thumbImageView.image = UIImage(named: "placeholder")
             thumbImageView.layer.cornerRadius = 8
             thumbImageView.clipsToBounds = true
-            thumbImageView.isUserInteractionEnabled = true
             thumbImageView.translatesAutoresizingMaskIntoConstraints = false
             
             loadingIndicator.translatesAutoresizingMaskIntoConstraints = false

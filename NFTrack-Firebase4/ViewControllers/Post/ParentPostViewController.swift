@@ -635,11 +635,11 @@ extension ParentPostViewController {
     // https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2F2CA3EC02-450D-4DB1-BF71-E86338CE1135.jpeg?alt=media&token=66fc9e87-09a6-4db6-813b-2a763ce1f5dd
     
     @objc func mint1() {
-        for i in 0...20 {
+        for i in 0...10 {
             FirebaseService.shared.db
                 .collection("post")
                 .document("\(i)")
-                .setData([
+                .updateData([
                     "sellerUserId": "vcHixrcSsLMpLiafMYrAmCvnlLU2",
                     "senderAddress": "\(i)",
                     "escrowHash": "\(i)",

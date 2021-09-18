@@ -1604,7 +1604,7 @@ protocol SingleDocumentFetchDelegate where Self: UIViewController & PostParseDel
     
     var storage: Set<AnyCancellable>! { get set }
     var alert: Alerts! { get set }
-    var cache: NSCache<NSString, T>! { get set }
+    var postCache: NSCache<NSString, T>! { get set }
     func getPost(with postingId: String, completionHandler: @escaping (Post) -> Void)
 }
 
@@ -1629,7 +1629,7 @@ extension SingleDocumentFetchDelegate {
                 
                 guard let p = post as? Self.T else { return }
                 print("p", p)
-                self?.cache.setObject(p, forKey: "CachedPost")
+                self?.postCache.setObject(p, forKey: "CachedPost")
                 
                 promise(.success(post))
             }
@@ -1637,8 +1637,7 @@ extension SingleDocumentFetchDelegate {
     
     func getPost(with postingId: String, completionHandler: @escaping (Post) -> Void) {
         return Future<Post, PostingError> { [weak self] promise in
-            print("self?.cache.object", self?.cache.object(forKey: "CachedPost"))
-            if let cachedVersion = self?.cache.object(forKey: "CachedPost") {
+            if let cachedVersion = self?.postCache.object(forKey: "CachedPost") {
                 print("cached", cachedVersion)
                 // use the cached version
                 promise(.success(cachedVersion))

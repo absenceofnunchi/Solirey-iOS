@@ -91,7 +91,8 @@ extension ChatListViewController {
                     return
                 }
 
-                print("querySnapshot.documents.last", querySnapshot.documents.last as Any)
+                self?.imageCache.removeAllObjects()
+                
                 guard let lastSnapshot = querySnapshot.documents.last else {
                     return
                 }
@@ -136,6 +137,8 @@ extension ChatListViewController {
 //                print("empty1")
 //                return
 //            }
+        
+//            self?.imageCache.removeAllObjects()
 //
 //            print("querySnapshot.documents.last", querySnapshot.documents.last as Any)
 //            guard let lastSnapshot = querySnapshot.documents.last else {
@@ -188,6 +191,8 @@ extension ChatListViewController {
                 guard let querySnapshot = querySnapshot else {
                     return
                 }
+            
+                self?.imageCache.removeAllObjects()
                 
                 guard let lastSnapshot = querySnapshot.documents.last else {
                     return

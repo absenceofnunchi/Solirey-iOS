@@ -42,7 +42,8 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     var nextListener: ListenerRegistration!
     var lastSnapshot: QueryDocumentSnapshot!
     var PAGINATION_LIMIT: Int = 15
-
+    var imageCache = NSCache<NSIndexPath, UIImage>()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
@@ -51,6 +52,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         detachListeners()
+        imageCache.removeAllObjects()
     }
     
     func setDataStore(postArr: [T]) {
@@ -73,6 +75,8 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     func configureUI() {
         view.backgroundColor = .white
         alert = Alerts()
+        imageCache.countLimit = 75 // 75 images
+        imageCache.totalCostLimit = 50 * 1024 * 1024 // 50 MB
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -99,23 +103,31 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
             self.loadingOperations.removeValue(forKey: indexPath)
         }
         
-        // Try to find an existing data loader
-        if let dataLoader = loadingOperations[indexPath] {
-            // Has the data already been loaded?
-            if let image = dataLoader.image {
-                cell.updateAppearanceFor(.fetched(image))
-                loadingOperations.removeValue(forKey: indexPath)
-            } else {
-                // No data loaded yet, so add the completion closure to update the cell once the data arrives
-                dataLoader.loadingCompleteHandler = updateCellClosure
-            }
+        // Check the cache for an existing image
+        if let cachedImage = imageCache.object(forKey: indexPath as NSIndexPath) {
+            print("cachedImage", cachedImage)
+            cell.updateAppearanceFor(.fetched(cachedImage))
+            loadingOperations.removeValue(forKey: indexPath)
         } else {
-            // Need to create a data loaded for this index path
-            if let dataLoader = dataStore.loadImage(at: indexPath.row) {
-                // Provide the completion closure, and kick off the loading operation
-                dataLoader.loadingCompleteHandler = updateCellClosure
-                loadingQueue.addOperation(dataLoader)
-                loadingOperations[indexPath] = dataLoader
+            // No cached image exists so try to find an existing data loader
+            if let dataLoader = loadingOperations[indexPath] {
+                // Has the data already been loaded?
+                if let image = dataLoader.image {
+                    cell.updateAppearanceFor(.fetched(image))
+                    loadingOperations.removeValue(forKey: indexPath)
+                    imageCache.setObject(image, forKey: indexPath as NSIndexPath)
+                } else {
+                    // No data loaded yet, so add the completion closure to update the cell once the data arrives
+                    dataLoader.loadingCompleteHandler = updateCellClosure
+                }
+            } else {
+                // Need to create a data loaded for this index path
+                if let dataLoader = dataStore.loadImage(at: indexPath.row) {
+                    // Provide the completion closure, and kick off the loading operation
+                    dataLoader.loadingCompleteHandler = updateCellClosure
+                    loadingQueue.addOperation(dataLoader)
+                    loadingOperations[indexPath] = dataLoader
+                }
             }
         }
     }

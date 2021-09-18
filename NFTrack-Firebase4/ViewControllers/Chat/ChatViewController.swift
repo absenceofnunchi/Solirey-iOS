@@ -68,7 +68,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     private var postBarButton: UIBarButtonItem!
     private var reportBarButton: UIBarButtonItem!
     final var storage: Set<AnyCancellable>!
-    final var cache: NSCache<NSString, Post>!
+    final var postCache: NSCache<NSString, Post>!
     private var lastContentOffset: CGFloat = 0
     
     final override func setDataStore(postArr: [Message]) {
@@ -102,7 +102,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         }
    
         if isMovingFromParent {
-            cache.removeObject(forKey: "CachedPost")
+            postCache.removeObject(forKey: "CachedPost")
         }
     }
     
@@ -115,7 +115,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         super.configureUI()
         view.backgroundColor = .white
         alert = Alerts()
-        cache = NSCache<NSString, Post>()
+        postCache = NSCache<NSString, Post>()
         storage = Set<AnyCancellable>()
         
         tableView = UITableView()
@@ -190,8 +190,9 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
             //        imageCell.updateAppearanceFor(.pending(post))
             
             let interaction = UIContextMenuInteraction(delegate: self)
-            imageCell.messageLabel.isUserInteractionEnabled = true
-            imageCell.messageLabel.addInteraction(interaction)
+            imageCell.thumbImageView.isUserInteractionEnabled = true
+            imageCell.thumbImageView.addInteraction(interaction)
+            
             cell = imageCell
         } else {
             guard let messageCell = tableView.dequeueReusableCell(withIdentifier: MessageCell.identifier, for: indexPath) as? MessageCell else {
@@ -216,10 +217,15 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     
     final override func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
-            guard let contentLabel = interaction.view as? UILabel,
-                  let message = contentLabel.text else { return nil }
-            
-            return self.createMenu(message: message)
+            if let contentLabel = interaction.view as? UILabel,
+               let message = contentLabel.text {
+                return self.createMessageMenu(message: message)
+            } else if let imageView = interaction.view as? UIImageView {
+                guard let image = imageView.image else { return nil }
+                return self.createImageMenu(image: image)
+            } else {
+                return nil
+            }
         }
     }
     
@@ -524,7 +530,7 @@ extension ChatViewController {
 }
 
 extension ChatViewController: SharableDelegate {
-    final func createMenu(message: String) -> UIMenu {
+    final func createMessageMenu(message: String) -> UIMenu {
         // Create a UIAction for sharing
         let share = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up")) { [weak self] action in
             let objectsToShare: [AnyObject] = [message as AnyObject]
@@ -535,6 +541,24 @@ extension ChatViewController: SharableDelegate {
         let copy = UIAction(title: "Copy", image: UIImage(systemName: "doc.on.doc")) { action in
             let pasteboard = UIPasteboard.general
             pasteboard.string = message
+        }
+        
+        // Create and return a UIMenu with all of the actions as children
+        return UIMenu(title: "", children: [share, copy])
+    }
+    
+    final func createImageMenu(image: UIImage) -> UIMenu {
+        // Create a UIAction for sharing
+        let share = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up")) { [weak self] action in
+            let objectsToShare: [AnyObject] = [image as AnyObject]
+            self?.share(objectsToShare)
+        }
+        
+        // Create an action for renaming
+        let copy = UIAction(title: "Open", image: UIImage(systemName: "doc.on.doc")) { [weak self] action in
+            let vc = BigPreviewViewController()
+            vc.imageView.image = image
+            self?.present(vc, animated: true, completion: nil)
         }
         
         // Create and return a UIMenu with all of the actions as children

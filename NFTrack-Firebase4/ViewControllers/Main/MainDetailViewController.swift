@@ -11,6 +11,8 @@ import web3swift
 import Combine
 import FirebaseMessaging
 
+//
+
 class MainDetailViewController: ParentListViewController<Post>, PostParseDelegate {
     private var storage = Set<AnyCancellable>()
     final var category: String! {
@@ -25,10 +27,10 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 .whereField("bidders", notIn: [userId])
                 .order(by: "bidders")
                 .order(by: "date", descending: true)
-                .limit(to: PAGINATION_LIMIT)
+                .limit(to: 3)
                 .addSnapshotListener({ [weak self] (querySnapshot: QuerySnapshot?, err: Error?) in
-                    if let err = err {
-                        self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
+                    if let _ = err {
+                        self?.alert.showDetail("Error", with: "Unable to fetch data. Please try again later.", for: self)
                     } else {
                         defer {
                             DispatchQueue.main.async {
@@ -40,6 +42,10 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                             return
                         }
                         
+                        // All cache has to be removed because the listener could fetch the modified data at any point and disrupt the index path
+                        // This means the index path saved in the cache would be inaccurate
+                        self?.imageCache.removeAllObjects()
+                        
                         guard let lastSnapshot = querySnapshot.documents.last else {
                             // The collection is empty.
                             return
@@ -49,7 +55,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
 
                         if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                             self?.postArr = data
-    //                        self?.dataStore = PostImageDataStore(posts: data)
                         }
                     }
                 })
@@ -127,11 +132,11 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
             .whereField("bidders", notIn: [userId])
             .order(by: "bidders")
             .order(by: "date", descending: true)
-            .limit(to: PAGINATION_LIMIT)
+            .limit(to: 3)
             .start(afterDocument: lastSnapshot)
             .addSnapshotListener({ [weak self] (querySnapshot: QuerySnapshot?, err: Error?) in
-                if let err = err {
-                    self?.alert.showDetail("Error fetching data", with: err.localizedDescription, for: self)
+                if let _ = err {
+                    self?.alert.showDetail("Error", with: "Unable to fetch data. Please try again later.", for: self)
                 } else {
                     defer {
                         DispatchQueue.main.async {
@@ -143,6 +148,8 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                         return
                     }
                     
+                    self?.imageCache.removeAllObjects()
+                    
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
                         return
@@ -152,7 +159,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                     
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                         self?.postArr.append(contentsOf: data)
-    //                    self?.dataStore = PostImageDataStore(posts: data)
                     }
                 }
             })

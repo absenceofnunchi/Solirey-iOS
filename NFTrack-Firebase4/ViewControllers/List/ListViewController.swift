@@ -19,6 +19,12 @@ class ListViewController: ParentListViewController<Post> {
     }
     private var storage = Set<AnyCancellable>()
     private var segmentRetainer: Segment!
+    override var PAGINATION_LIMIT: Int {
+        get {
+            return 10
+        }
+        set {}
+    }
     
     final override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,14 +47,6 @@ class ListViewController: ParentListViewController<Post> {
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        if firstListener != nil {
-            firstListener.remove()
-        }
-        
-        if nextListener != nil {
-            nextListener.remove()
-        }
-        
         lastSnapshot = nil
         loadingQueue.cancelAllOperations()
         loadingOperations.removeAll()
@@ -176,6 +174,8 @@ class ListViewController: ParentListViewController<Post> {
                     configureDataRefetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue], lastSnapshot: lastSnapshot)
             case .posts:
                     configureDataRefetch(isBuyer: false, status: [PostStatus.ready.rawValue], lastSnapshot: lastSnapshot)
+            case .auction:
+                    configureAuctionRefetch()
             default:
                 break
         }
@@ -267,14 +267,16 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
             .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
             .whereField("status", in: status)
             .order(by: "date", descending: true)
-            .limit(to: 10)
+            .limit(to: PAGINATION_LIMIT)
             .addSnapshotListener() { [weak self] (querySnapshot, error) in
                 if let _ = error {
-                    self?.alert.showDetail("Error in Fetching Data", with: "There was an error fetching the posts", for: self)
+                    self?.alert.showDetail("Error in Fetching Data", with: "There was an error fetching the posts.", for: self)
                 } else {
                     guard let querySnapshot = querySnapshot else {
                         return
                     }
+                    
+                    self?.imageCache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
@@ -310,16 +312,17 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
             .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
             .whereField("status", in: status)
             .order(by: "date", descending: true)
-            .limit(to: 10)
+            .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)
             .addSnapshotListener() { [weak self] (querySnapshot, error) in
-                if let error = error {
-                    print(error.localizedDescription)
-                    self?.alert.showDetail("Error in Fetching Data", with: error.localizedDescription, for: self)
+                if let _ = error {
+                    self?.alert.showDetail("Error", with: "Unable to fetch data. Please try again.", for: self)
                 } else {
                     guard let querySnapshot = querySnapshot else {
                         return
                     }
+                    
+                    self?.imageCache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
@@ -356,14 +359,28 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
         self.dataStore = nil
         self.postArr.removeAll()
         
-        db.collection("post")
+        firstListener = db.collection("post")
             .whereField("bidders", arrayContains: userId)
             .whereField("status", in: [AuctionStatus.bid.rawValue, AuctionStatus.ended.rawValue, AuctionStatus.transferred.rawValue])
             .order(by: "date", descending: true)
-            .getDocuments() { [weak self] (querySnapshot, error) in
-                if let error = error {
-                    self?.alert.showDetail("Error in Fetching Data", with: error.localizedDescription, for: self)
+            .limit(to: PAGINATION_LIMIT)
+            .addSnapshotListener() { [weak self] (querySnapshot, error) in
+                if let _ = error {
+                    self?.alert.showDetail("Error", with: "Unable to fetch data. Please try again.", for: self)
                 } else {
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    self?.imageCache.removeAllObjects()
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
                     defer {
                         DispatchQueue.main.async {
                             self?.tableView.reloadData()
@@ -377,7 +394,54 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                     
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                         DispatchQueue.main.async {
-                            self?.postArr = data
+                            self?.postArr.append(contentsOf: data)
+                        }
+                    }
+                }
+            }
+    }
+    
+    // MARK: - configureAuctionRefetch()
+    final func configureAuctionRefetch() {
+        guard let userId = userId else { return }
+        
+        nextListener = db.collection("post")
+            .whereField("bidders", arrayContains: userId)
+            .whereField("status", in: [AuctionStatus.bid.rawValue, AuctionStatus.ended.rawValue, AuctionStatus.transferred.rawValue])
+            .order(by: "date", descending: true)
+            .limit(to: PAGINATION_LIMIT)
+            .start(afterDocument: lastSnapshot)
+            .addSnapshotListener() { [weak self] (querySnapshot, error) in
+                if let _ = error {
+                    self?.alert.showDetail("Error", with: "Unable to fetch data. Please try again.", for: self)
+                } else {
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    self?.imageCache.removeAllObjects()
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                            self?.delay(1.0) {
+                                DispatchQueue.main.async {
+                                    self?.refreshControl.endRefreshing()
+                                }
+                            }
+                        }
+                    }
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        DispatchQueue.main.async {
+                            self?.postArr.append(contentsOf: data)
                         }
                     }
                 }

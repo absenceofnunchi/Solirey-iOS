@@ -21,8 +21,13 @@ class SavedViewController: ParentListViewController<Post>, PostParseDelegate {
         super.viewWillAppear(animated)
         
         if isMovingToParent {
-            firstListener.remove()
-            nextListener.remove()
+            if firstListener != nil {
+                firstListener.remove()
+            }
+            
+            if nextListener != nil {
+                nextListener.remove()
+            }
         }
     }
 
@@ -37,6 +42,8 @@ class SavedViewController: ParentListViewController<Post>, PostParseDelegate {
                     guard let querySnapshot = querySnapshot else {
                         return
                     }
+                    
+                    self?.imageCache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
@@ -98,6 +105,8 @@ class SavedViewController: ParentListViewController<Post>, PostParseDelegate {
                     guard let querySnapshot = querySnapshot else {
                         return
                     }
+                    
+                    self?.imageCache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.

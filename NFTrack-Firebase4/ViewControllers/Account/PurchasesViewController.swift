@@ -70,6 +70,8 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
                         return
                     }
                     
+                    self?.imageCache.removeAllObjects()
+                    
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
                         return
@@ -78,7 +80,6 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
                     self?.lastSnapshot = lastSnapshot
                     
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
-                        self?.postArr.removeAll()
                         self?.postArr = data
                     }
                 }

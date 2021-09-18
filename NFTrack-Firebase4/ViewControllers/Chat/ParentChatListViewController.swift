@@ -11,19 +11,19 @@ import Combine
 
 class ParentChatListViewController: ParentListViewController<ChatListModel>, PostParseDelegate, SingleDocumentFetchDelegate {
     var storage: Set<AnyCancellable>!
-    var cache: NSCache<NSString, Post>!
+    var postCache: NSCache<NSString, Post>!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         configureNavigationBar(vc: self)
         //        configureSearchController()
-        cache = NSCache<NSString, Post>()
+        postCache = NSCache<NSString, Post>()
         storage = Set<AnyCancellable>()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        cache.removeObject(forKey: "CachedPost")
+        postCache.removeObject(forKey: "CachedPost")
     }
     
     override func setDataStore(postArr: [ChatListModel]) {

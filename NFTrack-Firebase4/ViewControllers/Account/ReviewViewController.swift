@@ -12,6 +12,8 @@ import UIKit
 
 class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
     internal var segmentedControl: UISegmentedControl!
+    private var userIdField: String!
+    
     final override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -19,7 +21,7 @@ class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
         configureDataFetch(userIdField: "buyerUserId")
     }
     
-    override func setDataStore(postArr: [Post]) {
+    final override func setDataStore(postArr: [Post]) {
         dataStore = PostImageDataStore(posts: postArr)
     }
     
@@ -48,6 +50,7 @@ class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
             .whereField("status", isEqualTo: "complete")
             .whereField("confirmReceivedDate", isGreaterThan: fromDate)
             .order(by: "confirmReceivedDate", descending: true)
+            .limit(to: PAGINATION_LIMIT)
             .getDocuments() { [weak self] (querySnapshot, err) in
                 if let err = err {
                     print(err)
@@ -63,6 +66,70 @@ class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
                             }
                         }
                     }
+                    
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    self?.imageCache.removeAllObjects()
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        self?.postArr = data
+                    }
+                }
+            }
+    }
+    
+    final func configureDataRefetch(userIdField: String) {
+        guard let userId = userId else {
+            self.alert.showDetail("Sorry", with: "Please try re-logging back in.", for: self)
+            return
+        }
+        // only valid for 1 month
+        guard let fromDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) else {return}
+        FirebaseService.shared.db.collection("post")
+            .whereField(userIdField, isEqualTo: userId)
+            .whereField("isReviewed", isEqualTo: false)
+            .whereField("status", isEqualTo: "complete")
+            .whereField("confirmReceivedDate", isGreaterThan: fromDate)
+            .order(by: "confirmReceivedDate", descending: true)
+            .limit(to: PAGINATION_LIMIT)
+            .start(afterDocument: lastSnapshot)
+            .getDocuments() { [weak self] (querySnapshot, err) in
+                if let err = err {
+                    print(err)
+                    self?.alert.showDetail("Error Fetching Data", with: err.localizedDescription, for: self)
+                } else {
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                            self?.delay(1.0) {
+                                DispatchQueue.main.async {
+                                    self?.refreshControl.endRefreshing()
+                                }
+                            }
+                        }
+                    }
+                    
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    self?.imageCache.removeAllObjects()
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
                     
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                         self?.postArr = data
@@ -96,13 +163,18 @@ class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
         segmentedControl.sendActions(for: UIControl.Event.valueChanged)
         switch index {
             case 0:
-                configureDataFetch(userIdField: "buyerUserId")
+                userIdField = "buyerUserId"
+                configureDataFetch(userIdField: userIdField)
             case 1:
-                configureDataFetch(userIdField: "sellerUserId")
+                userIdField = "sellerUserId"
+                configureDataFetch(userIdField: userIdField)
             default:
                 break
         }
-        
+    }
+    
+    override func executeAfterDragging() {
+        configureDataRefetch(userIdField: userIdField)
     }
 }
 
