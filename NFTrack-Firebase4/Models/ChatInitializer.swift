@@ -119,7 +119,7 @@ class ChatInitializer {
         self.postingId = postingId
     }
     
-    final func createChatInfo() -> Future<DocumentReference, PostingError> {
+    final func createChatInfo() -> AnyPublisher<DocumentReference, PostingError> {
         Future<DocumentReference, PostingError> { [weak self] promise in
             guard let chatIsNew = self?.chatIsNew,
                   let userId = self?.userId,
@@ -192,5 +192,6 @@ class ChatInitializer {
                 }
             }
         }
+        .eraseToAnyPublisher()
     }
 }

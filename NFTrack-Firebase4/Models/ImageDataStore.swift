@@ -122,16 +122,25 @@ class ReviewImageDataStore: ImageDataStore<Review> {
 class DataLoadOperation: Operation {
     final var image: UIImage?
     final var loadingCompleteHandler: ((UIImage?) -> ())?
-    private var _imageString: String
+    private var _imageString: String!
+    private var _imageURL: URL!
     
     init(_ imageString: String) {
         _imageString = imageString
     }
     
+    init(_ imageURL: URL) {
+        _imageURL = imageURL
+    }
+    
     override func main() {
         if isCancelled { return }
-        guard let url = URL(string: _imageString) else {
-            return
+        
+        var url: URL!
+        if let imageString = _imageString {
+            url = URL(string: imageString)
+        } else {
+            url = _imageURL
         }
         
         if url.pathExtension == "pdf" {

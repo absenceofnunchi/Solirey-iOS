@@ -1,1159 +1,926 @@
-
-
+////
+////  ChatViewController.swift
+////  NFTrack-Firebase4
+////
+////  Created by J C on 2021-06-10.
+////
 //
-//  ListViewController.swift
-//  NFTrack-Firebase4
-//
-//  Created by J C on 2021-05-16.
-//
+///*
+// Abstract:
+// Real time chat between two users.
+// 
+// Important:
+// UserInfo always pertains to the recipient regardless of whether it is the buyer or the seller. Therefore, UserInfo cannot be used to determine whether a user is a buyer or a seller.
+// 
+// There are two ways to arrive on this view controller:
+// 1) ListDetailVC: A previous chat might not exists, in which case a new chat is created using getDocId(), a unique identifer for each chat channel
+// 2) ChatListVC: The chat already exists. ChatListVC passes post (PostCoreModel), which sets the document ID, which in turn, fetches the chat data using the document ID
+// 
+// Only the potential buyer can initiate the conversation and the seller cannot. When the buyer terminates the conversation, they can reinitate the conversation whereas the seller cannot. The seller can terminate the conversation as well, but the buyer can reinitate.
+// 1) Buyer
+// A. Terminates the conversation by removing their user ID from the channel's Members.
+// B. Prevent the seller from contacting the buyer.
+// C. When the buyer re-initiates the conversation, the chat is initiated from ListDetail, not ChatList.  The buyer's user ID is inserted to Members
+// 2) Seller
+// A. Terminates the conversation by removing their user ID from the channel's Members.
+// B. The seller can still be contacted by the buyer even if their user ID has been removed
+// */
 //
 //import UIKit
+//import FirebaseFirestore
+//import Combine
 //
-//class ListViewController: UIViewController {
-//    private let userDefaults = UserDefaults.standard
-//    var segmentedControl: UISegmentedControl!
-//    private var childListViewController: ChildListViewController!
-//    private var currentIndex: Int! = 0
-//
+//class ChatViewController: UIViewController, FileUploadable, SingleDocumentFetchDelegate {
+//    var userInfo: UserInfo!
+//    var docId: String! {
+//        didSet {
+//            if docId != nil {
+//                fetchMessages(docId)
+//            } else {
+//                alert.showDetail("Error", with: "Unable to generate the chat ID.", for: self)
+//            }
+//        }
+//    }
+//    var postingId: String!
+//    private var messages = [Message]()
+//    private var toolBarView: ToolBarView!
+//    private var toolBarBottomConstraint: NSLayoutConstraint!
+//    var alert: Alerts!
+//    private var tableView: UITableView!
+//    private var userId: String! {
+//        return UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
+//    }
+//    private var lastCell: CGRect!
+//    private var imageName: String!
+//    private var lastSnapshot: QueryDocumentSnapshot!
+//    private var firstListener: ListenerRegistration!
+//    private var nextListener: ListenerRegistration!
+//    private var chatInfoListener: ListenerRegistration!
+//    // If chatListModel is set, it means the channel info already exists, therefore the chat is not new
+//    var chatListModel: ChatListModel! {
+//        didSet {
+//            chatIsNew = false
+//            postingId = chatListModel.postingId
+//            docId = chatListModel.documentId
+//        }
+//    }
+//    // Toggled on and off by fetchChanelInfo() depending on whether the channel info exists or not
+//    // If new, create the channel info along with the very first message.
+//    private var chatIsNew: Bool! = true
+//    private var spinner: UIActivityIndicatorView!
+//    private let PAGINATION_LIMIT: Int = 40
+//    private var optionsBarItem: UIBarButtonItem!
+//    private var postBarButton: UIBarButtonItem!
+//    private var reportBarButton: UIBarButtonItem!
+//    final var storage: Set<AnyCancellable>!
+//    final var cache: NSCache<NSString, Post>!
+//    
 //    final override func viewDidLoad() {
 //        super.viewDidLoad()
-//
-//        configureNavigationBar(vc: self)
-//        configureSwitch()
-//        //        configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
-//
-//        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
-//        swipeLeft.direction = .left
-//        view.addGestureRecognizer(swipeLeft)
-//
-//        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
-//        swipeRight.direction = .right
-//        view.addGestureRecognizer(swipeRight)
+//        
+//        configureUI()
+//        configureNavigationBar()
+//        setConstraints()
 //    }
-//
-//    @objc func swiped(_ sender: UISwipeGestureRecognizer) {
-//        switch sender.direction {
-//            case .right:
-//                if currentIndex - 1 >= 0 {
-//                    currentIndex -= 1
-//                } else {
-//                    return
-//                }
-//            case .left:
-//                if currentIndex + 1 < Segment.allCases.count {
-//                    currentIndex += 1
-//                } else {
-//                    return
-//                }
-//            default:
-//                break
+//    
+//    final override func viewWillAppear(_ animated: Bool) {
+//        super.viewWillAppear(animated)
+//        addKeyboardObserver()
+//        self.tabBarController?.tabBar.isHidden = true
+//    }
+//    
+//    final override func viewWillDisappear(_ animated: Bool) {
+//        super.viewWillDisappear(animated)
+//        self.tabBarController?.tabBar.isHidden = false
+//        
+//        if firstListener != nil {
+//            firstListener.remove()
 //        }
-//        segmentedControl.selectedSegmentIndex = currentIndex
-//        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+//        
+//        if nextListener != nil {
+//            nextListener.remove()
+//        }
+//        
+//        if chatInfoListener != nil {
+//            chatInfoListener.remove()
+//        }
+//        
+//        if isMovingFromParent {
+//            cache.removeObject(forKey: "CachedPost")
+//        }
+//    }
+//    
+//    final override func viewDidDisappear(_ animated: Bool) {
+//        super.viewDidDisappear(animated)
+//        removeKeyboardObserver()
 //    }
 //}
 //
-//extension ListViewController: SegmentConfigurable {
-//    enum Segment: Int, CaseIterable {
-//        case buying, selling, auction, posts
-//
-//        func asString() -> String {
-//            switch self {
-//                case .buying:
-//                    return NSLocalizedString("Buying", comment: "")
-//                case .selling:
-//                    return NSLocalizedString("Selling", comment: "")
-//                case .auction:
-//                    return NSLocalizedString("Auction", comment: "")
-//                case .posts:
-//                    return NSLocalizedString("Postings", comment: "")
+//extension ChatViewController: PostParseDelegate {
+//    //    private func getProfileInfo() {
+//    //        if let uid = UserDefaults.standard.string(forKey: UserDefaultKeys.userId),
+//    //           let displayName = UserDefaults.standard.string(forKey: UserDefaultKeys.displayName) {
+//    //            self.userId = uid
+//    //            self.displayName = displayName
+//    //        } else {
+//    //            self.alert.showDetail("Sorry", with: "Unable to retrieve your profile. Please try again.", for: self) {
+//    //                self.navigationController?.popViewController(animated: true)
+//    //            } completion: {}
+//    //        }
+//    //    }
+//    
+//    private func configureNavigationBar() {
+//        self.navigationItem.largeTitleDisplayMode = .never
+//        
+//        let button =  UIButton()
+//        //        button.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
+//        button.setTitle(userInfo.displayName, for: .normal)
+//        button.setTitleColor(.gray, for: .normal)
+//        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+//        button.tag = 0
+//        navigationItem.titleView = button
+//        
+//        guard let postBarImage = UIImage(systemName: "list.bullet.below.rectangle"),
+//              let reportImage = UIImage(systemName: "flag") else {
+//            return
+//        }
+//        
+//        // Chat should only be able to navigate to the posting if the view controller was pushed from ChatListVC because if it was pushed from ListDetailVC, it's entirely redundant
+//        if #available(iOS 14.0, *) {
+//            var buttonArr: [UIAction] = [UIAction(title: NSLocalizedString("Report", comment: ""), image: reportImage, handler: menuHandler)]
+//            if let navController = self.navigationController, navController.viewControllers.count >= 2 {
+//                let viewController = navController.viewControllers[navController.viewControllers.count - 2]
+//                if let _ = viewController as? ChatListViewController {
+//                    buttonArr.append(UIAction(title: NSLocalizedString("Posting", comment: ""), image: postBarImage, handler: menuHandler))
+//                }
 //            }
-//        }
-//
-//        static func getSegmentText() -> [String] {
-//            let segmentArr = Segment.allCases
-//            var segmentTextArr = [String]()
-//            for segment in segmentArr {
-//                segmentTextArr.append(NSLocalizedString(segment.asString(), comment: ""))
+//            let barButtonMenu = UIMenu(title: "", children: buttonArr)
+//            
+//            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
+//            optionsBarItem = UIBarButtonItem(title: nil, image: image, primaryAction: nil, menu: barButtonMenu)
+//            navigationItem.rightBarButtonItem = optionsBarItem
+//        } else {
+//            var buttonArr = [UIBarButtonItem]()
+//            reportBarButton = UIBarButtonItem(image: reportImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+//            reportBarButton.tag = 1
+//            buttonArr.append(reportBarButton)
+//            
+//            if let navController = self.navigationController, navController.viewControllers.count >= 2 {
+//                let viewController = navController.viewControllers[navController.viewControllers.count - 2]
+//                if let _ = viewController as? ChatListViewController {
+//                    postBarButton = UIBarButtonItem(image: postBarImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+//                    postBarButton.tag = 2
+//                    buttonArr.append(postBarButton)
+//                }
 //            }
-//            return segmentTextArr
+//            
+//            self.navigationItem.rightBarButtonItems = buttonArr
 //        }
 //    }
-//
-//    // MARK: - configureSwitch
-//    final func configureSwitch() {
-//        // Segmented control as the custom title view.
-//        let segmentTextContent = Segment.getSegmentText()
-//        segmentedControl = UISegmentedControl(items: segmentTextContent)
-//        segmentedControl.selectedSegmentIndex = 0
-//        segmentedControl.autoresizingMask = .flexibleWidth
-//        segmentedControl.frame = CGRect(x: 0, y: 0, width: 300, height: 30)
-//        segmentedControl.addTarget(self, action: #selector(segmentedControlSelectionDidChange(_:)), for: .valueChanged)
-//        self.navigationItem.titleView = segmentedControl
-//    }
-//
-//    // MARK: - segmentedControlSelectionDidChange
-//    @objc final func segmentedControlSelectionDidChange(_ sender: UISegmentedControl) {
-//        guard let segment = Segment(rawValue: sender.selectedSegmentIndex)
-//        else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
-//        currentIndex = sender.selectedSegmentIndex
-//        switch segment {
-//            case .buying:
-//                guard var childListViewController = childListViewController else { return }
-//                removeBaseViewController(childListViewController)
-//                childListViewController = addBaseViewController(ChildListViewController.self, cellType: TangibleCell)
-//            //                configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
-//            //            case .selling:
-//            //                configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
-//            //            case .auction:
-//            ////                configureDataFetch(isBuyer: true, status: [PostStatus.complete.rawValue])
-//            //                configureAuctionFetch()
-//            //            case .posts:
-//            //                configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
-//            default:
-//                break
-//        }
-//    }
-//
-//    // MARK: - Switching Between View Controllers
-//
-//    /// Adds a child view controller to the container.
-//    private func addBaseViewController<T: ChildListViewController>(_ viewController: T.Type, cellType: ProgressCell.Type) -> T {
-//        let vc = viewController.init(cellType: cellType)
-//        addChild(vc)
-//        view.addSubview(vc.view)
-//        vc.view.fill()
-//        vc.didMove(toParent: self)
-//        return vc
-//    }
-//
-//    /// Removes a child view controller from the container.
-//    private func removeBaseViewController(_ viewController: UIViewController?) {
-//        guard let viewController = viewController else { return }
-//        viewController.willMove(toParent: nil)
-//        viewController.view.removeFromSuperview()
-//        viewController.removeFromParent()
-//    }
-//}
-
-//
-//  ProgressCell.swift
-//  NFTrack-Firebase4
-//
-//  Created by J C on 2021-06-06.
-//
-
-/*
- Abstract:
- Displays items that require displaying the progression of the purchase status
- 1. Tangible, payment method: escrow, sale format: online direct, delivery method: shipping
- 2. Digital, payment method: escrow, sale format: online direct, delivery method: online
- 3. Digital, payment method: beneficiary, sale format: open auction, delivery method: online
- */
-
-//import UIKit
-//
-//class ProgressCell1: CardCell {
-//    class override var identifier: String {
-//        return "ProgressCell"
-//    }
-//    final let selectedColor = UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1)
-//
-//    final let INSET: CGFloat = 45
-//    final var strokeColor: UIColor = .gray {
-//        didSet {
-//            shapeLayer.strokeColor = strokeColor.cgColor
-//        }
-//    }
-//    final var lineWidth: CGFloat = 0.5 {
-//        didSet {
-//            updatePath()
-//        }
-//    }
-//
-//    final lazy var shapeLayer: CAShapeLayer = {
-//        let shapeLayer = CAShapeLayer()
-//        shapeLayer.strokeColor = strokeColor.cgColor
-//        shapeLayer.lineWidth = lineWidth
-//        return shapeLayer
-//    }()
-//
-//    final lazy var circleShapeLayer: CAShapeLayer = {
-//        let shapeLayer = CAShapeLayer()
-//        shapeLayer.strokeColor = strokeColor.cgColor
-//        shapeLayer.fillColor = UIColor.white.cgColor
-//        shapeLayer.lineWidth = lineWidth
-//        return shapeLayer
-//    }()
-//
-//    final lazy var circleShapeLayer2: CAShapeLayer = {
-//        let shapeLayer = CAShapeLayer()
-//        shapeLayer.strokeColor = strokeColor.cgColor
-//        shapeLayer.fillColor = UIColor.white.cgColor
-//        shapeLayer.lineWidth = lineWidth
-//        return shapeLayer
-//    }()
-//
-//    final lazy var circleShapeLayer3: CAShapeLayer = {
-//        let shapeLayer = CAShapeLayer()
-//        shapeLayer.strokeColor = strokeColor.cgColor
-//        shapeLayer.fillColor = UIColor.white.cgColor
-//        shapeLayer.lineWidth = lineWidth
-//        return shapeLayer
-//    }()
-//
-//    final var statusLabel1: UILabel!
-//    final var dateLabel1: UILabel!
-//    final var statusLabel2: UILabel!
-//    final var dateLabel2: UILabel!
-//    final var statusLabel3: UILabel!
-//    final var dateLabel3: UILabel!
-//    final var indicatorPanel: UIView!
-//    final var meterContainer: UIView!
-//
-//    override func configure(_ post: Post?) {
-//        super.configure(post)
-//        guard let post = post else { return }
-//
-//        meterContainer = UIView()
-//        meterContainer.layer.addSublayer(shapeLayer)
-//        meterContainer.layer.addSublayer(circleShapeLayer)
-//        meterContainer.layer.addSublayer(circleShapeLayer2)
-//        meterContainer.layer.addSublayer(circleShapeLayer3)
-//        meterContainer.translatesAutoresizingMaskIntoConstraints = false
-//        containerView.addSubview(meterContainer)
-//
-//        // category: all except digital
-//        // sale format: online direct
-//        // delivery method: shipping(Purchased, Transferred, Received), in person
-//
-//        // category: digital
-//        // sale format: online direct(Purchased, Transferred, Received), open auction(Bid, Auction Ended, Transferred)
-//        // delivery method: online transfer
-//
-//        if post.saleFormat == SaleFormat.openAuction.rawValue {
-//            statusLabel1 = createStatusLabel(text: AuctionStatus.bid.toDisplay)
-//            statusLabel2 = createStatusLabel(text: AuctionStatus.ended.toDisplay)
-//            statusLabel3 = createStatusLabel(text: AuctionStatus.transferred.toDisplay)
-//        } else {
-//            statusLabel1 = createStatusLabel(text: "Purchased")
-//            statusLabel2 = createStatusLabel(text: "Transferred")
-//            statusLabel3 = createStatusLabel(text: "Received")
-//        }
-//
-//        statusLabel1.textAlignment = .center
-//        meterContainer.addSubview(statusLabel1)
-//
-//        dateLabel1 = createStatusLabel(text: "")
-//        dateLabel1.textAlignment = .center
-//        meterContainer.addSubview(dateLabel1)
-//
-//        statusLabel2.textAlignment = .center
-//        meterContainer.addSubview(statusLabel2)
-//
-//        dateLabel2 = createStatusLabel(text: "")
-//        dateLabel2.textAlignment = .center
-//        meterContainer.addSubview(dateLabel2)
-//
-//        statusLabel3.textAlignment = .center
-//        meterContainer.addSubview(statusLabel3)
-//
-//        dateLabel3 = createStatusLabel(text: "")
-//        dateLabel3.textAlignment = .center
-//        meterContainer.addSubview(dateLabel3)
-//
-//        var progressConstraints = [NSLayoutConstraint]()
-//        if let files = post.files, files.count > 0 {
-//            progressConstraints += [
-//                meterContainer.topAnchor.constraint(equalTo: thumbImageView.bottomAnchor, constant: 10),
-//            ]
-//        } else {
-//            progressConstraints += [
-//                meterContainer.topAnchor.constraint(equalTo: descContainer.bottomAnchor, constant: 10),
-//            ]
-//        }
-//
-//        progressConstraints += [
-//            meterContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 0),
-//            meterContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: 0),
-//            meterContainer.heightAnchor.constraint(equalToConstant: 100),
-//
-//            dateLabel1.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor, constant: 0),
-//            dateLabel1.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: -5),
-//            dateLabel1.heightAnchor.constraint(equalToConstant: 30),
-//            dateLabel1.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-//
-//            statusLabel1.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor, constant: 0),
-//            statusLabel1.bottomAnchor.constraint(equalTo: dateLabel1.topAnchor, constant: 0),
-//            statusLabel1.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-//
-//            dateLabel2.centerXAnchor.constraint(equalTo: meterContainer.centerXAnchor, constant: 20),
-//            dateLabel2.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: -5),
-//            dateLabel2.heightAnchor.constraint(equalToConstant: 30),
-//            dateLabel2.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-//
-//            statusLabel2.centerXAnchor.constraint(equalTo: meterContainer.centerXAnchor),
-//            statusLabel2.bottomAnchor.constraint(equalTo: dateLabel2.topAnchor, constant: -0),
-//            statusLabel2.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-//
-//            dateLabel3.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor, constant: 0),
-//            dateLabel3.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor, constant: -5),
-//            dateLabel3.heightAnchor.constraint(equalToConstant: 30),
-//            dateLabel3.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-//
-//            statusLabel3.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor, constant: 0),
-//            statusLabel3.bottomAnchor.constraint(equalTo: dateLabel3.topAnchor, constant: 0),
-//            statusLabel3.widthAnchor.constraint(equalTo: meterContainer.widthAnchor, multiplier: 0.33),
-//        ]
-//
-//        NSLayoutConstraint.activate(progressConstraints)
-//        meterContainer.layoutIfNeeded()
-//        dateLabel1.layoutIfNeeded()
-//        statusLabel1.layoutIfNeeded()
-//        updatePath()
-//        set(post: post)
-//    }
-//}
-//
-//extension ProgressCell1 {
-//    final func createStatusLabel(text: String) -> UILabel {
-//        let statusLabel = UILabel()
-//        statusLabel.text = text
-//        statusLabel.textColor = .lightGray
-//        statusLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
-//        statusLabel.sizeToFit()
-//        statusLabel.translatesAutoresizingMaskIntoConstraints = false
-//        return statusLabel
-//    }
-//
-//    final func processDate(date: Date?) -> String? {
-//        guard let date = date else { return "" }
-//        let formatter = DateFormatter()
-//        formatter.dateStyle = .short
-//        let formattedDate = formatter.string(from: date)
-//        return formattedDate
-//    }
-//
-//    final func set(post: Post) {
-//        // progress sequence for the following:
-//
-//        // tangible (escrow) and digital online direct (escrow)
-//        // 1. ready (doesn't show on ProgressCell)
-//        // 2. pending
-//        // 3. transferred
-//        // 4. complete
-//
-//        // open auction
-//        // 1. ready (doesn't show on ProgressCell)
-//        // 2. bid
-//        // 3. ended (the auctionEnd method after the expiry)
-//        // 4. transferred (the digital asset transfer)
-//        switch post.status {
-//            case PostStatus.ready.rawValue:
-//                circleShapeLayer.fillColor = UIColor.white.cgColor
-//                circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
-//                statusLabel1.textColor = .lightGray
-//
-//                dateLabel1.text = ""
-//                dateLabel1.textColor = .lightGray
-//            // first node
-//            case PostStatus.pending.rawValue, AuctionStatus.bid.rawValue:
-//                circleShapeLayer.fillColor = selectedColor.cgColor
-//                circleShapeLayer.strokeColor = selectedColor.cgColor
-//                statusLabel1.textColor = selectedColor
-//
-//                if let confirmPurchaseDate = post.confirmPurchaseDate {
-//                    dateLabel1.text = processDate(date: confirmPurchaseDate)
-//                } else if let bidDate = post.bidDate  {
-//                    dateLabel1.text = processDate(date: bidDate)
-//                }
-//
-//                dateLabel1.textColor = selectedColor
-//            // second node
-//            case PostStatus.transferred.rawValue, AuctionStatus.ended.rawValue:
-//                circleShapeLayer.fillColor = selectedColor.cgColor
-//                circleShapeLayer.strokeColor = selectedColor.cgColor
-//                statusLabel1.textColor = selectedColor
-//
-//                if let confirmPurchaseDate = post.confirmPurchaseDate {
-//                    dateLabel1.text = processDate(date: confirmPurchaseDate)
-//                } else if let bidDate = post.bidDate {
-//                    dateLabel1.text = processDate(date: bidDate)
-//                }
-//                dateLabel1.textColor = selectedColor
-//
-//                circleShapeLayer2.fillColor = selectedColor.cgColor
-//                circleShapeLayer2.strokeColor = selectedColor.cgColor
-//                statusLabel2.textColor = selectedColor
-//
-//                if let transferDate = post.transferDate {
-//                    dateLabel2.text = processDate(date: transferDate)
-//                } else if let auctionEndDate = post.auctionEndDate {
-//                    dateLabel2.text = processDate(date: auctionEndDate)
-//                }
-//                dateLabel2.textColor = selectedColor
-//            case PostStatus.complete.rawValue, AuctionStatus.transferred.rawValue:
-//                circleShapeLayer.fillColor = selectedColor.cgColor
-//                circleShapeLayer.strokeColor = selectedColor.cgColor
-//                statusLabel1.textColor = selectedColor
-//
-//                if let confirmPurchaseDate = post.confirmPurchaseDate {
-//                    dateLabel1.text = processDate(date: confirmPurchaseDate)
-//                } else if let auctionTransferredDate = post.auctionTransferredDate {
-//                    dateLabel1.text = processDate(date: auctionTransferredDate)
-//                }
-//                dateLabel1.textColor = selectedColor
-//
-//                circleShapeLayer2.fillColor = selectedColor.cgColor
-//                circleShapeLayer2.strokeColor = selectedColor.cgColor
-//                statusLabel2.textColor = selectedColor
-//
-//                if let transferDate = post.transferDate {
-//                    dateLabel2.text = processDate(date: transferDate)
-//                } else if let auctionEndDate = post.auctionEndDate {
-//                    dateLabel2.text = processDate(date: auctionEndDate)
-//                }
-//                dateLabel2.textColor = selectedColor
-//
-//                circleShapeLayer3.fillColor = selectedColor.cgColor
-//                circleShapeLayer3.strokeColor = selectedColor.cgColor
-//                statusLabel3.textColor = selectedColor
-//
-//                if let confirmReceived = post.confirmReceivedDate {
-//                    dateLabel3.text = processDate(date: confirmReceived)
-//                } else if let auctionTransferredDate = post.auctionTransferredDate {
-//                    dateLabel3.text = processDate(date: auctionTransferredDate)
-//                }
-//            default:
-//                circleShapeLayer.fillColor = UIColor.white.cgColor
-//                circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
-//                statusLabel1.textColor = .lightGray
-//
-//                dateLabel1.text = ""
-//                dateLabel1.textColor = .lightGray
-//        }
-//    }
-//
-//    // 2 points
-//    // (1 / 2) * (1 / 2) = 1 / 4
-//    // 1 / 4, 3 / 4
-//
-//    // 3 points
-//    // (1 / 3) * (1 / 2) = 1 / 6
-//    // 1 / 6, 5 / 5
-//
-//    // 4 points
-//    // (1 / 4) * (1 / 2) = 1 / 8
-//    // 1 / 8, 7 / 8
-//
-//
-//
-//    // MARK: - updatePath
-//    final func updatePath() {
-//        let offset: CGFloat = -20
-//        let path = UIBezierPath()
-//        path.move(to: CGPoint(x: meterContainer.bounds.width / 6, y: meterContainer.bounds.midY + offset))
-//        path.addLine(to: CGPoint(x: (meterContainer.bounds.width / 6) * 5, y: meterContainer.bounds.midY + offset))
-//        shapeLayer.path = path.cgPath
-//        shapeLayer.lineWidth = lineWidth
-//
-//        let circlePath = UIBezierPath(arcCenter: CGPoint(x: meterContainer.bounds.width / 6, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
-//        circlePath.lineWidth = lineWidth
-//        circleShapeLayer.path = circlePath.cgPath
-//        circleShapeLayer.lineWidth = lineWidth
-//
-//        let circlePath2 = UIBezierPath(arcCenter: CGPoint(x: meterContainer.bounds.midX, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
-//        circlePath.lineWidth = lineWidth
-//        circleShapeLayer2.path = circlePath2.cgPath
-//        circleShapeLayer2.lineWidth = lineWidth
-//
-//        let circlePath3 = UIBezierPath(arcCenter: CGPoint(x: (meterContainer.bounds.width / 6) * 5, y: meterContainer.bounds.midY + offset), radius: 8, startAngle: CGFloat(0), endAngle: CGFloat.pi * 2, clockwise: true)
-//        circlePath.lineWidth = lineWidth
-//        circleShapeLayer3.path = circlePath3.cgPath
-//        circleShapeLayer3.lineWidth = lineWidth
-//    }
-//
-//    override func prepareForReuse() {
-//        super.prepareForReuse()
-//        circleShapeLayer.fillColor = UIColor.white.cgColor
-//        circleShapeLayer.strokeColor = UIColor.lightGray.cgColor
-//        statusLabel1.textColor = .lightGray
-//
-//        dateLabel1.text = ""
-//        dateLabel1.textColor = .lightGray
-//
-//        circleShapeLayer2.fillColor = UIColor.white.cgColor
-//        circleShapeLayer2.strokeColor = UIColor.lightGray.cgColor
-//        statusLabel2.textColor = selectedColor
-//
-//        dateLabel1.text = ""
-//        dateLabel1.textColor = selectedColor
-//
-//        circleShapeLayer3.fillColor = UIColor.white.cgColor
-//        circleShapeLayer3.strokeColor = UIColor.lightGray.cgColor
-//        statusLabel3.textColor = selectedColor
-//
-//        dateLabel1.text = ""
-//        dateLabel1.textColor = selectedColor
-//    }
-//}
-
-//// auction first node
-//if let bidDate = post.bidDate {
-//    let bidNode = ProgressMeterNode(statusLabelText: AuctionStatus.bid.toDisplay, dateLabelText: processDate(date: bidDate))
-//    progressMeterNodeArr.append(bidNode)
-//    // escrow first node
-//} else if let confirmPurchaseDate = post.confirmPurchaseDate {
-//    let purchaseDateNode = ProgressMeterNode(statusLabelText: "Purchased", dateLabelText: processDate(date: confirmPurchaseDate))
-//    progressMeterNodeArr.append(purchaseDateNode)
-//    // auction second node
-//} else if let auctionEndDate = post.auctionEndDate {
-//    let endedNode = ProgressMeterNode(statusLabelText: AuctionStatus.ended.toDisplay, dateLabelText: processDate(date: auctionEndDate))
-//    progressMeterNodeArr.append(endedNode)
-//    // escrow second node
-//} else if let transferDate = post.transferDate {
-//    let transferNode = ProgressMeterNode(statusLabelText: "Transferred", dateLabelText: processDate(date: transferDate))
-//    progressMeterNodeArr.append(transferNode)
-//    // auction third node
-//} else if let auctionTransferredDate = post.auctionTransferredDate {
-//    let auctionTransferNode = ProgressMeterNode(statusLabelText: AuctionStatus.transferred.toDisplay, dateLabelText: processDate(date: auctionTransferredDate))
-//    progressMeterNodeArr.append(auctionTransferNode)
-//    // escrow second node
-//} else if let confirmReceived = post.confirmReceivedDate {
-//    let receivedNode = ProgressMeterNode(statusLabelText: "Received", dateLabelText: processDate(date: confirmReceived))
-//    progressMeterNodeArr.append(receivedNode)
-//}
-
-// escrow deployment
-//self.transactionService.prepareTransactionForNewContract(contractABI: purchaseABI2, bytecode: purchaseBytecode2, value: String(price), completion: { [weak self] (transaction, error) in
-//    guard let `self` = self else { return }
-//    if let error = error {
-//        switch error {
-//            case .invalidAmountFormat:
-//                self.alert.showDetail("Error", with: "The price is in a wrong format", for: self)
-//            case .contractLoadingError:
-//                self.alert.showDetail("Error", with: "Escrow Contract Loading Error", for: self)
-//            case .createTransactionIssue:
-//                self.alert.showDetail("Error", with: "Escrow Contract Transaction Issue", for: self)
-//            case .retrievingEstimatedGasError:
-//                self.alert.showDetail("Error", with: "There was an error getting the estimating the gas limit.", for: self)
-//            case .retrievingCurrentAddressError:
-//                self.alert.showDetail("Error", with: "There was an error getting your account address.", for: self)
-//            default:
-//                self.alert.showDetail("Error", with: "There was an error deploying your escrow contract.", for: self)
-//        }
-//    }
-//
-//    // minting
-//    self.transactionService.prepareTransactionForMinting { (mintTransaction, mintError) in
-//        if let error = mintError {
-//            switch error {
-//                case .contractLoadingError:
-//                    self.alert.showDetail("Error", with: "Minting Contract Loading Error", for: self)
-//                case .createTransactionIssue:
-//                    self.alert.showDetail("Error", with: "Minting Contract Transaction Issue", for: self)
-//                case .retrievingEstimatedGasError:
-//                    self.alert.showDetail("Error", with: "There was an error getting the estimating the gas limit.", for: self)
+//    
+//    private func configureUI() {
+//        view.backgroundColor = .white
+//        alert = Alerts()
+//        cache = NSCache<NSString, Post>()
+//        storage = Set<AnyCancellable>()
+//        
+//        tableView = UITableView()
+//        tableView.allowsSelection = false
+//        tableView.register(MessageCell.self, forCellReuseIdentifier: MessageCell.identifier)
+//        tableView.delegate = self
+//        tableView.dataSource = self
+//        tableView.separatorStyle = .none
+//        tableView.keyboardDismissMode = .onDrag
+//        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 50, right: 0)
+//        tableView.frame = CGRect(origin: .zero, size: view.bounds.size)
+//        tableView.transform = CGAffineTransform(scaleX: 1, y: -1)
+//        view.addSubview(tableView)
+//        
+//        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ChatViewController.dismissKeyboard))
+//        tap.cancelsTouchesInView = false
+//        tableView.addGestureRecognizer(tap)
+//        
+//        toolBarView = ToolBarView()
+//        toolBarView.buttonAction = { [weak self] tag in
+//            switch tag {
+//                case 1:
+//                    let imagePickerController = UIImagePickerController()
+//                    imagePickerController.allowsEditing = false
+//                    imagePickerController.sourceType = .photoLibrary
+//                    imagePickerController.delegate = self
+//                    imagePickerController.modalPresentationStyle = .fullScreen
+//                    self?.present(imagePickerController, animated: true, completion: nil)
+//                case 2:
+//                    self?.sendMessage()
 //                default:
-//                    self.alert.showDetail("Error", with: "There was an error minting your token.", for: self)
+//                    break
 //            }
 //        }
-//
-//        //                /// check the balance of the wallet against the deposit into the escrow + gas limit for two transactions: minting and deploying the contract
-//        //                let localDatabase = LocalDatabase()
-//        //                guard let wallet = localDatabase.getWallet(), let walletAddress = EthereumAddress(wallet.address) else {
-//        //                    self.alert.showDetail("Sorry", with: "There was an error retrieving your wallet.", for: self)
-//        //                    return
-//        //                }
-//        //
-//        //                var balanceResult: BigUInt!
-//        //                do {
-//        //                    balanceResult = try Web3swiftService.web3instance.eth.getBalance(address: walletAddress)
-//        //                } catch {
-//        //                    self.alert.showDetail("Sorry", with: "An error retrieving the balance of your wallet.", for: self)
-//        //                    return
-//        //                }
-//        //
-//        //                guard let currentGasPrice = try? Web3swiftService.web3instance.eth.getGasPrice() else {
-//        //                    self.alert.showDetail("Sorry", with: "An error retreiving the current gas price.", for: self)
-//        //                    return
-//        //                }
-//        //
-//        //                guard let estimatedGasForMinting = estimatedGasForMinting,
-//        //                      let estimatedGasForDeploying = estimatedGasForDeploying,
-//        //                      let priceInWei = Web3.Utils.parseToBigUInt(String(price), units: .eth),
-//        //                      ((estimatedGasForMinting + estimatedGasForDeploying) * currentGasPrice + priceInWei) < balanceResult else {
-//        //                    self.alert.showDetail("Sorry", with: "Insufficient funds in your wallet to cover both the gas fee and the deposit for the escrow.", height: 300, for: self)
-//        //                    return
-//        //                }
-//
-//        // escrow deployment transaction
-//        if let transaction = transaction {
-//            self.hideSpinner {}
-//            let content = [
-//                StandardAlertContent(
-//                    index: 0,
-//                    titleString: "Password",
-//                    body: [AlertModalDictionary.passwordSubtitle: ""],
-//                    isEditable: true,
-//                    fieldViewHeight: 50,
-//                    messageTextAlignment: .left,
-//                    alertStyle: .withCancelButton
-//                ),
-//                StandardAlertContent(
-//                    index: 1,
-//                    titleString: "Details",
-//                    body: [
-//                        AlertModalDictionary.gasLimit: "",
-//                        AlertModalDictionary.gasPrice: "",
-//                        AlertModalDictionary.nonce: ""
-//                    ],
-//                    isEditable: true,
-//                    fieldViewHeight: 50,
-//                    messageTextAlignment: .left,
-//                    alertStyle: .noButton
-//                )
-//            ]
-//
-//            DispatchQueue.main.async {
-//                let alertVC = AlertViewController(height: 400, standardAlertContent: content)
-//                alertVC.action = { [weak self] (modal, mainVC) in
-//                    // responses to the main vc's button
-//                    mainVC.buttonAction = { _ in
-//                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-//                              !password.isEmpty else {
-//                            self?.alert.fading(text: "Email cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
-//                            return
-//                        }
-//
-//                        guard let self = self else { return }
-//                        self.dismiss(animated: true, completion: {
-//                            self.progressModal = ProgressModalViewController(postType: .tangible)
-//                            self.progressModal.titleString = "Posting In Progress"
-//                            self.present(self.progressModal, animated: true, completion: {
-//                                DispatchQueue.global(qos: .userInitiated).async {
-//                                    do {
-//                                        // create new contract
-//                                        let result = try transaction.send(password: password, transactionOptions: nil)
-//                                        print("deployment result", result)
-//                                        let update: [String: PostProgress] = ["update": .deployingEscrow]
-//                                        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//
-//                                        // mint transaction
-//                                        if let mintTransaction = mintTransaction {
-//                                            do {
-//                                                let mintResult = try mintTransaction.send(password: password,transactionOptions: nil)
-//                                                print("mintResult", mintResult)
-//
-//                                                // firebase
-//                                                let senderAddress = result.transaction.sender!.address
-//                                                let ref = self.db.collection("post")
-//                                                let id = ref.document().documentID
-//
-//                                                // for deleting photos afterwards
-//                                                self.documentId = id
-//
-//                                                // txHash is either minting or transferring the ownership
-//                                                self.db.collection("post").document(id).setData([
-//                                                    "sellerUserId": userId,
-//                                                    "senderAddress": senderAddress,
-//                                                    "escrowHash": result.hash,
-//                                                    "mintHash": mintResult.hash,
-//                                                    "date": Date(),
-//                                                    "title": itemTitle,
-//                                                    "description": desc,
-//                                                    "price": price,
-//                                                    "category": category,
-//                                                    "status": PostStatus.ready.rawValue,
-//                                                    "tags": Array(tokensArr),
-//                                                    "itemIdentifier": convertedId,
-//                                                    "isReviewed": false,
-//                                                    "type": "digital",
-//                                                    "deliveryMethod": deliveryMethod,
-//                                                    "saleFormat": saleFormat,
-//                                                    "paymentMethod": paymentMethod
-//                                                ]) { (error) in
-//                                                    if let error = error {
-//                                                        self.alert.showDetail("Error", with: error.localizedDescription, for: self)
-//                                                    } else {
-//                                                        /// no need for a socket if you don't have images to upload?
-//                                                        /// show the success alert here
-//                                                        /// apply the same for resell
-//                                                        //                                                                    self.socketDelegate = SocketDelegate(contractAddress: "0x656f9bf02fa8eff800f383e5678e699ce2788c5c")
-//                                                        //                                                                    self.socketDelegate.delegate = self
-//                                                    }
-//                                                }
-//                                            } catch Web3Error.nodeError(let desc) {
-//                                                if let index = desc.firstIndex(of: ":") {
-//                                                    let newIndex = desc.index(after: index)
-//                                                    let newStr = desc[newIndex...]
-//                                                    DispatchQueue.main.async {
-//                                                        self.alert.showDetail("Alert", with: String(newStr), for: self)
-//                                                    }
-//                                                }
-//                                            } catch Web3Error.transactionSerializationError {
-//                                                DispatchQueue.main.async {
-//                                                    self.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
-//                                                }
-//                                            } catch Web3Error.connectionError {
-//                                                DispatchQueue.main.async {
-//                                                    self.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
-//                                                }
-//                                            } catch Web3Error.dataError {
-//                                                DispatchQueue.main.async {
-//                                                    self.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
-//                                                }
-//                                            } catch Web3Error.inputError(_) {
-//                                                DispatchQueue.main.async {
-//                                                    self.alert.showDetail("Alert", with: "Failed to sign the transaction. \n\nPlease try logging out of your wallet (not the Buroku account) and logging back in. \n\nEnsure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
-//                                                }
-//                                            } catch Web3Error.processingError(let desc) {
-//                                                DispatchQueue.main.async {
-//                                                    self.alert.showDetail("Alert", with: desc, height: 320, for: self)
-//                                                }
-//                                            } catch {
-//                                                self.alert.showDetail("Error", with: error.localizedDescription, for: self)
-//                                            }
-//                                        }
-//
-//                                    } catch Web3Error.nodeError(let desc) {
-//                                        if let index = desc.firstIndex(of: ":") {
-//                                            let newIndex = desc.index(after: index)
-//                                            let newStr = desc[newIndex...]
-//                                            DispatchQueue.main.async {
-//                                                self.alert.showDetail("Alert", with: String(newStr), for: self)
-//                                            }
-//                                        }
-//                                    } catch Web3Error.transactionSerializationError {
-//                                        DispatchQueue.main.async {
-//                                            self.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
-//                                        }
-//                                    } catch Web3Error.connectionError {
-//                                        DispatchQueue.main.async {
-//                                            self.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
-//                                        }
-//                                    } catch Web3Error.dataError {
-//                                        DispatchQueue.main.async {
-//                                            self.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
-//                                        }
-//                                    } catch Web3Error.inputError(_) {
-//                                        DispatchQueue.main.async {
-//                                            self.alert.showDetail("Alert", with: "Failed to sign the transaction. \n\nPlease try logging out of your wallet (not the Buroku account) and logging back in. \n\nEnsure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
-//                                        }
-//                                    } catch Web3Error.processingError(let desc) {
-//                                        DispatchQueue.main.async {
-//                                            self.alert.showDetail("Alert", with: desc, height: 320, for: self)
-//                                        }
-//                                    } catch {
-//                                        self.alert.showDetail("Error", with: error.localizedDescription, for: self)
-//                                    }
-//                                } // DispatchQueue.global background
-//                            }) // end of self.present completion for ProgressModalVC
-//                        }) // end of self.dismiss completion
-//                    } // mainVC
-//                } // alertVC
-//                self.present(alertVC, animated: true, completion: nil)
-//            }
-//        } // transaction
-//    } // end of prepareTransactionForMinting
-//}) // end of prepareTransactionForNewContract
-//}
-
-// ListDetailVC
-/// outdated version
-//final func transferToken1() {
-//    let docRef = FirebaseService.shared.db.collection("post").document(post.documentId)
-//    docRef.getDocument { [weak self] (document, error) in
-//        if let document = document,
-//           document.exists,
-//           let data = document.data() {
-//
-//            var buyerHash: String!
-//            var tokenId: String!
-//            data.forEach { (item) in
-//                switch item.key {
-//                    case "buyerHash":
-//                        buyerHash = item.value as? String
-//                    case "tokenId":
-//                        tokenId = item.value as? String
-//                    default:
-//                        break
+//        toolBarView.translatesAutoresizingMaskIntoConstraints = false
+//        view.addSubview(toolBarView)
+//        
+//        spinner = UIActivityIndicatorView()
+//        spinner.stopAnimating()
+//        spinner.hidesWhenStopped = true
+//        spinner.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.size.width, height: 60)
+//        tableView.tableFooterView = spinner
+//    }
+//    
+//    private func setConstraints() {
+//        toolBarBottomConstraint = toolBarView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+//        NSLayoutConstraint.activate([
+//            toolBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+//            toolBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+//            toolBarView.heightAnchor.constraint(greaterThanOrEqualToConstant: 60),
+//            toolBarBottomConstraint
+//        ])
+//    }
+//    
+//    @objc func buttonPressed(_ sender: UIButton) {
+//        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+//        feedbackGenerator.impactOccurred()
+//        
+//        switch sender.tag {
+//            case 0:
+//                let profileDetailVC = ProfileDetailViewController()
+//                profileDetailVC.userInfo = userInfo
+//                self.navigationController?.pushViewController(profileDetailVC, animated: true)
+//                break
+//            case 1:
+//                getPost(with: postingId) { [weak self] (fetchedPost) in
+//                    let reportVC = ReportViewController()
+//                    reportVC.post = fetchedPost
+//                    reportVC.userId = self?.userId
+//                    self?.navigationController?.pushViewController(reportVC, animated: true)
 //                }
-//            }
-//
-//            guard let bh = buyerHash else {
-//                self?.alert.showDetail("Error", with: "The item has not been purchased by a buyer yet.", for: self)
-//                return
-//            }
-//
-//            guard let ti = tokenId else {
-//                self?.alert.showDetail("Error", with: "The item does not have token ID registered. It may take up to 10 mins to process.", for: self)
-//                return
-//            }
-//
-//            guard let fromAddress = Web3swiftService.currentAddress,
-//                  let toAddress = EthereumAddress(bh),
-//                  let NFTrackAddress = NFTrackAddress else {
-//                self?.alert.showDetail("Error", with: "Could not get the contract address to transfer the token.", for: self)
-//                return
-//            }
-//
-//            let param: [AnyObject] = [fromAddress, toAddress, ti] as [AnyObject]
-//
-//            self?.transactionService.prepareTransactionForWriting(
-//                method: "transferFrom",
-//                abi: NFTrackABI,
-//                param: param,
-//                contractAddress: NFTrackAddress,
-//                completion: { (transaction, error) in
-//
-//                    if let error = error {
-//                        switch error {
-//                            case .invalidAmountFormat:
-//                                self?.alert.showDetail("Error", with: "The ETH amount is not in a correct format!", for: self)
-//                            case .zeroAmount:
-//                                self?.alert.showDetail("Error", with: "The ETH amount cannot be negative", for: self)
-//                            case .insufficientFund:
-//                                self?.alert.showDetail("Error", with: "There is an insufficient amount of ETH in the wallet.", for: self)
-//                            case .contractLoadingError:
-//                                self?.alert.showDetail("Error", with: "There was an error loading your contract.", for: self)
-//                            case .createTransactionIssue:
-//                                self?.alert.showDetail("Error", with: "There was an error creating the transaction.", for: self)
-//                            default:
-//                                self?.alert.showDetail("Sorry", with: "There was an error. Please try again.", for: self)
-//                        }
-//                    }
-//
-//                    if let transaction = transaction {
-//                        let content = [
-//                            StandardAlertContent(
-//                                index: 0,
-//                                titleString: "Password",
-//                                body: [AlertModalDictionary.passwordSubtitle: ""],
-//                                isEditable: true,
-//                                fieldViewHeight: 50,
-//                                messageTextAlignment: .left,
-//                                alertStyle: .withCancelButton
-//                            ),
-//                            StandardAlertContent(
-//                                index: 1,
-//                                titleString: "Transaction Options",
-//                                body: [
-//                                    AlertModalDictionary.gasLimit: "",
-//                                    AlertModalDictionary.gasPrice: "",
-//                                    AlertModalDictionary.nonce: ""
-//                                ],
-//                                isEditable: true,
-//                                fieldViewHeight: 50,
-//                                messageTextAlignment: .left,
-//                                alertStyle: .noButton
-//                            )
-//                        ]
-//
-//                        DispatchQueue.main.async {
-//                            let alertVC = AlertViewController(height: 400, standardAlertContent: content)
-//                            alertVC.action = { [weak self] (modal, mainVC) in
-//                                // responses to the main vc's button
-//                                mainVC.buttonAction = { _ in
-//                                    guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-//                                          !password.isEmpty else {
-//                                        self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
-//                                        return
-//                                    }
-//
-//                                    self?.dismiss(animated: true, completion: {
-//                                        self?.showSpinner({
-//                                            DispatchQueue.global().async {
-//                                                do {
-//                                                    let receipt = try transaction.send(password: password, transactionOptions: nil)
-//                                                    FirebaseService.shared.db.collection("post").document(document.documentID).updateData([
-//                                                        "transferHash": receipt.hash,
-//                                                        "transferDate": Date(),
-//                                                        "status": PostStatus.transferred.rawValue
-//                                                    ], completion: { (error) in
-//                                                        if let error = error {
-//                                                            self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
-//                                                        } else {
-//                                                            /// send the push notification to the seller
-//                                                            guard let `self` = self, let buyerUserId = self.post.buyerUserId else { return }
-//                                                            self.sendNotification(sender: self.userId, recipient: buyerUserId, content: "The seller has transferred the item!", docID: self.post.documentId) { [weak self] (error) in
-//                                                                if let error = error {
-//                                                                    print("error", error)
-//                                                                }
-//
-//                                                                self?.alert.showDetail(
-//                                                                    "Success!",
-//                                                                    with: "The token has been successfully transferred.",
-//                                                                    for: self
-//                                                                ) {
-//                                                                    self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
-//                                                                    self?.navigationController?.popViewController(animated: true)
-//                                                                } completion: {}
-//                                                            }
-//                                                        }
-//                                                    })
-//                                                } catch Web3Error.nodeError(let desc) {
-//                                                    if let index = desc.firstIndex(of: ":") {
-//                                                        let newIndex = desc.index(after: index)
-//                                                        let newStr = desc[newIndex...]
-//                                                        self?.alert.showDetail("Alert", with: String(newStr), for: self)
-//                                                    }
-//                                                } catch Web3Error.transactionSerializationError {
-//                                                    DispatchQueue.main.async {
-//                                                        self?.alert.showDetail("Sorry", with: "There was a transaction serialization error. Please try logging out of your wallet and back in.", height: 300, alignment: .left, for: self)
-//                                                    }
-//                                                } catch Web3Error.connectionError {
-//                                                    DispatchQueue.main.async {
-//                                                        self?.alert.showDetail("Sorry", with: "There was a connection error. Please try again.", for: self)
-//                                                    }
-//                                                } catch Web3Error.dataError {
-//                                                    DispatchQueue.main.async {
-//                                                        self?.alert.showDetail("Sorry", with: "There was a data error. Please try again.", for: self)
-//                                                    }
-//                                                } catch Web3Error.inputError(_) {
-//                                                    DispatchQueue.main.async {
-//                                                        self?.alert.showDetail("Alert", with: "Failed to sign the transaction. You may be using an incorrect password. \n\nOtherwise, please try logging out of your wallet (not the NFTrack account) and logging back in. Ensure that you remember the password and the private key.", height: 370, alignment: .left, for: self)
-//                                                    }
-//                                                } catch Web3Error.processingError(let desc) {
-//                                                    DispatchQueue.main.async {
-//                                                        self?.alert.showDetail("Alert", with: "\(desc). Ensure that you're using the same address used in the original transaction.", height: 320, alignment: .left, for: self)
-//                                                    }
-//                                                } catch {
-//                                                    self?.alert.showDetail("Error", with: "There was an error with the transfer transaction.", for: self)
-//                                                }
-//                                            } // dispatchQueue
-//                                        }) // showSpinner
-//                                    }) // dismiss
-//                                } // mainVC buttonAction
-//                            } // alertVC
-//                            self?.present(alertVC, animated: true, completion: nil)
-//                        }
-//                    } // transaction
-//                })
-//        } else {
-//            self?.alert.showDetail("Sorry", with: "Unable to find the token to transfer.", for: self)
+//                break
+//            case 2:
+//                getPost(with: postingId) { [weak self] (fetchedPost) in
+//                    let listDetailVC = ListDetailViewController()
+//                    listDetailVC.post = fetchedPost
+//                    self?.navigationController?.pushViewController(listDetailVC, animated: true)
+//                }
+//            default:
+//                break
+//        }
+//    }
+//    
+//    @objc func menuHandler(action: UIAction) {
+//        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+//        feedbackGenerator.impactOccurred()
+//        
+//        guard let postingId = postingId else { return }
+//        switch action.title {
+//            case "Posting":
+//                getPost(with: postingId) { [weak self] (fetchedPost) in
+//                    let listDetailVC = ListDetailViewController()
+//                    listDetailVC.post = fetchedPost
+//                    self?.navigationController?.pushViewController(listDetailVC, animated: true)
+//                }
+//                break
+//            case "Report":
+//                getPost(with: postingId) { [weak self] (fetchedPost) in
+//                    let reportVC = ReportViewController()
+//                    reportVC.post = fetchedPost
+//                    reportVC.userId = self?.userId
+//                    self?.navigationController?.pushViewController(reportVC, animated: true)
+//                }
+//                break
+//            default:
+//                break
 //        }
 //    }
 //}
-/// outdated version
-//final func getStatus1() {
-//    DispatchQueue.global().async { [weak self] in
-//        guard let `self` = self else { return }
-//        do {
-//            guard let escrowHash = self.post.escrowHash else {
-//                self.alert.showDetail("Error", with: "Could not load the escrow hash", for: self)
-//                return
-//            }
-//            let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(escrowHash)
-//            guard let contractAddress = receipt.contractAddress else { return }
-//            self.contractAddress = contractAddress
-//            self.transactionService.prepareTransactionForReading(method: "state", contractAddress: contractAddress, completion: { (transaction, error) in
-//                if let error = error {
-//                    switch error {
-//                        case .contractLoadingError:
-//                            self.alert.showDetail("Error", with: "Contract Loading Error", for: self)
-//                        case .createTransactionIssue:
-//                            self.alert.showDetail("Error", with: "Contract Transaction Issue", for: self)
-//                        default:
-//                            self.alert.showDetail("Error", with: "There was an error getting your information from the blockchain.", for: self)
+//
+//extension ChatViewController {
+//    private func fetchMessages(_ docId: String) {
+//        firstListener = FirebaseService.shared.db
+//            .collection("chatrooms")
+//            .document(docId)
+//            .collection("messages")
+//            .limit(to: 5)
+//            .order(by: "sentAt", descending: true)
+//            .addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
+//                if let _ = error {
+//                    self?.alert.showDetail("Sorry", with: "Unable to receive messages at the moment.", for: self)
+//                }
+//                
+//                defer {
+//                    DispatchQueue.main.async {
+//                        self?.tableView.reloadData()
+//                        self?.tableView.scrollToTop()
 //                    }
 //                }
 //                
-//                if let transaction = transaction {
-//                    do {
-//                        let result: [String: Any] = try transaction.call()
-//                        if let value = result["0"] as? BigUInt {
-//                            let serialized = value.serialize()
-//                            
-//                            print("serialized.count", serialized.count)
-//                            
-//                            var status: String!
-//                            var buyerButtonTitle: String!
-//                            var sellerButtonTitle: String!
-//                            var sellerTag: Int!
-//                            var buyerTag: Int!
-//                            
-//                            if serialized.count == 0 {
-//                                // abort
-//                                status = PurchaseStatus.created.rawValue
-//                                sellerButtonTitle = "Abort"
-//                                sellerTag = 1
-//                                
-//                                // buy
-//                                buyerButtonTitle = "Buy"
-//                                buyerTag = 2
-//                            } else if serialized.count == 1 {
-//                                let statusCode = serialized[0]
-//                                print("statusCode", statusCode)
-//                                switch statusCode {
-//                                    case 1:
-//                                        status = PurchaseStatus.locked.rawValue
-//                                        sellerButtonTitle = "Transfer Ownership"
-//                                        // default
-//                                        sellerTag = 5
-//                                        
-//                                        if self.post.transferHash != nil {
-//                                            buyerButtonTitle = "Confirm Received"
-//                                            buyerTag = 3
-//                                        } else {
-//                                            buyerButtonTitle = "Transfer Pending"
-//                                            buyerTag = 8
-//                                        }
-//                                    case 2:
-//                                        status = "Inactive"
-//                                        sellerButtonTitle = "Transaction Completed"
-//                                        
-//                                        buyerButtonTitle = "Sell"
-//                                        buyerTag = 4
-//                                    default:
-//                                        break
-//                                }
-//                            }
-//                            
-//                            self.getStatus1()
-//                            
-//                            if self.userId != self.post.sellerUserId {
-//                                DispatchQueue.main.async {
-//                                    self.configureStatusButton(buttonTitle: buyerButtonTitle, tag: buyerTag)
-//                                }
-//                            } else if self.userId == self.post.sellerUserId {
-//                                DispatchQueue.main.async {
-//                                    self.configureStatusButton(buttonTitle: sellerButtonTitle, tag: sellerTag)
-//                                }
-//                            } else {
-//                                self.alert.showDetail("Authorization Error", with: "You need to be logged in!", for: self) { [weak self] in
-//                                    DispatchQueue.main.async {
-//                                        self?.navigationController?.popViewController(animated: true)
-//                                    }
-//                                } completion: {}
-//                            }
-//                            
-//                            if self.statusLabel != nil {
-//                                DispatchQueue.main.async {
-//                                    self.statusLabel.text = status
-//                                }
-//                            }
-//                        } else {
-//                            DispatchQueue.main.async {
-//                                self.navigationController?.popViewController(animated: true)
-//                            }
+//                guard let querySnapshot = querySnapshot else {
+//                    return
+//                }
+//                
+//                guard let lastSnapshot = querySnapshot.documents.last else {
+//                    // The collection is empty.
+//                    return
+//                }
+//                
+//                self?.lastSnapshot = lastSnapshot
+//                
+//                if let messages = self?.parseMessage(querySnapshot.documents) {
+//                    self?.messages = messages
+//                }
+//            }
+//    }
+//    
+//    private func refetchMessages(_ lastSnapshot: QueryDocumentSnapshot, docId: String) {
+//        nextListener = FirebaseService.shared.db
+//            .collection("chatrooms")
+//            .document(docId)
+//            .collection("messages")
+//            .order(by: "sentAt", descending: true)
+//            .limit(to: 5)
+//            .start(afterDocument: lastSnapshot)
+//            .addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
+//                if let _ = error {
+//                    self?.alert.showDetail("Sorry", with: "Unable to receive messages at the moment.", for: self)
+//                }
+//                
+//                defer {
+//                    DispatchQueue.main.async {
+//                        self?.tableView.reloadData()
+//                        self?.tableView.scrollToBottom()
+//                        DispatchQueue.main.async {
+//                            self?.spinner.stopAnimating()
 //                        }
-//                    } catch {
-//                        self.alert.showDetail("Error", with: error.localizedDescription, for: self) { [weak self] in
-//                            DispatchQueue.main.async {
-//                                self?.navigationController?.popViewController(animated: true)
-//                            }
-//                        } completion: {}
 //                    }
 //                }
-//            })
-//        }  catch Web3Error.nodeError(let desc) {
-//            if let index = desc.firstIndex(of: ":") {
-//                let newIndex = desc.index(after: index)
-//                let newStr = desc[newIndex...]
-//                self.alert.showDetail("Alert", with: String(newStr), for: self)
-//            }
-//        } catch {
-//            self.alert.showDetail("Error", with: "Unable to retrieve the contract adddress", for: self) { [weak self] in
-//                DispatchQueue.main.async {
-//                    self?.navigationController?.popViewController(animated: true)
+//                
+//                guard let querySnapshot = querySnapshot else {
+//                    return
 //                }
-//            } completion: {}
+//                
+//                guard let lastSnapshot = querySnapshot.documents.last else {
+//                    // The collection is empty.
+//                    return
+//                }
+//                
+//                self?.lastSnapshot = lastSnapshot
+//                
+//                if let messages = self?.parseMessage(querySnapshot.documents) {
+//                    self?.messages.append(contentsOf: messages)
+//                }
+//            }
+//    }
+//    
+//    private func parseMessage(_ documents: [QueryDocumentSnapshot]) -> [Message] {
+//        return documents.map { docSnapshot -> Message in
+//            let data = docSnapshot.data()
+//            let senderId = data["sender"] as? String ?? ""
+//            let content = data["content"] as? String ?? ""
+//            let displayName = data["displayName"] as? String ?? ""
+//            let sentAt = data["sentAt"] as? Date ?? Date()
+//            let imageURL = data["imageURL"] as? String
+//            
+//            let formatter = DateFormatter()
+//            formatter.dateFormat = "HH:mm"
+//            let formattedDate = formatter.string(from: sentAt)
+//            
+//            return Message(
+//                id: senderId,
+//                content: content,
+//                displayName: displayName,
+//                sentAt: formattedDate,
+//                imageURL: imageURL
+//            )
 //        }
 //    }
-//}
-
-//
-//  LocationSearchViewController.swift
-//  NFTrack-Firebase4
-//
-//  Created by J C on 2021-08-27.
-//
-
-
-//import UIKit
-//import MapKit
-//
-//class LocationSearchViewController: UITableViewController {
-//    var matchingItems = [MKMapItem]()
-//    var mapView : MKMapView? = nil
-//    var handleMapSearchDelegate: HandleMapSearch? = nil
 //    
-//    init(mapView: MKMapView) {
-//        super.init(nibName: nil, bundle: nil)
-//        self.mapView = mapView
-//    }
-//    
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//    
-//    override func viewDidLoad() {
-//        super.viewDidLoad()
-//        tableView.register(AddressCell.self, forCellReuseIdentifier: AddressCell.reuseIdentifier)
-//        tableView.rowHeight = 70
-//    }
-//}
-//
-//// MARK:- Location search results
-//extension LocationSearchViewController: UISearchResultsUpdating {
-//    func updateSearchResults(for searchController: UISearchController) {
-//        guard let mapView = mapView, let searchBarText = searchController.searchBar.text else { return }
-//        
-//        let searchCompleter = MKLocalSearchCompleter()
-//        searchCompleter.delegate = self
-//        searchCompleter.region = MKCoordinateRegion(.world)
-//        searchCompleter.resultTypes = MKLocalSearchCompleter.ResultType([.address])
-//        searchCompleter.queryFragment = searchBarText
-//        
-//        //        let request = MKLocalSearch.Request()
-//        //        request.naturalLanguageQuery = searchBarText
-//        //        request.region = mapView.region
-//        //
-//        //        let search = MKLocalSearch(request: request)
-//        //        search.start { [weak self] (response, error) in
-//        //            guard let response = response else { return }
-//        //            self?.matchingItems.removeAll()
-//        //            self?.matchingItems.append(contentsOf: response.mapItems)
-//        //            self?.tableView.reloadData()
-//        //        }
-//    }
-//}
-//
-//extension LocationSearchViewController: MKLocalSearchCompleterDelegate {
-//    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-//        print("completer", completer)
-//        
-//        self.matchingItems.removeAll()
-//        self.matchingItems.append(contentsOf: completer.results)
-//        self.tableView.reloadData()
-//    }
-//    
-//    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-//        print("error", error)
-//    }
-//}
-//
-//// MARK: - Table view data source
-//extension LocationSearchViewController: ParseAddressDelegate {
-//    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-//        return matchingItems.count
-//    }
-//    
-//    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-//        guard let cell = tableView.dequeueReusableCell(withIdentifier: AddressCell.reuseIdentifier, for: indexPath) as? AddressCell else {
-//            fatalError()
+//    private func sendMessage() {
+//        guard
+//            let messageContent = toolBarView.textView.text,
+//            !messageContent.isEmpty,
+//            let userId = userId else {
+//            return
 //        }
 //        
-//        let selectedItem = matchingItems[indexPath.row].placemark
-//        cell.mainLabel.text = selectedItem.name
-//        cell.detailLabel.text = parseAddress(selectedItem: selectedItem)
+//        let ref = FirebaseService.shared.db
+//            .collection("chatrooms")
+//            .document(docId)
+//        
+//        let chatInitializer = ChatInitializer(
+//            chatIsNew: chatIsNew,
+//            ref: ref,
+//            userInfo: userInfo,
+//            messageContent: messageContent,
+//            chatListModel: chatListModel,
+//            docId: docId,
+//            postingId: postingId
+//        )
+//        
+//        chatInitializer.createChatInfo()
+//            .sink { [weak self] (completion) in
+//                switch completion {
+//                    case .failure(.generalError(reason: let err)):
+//                        self?.alert.showDetail("Error", with: err, for: self)
+//                    case .failure(.chatDisabled):
+//                        guard let displayName = self?.userInfo.displayName else { return }
+//                        self?.alert.showDetail("Undelivered Message", with: "The message couldn't be delivered because \(displayName) has left the chat.", for: self)
+//                    case .finished:
+//                        break
+//                    default:
+//                        break
+//                }
+//            } receiveValue: { [weak self] (ref) in
+//                // send text message
+//                guard let recipient = self?.userInfo.uid else { return }
+//                
+//                ref.collection("messages").addDocument(data: [
+//                    "sentAt": Date(),
+//                    "content": messageContent,
+//                    "sender": userId,
+//                    "recipient": recipient,
+//                ]) { (error) in
+//                    if let _ = error {
+//                        self?.alert.showDetail("Sorry", with: "Unable to send the message at the moment.", for: self)
+//                    } else {
+//                        self?.toolBarView.textView.text.removeAll()
+//                    }
+//                }
+//            }
+//            .store(in: &storage)
+//    }
+//}
+//
+//extension ChatViewController {
+//    // MARK: - addKeyboardObserver
+//    private func addKeyboardObserver() {
+//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+//        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+//        
+//    }
+//    
+//    // MARK: - removeKeyboardObserver
+//    private func removeKeyboardObserver(){
+//        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+//        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+//    }
+//    
+//    @objc private func keyboardWillShow(notification: NSNotification) {
+//        if let userInfo = notification.userInfo {
+//            guard let keyBoardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else { return }
+//            let keyboardViewEndFrame = view.convert(keyBoardFrame, from: view.window)
+//            let keyboardHeight = keyboardViewEndFrame.height
+//            
+//            let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! Double
+//            let curve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! UInt
+//            
+//            self.tableView.frame = CGRect(
+//                origin: .zero,
+//                size: CGSize(
+//                    width: self.view.bounds.size.width,
+//                    height: self.view.bounds.size.height - keyboardHeight
+//                )
+//            )
+//            
+//            // - toolBarView.bounds.size.height
+//            //            let insets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
+//            //            self.tableView.contentInset = insets
+//            //            self.tableView.scrollIndicatorInsets = insets
+//            
+//            self.toolBarBottomConstraint.constant = -keyboardHeight
+//            self.view.setNeedsLayout()
+//            let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
+//            UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
+//                self.view.layoutIfNeeded()
+//            })
+//            tableView.scrollToTop()
+//        }
+//    }
+//    
+//    @objc private func keyboardWillHide(notification: NSNotification) {
+//        let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as! Double
+//        let curve = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as! UInt
+//        
+//        let insets: UIEdgeInsets = .zero
+//        tableView.contentInset = insets
+//        tableView.scrollIndicatorInsets = insets
+//        tableView.frame = CGRect(origin: .zero, size: view.bounds.size)
+//        
+//        //        self.tableView.frame.origin.y = .zero
+//        self.toolBarBottomConstraint.constant = 0
+//        view.setNeedsLayout()
+//        let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
+//        UIView.animate(withDuration: duration, delay: 0, options: curveAnimationOptions, animations: {
+//            //                    self.toolBarView.frame = CGRect(origin: CGPoint(x: 0, y: self.view.frame.size.height - self.toolBarView.bounds.size.height - keyboardHeight), size: CGSize(width: self.view.bounds.size.width, height: 60))
+//            self.view.layoutIfNeeded()
+//        })
+//    }
+//}
+//
+//extension ChatViewController: TableViewConfigurable, UITableViewDataSource, UIContextMenuInteractionDelegate, SharableDelegate {
+//    final func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+//        return messages.count
+//    }
+//    
+//    final func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+//        guard let cell = tableView.dequeueReusableCell(withIdentifier: MessageCell.identifier, for: indexPath) as? MessageCell else {
+//            fatalError("Unable to dequeue the custom table cell")
+//        }
+//        
+//        cell.selectionStyle = .none
+//        let message = messages[indexPath.row]
+//        cell.set(with: message, myId: userId)
+//        
+//        let interaction = UIContextMenuInteraction(delegate: self)
+//        cell.contentLabel.isUserInteractionEnabled = true
+//        cell.contentLabel.addInteraction(interaction)
+//        
+//        cell.contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
 //        return cell
 //    }
 //    
-//    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//        let selectedItem = matchingItems[indexPath.row].placemark
-//        handleMapSearchDelegate?.dropPinZoomIn(placemark: selectedItem)
+//    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+//        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+//            guard let contentLabel = interaction.view as? UILabel,
+//                  let message = contentLabel.text else { return nil }
+//            
+//            return self.createMenu(message: message)
+//        }
+//    }
+//    
+//    func createMenu(message: String) -> UIMenu {
+//        // Create a UIAction for sharing
+//        let share = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up")) { [weak self] action in
+//            let objectsToShare: [AnyObject] = [message as AnyObject]
+//            self?.share(objectsToShare)
+//        }
+//        
+//        // Create an action for renaming
+//        let copy = UIAction(title: "Copy", image: UIImage(systemName: "doc.on.doc")) { action in
+//            let pasteboard = UIPasteboard.general
+//            pasteboard.string = message
+//        }
+//        
+//        // Create and return a UIMenu with all of the actions as children
+//        return UIMenu(title: "", children: [share, copy])
+//    }
+//}
+//
+//// MARK: - Image picker
+//extension ChatViewController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
+//    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+//        picker.dismiss(animated: true)
+//        
+//        guard let url = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
+//            print("No image found")
+//            return
+//        }
+//        
+//        alert.showDetail(
+//            "Picture Message",
+//            with: "Would you like to send the image?",
+//            for: self,
+//            alertStyle: .withCancelButton,
+//            buttonAction: { [weak self] in
+//                guard let userId = self?.userId else { return }
+//                Future<URL?, PostingError> { promise in
+//                    self?.uploadImage(url: url, userId: userId, promise: promise)
+//                }
+//                .sink { [weak self] (completion) in
+//                    switch completion {
+//                        case .failure(.generalError(reason: let err)):
+//                            self?.alert.showDetail("Error", with: err, for: self)
+//                        case .finished:
+//                            break
+//                        default:
+//                            break
+//                    }
+//                } receiveValue: { [weak self] (url) in
+//                    guard let url = url else { return }
+//                    self?.sendImage(url: url)
+//                }
+//                .store(in: &self!.storage)
+//            }
+//        )
+//    }
+//    
+//    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
 //        dismiss(animated: true, completion: nil)
+//    }
+//    
+//    private func sendImage(url: URL) {
+//        guard let userId = userId else {
+//            return
+//        }
+//        
+//        let ref = FirebaseService.shared.db
+//            .collection("chatrooms")
+//            .document(docId)
+//        
+//        let chatInitializer = ChatInitializer(
+//            chatIsNew: chatIsNew,
+//            ref: ref,
+//            userInfo: userInfo,
+//            messageContent: "Image",
+//            chatListModel: chatListModel,
+//            docId: docId,
+//            postingId: postingId
+//        )
+//        
+//        chatInitializer.createChatInfo()
+//            .sink { [weak self] (completion) in
+//                switch completion {
+//                    case .failure(.generalError(reason: let err)):
+//                        self?.alert.showDetail("Error", with: err, for: self)
+//                    case .failure(.chatDisabled):
+//                        guard let displayName = self?.userInfo.displayName else { return }
+//                        self?.alert.showDetail("Undelivered Message", with: "The message couldn't be delivered because \(displayName) has left the chat.", for: self)
+//                    case .finished:
+//                        break
+//                    default:
+//                        break
+//                }
+//            } receiveValue: { [weak self] (ref) in
+//                print("ref", ref)
+//                // send text message
+//                guard let recipient = self?.userInfo.uid else { return }
+//                print("recipient", recipient)
+//                ref.collection("messages").addDocument(data: [
+//                    "sentAt": Date(),
+//                    "imageURL": url.absoluteString,
+//                    "sender": userId,
+//                    "recipient": recipient,
+//                ]) { (error) in
+//                    if let _ = error {
+//                        self?.alert.showDetail("Sorry", with: "Unable to send the image at the moment.", for: self)
+//                    } else {
+//                        //                        self?.toolBarView.textView.text.removeAll()
+//                    }
+//                }
+//            }
+//            .store(in: &storage)
+//    }
+//}
+//
+//extension ChatViewController: UITableViewDelegate {
+//    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+//        let offset = scrollView.contentOffset
+//        let bounds = scrollView.bounds
+//        let size = scrollView.contentSize
+//        let inset = scrollView.contentInset
+//        let y = offset.y + bounds.size.height - inset.bottom
+//        let h = size.height
+//        let reload_distance:CGFloat = 10.0
+//        if y > (h + reload_distance) {
+//            spinner.startAnimating()
+//            delay(0.5) { [weak self] in
+//                guard let lastSnapshot = self?.lastSnapshot,
+//                      let docId = self?.docId else { return }
+//                self?.refetchMessages(lastSnapshot, docId: docId)
+//            }
+//        }
+//    }
+//}
+//
+////    private func sendMessage1() {
+////        guard
+////            let messageContent = toolBarView.textView.text,
+////            !messageContent.isEmpty,
+////            let userId = userId else {
+////            return
+////        }
+////
+////        let ref = FirebaseService.shared.db
+////            .collection("chatrooms")
+////            .document(docId)
+////
+////        if self.messages.count == 0 {
+////            /// docId is the hashed Id that corresponds to the unique ID of the chat room
+////            guard let sellerUserId = userInfo.uid else {
+////                self.alert.showDetail(
+////                    "Sorry",
+////                    with: "Unable to retrieve the seller's info. Please try again",
+////                    for: self,
+////                    buttonAction: {
+////                        self.navigationController?.popViewController(animated: true)
+////                    }, completion:  {
+////
+////                    }
+////                )
+////                return
+////            }
+////
+////            // only the buyer can initiate the conversation
+////            // so the initial setting of the following data is true
+////            ref.setData([
+////                "members": [sellerUserId, userId],
+////                "sellerUserId": sellerUserId,
+////                "sellerDisplayName": userInfo.displayName,
+////                "sellerPhotoURL": userInfo.photoURL ?? "NA",
+////                "buyerUserId": userId,
+////                "buyerDisplayName": displayName!,
+////                "buyerPhotoURL": photoURL ?? "NA",
+////                "docId": docId!,
+////                "latestMessage": messageContent,
+////                "sentAt": Date()
+////            ]) { [weak self] (error) in
+////                if let error = error {
+////                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+////                } else {
+//////                    if let tabBarVCs = self?.tabBarController?.viewControllers {
+//////                        for case let vc as UINavigationController in tabBarVCs where vc.title == "Inbox" {
+//////                            for case let chatListVC as ChatListViewController in vc.children {
+//////                                chatListVC.fetchChatList()
+//////                            }
+//////                        }
+//////                    }
+////                }
+////            }
+////        } else {
+////            ref.updateData([
+////                "latestMessage": messageContent,
+////                "sentAt": Date()
+////            ]) { [weak self] (error) in
+////                if let error = error {
+////                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+////                }
+////            }
+////        }
+////
+////        ref.collection("messages").addDocument(data: [
+////            "sentAt": Date(),
+////            "content": messageContent,
+////            "sender": userId,
+////            "recipient": "recipientUid",
+////        ]) { [weak self] (error) in
+////            if let error = error {
+////                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+////            } else {
+////                self?.toolBarView.textView.text.removeAll()
+////            }
+////        }
+////    }
+////
+////    private func sendImage(url: URL) {
+////        let ref = FirebaseService.shared.db
+////            .collection("chatrooms")
+////            .document(docId)
+////
+////        if self.messages.count == 0 {
+////            /// docId is the hashedId that corresponds to the unique ID of the chat room
+////            guard let sellerUserId = userInfo.uid else {
+////                self.alert.showDetail("Sorry", with: "Unable to retrieve the seller's info. Please try again", for: self) {
+////                    self.navigationController?.popViewController(animated: true)
+////                } completion: {}
+////                return
+////            }
+////
+////            defer {
+////                deleteFile(fileName: imageName)
+////            }
+////
+////            ref.setData([
+////                "members": [sellerUserId, userId],
+////                "sellerUserId": sellerUserId,
+////                "sellerDisplayName": userInfo.displayName,
+////                "sellerPhotoURL": userInfo.photoURL ?? "NA",
+////                "buyerUserId": userId!,
+////                "buyerDisplayName": displayName!,
+////                "buyerPhotoURL": photoURL ?? "NA",
+////                "docId": docId!,
+////                "latestMessage": "",
+////                "sentAt": Date(),
+////            ])
+////        } else {
+////            ref.updateData([
+////                "latestMessage": "",
+////                "sentAt": Date()
+////            ])
+////        }
+////
+////        let data: [String: Any] = [
+////            "sentAt": Date(),
+////            "imageURL": "\(url)",
+////            "sender": userId!
+////        ]
+////        ref.collection("messages").addDocument(data: data) { [weak self] (error) in
+////            if let error = error {
+////                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
+////                    if let imageName = self?.imageName {
+////                        self?.deleteFile(fileName: imageName)
+////                    }
+////                } completion: {}
+////            }
+////        }
+////    }
+//
+
+
+//
+//  MessageCell.swift
+//  NFTrack-Firebase4
+//
+//  Created by J C on 2021-06-11.
+//
+
+//import UIKit
+//
+//class MessageCell: UITableViewCell {
+//    static let identifier = "MessageCell"
+//    
+//    final var stackView: UIStackView!
+//    final var contentLabel: UILabelPadding!
+//    final var dateLabel: UILabelPadding!
+//    final var constraint = [NSLayoutConstraint]()
+//    final let thumbImageView = UIImageView()
+//    
+//    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+//        super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
+//        
+//        configure()
+//        setConstraints()
+//    }
+//    
+//    required init?(coder: NSCoder) {
+//        fatalError("not implemented")
+//    }
+//    
+//}
+//
+//extension MessageCell {
+//    func configure() {
+//        contentLabel = UILabelPadding()
+//        contentLabel.numberOfLines = 0
+//        contentLabel.font = UIFont.systemFont(ofSize: 15)
+//        contentLabel.layer.cornerRadius = 11
+//        contentLabel.clipsToBounds = true
+//        contentLabel.adjustsFontForContentSizeCategory = true
+//        
+//        dateLabel = UILabelPadding()
+//        dateLabel.top = 0
+//        dateLabel.textAlignment = .right
+//        dateLabel.textColor = .lightGray
+//        dateLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+//        dateLabel.adjustsFontForContentSizeCategory = true
+//        
+//        stackView = UIStackView(arrangedSubviews: [thumbImageView, contentLabel, dateLabel])
+//        stackView.spacing = 3
+//        stackView.axis = .vertical
+//        stackView.distribution = .fillProportionally
+//        stackView.translatesAutoresizingMaskIntoConstraints = false
+//        contentView.addSubview(stackView)
+//    }
+//    
+//    func setConstraints() {
+//        NSLayoutConstraint.activate([
+//            stackView.topAnchor.constraint(equalTo: contentView.topAnchor),
+//            stackView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.7),
+//            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+//        ])
+//    }
+//    
+//    func set(with message: Message, myId: String) {
+//        contentLabel.text = message.content
+//        dateLabel.text = message.sentAt
+//        
+//        NSLayoutConstraint.deactivate(constraint)
+//        constraint.removeAll()
+//        // message.id means the UID of the sender
+//        if message.id == myId {
+//            if let imageURL = message.imageURL {
+//                //                let loadingIndicator = UIActivityIndicatorView()
+//                thumbImageView.image = UIImage(named: "placeholder")
+//                guard let url = URL(string: imageURL) else { return }
+//                downloadImageFrom(url) { [weak self] (image) in
+//                    DispatchQueue.main.async {
+//                        //                        self?.thumbImageView.bounds = CGRect(origin: .zero, size: CGSize(width: 200, height: 200))
+//                        self?.thumbImageView.image = image
+//                    }
+//                }
+//                thumbImageView.layer.cornerRadius = 8
+//                thumbImageView.translatesAutoresizingMaskIntoConstraints = false
+//                constraint.append(thumbImageView.heightAnchor.constraint(equalToConstant: 200))
+//                
+//            } else {
+//                contentLabel?.backgroundColor = UIColor(red: 102/255, green: 140/255, blue: 255/255, alpha: 1)
+//                contentLabel?.textColor = .white
+//                stackView.alignment = .trailing
+//            }
+//            
+//            constraint.append(contentsOf: [
+//                stackView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+//            ])
+//        } else {
+//            contentLabel?.backgroundColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1)
+//            contentLabel?.textColor = .black
+//            stackView.alignment = .leading
+//            
+//            constraint.append(contentsOf: [
+//                stackView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+//            ])
+//        }
+//        NSLayoutConstraint.activate(constraint)
+//        stackView.setNeedsLayout()
+//    }
+//    
+//    override func prepareForReuse() {
+//        thumbImageView.image = nil
 //    }
 //}

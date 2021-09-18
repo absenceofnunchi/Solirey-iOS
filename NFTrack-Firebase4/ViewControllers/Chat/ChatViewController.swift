@@ -30,9 +30,9 @@ import UIKit
 import FirebaseFirestore
 import Combine
 
-class ChatViewController: UIViewController, FileUploadable, SingleDocumentFetchDelegate {
-    var userInfo: UserInfo!
-    var docId: String! {
+class ChatViewController: ParentListViewController<Message>, FileUploadable, SingleDocumentFetchDelegate {
+    final var userInfo: UserInfo!
+    final var docId: String! {
         didSet {
             if docId != nil {
                 fetchMessages(docId)
@@ -41,23 +41,13 @@ class ChatViewController: UIViewController, FileUploadable, SingleDocumentFetchD
             }
         }
     }
-    var postingId: String!
-    private var messages = [Message]()
-    private var toolBarView: ToolBarView!
+    final var postingId: String!
+    final var toolBarView: ToolBarView!
     private var toolBarBottomConstraint: NSLayoutConstraint!
-    var alert: Alerts!
-    private var tableView: UITableView!
-    private var userId: String! {
-        return UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
-    }
     private var lastCell: CGRect!
     private var imageName: String!
-    private var lastSnapshot: QueryDocumentSnapshot!
-    private var firstListener: ListenerRegistration!
-    private var nextListener: ListenerRegistration!
-    private var chatInfoListener: ListenerRegistration!
     // If chatListModel is set, it means the channel info already exists, therefore the chat is not new
-    var chatListModel: ChatListModel! {
+    final var chatListModel: ChatListModel! {
         didSet {
             chatIsNew = false
             postingId = chatListModel.postingId
@@ -66,14 +56,24 @@ class ChatViewController: UIViewController, FileUploadable, SingleDocumentFetchD
     }
     // Toggled on and off by fetchChanelInfo() depending on whether the channel info exists or not
     // If new, create the channel info along with the very first message.
-    private var chatIsNew: Bool! = true
+    final var chatIsNew: Bool! = true
     private var spinner: UIActivityIndicatorView!
-    private let PAGINATION_LIMIT: Int = 40
+    final override var PAGINATION_LIMIT: Int {
+        get {
+            return 40
+        }
+        set {}
+    }
     private var optionsBarItem: UIBarButtonItem!
     private var postBarButton: UIBarButtonItem!
     private var reportBarButton: UIBarButtonItem!
     final var storage: Set<AnyCancellable>!
     final var cache: NSCache<NSString, Post>!
+    private var lastContentOffset: CGFloat = 0
+    
+    final override func setDataStore(postArr: [Message]) {
+        dataStore = MessageImageDataStore(posts: postArr)
+    }
     
     final override func viewDidLoad() {
         super.viewDidLoad()
@@ -100,11 +100,7 @@ class ChatViewController: UIViewController, FileUploadable, SingleDocumentFetchD
         if nextListener != nil {
             nextListener.remove()
         }
-        
-        if chatInfoListener != nil {
-            chatInfoListener.remove()
-        }
-        
+   
         if isMovingFromParent {
             cache.removeObject(forKey: "CachedPost")
         }
@@ -114,79 +110,21 @@ class ChatViewController: UIViewController, FileUploadable, SingleDocumentFetchD
         super.viewDidDisappear(animated)
         removeKeyboardObserver()
     }
-}
-
-extension ChatViewController: PostParseDelegate {
-//    private func getProfileInfo() {
-//        if let uid = UserDefaults.standard.string(forKey: UserDefaultKeys.userId),
-//           let displayName = UserDefaults.standard.string(forKey: UserDefaultKeys.displayName) {
-//            self.userId = uid
-//            self.displayName = displayName
-//        } else {
-//            self.alert.showDetail("Sorry", with: "Unable to retrieve your profile. Please try again.", for: self) {
-//                self.navigationController?.popViewController(animated: true)
-//            } completion: {}
-//        }
-//    }
     
-    private func configureNavigationBar() {
-        self.navigationItem.largeTitleDisplayMode = .never
-
-        let button =  UIButton()
-        //        button.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
-        button.setTitle(userInfo.displayName, for: .normal)
-        button.setTitleColor(.gray, for: .normal)
-        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
-        button.tag = 0
-        navigationItem.titleView = button
-
-        guard let postBarImage = UIImage(systemName: "list.bullet.below.rectangle"),
-              let reportImage = UIImage(systemName: "flag") else {
-            return
-        }
-        
-        // Chat should only be able to navigate to the posting if the view controller was pushed from ChatListVC because if it was pushed from ListDetailVC, it's entirely redundant
-        if #available(iOS 14.0, *) {
-            var buttonArr: [UIAction] = [UIAction(title: NSLocalizedString("Report", comment: ""), image: reportImage, handler: menuHandler)]
-            if let navController = self.navigationController, navController.viewControllers.count >= 2 {
-                let viewController = navController.viewControllers[navController.viewControllers.count - 2]
-                if let _ = viewController as? ChatListViewController {
-                    buttonArr.append(UIAction(title: NSLocalizedString("Posting", comment: ""), image: postBarImage, handler: menuHandler))
-                }
-            }
-            let barButtonMenu = UIMenu(title: "", children: buttonArr)
-            
-            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
-            optionsBarItem = UIBarButtonItem(title: nil, image: image, primaryAction: nil, menu: barButtonMenu)
-            navigationItem.rightBarButtonItem = optionsBarItem
-        } else {
-            var buttonArr = [UIBarButtonItem]()
-            reportBarButton = UIBarButtonItem(image: reportImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
-            reportBarButton.tag = 1
-            buttonArr.append(reportBarButton)
-
-            if let navController = self.navigationController, navController.viewControllers.count >= 2 {
-                let viewController = navController.viewControllers[navController.viewControllers.count - 2]
-                if let _ = viewController as? ChatListViewController {
-                    postBarButton = UIBarButtonItem(image: postBarImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
-                    postBarButton.tag = 2
-                    buttonArr.append(postBarButton)
-                }
-            }
-
-            self.navigationItem.rightBarButtonItems = buttonArr
-        }
-    }
-    
-    private func configureUI() {
+    final override func configureUI() {
+        super.configureUI()
         view.backgroundColor = .white
         alert = Alerts()
         cache = NSCache<NSString, Post>()
         storage = Set<AnyCancellable>()
-                
+        
         tableView = UITableView()
         tableView.allowsSelection = false
         tableView.register(MessageCell.self, forCellReuseIdentifier: MessageCell.identifier)
+        tableView.register(ImageMessageCell.self, forCellReuseIdentifier: ImageMessageCell.identifier)
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = UITableView.automaticDimension
+        tableView.prefetchDataSource = self
         tableView.delegate = self
         tableView.dataSource = self
         tableView.separatorStyle = .none
@@ -236,7 +174,138 @@ extension ChatViewController: PostParseDelegate {
         ])
     }
     
-    @objc func buttonPressed(_ sender: UIButton) {
+    final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        var cell: UITableViewCell!
+        let post = postArr[indexPath.row]
+        
+        if let _ = post.imageURL {
+            guard let imageCell = tableView.dequeueReusableCell(withIdentifier: ImageMessageCell.identifier, for: indexPath) as? ImageMessageCell else {
+                fatalError("Unable to dequeue the custom table cell")
+            }
+            
+            imageCell.myUserId = userId
+            imageCell.selectionStyle = .none
+            let post = postArr[indexPath.row]
+            imageCell.configure(post)
+            //        imageCell.updateAppearanceFor(.pending(post))
+            
+            let interaction = UIContextMenuInteraction(delegate: self)
+            imageCell.messageLabel.isUserInteractionEnabled = true
+            imageCell.messageLabel.addInteraction(interaction)
+            cell = imageCell
+        } else {
+            guard let messageCell = tableView.dequeueReusableCell(withIdentifier: MessageCell.identifier, for: indexPath) as? MessageCell else {
+                fatalError("Unable to dequeue the custom table cell")
+            }
+            
+            messageCell.myUserId = userId
+            messageCell.selectionStyle = .none
+            let post = postArr[indexPath.row]
+            messageCell.configure(post)
+            //        messageCell.updateAppearanceFor(.pending(post))
+            
+            let interaction = UIContextMenuInteraction(delegate: self)
+            messageCell.messageLabel.isUserInteractionEnabled = true
+            messageCell.messageLabel.addInteraction(interaction)
+            cell = messageCell
+        }
+
+        cell.contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
+        return cell
+    }
+    
+    final override func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+            guard let contentLabel = interaction.view as? UILabel,
+                  let message = contentLabel.text else { return nil }
+            
+            return self.createMenu(message: message)
+        }
+    }
+    
+    override func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        let offset = scrollView.contentOffset
+        let bounds = scrollView.bounds
+        let size = scrollView.contentSize
+        let inset = scrollView.contentInset
+        let y = offset.y + bounds.size.height - inset.bottom
+        let h = size.height
+        let reload_distance:CGFloat = 10.0
+        
+        // Only refresh if pulled down
+        if lastContentOffset > scrollView.contentOffset.y && lastContentOffset < scrollView.contentSize.height - scrollView.frame.height {
+            // 
+        } else if lastContentOffset < scrollView.contentOffset.y && scrollView.contentOffset.y > 0 {
+            // update the new position acquired
+            lastContentOffset = scrollView.contentOffset.y
+            if y > (h + reload_distance) {
+                guard self.postArr.count > 0 else { return }
+                executeAfterDragging()
+            }
+        }
+    }
+
+    final override func executeAfterDragging() {
+        spinner.startAnimating()
+        delay(0.5) { [weak self] in
+            guard let lastSnapshot = self?.lastSnapshot,
+                  let docId = self?.docId else { return }
+            self?.refetchMessages(lastSnapshot, docId: docId)
+        }
+    }
+}
+
+extension ChatViewController: PostParseDelegate {
+    private func configureNavigationBar() {
+        self.navigationItem.largeTitleDisplayMode = .never
+
+        let button =  UIButton()
+        //        button.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
+        button.setTitle(userInfo.displayName, for: .normal)
+        button.setTitleColor(.gray, for: .normal)
+        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        button.tag = 0
+        navigationItem.titleView = button
+
+        guard let postBarImage = UIImage(systemName: "list.bullet.below.rectangle"),
+              let reportImage = UIImage(systemName: "flag") else {
+            return
+        }
+        
+        // Chat should only be able to navigate to the posting if the view controller was pushed from ChatListVC because if it was pushed from ListDetailVC, it's entirely redundant
+        if #available(iOS 14.0, *) {
+            var buttonArr: [UIAction] = [UIAction(title: NSLocalizedString("Report", comment: ""), image: reportImage, handler: menuHandler)]
+            if let navController = self.navigationController, navController.viewControllers.count >= 2 {
+                let viewController = navController.viewControllers[navController.viewControllers.count - 2]
+                if let _ = viewController as? ChatListViewController {
+                    buttonArr.append(UIAction(title: NSLocalizedString("Posting", comment: ""), image: postBarImage, handler: menuHandler))
+                }
+            }
+            let barButtonMenu = UIMenu(title: "", children: buttonArr)
+            
+            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
+            optionsBarItem = UIBarButtonItem(title: nil, image: image, primaryAction: nil, menu: barButtonMenu)
+            navigationItem.rightBarButtonItem = optionsBarItem
+        } else {
+            var buttonArr = [UIBarButtonItem]()
+            reportBarButton = UIBarButtonItem(image: reportImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            reportBarButton.tag = 1
+            buttonArr.append(reportBarButton)
+
+            if let navController = self.navigationController, navController.viewControllers.count >= 2 {
+                let viewController = navController.viewControllers[navController.viewControllers.count - 2]
+                if let _ = viewController as? ChatListViewController {
+                    postBarButton = UIBarButtonItem(image: postBarImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+                    postBarButton.tag = 2
+                    buttonArr.append(postBarButton)
+                }
+            }
+
+            self.navigationItem.rightBarButtonItems = buttonArr
+        }
+    }
+    
+    @objc private func buttonPressed(_ sender: UIButton) {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
@@ -265,7 +334,7 @@ extension ChatViewController: PostParseDelegate {
         }
     }
     
-    @objc func menuHandler(action: UIAction) {
+    @objc private func menuHandler(action: UIAction) {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
@@ -293,84 +362,6 @@ extension ChatViewController: PostParseDelegate {
 }
 
 extension ChatViewController {
-//    private func fetchChanelInfo(_ docId: String) {
-//        FirebaseService.shared.db
-//            .collection("chatrooms")
-//            .document(docId)
-//            .addSnapshotListener { [weak self] (querySnapshot, error) in
-//                if let _ = error {
-//                    self?.alert.showDetail("Error", with: "There was an error getting the chat information.", for: self)
-//                    return
-//                }
-//
-//                guard let querySnapshot = querySnapshot else {
-//                    return
-//                }
-//
-//                guard querySnapshot.exists else {
-//                    self?.chatIsNew = true
-//                    return
-//                }
-//
-//                guard let data = querySnapshot.data() else {
-//                    return
-//                }
-//
-//                guard !data.isEmpty else {
-//                    return
-//                }
-//
-//                self?.chatIsNew = false
-//                self?.chatListModel = self?.parseChatListModel(querySnapshot)
-//            }
-//    }
-    
-//    private func parseChatListModel(_ document: DocumentSnapshot) -> ChatListModel? {
-//        guard let data = document.data() else { return nil }
-//        var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId: String!
-//        var date: Date!
-//        var members: [String]!
-//
-//        data.forEach { (item) in
-//            switch item.key {
-//                case "buyerDisplayName":
-//                    buyerDisplayName = item.value as? String
-//                case "buyerPhotoURL":
-//                    buyerPhotoURL = item.value as? String
-//                case "buyerUserId":
-//                    buyerUserId = item.value as? String
-//                case "latestMessage":
-//                    latestMessage = item.value as? String
-//                case "sellerDisplayName":
-//                    sellerDisplayName = item.value as? String
-//                case "sellerPhotoURL":
-//                    sellerPhotoURL = item.value as? String
-//                case "sentAt":
-//                    let timeStamp = item.value as? Timestamp
-//                    date = timeStamp?.dateValue()
-//                case "sellerUserId":
-//                    sellerUserId = item.value as? String
-//                case "members":
-//                    members = item.value as? [String]
-//                default:
-//                    break
-//            }
-//        }
-//
-//        return ChatListModel(
-//            documentId: document.documentID,
-//            latestMessage: latestMessage,
-//            date: date,
-//            buyerDisplayName: buyerDisplayName,
-//            buyerPhotoURL: buyerPhotoURL,
-//            buyerUserId: buyerUserId,
-//            sellerDisplayName: sellerDisplayName,
-//            sellerPhotoURL: sellerPhotoURL,
-//            sellerUserId: sellerUserId,
-//            members: members
-//        )
-//    }
-    
     private func fetchMessages(_ docId: String) {
         firstListener = FirebaseService.shared.db
             .collection("chatrooms")
@@ -402,7 +393,7 @@ extension ChatViewController {
                 self?.lastSnapshot = lastSnapshot
                 
                 if let messages = self?.parseMessage(querySnapshot.documents) {
-                    self?.messages = messages
+                    self?.postArr = messages
                 }
             }
     }
@@ -442,7 +433,7 @@ extension ChatViewController {
                 self?.lastSnapshot = lastSnapshot
                 
                 if let messages = self?.parseMessage(querySnapshot.documents) {
-                    self?.messages.append(contentsOf: messages)
+                    self?.postArr.append(contentsOf: messages)
                 }
             }
     }
@@ -468,61 +459,6 @@ extension ChatViewController {
                 imageURL: imageURL
             )
         }
-    }
-    
-    private func sendMessage() {
-        guard
-            let messageContent = toolBarView.textView.text,
-            !messageContent.isEmpty,
-            let userId = userId else {
-            return
-        }
-        
-        let ref = FirebaseService.shared.db
-            .collection("chatrooms")
-            .document(docId)
-        
-        let chatInitializer = ChatInitializer(
-            chatIsNew: chatIsNew,
-            ref: ref,
-            userInfo: userInfo,
-            messageContent: messageContent,
-            chatListModel: chatListModel,
-            docId: docId,
-            postingId: postingId
-        )
-
-        chatInitializer.createChatInfo()
-            .sink { [weak self] (completion) in
-                switch completion {
-                    case .failure(.generalError(reason: let err)):
-                        self?.alert.showDetail("Error", with: err, for: self)
-                    case .failure(.chatDisabled):
-                        guard let displayName = self?.userInfo.displayName else { return }
-                        self?.alert.showDetail("Undelivered Message", with: "The message couldn't be delivered because \(displayName) has left the chat.", for: self)
-                    case .finished:
-                        break
-                    default:
-                        break
-                }
-            } receiveValue: { [weak self] (ref) in
-                // send text message
-                guard let recipient = self?.userInfo.uid else { return }
-                
-                ref.collection("messages").addDocument(data: [
-                    "sentAt": Date(),
-                    "content": messageContent,
-                    "sender": userId,
-                    "recipient": recipient,
-                ]) { (error) in
-                    if let _ = error {
-                        self?.alert.showDetail("Sorry", with: "Unable to send the message at the moment.", for: self)
-                    } else {
-                        self?.toolBarView.textView.text.removeAll()
-                    }
-                }
-            }
-            .store(in: &storage)
     }
 }
 
@@ -557,11 +493,6 @@ extension ChatViewController {
                 )
             )
 
-// - toolBarView.bounds.size.height
-//            let insets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
-//            self.tableView.contentInset = insets
-//            self.tableView.scrollIndicatorInsets = insets
-
             self.toolBarBottomConstraint.constant = -keyboardHeight
             self.view.setNeedsLayout()
             let curveAnimationOptions = UIView.AnimationOptions(rawValue: curve << 16)
@@ -592,38 +523,8 @@ extension ChatViewController {
     }
 }
 
-extension ChatViewController: TableViewConfigurable, UITableViewDataSource, UIContextMenuInteractionDelegate, SharableDelegate {
-    final func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return messages.count
-    }
-    
-    final func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: MessageCell.identifier, for: indexPath) as? MessageCell else {
-            fatalError("Unable to dequeue the custom table cell")
-        }
-        
-        cell.selectionStyle = .none
-        let message = messages[indexPath.row]
-        cell.set(with: message, myId: userId)
-
-        let interaction = UIContextMenuInteraction(delegate: self)
-        cell.contentLabel.isUserInteractionEnabled = true
-        cell.contentLabel.addInteraction(interaction)
-        
-        cell.contentView.transform = CGAffineTransform(scaleX: 1, y: -1)
-        return cell
-    }
-    
-    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
-            guard let contentLabel = interaction.view as? UILabel,
-                  let message = contentLabel.text else { return nil }
-            
-            return self.createMenu(message: message)
-        }
-    }
-    
-    func createMenu(message: String) -> UIMenu {
+extension ChatViewController: SharableDelegate {
+    final func createMenu(message: String) -> UIMenu {
         // Create a UIAction for sharing
         let share = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up")) { [weak self] action in
             let objectsToShare: [AnyObject] = [message as AnyObject]
@@ -638,111 +539,6 @@ extension ChatViewController: TableViewConfigurable, UITableViewDataSource, UICo
         
         // Create and return a UIMenu with all of the actions as children
         return UIMenu(title: "", children: [share, copy])
-    }
-}
-
-// MARK: - Image picker
-extension ChatViewController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        picker.dismiss(animated: true)
-        
-        guard let url = info[UIImagePickerController.InfoKey.imageURL] as? URL else {
-            print("No image found")
-            return
-        }
-        
-        alert.showDetail(
-            "Picture Message",
-            with: "Would you like to send the image?",
-            for: self,
-            alertStyle: .withCancelButton,
-            buttonAction: { [weak self] in
-                guard let userId = self?.userId else { return }
-                Future<URL?, PostingError> { promise in
-                    self?.uploadImage(url: url, userId: userId, promise: promise)
-                }
-                .eraseToAnyPublisher()
-            }
-        )
-    }
-    
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        dismiss(animated: true, completion: nil)
-    }
-    
-    private func sendImage() {
-        guard
-            let messageContent = toolBarView.textView.text,
-            !messageContent.isEmpty,
-            let userId = userId else {
-            return
-        }
-        
-        let ref = FirebaseService.shared.db
-            .collection("chatrooms")
-            .document(docId)
-        
-        let chatInitializer = ChatInitializer(
-            chatIsNew: chatIsNew,
-            ref: ref,
-            userInfo: userInfo,
-            messageContent: messageContent,
-            chatListModel: chatListModel,
-            docId: docId,
-            postingId: postingId
-        )
-        
-        chatInitializer.createChatInfo()
-            .sink { [weak self] (completion) in
-                switch completion {
-                    case .failure(.generalError(reason: let err)):
-                        self?.alert.showDetail("Error", with: err, for: self)
-                    case .failure(.chatDisabled):
-                        guard let displayName = self?.userInfo.displayName else { return }
-                        self?.alert.showDetail("Undelivered Message", with: "The message couldn't be delivered because \(displayName) has left the chat.", for: self)
-                    case .finished:
-                        break
-                    default:
-                        break
-                }
-            } receiveValue: { [weak self] (ref) in
-                // send text message
-                guard let recipient = self?.userInfo.uid else { return }
-                
-                ref.collection("messages").addDocument(data: [
-                    "sentAt": Date(),
-                    "content": messageContent,
-                    "sender": userId,
-                    "recipient": recipient,
-                ]) { (error) in
-                    if let _ = error {
-                        self?.alert.showDetail("Sorry", with: "Unable to send the message at the moment.", for: self)
-                    } else {
-                        self?.toolBarView.textView.text.removeAll()
-                    }
-                }
-            }
-            .store(in: &storage)
-    }
-}
-
-extension ChatViewController: UITableViewDelegate {
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        let offset = scrollView.contentOffset
-        let bounds = scrollView.bounds
-        let size = scrollView.contentSize
-        let inset = scrollView.contentInset
-        let y = offset.y + bounds.size.height - inset.bottom
-        let h = size.height
-        let reload_distance:CGFloat = 10.0
-        if y > (h + reload_distance) {
-            spinner.startAnimating()
-            delay(0.5) { [weak self] in
-                guard let lastSnapshot = self?.lastSnapshot,
-                      let docId = self?.docId else { return }
-                self?.refetchMessages(lastSnapshot, docId: docId)
-            }
-        }
     }
 }
 

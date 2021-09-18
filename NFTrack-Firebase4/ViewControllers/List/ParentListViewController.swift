@@ -41,7 +41,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     var firstListener: ListenerRegistration!
     var nextListener: ListenerRegistration!
     var lastSnapshot: QueryDocumentSnapshot!
-    let PAGINATION_LIMIT: Int = 15
+    var PAGINATION_LIMIT: Int = 15
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -183,6 +183,10 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     }
     
     @objc dynamic func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+        
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
         
     }
     

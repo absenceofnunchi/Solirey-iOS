@@ -226,12 +226,15 @@ struct SectionedChatList {
 /// ListDetailVC
 class UILabelPadding: UILabel {
     var top: CGFloat = 10
+    var left: CGFloat = 10
+    var right: CGFloat = 10
     var extraInternalHeight: CGFloat = 0 {
         didSet {
             self.invalidateIntrinsicContentSize()
         }
     }
-    lazy var padding = UIEdgeInsets(top: top, left: 10, bottom: 10, right: 10)
+    
+    lazy var padding = UIEdgeInsets(top: top, left: left, bottom: 10, right: right)
     override func drawText(in rect: CGRect) {
         super.drawText(in: rect.inset(by: padding))
     }

@@ -12,8 +12,8 @@ import Combine
 import FirebaseMessaging
 
 class MainDetailViewController: ParentListViewController<Post>, PostParseDelegate {
-    var storage = Set<AnyCancellable>()
-    var category: String! {
+    private var storage = Set<AnyCancellable>()
+    final var category: String! {
         didSet {
             guard let category = category,
                   let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) else { return }
@@ -55,24 +55,24 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 })
         }
     }
-    var subscriptionButtonItem: UIBarButtonItem!
-    var isSubscribed: Bool! = false {
+    private var subscriptionButtonItem: UIBarButtonItem!
+    private var isSubscribed: Bool! = false {
         didSet {
             configureNavigationItem()
         }
     }
     
-    override func setDataStore(postArr: [Post]) {
+    final override func setDataStore(postArr: [Post]) {
         dataStore = PostImageDataStore(posts: postArr)
     }
     
-    override func viewDidLoad() {
+    final override func viewDidLoad() {
         super.viewDidLoad()
         configureNavigationItem()
         fetchSubscriptionStatus()
     }
 
-    override func configureUI() {
+    final override func configureUI() {
         super.configureUI()
         tableView = configureTableView(delegate: self, dataSource: self, height: 330, cellType: CardCell.self, identifier: CardCell.identifier)
         tableView.prefetchDataSource = self
@@ -80,14 +80,14 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         tableView.fill()
     }
     
-    func configureNavigationItem() {
+    private func configureNavigationItem() {
         guard let bookmarkImage = UIImage(systemName: isSubscribed ? "bookmark.fill" : "bookmark") else { return }
         subscriptionButtonItem = UIBarButtonItem(image: bookmarkImage, style: .plain, target: self, action: #selector(buttonPressed(_:)))
         subscriptionButtonItem.tag = 0
         navigationItem.rightBarButtonItem = subscriptionButtonItem
     }
     
-    func fetchSubscriptionStatus() {
+    private func fetchSubscriptionStatus() {
         FirebaseService.shared.db
             .collection("deviceToken")
             .document(userId)
@@ -118,7 +118,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
             }
     }
     
-    func refetch(lastSnapshot: QueryDocumentSnapshot) {
+    private func refetch(lastSnapshot: QueryDocumentSnapshot) {
         guard let userId = userId else { return }
         
         nextListener = FirebaseService.shared.db.collection("post")
@@ -159,11 +159,11 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     }
     
     // refetch after the scrolled to the end
-    override func executeAfterDragging() {
+    final override func executeAfterDragging() {
         refetch(lastSnapshot: self.lastSnapshot)
     }
     
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: CardCell.identifier) as? CardCell else {
             fatalError("Sorry, could not load cell")
         }
@@ -174,7 +174,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         return cell
     }
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
         
         guard let saleFormat = SaleFormat(rawValue: post.saleFormat) else {
@@ -219,7 +219,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
 }
 
 extension MainDetailViewController {
-    @objc func buttonPressed(_ sender: UIButton) {
+    @objc final func buttonPressed(_ sender: UIButton) {
         switch sender.tag {
             case 0:
                 guard let title = self.title else { return }

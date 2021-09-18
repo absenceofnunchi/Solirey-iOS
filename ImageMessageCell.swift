@@ -1,15 +1,15 @@
 //
-//  MessageCell.swift
+//  ImageMessageCell.swift
 //  NFTrack-Firebase4
 //
-//  Created by J C on 2021-06-11.
+//  Created by J C on 2021-09-17.
 //
 
 import UIKit
 
-class MessageCell: ParentTableCell<Message> {
+class ImageMessageCell: ParentTableCell<Message> {
     class override var identifier: String {
-        return "MessageCell"
+        return "ImageMessageCell"
     }
     
     final var stackView: UIStackView!
@@ -18,19 +18,10 @@ class MessageCell: ParentTableCell<Message> {
     final var cellConstraints = [NSLayoutConstraint]()
     // The user ID of the current chat user (sender) to distinguish the sender messages from the recipient messages
     final var myUserId: String!
-
+    
     override func configure(_ post: Message?) {
         guard let message = post,
               let myUserId = myUserId else { return }
-
-        messageLabel.text = message.content
-        messageLabel.numberOfLines = 0
-        messageLabel.font = UIFont.systemFont(ofSize: 15)
-        messageLabel.layer.cornerRadius = 11
-        messageLabel.clipsToBounds = true
-        messageLabel.lineBreakMode = .byWordWrapping
-        messageLabel.adjustsFontForContentSizeCategory = true
-        messageLabel.sizeToFit()
         
         dateLabel.text = message.sentAt
         dateLabel.top = 0
@@ -40,8 +31,8 @@ class MessageCell: ParentTableCell<Message> {
         dateLabel.sizeToFit()
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(dateLabel)
-
-        stackView = UIStackView(arrangedSubviews: [messageLabel])
+        
+        stackView = UIStackView(arrangedSubviews: [thumbImageView])
         stackView.spacing = 3
         stackView.axis = .vertical
         stackView.distribution = .fill
@@ -49,7 +40,7 @@ class MessageCell: ParentTableCell<Message> {
         stackView.setContentCompressionResistancePriority(UILayoutPriority.required, for: .vertical)
         stackView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stackView)
-
+        
         cellConstraints.append(contentsOf: [
             stackView.topAnchor.constraint(equalTo: contentView.topAnchor),
             stackView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.7),
@@ -58,17 +49,28 @@ class MessageCell: ParentTableCell<Message> {
             dateLabel.topAnchor.constraint(equalTo: stackView.bottomAnchor),
             dateLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
         ])
-
+        
+        
         if let _ = message.imageURL {
+            thumbImageView.image = UIImage(named: "placeholder")
+            thumbImageView.layer.cornerRadius = 8
+            thumbImageView.clipsToBounds = true
+            thumbImageView.isUserInteractionEnabled = true
+            thumbImageView.translatesAutoresizingMaskIntoConstraints = false
+            
+            loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+            thumbImageView.addSubview(loadingIndicator)
+            loadingIndicator.startAnimating()
+            
+            cellConstraints.append(contentsOf: [
+                thumbImageView.heightAnchor.constraint(equalToConstant: 200),
+//                thumbImageView.widthAnchor.constraint(equalToConstant: 200),
+//                thumbImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+                loadingIndicator.centerYAnchor.constraint(equalTo: thumbImageView.centerYAnchor),
+                loadingIndicator.centerXAnchor.constraint(equalTo: thumbImageView.centerXAnchor)
+            ])
+            
             if message.id == myUserId {
-                
-            } else {
-                
-            }
-        } else {
-            if message.id == myUserId {
-                messageLabel.backgroundColor = UIColor(red: 102/255, green: 140/255, blue: 255/255, alpha: 1)
-                messageLabel.textColor = .white
                 stackView.alignment = .trailing
                 dateLabel.textAlignment = .right
                 dateLabel.right = 0
@@ -78,8 +80,6 @@ class MessageCell: ParentTableCell<Message> {
                     dateLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor)
                 ])
             } else {
-                messageLabel.backgroundColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1)
-                messageLabel.textColor = .black
                 stackView.alignment = .leading
                 dateLabel.textAlignment = .left
                 dateLabel.left = 0
@@ -90,16 +90,7 @@ class MessageCell: ParentTableCell<Message> {
                 ])
             }
         }
-
+        
         NSLayoutConstraint.activate(cellConstraints)
-//        stackView.layoutIfNeeded()
-//        stackView.setNeedsLayout()
-    }
-}
-
-extension MessageCell {
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        messageLabel.text = nil
     }
 }
