@@ -167,6 +167,8 @@ class ListViewController: ParentListViewController<Post> {
 //    }
     
     final override func executeAfterDragging() {
+        guard postArr.count > 0 else { return }
+        
         switch segmentRetainer {
             case .buying:
                     configureDataRefetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue], lastSnapshot: lastSnapshot)
@@ -276,7 +278,7 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                         return
                     }
                     
-                    self?.imageCache.removeAllObjects()
+                    self?.cache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
@@ -322,7 +324,7 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                         return
                     }
                     
-                    self?.imageCache.removeAllObjects()
+                    self?.cache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
@@ -372,7 +374,7 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                         return
                     }
                     
-                    self?.imageCache.removeAllObjects()
+                    self?.cache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
@@ -419,7 +421,7 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                         return
                     }
                     
-                    self?.imageCache.removeAllObjects()
+                    self?.cache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.

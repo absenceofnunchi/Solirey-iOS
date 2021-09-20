@@ -470,6 +470,9 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
     }
     
     @objc private func tapped(_ sender: UITapGestureRecognizer) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         guard let v = sender.view else { return }
         switch v.tag {
             case 11:

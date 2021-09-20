@@ -8,7 +8,7 @@
 import UIKit
 
 class ImageMessageCell: ParentTableCell<Message> {
-    class override var identifier: String {
+    final class override var identifier: String {
         return "ImageMessageCell"
     }
     
@@ -18,8 +18,9 @@ class ImageMessageCell: ParentTableCell<Message> {
     final var cellConstraints = [NSLayoutConstraint]()
     // The user ID of the current chat user (sender) to distinguish the sender messages from the recipient messages
     final var myUserId: String!
+    final var buttonAction: (()->Void)?
     
-    override func configure(_ post: Message?) {
+    final override func configure(_ post: Message?) {
         guard let message = post,
               let myUserId = myUserId else { return }
         
@@ -50,11 +51,13 @@ class ImageMessageCell: ParentTableCell<Message> {
             dateLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
         ])
         
-        
         if let _ = message.imageURL {
             thumbImageView.image = UIImage(named: "placeholder")
             thumbImageView.layer.cornerRadius = 8
             thumbImageView.clipsToBounds = true
+            let tap = UITapGestureRecognizer(target: self, action: #selector(tapped))
+            thumbImageView.isUserInteractionEnabled = true
+            thumbImageView.addGestureRecognizer(tap)
             thumbImageView.translatesAutoresizingMaskIntoConstraints = false
             
             loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
@@ -91,5 +94,11 @@ class ImageMessageCell: ParentTableCell<Message> {
         }
         
         NSLayoutConstraint.activate(cellConstraints)
+    }
+    
+    @objc final func tapped() {
+        if let buttonAction = buttonAction {
+            buttonAction()
+        }
     }
 }

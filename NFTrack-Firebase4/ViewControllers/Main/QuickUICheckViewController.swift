@@ -188,7 +188,7 @@ extension QuickUICheckViewController: UITextFieldDelegate {
 
 extension QuickUICheckViewController: PostParseDelegate {
     func fetchData() {
-        imageCache.removeAllObjects()
+        cache.removeAllObjects()
         
         guard let text = idTextField.text, !text.isEmpty else {
             alert.showDetail("Sorry", with: "The field cannot be empty.", for: self)

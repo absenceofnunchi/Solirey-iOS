@@ -19,7 +19,9 @@ class ChatListCell: ParentTableCell<ChatListModel> {
     override class var identifier: String {
         return "ChatListCell"
     }
-    private var titleLabel: UILabel!
+    
+    private var userDisplayNameLabel: UILabel!
+    private var itemNameLabel: UILabel!
     private var descLabel: UILabel!
     private var dateLabel: UILabel!
     private var timeLabel: UILabel!
@@ -62,13 +64,19 @@ class ChatListCell: ParentTableCell<ChatListModel> {
             ])
         }
         
-        titleLabel = UILabel()
-        titleLabel.text = displayName
-        titleLabel.textColor = .gray
-        titleLabel.font = .rounded(ofSize: titleLabel.font.pointSize, weight: .bold)
-        titleLabel.adjustsFontForContentSizeCategory = true
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(titleLabel)
+        userDisplayNameLabel = UILabel()
+        userDisplayNameLabel.text = displayName
+        userDisplayNameLabel.textColor = .gray
+        userDisplayNameLabel.font = .rounded(ofSize: userDisplayNameLabel.font.pointSize, weight: .bold)
+        userDisplayNameLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(userDisplayNameLabel)
+        
+        itemNameLabel = UILabel()
+        itemNameLabel.text = post.itemName
+        itemNameLabel.textColor = .lightGray
+        itemNameLabel.font = .rounded(ofSize: itemNameLabel.font.pointSize, weight: .semibold)
+        itemNameLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(itemNameLabel)
         
         descLabel = UILabel()
         descLabel.text = post.latestMessage
@@ -106,14 +114,19 @@ class ChatListCell: ParentTableCell<ChatListModel> {
             thumbImageView.widthAnchor.constraint(equalToConstant: IMAGE_HEIGHT),
             thumbImageView.heightAnchor.constraint(equalToConstant: IMAGE_HEIGHT),
             
-            titleLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
-            titleLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-            titleLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
-            titleLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.5),
+            userDisplayNameLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
+            userDisplayNameLabel.topAnchor.constraint(equalTo: thumbImageView.layoutMarginsGuide.topAnchor),
+            userDisplayNameLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
+            userDisplayNameLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.5),
+            
+            itemNameLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
+            itemNameLabel.topAnchor.constraint(equalTo: userDisplayNameLabel.layoutMarginsGuide.bottomAnchor),
+            itemNameLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
+            itemNameLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.5),
             
             descLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
             descLabel.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
-            descLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
+            descLabel.topAnchor.constraint(equalTo: itemNameLabel.layoutMarginsGuide.bottomAnchor),
             descLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.5),
             
             dateLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
@@ -129,7 +142,7 @@ class ChatListCell: ParentTableCell<ChatListModel> {
     }
     
     override func prepareForReuse() {
-        titleLabel.text = nil
+        userDisplayNameLabel.text = nil
         thumbImageView.image = nil
         descLabel.text = nil
         dateLabel.text = nil

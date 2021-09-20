@@ -8,45 +8,18 @@
 import UIKit
 import MapKit
 
-class FilteredLocationSearchViewController: UITableViewController {
-    var items = [String]()
+class FilteredLocationSearchViewController: ParentLocationSearchViewController<String> {
     var scopeRetainer: ShippingRestriction! = .cities
-    var regionRadius: CLLocationDistance!
-    var request: MKLocalSearch.Request!
-    weak var handleMapSearchDelegate: HandleMapSearch? = nil
-    var location: CLLocationCoordinate2D! {
-        didSet {
-            if request != nil {
-                request.region = MKCoordinateRegion.init(center: location, latitudinalMeters: regionRadius, longitudinalMeters: regionRadius)
-            }
-        }
-    }
-    var alert: Alerts!
     var searchController: UISearchController!
-    
-    init(regionRadius: CLLocationDistance) {
-        super.init(nibName: nil, bundle: nil)
-        self.regionRadius = regionRadius
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
-        tableView.keyboardDismissMode = .onDrag
-        
-        alert = Alerts()
     }
-}
-
-extension FilteredLocationSearchViewController: UISearchResultsUpdating, ParseAddressDelegate {
-    func updateSearchResults(for searchController: UISearchController) {
+    
+    override func updateSearchResults(for searchController: UISearchController) {
         self.searchController = searchController
-
+        
         scopedSearch(
             searchBar: searchController.searchBar,
             searchController: searchController,
@@ -54,7 +27,9 @@ extension FilteredLocationSearchViewController: UISearchResultsUpdating, ParseAd
             scope: scopeRetainer
         )
     }
-    
+}
+
+extension FilteredLocationSearchViewController {
     func scopedSearch(
         searchBar: UISearchBar,
         searchController: UISearchController,
@@ -84,7 +59,7 @@ extension FilteredLocationSearchViewController: UISearchResultsUpdating, ParseAd
             }
             
             guard let response = response else { return }
-            self?.items.removeAll()
+            self?.data.removeAll()
             var itemSet = Set<String>()
             response.mapItems.forEach { (item) in
                 guard let self = self else { return }
@@ -92,7 +67,7 @@ extension FilteredLocationSearchViewController: UISearchResultsUpdating, ParseAd
                 itemSet.insert(i)
             }
             //            let parsed = response.mapItems.map { self!.parseAddress(selectedItem: $0.placemark, scope: scope) }
-            self?.items.append(contentsOf: itemSet)
+            self?.data.append(contentsOf: itemSet)
             self?.tableView.reloadData()
         }
     }
@@ -120,20 +95,16 @@ extension FilteredLocationSearchViewController: UISearchBarDelegate {
 
 // MARK: - Table view data source
 extension FilteredLocationSearchViewController: HandleMapSearch {
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return items.count
-    }
-    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
         
-        let selectedItem = items[indexPath.row]
+        let selectedItem = data[indexPath.row]
         cell.textLabel?.text = selectedItem
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let selectedItem = items[indexPath.row]
+        let selectedItem = data[indexPath.row]
 //        addTag(selectedItem)
         
         dismiss(animated: true, completion: nil)

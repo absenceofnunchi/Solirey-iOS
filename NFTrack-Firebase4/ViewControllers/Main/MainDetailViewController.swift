@@ -44,7 +44,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                         
                         // All cache has to be removed because the listener could fetch the modified data at any point and disrupt the index path
                         // This means the index path saved in the cache would be inaccurate
-                        self?.imageCache.removeAllObjects()
+                        self?.cache.removeAllObjects()
                         
                         guard let lastSnapshot = querySnapshot.documents.last else {
                             // The collection is empty.
@@ -148,7 +148,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                         return
                     }
                     
-                    self?.imageCache.removeAllObjects()
+                    self?.cache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
@@ -275,4 +275,8 @@ extension MainDetailViewController {
                 break
         }
     }
+}
+
+extension MainDetailViewController {
+    
 }

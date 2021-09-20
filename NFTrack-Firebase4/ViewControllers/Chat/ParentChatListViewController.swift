@@ -146,10 +146,10 @@ extension ParentChatListViewController {
     }
     
     override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
-        guard let destinationViewController = animator.previewViewController else { return }
-        
-        animator.addAnimations {
-            self.show(destinationViewController, sender: self)
+        guard let destinationViewController = animator.previewViewController as? ChatViewController else { return }
+        destinationViewController.tableView.scrollToTop()
+        animator.addAnimations { [weak self] in
+            self?.show(destinationViewController, sender: self)
         }
     }
 }
@@ -173,10 +173,10 @@ extension ParentChatListViewController {
     }
     
     func navToPosting(with postingId: String) {
-        self.getPost(with: postingId) { (fetchedPost) in
+        self.getPost(with: postingId) { [weak self] (fetchedPost) in
             let listDetailVC = ListDetailViewController()
             listDetailVC.post = fetchedPost
-            self.navigationController?.pushViewController(listDetailVC, animated: true)
+            self?.navigationController?.pushViewController(listDetailVC, animated: true)
         }
     }
     
@@ -194,6 +194,7 @@ extension ParentChatListViewController {
         let chatVC = ChatViewController()
         chatVC.userInfo = userInfo
         chatVC.chatListModel = post
+        chatVC.tableView?.scrollToTop()
         
         return chatVC
     }
@@ -221,7 +222,10 @@ extension ParentChatListViewController {
                             self?.alert.showDetail("Error", with: "There was an error deleting the chat.", for: self)
                         } else {
                             DispatchQueue.main.async {
-                                self?.tableView.reloadData()
+                                self?.postArr.remove(at: indexPath.section)
+                                self?.tableView.deleteRows(at: [indexPath], with: .fade)
+//                                self?.tableView.deleteSections([indexPath.section], with: .fade)
+//                                self?.tableView.reloadData()
                             }
                         }
                     }

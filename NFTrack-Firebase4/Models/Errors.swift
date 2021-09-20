@@ -61,8 +61,8 @@ enum FileUploadError: Error {
     case userNotLoggedIn
     case fileManagerError(String)
 }
+
 enum APIError: Error, LocalizedError {
-    
     enum HTTPStatusCode: Int, Error, CustomStringConvertible {
         // 100 Informational
         case `continue` = 100

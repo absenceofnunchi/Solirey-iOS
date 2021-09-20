@@ -75,6 +75,9 @@
 		495FD329268D284E00F1D81D /* MainViewController + SearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD328268D284E00F1D81D /* MainViewController + SearchBar.swift */; };
 		495FD32E268D292E00F1D81D /* FilterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD32D268D292E00F1D81D /* FilterViewController.swift */; };
 		495FD333268D402900F1D81D /* FilterCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD332268D402900F1D81D /* FilterCell.swift */; };
+		4962FADF26F647C6004B01A8 /* CacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962FADE26F647C6004B01A8 /* CacheService.swift */; };
+		4962FAE726F6749A004B01A8 /* CacheServiceTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962FAE626F6749A004B01A8 /* CacheServiceTest.swift */; };
+		4962FB1126F6967A004B01A8 /* ChatInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962FB1026F69679004B01A8 /* ChatInfoViewController.swift */; };
 		4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45B2641B001005B3268 /* AppDelegate.swift */; };
 		4964E45E2641B001005B3268 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45D2641B001005B3268 /* SceneDelegate.swift */; };
 		4964E4602641B001005B3268 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E45F2641B001005B3268 /* SignInViewController.swift */; };
@@ -127,6 +130,8 @@
 		497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9AEB2655A60300F09CAA /* NFTrackABI.swift */; };
 		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
 		497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9B1E2658927200F09CAA /* MainViewController.swift */; };
+		497CF79F26F7C050003EF69E /* ChatMapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497CF79E26F7C050003EF69E /* ChatMapViewController.swift */; };
+		497CF7A726F82818003EF69E /* ParentLocationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497CF7A626F82818003EF69E /* ParentLocationSearchViewController.swift */; };
 		497F1F2D26DC920800E0F967 /* ShippingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F1F2C26DC920800E0F967 /* ShippingViewController.swift */; };
 		497F1F3226DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F1F3126DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift */; };
 		4983BB2026E5B3D200A45703 /* ShippingAddressChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983BB1F26E5B3D200A45703 /* ShippingAddressChecker.swift */; };
@@ -151,6 +156,7 @@
 		499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9966266C195F00FC6CDE /* AccountCell.swift */; };
 		499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F998D266C8D9700FC6CDE /* ProgressCell.swift */; };
 		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
+		49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */; };
 		49BFB4BE269E4666008D908F /* AuctionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */; };
 		49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */; };
 		49D59C762663326500107F79 /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D59C752663326500107F79 /* SocketDelegate.swift */; };
@@ -256,6 +262,9 @@
 		495FD328268D284E00F1D81D /* MainViewController + SearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + SearchBar.swift"; sourceTree = "<group>"; };
 		495FD32D268D292E00F1D81D /* FilterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterViewController.swift; sourceTree = "<group>"; };
 		495FD332268D402900F1D81D /* FilterCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterCell.swift; sourceTree = "<group>"; };
+		4962FADE26F647C6004B01A8 /* CacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheService.swift; sourceTree = "<group>"; };
+		4962FAE626F6749A004B01A8 /* CacheServiceTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheServiceTest.swift; sourceTree = "<group>"; };
+		4962FB1026F69679004B01A8 /* ChatInfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInfoViewController.swift; sourceTree = "<group>"; };
 		4964E4582641B001005B3268 /* NFTrack-Firebase4.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NFTrack-Firebase4.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4964E45B2641B001005B3268 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4964E45D2641B001005B3268 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -314,6 +323,8 @@
 		497A9AEB2655A60300F09CAA /* NFTrackABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABI.swift; sourceTree = "<group>"; };
 		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		497A9B1E2658927200F09CAA /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		497CF79E26F7C050003EF69E /* ChatMapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ChatMapViewController.swift; path = "NFTrack-Firebase4/ViewControllers/Account/ChatMapViewController.swift"; sourceTree = SOURCE_ROOT; };
+		497CF7A626F82818003EF69E /* ParentLocationSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentLocationSearchViewController.swift; sourceTree = "<group>"; };
 		497F1F2C26DC920800E0F967 /* ShippingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShippingViewController.swift; sourceTree = "<group>"; };
 		497F1F3126DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilteredLocationSearchViewController.swift; sourceTree = "<group>"; };
 		4983BB1F26E5B3D200A45703 /* ShippingAddressChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShippingAddressChecker.swift; sourceTree = "<group>"; };
@@ -338,6 +349,7 @@
 		499F9966266C195F00FC6CDE /* AccountCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCell.swift; sourceTree = "<group>"; };
 		499F998D266C8D9700FC6CDE /* ProgressCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCell.swift; sourceTree = "<group>"; };
 		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
+		49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + ContextMenu.swift"; sourceTree = "<group>"; };
 		49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionDetailViewController.swift; sourceTree = "<group>"; };
 		49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		49D59C752663326500107F79 /* SocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
@@ -409,8 +421,10 @@
 				492C81F126F3EB2E0083C3B5 /* ParentChatListViewController.swift */,
 				49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */,
 				492C81FF26F52DA50083C3B5 /* ChatViewController + SendMessage.swift */,
+				49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */,
 				49E7D64B267AA73F00E8815A /* ChatViewController1.swift */,
 				499702B4267459D8001DD80A /* ChatListViewController.swift */,
+				497CF79E26F7C050003EF69E /* ChatMapViewController.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -457,7 +471,7 @@
 		4964E44F2641B001005B3268 = {
 			isa = PBXGroup;
 			children = (
-				492C820426F574D20083C3B5 /* ImageMessageCell.swift */,
+				4962FB1026F69679004B01A8 /* ChatInfoViewController.swift */,
 				4964E45A2641B001005B3268 /* NFTrack-Firebase4 */,
 				4964E4712641B007005B3268 /* NFTrack-Firebase4Tests */,
 				4964E47C2641B007005B3268 /* NFTrack-Firebase4UITests */,
@@ -509,6 +523,7 @@
 				495FB37E26BB8A6F0047E91D /* AuctionButtonTest.swift */,
 				4988F0D026BF721400CD7678 /* ListVCTest.swift */,
 				49054D3226C961F600ECCB58 /* ListDetailTest.swift */,
+				4962FAE626F6749A004B01A8 /* CacheServiceTest.swift */,
 				4964E4742641B007005B3268 /* Info.plist */,
 			);
 			path = "NFTrack-Firebase4Tests";
@@ -594,6 +609,7 @@
 		4964E5142647779E005B3268 /* Cells and Supplementary Views */ = {
 			isa = PBXGroup;
 			children = (
+				492C820426F574D20083C3B5 /* ImageMessageCell.swift */,
 				4964E515264777BF005B3268 /* ImageCell.swift */,
 				499F9948266AB20700FC6CDE /* HistoryCell.swift */,
 				496F6FFC2651F15100E4056B /* ListCell.swift */,
@@ -636,6 +652,7 @@
 				496F6FF2264EA3D100E4056B /* FirebaseService.swift */,
 				4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */,
 				4958117426D6DAF1002C8F3B /* IPFSService.swift */,
+				4962FADE26F647C6004B01A8 /* CacheService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -766,6 +783,7 @@
 				493333312681116F00B8BFC2 /* ReviewPostViewController.swift */,
 				4958119326DB4EFB002C8F3B /* MapViewController.swift */,
 				4958118326D898C1002C8F3B /* AddressViewController.swift */,
+				497CF7A626F82818003EF69E /* ParentLocationSearchViewController.swift */,
 				4958118926D978EF002C8F3B /* LocationSearchViewController.swift */,
 				497F1F3126DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift */,
 			);
@@ -1073,6 +1091,7 @@
 				4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */,
 				49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */,
 				495FD2E026895B3300F1D81D /* ProfileReviewListViewController.swift in Sources */,
+				497CF79F26F7C050003EF69E /* ChatMapViewController.swift in Sources */,
 				496D56D0265AEDAB00C3E7FD /* ImageDataStore.swift in Sources */,
 				499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */,
 				496D56B12659654A00C3E7FD /* CategoryCell.swift in Sources */,
@@ -1084,6 +1103,7 @@
 				4964E4C12641E12A005B3268 /* BlurEffectContainerView.swift in Sources */,
 				49333361268281B800B8BFC2 /* ProfilePostingsViewController.swift in Sources */,
 				49409A75265946870060193C /* SearchResultsViewController.swift in Sources */,
+				4962FADF26F647C6004B01A8 /* CacheService.swift in Sources */,
 				4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */,
 				4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */,
 				495FB37526BB496D0047E91D /* AuctionButtonController.swift in Sources */,
@@ -1094,6 +1114,7 @@
 				495FB37A26BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift in Sources */,
 				495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */,
 				492A007D26A3AE44008B9B34 /* PaginatedViewController.swift in Sources */,
+				4962FB1126F6967A004B01A8 /* ChatInfoViewController.swift in Sources */,
 				49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */,
 				493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */,
 				49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */,
@@ -1124,6 +1145,7 @@
 				49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */,
 				49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */,
 				49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */,
+				497CF7A726F82818003EF69E /* ParentLocationSearchViewController.swift in Sources */,
 				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
 				496F6FFD2651F15200E4056B /* ListCell.swift in Sources */,
 				4958117526D6DAF1002C8F3B /* IPFSService.swift in Sources */,
@@ -1183,6 +1205,7 @@
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
 				49054D5426CC785C00ECCB58 /* ParentListEditViewController.swift in Sources */,
+				49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */,
 				492C820526F574D30083C3B5 /* ImageMessageCell.swift in Sources */,
 				499F9953266AED0E00FC6CDE /* ParentDetailViewController.swift in Sources */,
 				49DEFF652686552E004C2DD0 /* PreviewPDFViewController.swift in Sources */,
@@ -1222,6 +1245,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4962FAE726F6749A004B01A8 /* CacheServiceTest.swift in Sources */,
 				4988F0D126BF721400CD7678 /* ListVCTest.swift in Sources */,
 				495FB33B26B70D000047E91D /* AuctionDeploymentTests.swift in Sources */,
 				49054D3326C961F600ECCB58 /* ListDetailTest.swift in Sources */,

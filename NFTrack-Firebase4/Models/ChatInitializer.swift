@@ -100,6 +100,7 @@ class ChatInitializer {
     private var chatInfo: [String: Any]!
     private var docId: String!
     private var postingId: String
+    private var itemName: String
     
     init(
         chatIsNew: Bool = true,
@@ -108,7 +109,8 @@ class ChatInitializer {
         messageContent: String,
         chatListModel: ChatListModel?,
         docId: String,
-        postingId: String
+        postingId: String,
+        itemName: String
     ) {
         self.chatIsNew = chatIsNew
         self.ref = ref
@@ -117,6 +119,80 @@ class ChatInitializer {
         self.chatListModel = chatListModel
         self.docId = docId
         self.postingId = postingId
+        self.itemName = itemName
+    }
+    
+    final func createChatInfo(promise: @escaping (Result<DocumentReference, PostingError>) -> Void) {
+        guard let chatIsNew = self.chatIsNew,
+              let userId = self.userId,
+              let userInfo = self.userInfo,
+              let messageContent = self.messageContent else {
+            promise(.failure(.generalError(reason: "Unable to initialize the chat.")))
+            return
+        }
+        
+        // Create or update the chat info
+        if chatIsNew {
+            // If the chat is new, create a new chat info
+            // Only the buyer can initate the chat from ListDetailVC so no need to check whether the chat user is the buyer or the seller
+            guard let docId = self.docId,
+                  let sellerUserId = userInfo.uid,
+                  let sellerMemberSince = userInfo.memberSince,
+                  let buyerMemberSince = UserDefaults.standard.object(forKey: UserDefaultKeys.memberSince) as? Date else {
+                promise(.failure(.generalError(reason: "Unable to retrieve the seller's info. Please try again.")))
+                return
+            }
+            
+            let displayName = UserDefaults.standard.string(forKey: UserDefaultKeys.displayName)
+            let photoURL = UserDefaults.standard.string(forKey: UserDefaultKeys.photoURL)
+            
+            self.chatInfo = [
+                "members": [sellerUserId, userId],
+                "sellerUserId": sellerUserId,
+                "sellerDisplayName": userInfo.displayName,
+                "sellerPhotoURL": userInfo.photoURL ?? "NA",
+                "buyerUserId": userId,
+                "buyerDisplayName": displayName ?? "NA",
+                "buyerPhotoURL": photoURL ?? "NA",
+                "docId": docId,
+                "latestMessage": messageContent,
+                "sentAt": Date(),
+                "sellerMemberSince": sellerMemberSince,
+                "buyerMemberSince": buyerMemberSince,
+                "postingId": postingId,
+                "itemName": itemName
+            ]
+        } else {
+            // If the chat is not new, determine whether the sender is a seller or the buyer and how many members are in the chat currently
+            guard let chatListModel = self.chatListModel else {
+                promise(.failure(.generalError(reason: "Unable to retrieve the seller's info. Please try again.")))
+                return
+            }
+            
+            let chatInitializer = ChatInfoConfig(
+                chatListModel: chatListModel,
+                messageContent: messageContent,
+                userId: userId,
+                promise: promise
+            )
+            
+            self.chatInfo = chatInitializer.prepareChatInfo()
+        }
+        
+        guard let chatInfo = self.chatInfo,
+              let ref = self.ref else {
+            promise(.failure(.generalError(reason: "Unable to initialize the chat.")))
+            return
+        }
+        
+        self.ref.setData(chatInfo, merge: true) { (error) in
+            if let _ = error {
+                promise(.failure(.generalError(reason: "Unable to initialize the chat.")))
+                return
+            } else {
+                promise(.success(ref))
+            }
+        }
     }
     
     final func createChatInfo() -> AnyPublisher<DocumentReference, PostingError> {
@@ -134,10 +210,11 @@ class ChatInitializer {
                 // If the chat is new, create a new chat info
                 // Only the buyer can initate the chat from ListDetailVC so no need to check whether the chat user is the buyer or the seller
                 guard let docId = self?.docId,
-                      let sellerUserId = self?.userInfo.uid,
+                      let sellerUserId = userInfo.uid,
                       let sellerMemberSince = userInfo.memberSince,
                       let buyerMemberSince = UserDefaults.standard.object(forKey: UserDefaultKeys.memberSince) as? Date,
-                      let postingId = self?.postingId else {
+                      let postingId = self?.postingId,
+                      let itemName = self?.itemName else {
                     promise(.failure(.generalError(reason: "Unable to retrieve the seller's info. Please try again.")))
                     return
                 }
@@ -158,8 +235,10 @@ class ChatInitializer {
                     "sentAt": Date(),
                     "sellerMemberSince": sellerMemberSince,
                     "buyerMemberSince": buyerMemberSince,
-                    "postingId": postingId
+                    "postingId": postingId,
+                    "itemName": itemName
                 ]
+                
             } else {
                 // If the chat is not new, determine whether the sender is a seller or the buyer and how many members are in the chat currently
                 guard let chatListModel = self?.chatListModel else {

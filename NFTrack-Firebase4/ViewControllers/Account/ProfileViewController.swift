@@ -265,6 +265,7 @@ extension ProfileViewController {
         switch v.tag {
             case 5:
                 let mapVC = MapViewController()
+                mapVC.title = "Shipping Address"
                 mapVC.fetchPlacemarkDelegate = self
                 self.navigationController?.pushViewController(mapVC, animated: true)
             default:

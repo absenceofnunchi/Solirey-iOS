@@ -38,8 +38,6 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
         }
     }
     private var radius: CLLocationDistance! = 1000
-    private var placemark: MKPlacemark!
-    private var alert: Alerts!
     private var scopeRetainer: ShippingRestriction! = .cities
     final weak var shippingDelegate: ShippingDelegate?
     
@@ -76,7 +74,6 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
     final override func configureUI() {
         super.configureUI()
         title = "Shipping Info"
-        alert = Alerts()
         
         radiusTitleLabel = createTitleLabel(text: "Radius")
         scrollView.addSubview(radiusTitleLabel)
@@ -177,7 +174,7 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
         ])
     }
 
-    override func configureSearch() {
+    override func configureSearchBar() {
         filteredSearchVC = FilteredLocationSearchViewController(regionRadius: regionRadius)
         filteredSearchVC.handleMapSearchDelegate = self
         
@@ -226,7 +223,7 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
                    let radiusText = self.radiusTextField?.text,
                    let convertedRadius = Double(radiusText) {
                     radius = convertedRadius
-                    showCircle(coordinate: placemark.coordinate, radius: convertedRadius)
+                    showCircle(coordinate: placemark!.coordinate, radius: convertedRadius)
                 }
                 break
             default:
@@ -278,12 +275,6 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
     override func resetSearchResults() {
         dataSource.removeAll()
         addressTableView.reloadData()
-    }
-}
-
-extension ShippingViewController {
-    final override func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        filteredSearchVC.location = location
     }
 }
 
@@ -348,3 +339,31 @@ extension ShippingViewController {
         return circleRenderer
     }
 }
+
+//extension ShippingViewController {
+//    override func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+//        if filteredSearchVC != nil {
+//            filteredSearchVC.location = manager.location?.coordinate
+//        }
+//
+//        print("locationManagerDidChangeAuthorization old shipping")
+//        guard let coordinate = manager.location?.coordinate else { return }
+//        let placemark = MKPlacemark(coordinate: coordinate)
+//        let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+//        let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
+//        mapView.setRegion(region, animated: true)
+//    }
+//
+//    override func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+//        if filteredSearchVC != nil {
+//            filteredSearchVC.location = manager.location?.coordinate
+//        }
+//
+//        print("didChangeAuthorization shipping")
+//        guard let coordinate = manager.location?.coordinate else { return }
+//        let placemark = MKPlacemark(coordinate: coordinate)
+//        let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+//        let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
+//        mapView.setRegion(region, animated: true)
+//    }
+//}

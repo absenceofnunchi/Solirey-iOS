@@ -13,12 +13,12 @@ class ImageDataStore<T> {
     
     public func loadImage(at index: Int) -> DataLoadOperation? {
         if (0..<posts.count).contains(index) {
-            return dataLoadBuffer(posts[index])
+            return dataLoadBuffer(at: index)
         }
         return .none
     }
     
-    fileprivate func dataLoadBuffer(_ post: T) -> DataLoadOperation? {
+    fileprivate func dataLoadBuffer(at index: Int) -> DataLoadOperation? {
         return nil
     }
     
@@ -29,17 +29,10 @@ class ImageDataStore<T> {
 
 /// DataLeadOperation needs to take in a certain parameter, but the input data takes many different forms
 class PostImageDataStore: ImageDataStore<Post> {
-    final override func dataLoadBuffer(_ post: Post) -> DataLoadOperation? {
+    final override func dataLoadBuffer(at index: Int) -> DataLoadOperation? {
+        let post = posts[index]
         if let files = post.files, files.count > 0, let i = files.first {
-            return DataLoadOperation(i)
-//            var imageString: String!
-//            for file in files {
-//                if let url = URL(string: file), url.pathExtension != "pdf" {
-//                    imageString = file
-//                    break
-//                }
-//            }
-//            return imageString != nil ? DataLoadOperation(imageString) : .none
+            return DataLoadOperation(i, at: index)
         } else {
             return .none
         }
@@ -48,11 +41,12 @@ class PostImageDataStore: ImageDataStore<Post> {
 
 class ChatImageDataStore: ImageDataStore<ChatListModel> {
     final var userId: String!
-    final override func dataLoadBuffer(_ post: ChatListModel) -> DataLoadOperation? {
+    final override func dataLoadBuffer(at index: Int) -> DataLoadOperation? {
+        let post = posts[index]
         if post.sellerUserId != userId, post.sellerPhotoURL != "NA" {
-            return DataLoadOperation(post.sellerPhotoURL)
+            return DataLoadOperation(post.sellerPhotoURL, at: index)
         } else if post.buyerPhotoURL != "NA" {
-            return DataLoadOperation(post.buyerPhotoURL)
+            return DataLoadOperation(post.buyerPhotoURL, at: index)
         } else {
             return nil
         }
@@ -67,42 +61,44 @@ class ChatImageDataStore: ImageDataStore<ChatListModel> {
 // 1. Determine whether the chat is pinned or unpinned
 // 2. Determine whether the image exists in the datastore
 // 3. Determine whether the image belongs to the sender or the recipient
-class SectionDataStore {
-    final var userId: String!
-    private var posts: SectionedChatList!
-
-    final func loadImage(at indexPath: IndexPath) -> DataLoadOperation? {
-        if indexPath.section == 0, (0..<posts.pinned.count).contains(indexPath.row) {
-            // pinned
-            return dataLoadBuffer(posts.pinned[indexPath.row])
-        } else if indexPath.section == 1, (0..<posts.unpinned.count).contains(indexPath.row) {
-            // unpinned
-            return dataLoadBuffer(posts.unpinned[indexPath.row])
-        } else {
-            return .none
-        }
-    }
-
-    final func dataLoadBuffer(_ post: ChatListModel) -> DataLoadOperation? {
-        if post.sellerUserId != userId, post.sellerPhotoURL != "NA" {
-            return DataLoadOperation(post.sellerPhotoURL)
-        } else if post.buyerPhotoURL != "NA" {
-            return DataLoadOperation(post.buyerPhotoURL)
-        } else {
-            return nil
-        }
-    }
-
-    init(posts: SectionedChatList, userId: String) {
-        self.userId = userId
-        self.posts = posts
-    }
-}
+//class SectionDataStore {
+//    final var userId: String!
+//    private var posts: SectionedChatList!
+//
+//    final func loadImage(at indexPath: IndexPath) -> DataLoadOperation? {
+//        if indexPath.section == 0, (0..<posts.pinned.count).contains(indexPath.row) {
+//            // pinned
+//            return dataLoadBuffer(posts.pinned[indexPath.row])
+//        } else if indexPath.section == 1, (0..<posts.unpinned.count).contains(indexPath.row) {
+//            // unpinned
+//            return dataLoadBuffer(posts.unpinned[indexPath.row])
+//        } else {
+//            return .none
+//        }
+//    }
+//
+//    final func dataLoadBuffer(at index: Int) -> DataLoadOperation? {
+//        let post = posts[index]
+//        if post.sellerUserId != userId, post.sellerPhotoURL != "NA" {
+//            return DataLoadOperation(post.sellerPhotoURL)
+//        } else if post.buyerPhotoURL != "NA" {
+//            return DataLoadOperation(post.buyerPhotoURL)
+//        } else {
+//            return nil
+//        }
+//    }
+//
+//    init(posts: SectionedChatList, userId: String) {
+//        self.userId = userId
+//        self.posts = posts
+//    }
+//}
 
 class MessageImageDataStore: ImageDataStore<Message> {
-    override func dataLoadBuffer(_ post: Message) -> DataLoadOperation? {
+    override func dataLoadBuffer(at index: Int) -> DataLoadOperation? {
+        let post = posts[index]
         if let imageURL = post.imageURL {
-            return DataLoadOperation(imageURL)
+            return DataLoadOperation(imageURL, at: index)
         } else {
             return nil
         }
@@ -110,9 +106,10 @@ class MessageImageDataStore: ImageDataStore<Message> {
 }
 
 class ReviewImageDataStore: ImageDataStore<Review> {
-    final override func dataLoadBuffer(_ post: Review) -> DataLoadOperation? {
+    final override func dataLoadBuffer(at index: Int) -> DataLoadOperation? {
+        let post = posts[index]
         if post.reviewerPhotoURL != "NA" {
-            return DataLoadOperation(post.reviewerPhotoURL)
+            return DataLoadOperation(post.reviewerPhotoURL, at: index)
         } else {
             return .none
         }
@@ -124,13 +121,16 @@ class DataLoadOperation: Operation {
     final var loadingCompleteHandler: ((UIImage?) -> ())?
     private var _imageString: String!
     private var _imageURL: URL!
+    private var _index: Int!
     
-    init(_ imageString: String) {
+    init(_ imageString: String, at index: Int) {
         _imageString = imageString
+        _index = index
     }
     
-    init(_ imageURL: URL) {
+    init(_ imageURL: URL, at index: Int) {
         _imageURL = imageURL
+        _index = index
     }
     
     override func main() {
@@ -152,14 +152,17 @@ class DataLoadOperation: Operation {
                 if self.isCancelled { return }
                 self.image = configuredImage
                 self.loadingCompleteHandler?(self.image)
+                guard let index = self._index else { return }
+                CacheManager.shared[index] = configuredImage
             }
         } else {
             downloadImageFrom(url) { (image) in
                 DispatchQueue.main.async() { [weak self] in
-                    guard let self = self else { return }
-                    if self.isCancelled { return }
+                    guard let self = self, !self.isCancelled else { return }
                     self.image = image
                     self.loadingCompleteHandler?(self.image)
+                    guard let image = image, let index = self._index else { return }
+                    CacheService.shared[index as NSNumber] = image
                 }
             }
         }
@@ -178,5 +181,3 @@ func downloadImageFrom(_ url: URL, completeHandler: @escaping (UIImage?) -> ()) 
         completeHandler(_image)
     }.resume()
 }
-
-// https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2FF0DDF8AF-0378-45A0-BD07-75F6B92BC1B1.jpeg?alt=media&token=dd7a24df-a184-4ec9-a720-9f777280980a

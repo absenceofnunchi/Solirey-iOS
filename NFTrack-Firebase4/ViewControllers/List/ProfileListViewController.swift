@@ -41,6 +41,7 @@ class ProfileListViewController<T>: ParentListViewController<T> {
     func refetchData(lastSnapshot: QueryDocumentSnapshot) {}
     
     override func executeAfterDragging() {
+        guard postArr.count > 0 else { return }
         refetchData(lastSnapshot: lastSnapshot)
     }
 }

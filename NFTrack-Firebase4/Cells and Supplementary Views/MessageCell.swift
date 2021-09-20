@@ -8,7 +8,7 @@
 import UIKit
 
 class MessageCell: ParentTableCell<Message> {
-    class override var identifier: String {
+    final class override var identifier: String {
         return "MessageCell"
     }
     
@@ -19,7 +19,7 @@ class MessageCell: ParentTableCell<Message> {
     // The user ID of the current chat user (sender) to distinguish the sender messages from the recipient messages
     final var myUserId: String!
 
-    override func configure(_ post: Message?) {
+    final override func configure(_ post: Message?) {
         guard let message = post,
               let myUserId = myUserId else { return }
 
@@ -98,7 +98,7 @@ class MessageCell: ParentTableCell<Message> {
 }
 
 extension MessageCell {
-    override func prepareForReuse() {
+    final override func prepareForReuse() {
         super.prepareForReuse()
         messageLabel.text = nil
     }

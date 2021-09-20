@@ -6,13 +6,12 @@
 //
 
 import UIKit
-import MapKit
+import CoreLocation
 
-class AddressViewController: UIViewController {
+class AddressViewController: UIViewController, CLLocationManagerDelegate {
     var resultSearchController: UISearchController!
     var locationManager: CLLocationManager!
     let regionRadius: CLLocationDistance = 10000
-//    var selectedPin: MKPlacemark? = nil
     var fetchPlacemarkDelegate: HandleMapSearch? = nil
     var locationSearchVC: LocationSearchViewController!
     var location: CLLocationCoordinate2D! {
@@ -27,7 +26,7 @@ class AddressViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
-        configureSearch()
+        configureSearchBar()
     }
     
     func configureUI() {
@@ -36,29 +35,51 @@ class AddressViewController: UIViewController {
         locationManager = CLLocationManager()
         locationManager.delegate = self
     }
-    
-    func configureSearch() {
+
+    func configureSearchBar() {
         locationSearchVC = LocationSearchViewController(regionRadius: regionRadius)
         
         if let location = location {
             locationSearchVC.location = location
         }
-            
+        
         resultSearchController = UISearchController(searchResultsController: locationSearchVC)
         resultSearchController.searchResultsUpdater = locationSearchVC
+        resultSearchController?.hidesNavigationBarDuringPresentation = false
+        resultSearchController?.obscuresBackgroundDuringPresentation = true
         
         guard let searchBar = resultSearchController?.searchBar else { return }
         searchBar.sizeToFit()
         searchBar.placeholder = "Search for places"
-        navigationItem.titleView = searchBar
-//        navigationItem.searchController = resultSearchController
-        resultSearchController?.hidesNavigationBarDuringPresentation = false
-        resultSearchController?.obscuresBackgroundDuringPresentation = true
+//        navigationItem.titleView = searchBar
+        navigationItem.searchController = resultSearchController
+
         definesPresentationContext = true
     }
     
-    func centerMapOnLocation() {
-        
+    // subclassed to view controllers with a map view
+    func centerMapOnLocation() {}
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        if locationSearchVC != nil {
+            locationSearchVC.location = manager.location?.coordinate
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        // When the authorization is given, the location should be updated.
+        // The location should be set here so that the LocationVC shouldn't be prevented from being instantiated. But even before the authorization is given
+        if locationSearchVC != nil {
+            locationSearchVC.location = manager.location?.coordinate
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        print("Location updated")
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Failed to find user's location: \(error.localizedDescription)")
     }
 }
 
@@ -106,21 +127,5 @@ extension AddressViewController {
             default:
                 break
         }
-    }
-}
-
-extension AddressViewController: CLLocationManagerDelegate {
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        // When the authorization is given, the location should be updated.
-        // But even before the authorization is given, the LocationVC shouldn't be prevented from being instantiated.
-        locationSearchVC.location = location
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        print("Location updated")
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Failed to find user's location: \(error.localizedDescription)")
     }
 }

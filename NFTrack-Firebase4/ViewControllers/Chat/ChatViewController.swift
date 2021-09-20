@@ -41,6 +41,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
             }
         }
     }
+    final var itemName: String!
     final var postingId: String!
     final var toolBarView: ToolBarView!
     private var toolBarBottomConstraint: NSLayoutConstraint!
@@ -70,6 +71,9 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     final var storage: Set<AnyCancellable>!
     final var postCache: NSCache<NSString, Post>!
     private var lastContentOffset: CGFloat = 0
+    final var senderDisplayName: String! {
+        return UserDefaults.standard.string(forKey: UserDefaultKeys.displayName)
+    }
     
     final override func setDataStore(postArr: [Message]) {
         dataStore = MessageImageDataStore(posts: postArr)
@@ -81,6 +85,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         configureUI()
         configureNavigationBar()
         setConstraints()
+        seenRegister()
     }
     
     final override func viewWillAppear(_ animated: Bool) {
@@ -92,14 +97,6 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     final override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
-        
-        if firstListener != nil {
-            firstListener.remove()
-        }
-        
-        if nextListener != nil {
-            nextListener.remove()
-        }
    
         if isMovingFromParent {
             postCache.removeObject(forKey: "CachedPost")
@@ -140,14 +137,43 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         
         toolBarView = ToolBarView()
         toolBarView.buttonAction = { [weak self] tag in
+            let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+            feedbackGenerator.impactOccurred()
+            
             switch tag {
                 case 1:
-                    let imagePickerController = UIImagePickerController()
-                    imagePickerController.allowsEditing = false
-                    imagePickerController.sourceType = .photoLibrary
-                    imagePickerController.delegate = self
-                    imagePickerController.modalPresentationStyle = .fullScreen
-                    self?.present(imagePickerController, animated: true, completion: nil)
+                    let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+                    alert.addAction(UIAlertAction(title: "Camera", style: .default, handler: { action in
+                        let vc = UIImagePickerController()
+                        vc.sourceType = .camera
+                        vc.allowsEditing = true
+                        vc.delegate = self
+                        self?.present(vc, animated: true)
+                    }))
+                    
+                    alert.addAction(UIAlertAction(title: "Photo Library", style: .default, handler: { action in
+                        let imagePickerController = UIImagePickerController()
+                        imagePickerController.allowsEditing = false
+                        imagePickerController.sourceType = .photoLibrary
+                        imagePickerController.delegate = self
+                        imagePickerController.modalPresentationStyle = .fullScreen
+                        self?.present(imagePickerController, animated: true, completion: nil)
+                    }))
+                    
+                    alert.addAction(UIAlertAction(title: "Location", style: .default, handler: { action in
+//                        let shippingVC = ShippingViewController()
+//                        shippingVC.shippingDelegate = self
+//                        self?.navigationController?.pushViewController(shippingVC, animated: true)
+                        
+                        let mapVC = ChatMapViewController()
+                        mapVC.title = "Send Location"
+                        mapVC.fetchPlacemarkDelegate = self
+                        self?.navigationController?.pushViewController(mapVC, animated: true)
+                    }))
+                    
+                    alert.addAction(UIAlertAction(title: "Cancel", style: .destructive, handler: nil))
+                    
+                    self?.present(alert, animated: true)
                 case 2:
                     self?.sendMessage()
                 default:
@@ -187,11 +213,16 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
             imageCell.selectionStyle = .none
             let post = postArr[indexPath.row]
             imageCell.configure(post)
-            //        imageCell.updateAppearanceFor(.pending(post))
             
             let interaction = UIContextMenuInteraction(delegate: self)
-            imageCell.thumbImageView.isUserInteractionEnabled = true
             imageCell.thumbImageView.addInteraction(interaction)
+            imageCell.buttonAction = { [weak self] in
+                self?.createImageAction(
+                    imageCell: imageCell,
+                    post: post,
+                    indexPath: indexPath
+                )
+            }
             
             cell = imageCell
         } else {
@@ -215,14 +246,45 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         return cell
     }
     
+    // If the image is a map for location sharing, navigate to ChatMapVC to pinpoint the location
+    // If not, enlarge the image.
+    final func createImageAction(
+        imageCell: ImageMessageCell,
+        post: Message,
+        indexPath: IndexPath
+    ) {
+        if post.type == .location {
+            let mapVC = ChatMapViewController()
+            mapVC.sharedLocation = post.location
+            navigationController?.pushViewController(mapVC, animated: true)
+        } else {
+            if let image = imageCell.thumbImageView.image {
+                self.openImage(image)
+            } else {
+                if let cachedImage = self.cache[indexPath.row as NSNumber] as? UIImage {
+                    self.openImage(cachedImage)
+                } else {
+                    guard let imageURL = post.imageURL else { return }
+                    self.openImage(imageURL)
+                }
+            }
+        }
+    }
+    
     final override func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { suggestedActions in
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] suggestedActions in
+            let locationInTableView = interaction.location(in: self?.tableView)
+            guard let indexPath = self?.tableView.indexPathForRow(at: locationInTableView) else {
+                print("no index")
+                return nil
+            }
+                        
             if let contentLabel = interaction.view as? UILabel,
                let message = contentLabel.text {
-                return self.createMessageMenu(message: message)
+                return self?.createMessageMenu(message: message, at: indexPath.row)
             } else if let imageView = interaction.view as? UIImageView {
                 guard let image = imageView.image else { return nil }
-                return self.createImageMenu(image: image)
+                return self?.createImageMenu(image: image, at: indexPath.row)
             } else {
                 return nil
             }
@@ -252,6 +314,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     }
 
     final override func executeAfterDragging() {
+        guard postArr.count > 0 else { return }
         spinner.startAnimating()
         delay(0.5) { [weak self] in
             guard let lastSnapshot = self?.lastSnapshot,
@@ -449,9 +512,23 @@ extension ChatViewController {
             let data = docSnapshot.data()
             let senderId = data["sender"] as? String ?? ""
             let content = data["content"] as? String ?? ""
-            let displayName = data["displayName"] as? String ?? ""
             let sentAt = data["sentAt"] as? Date ?? Date()
             let imageURL = data["imageURL"] as? String
+            let senderDisplayName = data["senderDisplayName"] as? String ?? ""
+            let recipientDisplayName = data["recipientDisplayName"] as? String ?? ""
+            
+            var messageType: MessageType!
+            if let type = data["type"] as? String {
+                messageType = MessageType(rawValue: type)
+            }
+            
+            var location: ShippingAddress!
+            if let locationBuffer = data["location"] as? [String: Any],
+               let address = locationBuffer["address"] as? String,
+               let latitude = locationBuffer["latitude"] as? Double,
+               let longitude = locationBuffer["longitude"] as? Double {
+                location = ShippingAddress(address: address, longitude: longitude, latitude: latitude)
+            }
             
             let formatter = DateFormatter()
             formatter.dateFormat = "HH:mm"
@@ -460,11 +537,32 @@ extension ChatViewController {
             return Message(
                 id: senderId,
                 content: content,
-                displayName: displayName,
                 sentAt: formattedDate,
-                imageURL: imageURL
+                sentAtFull: sentAt,
+                imageURL: imageURL,
+                location: location,
+                type: messageType ?? .text,
+                senderDisplayName: senderDisplayName,
+                recipientDisplayName: recipientDisplayName
             )
         }
+    }
+}
+
+extension ChatViewController {
+    func seenRegister() {
+        guard chatIsNew == false else { return }
+        
+        let lastSeen = [
+            "lastSeen": [
+                userId: Date()
+            ]
+        ]
+        
+        FirebaseService.shared.db
+            .collection("chatrooms")
+            .document(docId)
+            .setData(lastSeen, merge: true)
     }
 }
 
@@ -473,7 +571,6 @@ extension ChatViewController {
     private func addKeyboardObserver() {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-        
     }
     
     // MARK: - removeKeyboardObserver
@@ -529,171 +626,15 @@ extension ChatViewController {
     }
 }
 
-extension ChatViewController: SharableDelegate {
-    final func createMessageMenu(message: String) -> UIMenu {
-        // Create a UIAction for sharing
-        let share = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up")) { [weak self] action in
-            let objectsToShare: [AnyObject] = [message as AnyObject]
-            self?.share(objectsToShare)
-        }
-        
-        // Create an action for renaming
-        let copy = UIAction(title: "Copy", image: UIImage(systemName: "doc.on.doc")) { action in
-            let pasteboard = UIPasteboard.general
-            pasteboard.string = message
-        }
-        
-        // Create and return a UIMenu with all of the actions as children
-        return UIMenu(title: "", children: [share, copy])
-    }
-    
-    final func createImageMenu(image: UIImage) -> UIMenu {
-        // Create a UIAction for sharing
-        let share = UIAction(title: "Share", image: UIImage(systemName: "square.and.arrow.up")) { [weak self] action in
-            let objectsToShare: [AnyObject] = [image as AnyObject]
-            self?.share(objectsToShare)
-        }
-        
-        // Create an action for renaming
-        let copy = UIAction(title: "Open", image: UIImage(systemName: "doc.on.doc")) { [weak self] action in
-            let vc = BigPreviewViewController()
-            vc.imageView.image = image
-            self?.present(vc, animated: true, completion: nil)
-        }
-        
-        // Create and return a UIMenu with all of the actions as children
-        return UIMenu(title: "", children: [share, copy])
+// Get the screenshot and the location from ChatMapVC
+// The sender sharing a location to the recipient
+extension ChatViewController: HandleMapSearch {
+    func getScreenshot(image: UIImage, address: ShippingAddress) {
+        sendLocation(
+            image: image,
+            imageName: UUID().uuidString,
+            userId: userId,
+            address: address
+        )
     }
 }
-
-//    private func sendMessage1() {
-//        guard
-//            let messageContent = toolBarView.textView.text,
-//            !messageContent.isEmpty,
-//            let userId = userId else {
-//            return
-//        }
-//
-//        let ref = FirebaseService.shared.db
-//            .collection("chatrooms")
-//            .document(docId)
-//
-//        if self.messages.count == 0 {
-//            /// docId is the hashed Id that corresponds to the unique ID of the chat room
-//            guard let sellerUserId = userInfo.uid else {
-//                self.alert.showDetail(
-//                    "Sorry",
-//                    with: "Unable to retrieve the seller's info. Please try again",
-//                    for: self,
-//                    buttonAction: {
-//                        self.navigationController?.popViewController(animated: true)
-//                    }, completion:  {
-//
-//                    }
-//                )
-//                return
-//            }
-//
-//            // only the buyer can initiate the conversation
-//            // so the initial setting of the following data is true
-//            ref.setData([
-//                "members": [sellerUserId, userId],
-//                "sellerUserId": sellerUserId,
-//                "sellerDisplayName": userInfo.displayName,
-//                "sellerPhotoURL": userInfo.photoURL ?? "NA",
-//                "buyerUserId": userId,
-//                "buyerDisplayName": displayName!,
-//                "buyerPhotoURL": photoURL ?? "NA",
-//                "docId": docId!,
-//                "latestMessage": messageContent,
-//                "sentAt": Date()
-//            ]) { [weak self] (error) in
-//                if let error = error {
-//                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
-//                } else {
-////                    if let tabBarVCs = self?.tabBarController?.viewControllers {
-////                        for case let vc as UINavigationController in tabBarVCs where vc.title == "Inbox" {
-////                            for case let chatListVC as ChatListViewController in vc.children {
-////                                chatListVC.fetchChatList()
-////                            }
-////                        }
-////                    }
-//                }
-//            }
-//        } else {
-//            ref.updateData([
-//                "latestMessage": messageContent,
-//                "sentAt": Date()
-//            ]) { [weak self] (error) in
-//                if let error = error {
-//                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
-//                }
-//            }
-//        }
-//
-//        ref.collection("messages").addDocument(data: [
-//            "sentAt": Date(),
-//            "content": messageContent,
-//            "sender": userId,
-//            "recipient": "recipientUid",
-//        ]) { [weak self] (error) in
-//            if let error = error {
-//                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
-//            } else {
-//                self?.toolBarView.textView.text.removeAll()
-//            }
-//        }
-//    }
-//
-//    private func sendImage(url: URL) {
-//        let ref = FirebaseService.shared.db
-//            .collection("chatrooms")
-//            .document(docId)
-//
-//        if self.messages.count == 0 {
-//            /// docId is the hashedId that corresponds to the unique ID of the chat room
-//            guard let sellerUserId = userInfo.uid else {
-//                self.alert.showDetail("Sorry", with: "Unable to retrieve the seller's info. Please try again", for: self) {
-//                    self.navigationController?.popViewController(animated: true)
-//                } completion: {}
-//                return
-//            }
-//
-//            defer {
-//                deleteFile(fileName: imageName)
-//            }
-//
-//            ref.setData([
-//                "members": [sellerUserId, userId],
-//                "sellerUserId": sellerUserId,
-//                "sellerDisplayName": userInfo.displayName,
-//                "sellerPhotoURL": userInfo.photoURL ?? "NA",
-//                "buyerUserId": userId!,
-//                "buyerDisplayName": displayName!,
-//                "buyerPhotoURL": photoURL ?? "NA",
-//                "docId": docId!,
-//                "latestMessage": "",
-//                "sentAt": Date(),
-//            ])
-//        } else {
-//            ref.updateData([
-//                "latestMessage": "",
-//                "sentAt": Date()
-//            ])
-//        }
-//
-//        let data: [String: Any] = [
-//            "sentAt": Date(),
-//            "imageURL": "\(url)",
-//            "sender": userId!
-//        ]
-//        ref.collection("messages").addDocument(data: data) { [weak self] (error) in
-//            if let error = error {
-//                self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self) {
-//                    if let imageName = self?.imageName {
-//                        self?.deleteFile(fileName: imageName)
-//                    }
-//                } completion: {}
-//            }
-//        }
-//    }

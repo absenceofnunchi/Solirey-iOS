@@ -66,6 +66,7 @@ extension FirebaseService: PostParseDelegate {
         }
     }
     
+    // Upload image with an URL
     final func uploadImage(fileURL: URL, userId: String, completion: @escaping (StorageUploadTask?, FileUploadError?) -> Void) {
         if FileManager.default.fileExists(atPath: fileURL.path) {
             let metadata = StorageMetadata()
@@ -79,6 +80,23 @@ extension FirebaseService: PostParseDelegate {
         } else {
             completion(nil, .fileNotAvailable)
         }
+    }
+    
+    // Upload image with data
+    final func uploadImage(image: UIImage, imageName: String, userId: String, completion: @escaping (StorageUploadTask?, FileUploadError?) -> Void) {
+        imageRef = storageRef.child(userId).child(imageName)
+        // Upload file and metadata to the object 'images/mountains.jpg'
+        
+        let metadata = StorageMetadata()
+        metadata.contentType = "image/*"
+        
+        guard let compressedImage = image.jpegData(compressionQuality: 0.8) else {
+            completion(nil, .fileManagerError("Unable to compress the screenshot of the map."))
+            return
+        }
+        
+        let uploadTask = imageRef.putData(compressedImage, metadata: metadata)
+        completion(uploadTask, nil)
     }
     
     final func downloadURL(urlString: String, promise: @escaping (Result<Data, PostingError>) -> Void) {

@@ -71,7 +71,7 @@ class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
                         return
                     }
                     
-                    self?.imageCache.removeAllObjects()
+                    self?.cache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
@@ -122,7 +122,7 @@ class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
                         return
                     }
                     
-                    self?.imageCache.removeAllObjects()
+                    self?.cache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
@@ -174,6 +174,7 @@ class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
     }
     
     override func executeAfterDragging() {
+        guard postArr.count > 0 else { return }
         configureDataRefetch(userIdField: userIdField)
     }
 }

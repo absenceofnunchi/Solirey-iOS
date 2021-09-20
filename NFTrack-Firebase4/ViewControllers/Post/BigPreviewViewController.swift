@@ -10,12 +10,14 @@ import UIKit
 class BigPreviewViewController: UIViewController, ModalConfigurable {
     var closeButton: UIButton!
     let imageView = UIImageView()
+    var imageURL: String!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         configureCloseButton(tintColor: .white)
         setButtonConstraints()
+
         imageView.contentMode = .scaleAspectFit
         imageView.enableZoom()
         view.addSubview(imageView)

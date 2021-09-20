@@ -175,6 +175,7 @@ protocol FileUploadable where Self:UIViewController {
     func uploadFileWithPromise(fileURL: URL, userId: String, promise: @escaping (Result<String?, PostingError>) -> Void)
     func uploadFileWithPromise(fileName: String, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void)
     func uploadImage(url: URL, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void)
+    func uploadImage(image: UIImage, imageName: String, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void)
     func deleteFile(fileName: String)
     func saveImage(imageName: String, image: UIImage) -> URL?
     func saveFile(fileName: String, data: Data)
@@ -406,117 +407,75 @@ extension FileUploadable {
     
     func uploadFileWithPromise(fileName: String, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void) {
         FirebaseService.shared.uploadFile(fileName: fileName, userId: userId) { [weak self](uploadTask, fileUploadError) in
-            if let error = fileUploadError {
-                switch error {
-                    case .fileManagerError(let msg):
-                        promise(.failure(.generalError(reason: msg)))
-                    case .fileNotAvailable:
-                        promise(.failure(.generalError(reason: "Image file not found.")))
-                    case .userNotLoggedIn:
-                        promise(.failure(.generalError(reason: "You need to be logged in!")))
-                }
-            }
-            
-            if let uploadTask = uploadTask {
-                // Listen for state changes, errors, and completion of the upload.
-                uploadTask.observe(.success) { snapshot in
-                    // Upload completed successfully
-                    self?.deleteFile(fileName: fileName)
-                    snapshot.reference.downloadURL { (url, error) in
-                        if let _ = error {
-                            promise(.failure(.generalError(reason: "Unable to upload.")))
-                        }
-                        
-                        promise(.success(url))
-                    }
-                }
-                
-                uploadTask.observe(.failure) { snapshot in
-                    if let error = snapshot.error as NSError? {
-                        switch (StorageErrorCode(rawValue: error.code)!) {
-                            case .objectNotFound:
-                                // File doesn't exist
-                                promise(.failure(.generalError(reason: "Object not found")))
-                                break
-                            case .unauthorized:
-                                // User doesn't have permission to access file
-                                promise(.failure(.generalError(reason: "Upload unauthorized")))
-                                break
-                            case .cancelled:
-                                // User canceled the upload
-                                promise(.failure(.generalError(reason: "Upload cancelled")))
-                                break
-                                
-                            /* ... */
-                            
-                            case .unknown:
-                                // Unknown error occurred, inspect the server response
-                                promise(.failure(.generalError(reason: "Unknown Error")))
-                                break
-                            default:
-                                // A separate error occurred. This is a good place to retry the upload.
-                                promise(.failure(.generalError(reason: "Unknown error. Please try again.")))
-                                break
-                        }
-                    }
-                }
-            }
+            self?.processPostUpload(uploadTask: uploadTask, fileUploadError: fileUploadError, promise: promise)
         }
     }
     
+    // Upload image with an URL
     func uploadImage(url: URL, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void) {
-        FirebaseService.shared.uploadImage(fileURL: url, userId: userId) { (uploadTask, fileUploadError) in
-            if let error = fileUploadError {
-                switch error {
-                    case .fileManagerError(let msg):
-                        promise(.failure(.generalError(reason: msg)))
-                    case .fileNotAvailable:
-                        promise(.failure(.generalError(reason: "Image file not found.")))
-                    case .userNotLoggedIn:
-                        promise(.failure(.generalError(reason: "You need to be logged in!")))
+        FirebaseService.shared.uploadImage(fileURL: url, userId: userId) { [weak self] (uploadTask, fileUploadError) in
+            self?.processPostUpload(uploadTask: uploadTask, fileUploadError: fileUploadError, promise: promise)
+        }
+    }
+
+    // Upload image with an URL
+    func uploadImage(image: UIImage, imageName: String, userId: String, promise: @escaping (Result<URL?, PostingError>) -> Void) {
+        FirebaseService.shared.uploadImage(image: image, imageName: imageName, userId: userId) { [weak self] (uploadTask, fileUploadError) in
+            self?.processPostUpload(uploadTask: uploadTask, fileUploadError: fileUploadError, promise: promise)
+        }
+    }
+    
+    private func processPostUpload(uploadTask: StorageUploadTask?, fileUploadError: FileUploadError?, promise: @escaping (Result<URL?, PostingError>) -> Void) {
+        if let error = fileUploadError {
+            switch error {
+                case .fileManagerError(let msg):
+                    promise(.failure(.generalError(reason: msg)))
+                case .fileNotAvailable:
+                    promise(.failure(.generalError(reason: "Image file not found.")))
+                case .userNotLoggedIn:
+                    promise(.failure(.generalError(reason: "You need to be logged in!")))
+            }
+        }
+        
+        if let uploadTask = uploadTask {
+            // Listen for state changes, errors, and completion of the upload.
+            uploadTask.observe(.success) { snapshot in
+                // Upload completed successfully
+                snapshot.reference.downloadURL { (url, error) in
+                    if let _ = error {
+                        promise(.failure(.generalError(reason: "Unable to upload.")))
+                    }
+                    
+                    promise(.success(url))
                 }
             }
             
-            if let uploadTask = uploadTask {
-                // Listen for state changes, errors, and completion of the upload.
-                uploadTask.observe(.success) { snapshot in
-                    // Upload completed successfully
-                    snapshot.reference.downloadURL { (url, error) in
-                        if let _ = error {
-                            promise(.failure(.generalError(reason: "Unable to upload.")))
-                        }
-                        
-                        promise(.success(url))
-                    }
-                }
-                
-                uploadTask.observe(.failure) { snapshot in
-                    if let error = snapshot.error as NSError? {
-                        switch (StorageErrorCode(rawValue: error.code)!) {
-                            case .objectNotFound:
-                                // File doesn't exist
-                                promise(.failure(.generalError(reason: "Object not found")))
-                                break
-                            case .unauthorized:
-                                // User doesn't have permission to access file
-                                promise(.failure(.generalError(reason: "Upload unauthorized")))
-                                break
-                            case .cancelled:
-                                // User canceled the upload
-                                promise(.failure(.generalError(reason: "Upload cancelled")))
-                                break
-                                
-                            /* ... */
+            uploadTask.observe(.failure) { snapshot in
+                if let error = snapshot.error as NSError? {
+                    switch (StorageErrorCode(rawValue: error.code)!) {
+                        case .objectNotFound:
+                            // File doesn't exist
+                            promise(.failure(.generalError(reason: "Object not found")))
+                            break
+                        case .unauthorized:
+                            // User doesn't have permission to access file
+                            promise(.failure(.generalError(reason: "Upload unauthorized")))
+                            break
+                        case .cancelled:
+                            // User canceled the upload
+                            promise(.failure(.generalError(reason: "Upload cancelled")))
+                            break
                             
-                            case .unknown:
-                                // Unknown error occurred, inspect the server response
-                                promise(.failure(.generalError(reason: "Unknown Error")))
-                                break
-                            default:
-                                // A separate error occurred. This is a good place to retry the upload.
-                                promise(.failure(.generalError(reason: "Unknown error. Please try again.")))
-                                break
-                        }
+                        /* ... */
+                        
+                        case .unknown:
+                            // Unknown error occurred, inspect the server response
+                            promise(.failure(.generalError(reason: "Unknown Error")))
+                            break
+                        default:
+                            // A separate error occurred. This is a good place to retry the upload.
+                            promise(.failure(.generalError(reason: "Unknown error. Please try again.")))
+                            break
                     }
                 }
             }
@@ -1255,9 +1214,10 @@ extension PostParseDelegate {
         var results = [ChatListModel]()
         for doc in documents {
             let data = doc.data()
-            var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId, postingId: String!
+            var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId, postingId, itemName: String!
             var date, sellerMemberSince, buyerMemberSince: Date!
             var members: [String]!
+            var lastSeen = [String: Date]()
             
             data.forEach { (item) in
                 switch item.key {
@@ -1288,6 +1248,18 @@ extension PostParseDelegate {
                     case "buyerMemberSince":
                         let timeStamp = item.value as? Timestamp
                         buyerMemberSince = timeStamp?.dateValue()
+                    case "lastSeen":
+                        if let tempDict = item.value as? [String: Timestamp] {
+                            for (key, value) in tempDict {
+                                lastSeen.updateValue(value.dateValue(), forKey: key)
+                            }
+//                            print("first.value", first.value)
+//                            let lastSeenDate = first.value.dateValue()
+//                            print("lastSeenDate in parse", lastSeenDate)
+//                            lastSeen = [first.key: lastSeenDate]
+                        }
+                    case "itemName":
+                        itemName = item.value as? String
                     default:
                         break
                 }
@@ -1306,7 +1278,9 @@ extension PostParseDelegate {
                 members: members,
                 postingId: postingId,
                 sellerMemberSince: sellerMemberSince,
-                buyerMemberSince: buyerMemberSince
+                buyerMemberSince: buyerMemberSince,
+                lastSeen: lastSeen,
+                itemName: itemName
             )
             
             results.append(chatListModel)
@@ -1363,13 +1337,16 @@ extension ButtonPanelConfigurable {
 }
 
 protocol SharableDelegate where Self: UIViewController  {
-    func share(_ objectsToShare: [AnyObject])
+    func share(_ objectsToShare: [AnyObject], completion: (() -> Void)?)
 }
 
 extension SharableDelegate {
-    func share(_ objectsToShare: [AnyObject]) {
+    func share(_ objectsToShare: [AnyObject], completion: (() -> Void)? = nil) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         let shareSheetVC = UIActivityViewController(activityItems: objectsToShare, applicationActivities: nil)
-        present(shareSheetVC, animated: true, completion: nil)
+        present(shareSheetVC, animated: true, completion: completion)
         
         if let pop = shareSheetVC.popoverPresentationController {
             pop.sourceView = self.view
@@ -1386,6 +1363,7 @@ protocol HandleMapSearch: AnyObject {
     func getPlacemark( addressString : String,
                        completionHandler: @escaping(MKPlacemark?, NSError?) -> Void )
     func resetSearchResults()
+    func getScreenshot(image: UIImage, address: ShippingAddress)
 }
 
 extension HandleMapSearch {
@@ -1413,6 +1391,10 @@ extension HandleMapSearch {
     }
     
     func resetSearchResults() {
+        
+    }
+    
+    func getScreenshot(image: UIImage, address: ShippingAddress) {
         
     }
 }
@@ -1600,11 +1582,9 @@ extension CoreSpotlightDelegate {
 }
 
 protocol SingleDocumentFetchDelegate where Self: UIViewController & PostParseDelegate {
-    associatedtype T where T: Post
-    
+    var postCache: NSCache<NSString, Post>! { get set }
     var storage: Set<AnyCancellable>! { get set }
     var alert: Alerts! { get set }
-    var postCache: NSCache<NSString, T>! { get set }
     func getPost(with postingId: String, completionHandler: @escaping (Post) -> Void)
 }
 
@@ -1627,9 +1607,8 @@ extension SingleDocumentFetchDelegate {
                     return
                 }
                 
-                guard let p = post as? Self.T else { return }
-                print("p", p)
-                self?.postCache.setObject(p, forKey: "CachedPost")
+                //guard let p = post as? Self.T else { return }
+                //CacheManager.shared["CachedPost"] = p
                 
                 promise(.success(post))
             }

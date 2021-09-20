@@ -42,7 +42,8 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     var nextListener: ListenerRegistration!
     var lastSnapshot: QueryDocumentSnapshot!
     var PAGINATION_LIMIT: Int = 15
-    var imageCache = NSCache<NSIndexPath, UIImage>()
+    // for a single section only
+    var cache = CacheService.shared
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -52,7 +53,6 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         detachListeners()
-        imageCache.removeAllObjects()
     }
     
     func setDataStore(postArr: [T]) {
@@ -60,7 +60,9 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     }
     
     func detachListeners() {
-        if isMovingToParent {
+        if isMovingFromParent {
+            cache.removeAllObjects()
+
             if firstListener != nil {
                 firstListener.remove()
             }
@@ -75,8 +77,8 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     func configureUI() {
         view.backgroundColor = .white
         alert = Alerts()
-        imageCache.countLimit = 75 // 75 images
-        imageCache.totalCostLimit = 50 * 1024 * 1024 // 50 MB
+        cache.countLimit = 75 // 75 images
+        cache.totalCostLimit = 50 * 1024 * 1024 // 50 MB
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -104,7 +106,8 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         }
         
         // Check the cache for an existing image
-        if let cachedImage = imageCache.object(forKey: indexPath as NSIndexPath) {
+//        if let cachedImage = cache.object(forKey: indexPath.row as NSNumber) {
+        if let cachedImage: UIImage = cache[indexPath.row as NSNumber] as? UIImage {
             print("cachedImage", cachedImage)
             cell.updateAppearanceFor(.fetched(cachedImage))
             loadingOperations.removeValue(forKey: indexPath)
@@ -115,7 +118,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
                 if let image = dataLoader.image {
                     cell.updateAppearanceFor(.fetched(image))
                     loadingOperations.removeValue(forKey: indexPath)
-                    imageCache.setObject(image, forKey: indexPath as NSIndexPath)
+                    cache[indexPath.row as NSNumber] = image
                 } else {
                     // No data loaded yet, so add the completion closure to update the cell once the data arrives
                     dataLoader.loadingCompleteHandler = updateCellClosure

@@ -9,42 +9,36 @@ import UIKit
 import FirebaseFirestore
 import Combine
 
-class ChatListViewController: ParentChatListViewController, UISearchControllerDelegate, UISearchBarDelegate {
-    var searchResultsController: ParentChatListViewController!
+class ChatListViewController: ParentChatListViewController {
     var searchController: UISearchController!
-    var searchCategory: ChatListCategory = .seller
+    var searchCategory: String = "sellerDisplayName"
     var searchTermRetainer: String!
     
     final override func viewDidLoad() {
         super.viewDidLoad()
         configureSearchController()
         configureSearchBar()
-    }
-    
-    final override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+        
         fetchChatList()
     }
-    
+
     override func executeAfterDragging() {
-        refetchChatList(
-            lastSnapshot: lastSnapshot,
-            category: searchCategory,
-            searchTerm: searchTermRetainer
-        )
+        guard postArr.count > 0 else { return }
+        refetchChatList(lastSnapshot: lastSnapshot)
     }
 }
 
 extension ChatListViewController {
     func configureSearchController() {
-//        searchResultsController = ParentChatListViewController()
-//        searchResultsController.delegate = self
-//        let nav = UINavigationController(rootViewController: searchResultsController)
         searchController = UISearchController(searchResultsController: nil)
         searchController.searchResultsUpdater = self
         searchController.delegate = self
-        //        searchController.hidesNavigationBarDuringPresentation = false
+        searchController.hidesNavigationBarDuringPresentation = false
         searchController.obscuresBackgroundDuringPresentation = false
+        
+        guard let searchBar = searchController?.searchBar else { return }
+        searchBar.sizeToFit()
+//        searchBar.placeholder = "Search for places"
         
         definesPresentationContext = true
         navigationItem.searchController = searchController
@@ -54,7 +48,8 @@ extension ChatListViewController {
     
     final func configureSearchBar() {
         // search bar attributes
-        let searchBar = searchController!.searchBar
+        guard let searchController = searchController else { return }
+        let searchBar = searchController.searchBar
         searchBar.delegate = self
         searchBar.autocapitalizationType = .none
         searchBar.tintColor = .black
@@ -71,8 +66,8 @@ extension ChatListViewController {
 }
 
 extension ChatListViewController {
-    func fetchChatList(category: ChatListCategory = .seller, searchTerm: String? = nil) {
-        firstListener = FirebaseService.shared.db
+    func fetchChatList() {
+        FirebaseService.shared.db
             .collection("chatrooms")
             .whereField("members", arrayContains: userId as String)
             .limit(to: PAGINATION_LIMIT)
@@ -91,7 +86,7 @@ extension ChatListViewController {
                     return
                 }
 
-                self?.imageCache.removeAllObjects()
+                self?.cache.removeAllObjects()
                 
                 guard let lastSnapshot = querySnapshot.documents.last else {
                     return
@@ -108,77 +103,16 @@ extension ChatListViewController {
                     self?.postArr.append(contentsOf: chatListModels)
                 }
             }
-        
-//        var ref = FirebaseService.shared.db
-//            .collection("chatrooms")
-//            .whereField("members", arrayContains: userId as String)
-//            .limit(to: PAGINATION_LIMIT)
-//            .order(by: "sentAt", descending: true)
-//
-//        if let searchTerm = searchTerm {
-//            print("searchTerm", searchTerm as Any)
-//            let displayNameField = category == .seller ? "sellerDisplayName" : "buyerDisplayName"
-//            print("displayNameField", displayNameField as Any)
-//            ref = ref.whereField(displayNameField, isEqualTo: searchTerm)
-//        }
-//
-//        firstListener = ref.addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
-//            if let _ = error {
-//                self?.alert.showDetail("Sorry", with: "Unable to fetch your chat.", for: self)
-//                return
-//            }
-//
-//            defer {
-//                self?.tableView.reloadData()
-//            }
-//
-//            print("querySnapshot", querySnapshot)
-//            guard let querySnapshot = querySnapshot else {
-//                print("empty1")
-//                return
-//            }
-        
-//            self?.imageCache.removeAllObjects()
-//
-//            print("querySnapshot.documents.last", querySnapshot.documents.last as Any)
-//            guard let lastSnapshot = querySnapshot.documents.last else {
-//                return
-//            }
-//
-//            self?.lastSnapshot = lastSnapshot
-//
-//            guard !querySnapshot.documents.isEmpty else {
-//                print("empty2")
-//                return
-//            }
-//
-//            print("querySnapshot.documents", querySnapshot.documents as Any)
-//            self?.postArr.removeAll()
-//            if let chatListModels = self?.parseChatListModels(querySnapshot.documents) {
-//                print("chatListModels", chatListModels)
-//                self?.postArr.append(contentsOf: chatListModels)
-//            }
-//        }
     }
-    
-    func refetchChatList(
-        lastSnapshot: QueryDocumentSnapshot,
-        category: ChatListCategory = .seller,
-        searchTerm: String? = nil
-    ) {
-        var ref = FirebaseService.shared.db
+        
+    func refetchChatList(lastSnapshot: QueryDocumentSnapshot) {
+        FirebaseService.shared.db
             .collection("chatrooms")
             .whereField("members", arrayContains: userId as String)
             .order(by: "sentAt", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)
-            
-        if let searchTerm = searchTerm {
-            let displayNameField = category == .seller ? "sellerDisplayName" : "buyerDisplayName"
-            ref = ref.whereField(displayNameField, isEqualTo: searchTerm)
-        }
-        
-        nextListener = ref.addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
+            .addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
                 if let _ = error {
                     self?.alert.showDetail("Sorry", with: "Unable to fetch your chat.", for: self)
                     return
@@ -192,7 +126,7 @@ extension ChatListViewController {
                     return
                 }
             
-                self?.imageCache.removeAllObjects()
+                self?.cache.removeAllObjects()
                 
                 guard let lastSnapshot = querySnapshot.documents.last else {
                     return
@@ -211,28 +145,111 @@ extension ChatListViewController {
     }
 }
 
-extension ChatListViewController: UISearchResultsUpdating {
+extension ChatListViewController: UISearchResultsUpdating, UISearchControllerDelegate, UISearchBarDelegate {
     func updateSearchResults(for searchController: UISearchController) {
-        if searchController.searchBar.text?.isEmpty == true {
-            fetchChatList()
+        guard searchController.searchBar.text?.isEmpty != true,
+              let searchTerm = searchController.searchBar.text else {
+            print("search bar empty")
+            return
         }
+        let strippedSearchTerm = searchTerm.trimmingCharacters(in: .whitespacesAndNewlines)
+        searchTermRetainer = strippedSearchTerm
+        fetchSearchedData(selectedCategory: searchTermRetainer, searchTerm: strippedSearchTerm)
     }
     
     final func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
-        guard let selectedCategory = ChatListCategory.getCategory(num: selectedScope) else { return }
-        self.searchCategory = selectedCategory
+        guard let selectedCategory: String = ChatListCategory.getCategory(num: selectedScope) else { return }
+        searchCategory = selectedCategory
+        fetchSearchedData(selectedCategory: selectedCategory, searchTerm: searchTermRetainer)
     }
     
     // MARK: - searchBarSearchButtonClicked
     final func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        guard let searchTerm = searchController.searchBar.text else { return }
-        self.searchTermRetainer = searchTerm
+        guard let searchTerm = searchBar.text else { return }
         // Strip out all the leading and trailing spaces.
-//        let whitespaceCharacterSet = CharacterSet.whitespaces
-//        let strippedString = text.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
-//        let searchItems = strippedString.components(separatedBy: " ") as [String]
-        
-        fetchChatList(category: searchCategory, searchTerm: searchTerm)
+        let strippedSearchTerm = searchTerm.trimmingCharacters(in: .whitespacesAndNewlines)
+        fetchSearchedData(selectedCategory: searchTermRetainer, searchTerm: strippedSearchTerm)
         searchBar.resignFirstResponder()
+    }
+    
+    func fetchSearchedData(selectedCategory: String, searchTerm: String) {
+        firstListener = FirebaseService.shared.db
+            .collection("chatrooms")
+            .whereField("members", arrayContains: userId as String)
+            .whereField(selectedCategory, isEqualTo: searchTerm)
+            .limit(to: PAGINATION_LIMIT)
+            .order(by: "sentAt", descending: true)
+            .addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
+                print("error", error)
+                if let _ = error {
+                    self?.alert.showDetail("Sorry", with: "Unable to fetch your chat.", for: self)
+                    return
+                }
+                
+                defer {
+                    self?.tableView.reloadData()
+                }
+                
+                guard let querySnapshot = querySnapshot else {
+                    return
+                }
+                
+                self?.cache.removeAllObjects()
+                
+                guard let lastSnapshot = querySnapshot.documents.last else {
+                    return
+                }
+                
+                self?.lastSnapshot = lastSnapshot
+                
+                guard !querySnapshot.documents.isEmpty else {
+                    return
+                }
+                
+                if let chatListModels = self?.parseChatListModels(querySnapshot.documents) {
+                    self?.postArr = chatListModels
+                }
+            }
+    }
+    
+    func refetchSearchedData(lastSnapshot: QueryDocumentSnapshot, selectedCategory: String, searchTerm: String) {
+        firstListener = FirebaseService.shared.db
+            .collection("chatrooms")
+            .whereField("members", arrayContains: userId as String)
+            .whereField(selectedCategory, isEqualTo: searchTerm)
+            .limit(to: PAGINATION_LIMIT)
+            .order(by: "sentAt", descending: true)
+            .start(afterDocument: lastSnapshot)
+            .addSnapshotListener { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
+                print("error", error)
+                if let _ = error {
+                    self?.alert.showDetail("Sorry", with: "Unable to fetch your chat.", for: self)
+                    return
+                }
+                
+                defer {
+                    self?.tableView.reloadData()
+                }
+                
+                guard let querySnapshot = querySnapshot else {
+                    return
+                }
+                
+                self?.cache.removeAllObjects()
+                
+                guard let lastSnapshot = querySnapshot.documents.last else {
+                    return
+                }
+                
+                self?.lastSnapshot = lastSnapshot
+                
+                guard !querySnapshot.documents.isEmpty else {
+                    return
+                }
+                
+                if let chatListModels = self?.parseChatListModels(querySnapshot.documents) {
+                    self?.postArr.append(contentsOf: chatListModels)
+                }
+            }
     }
 }

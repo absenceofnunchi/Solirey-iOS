@@ -185,7 +185,8 @@ class ChatListModel: PostCoreModel {
     var postingId: String!
     var sellerMemberSince: Date!
     var buyerMemberSince: Date!
-    var isPinned: Bool!
+    var lastSeen: [String: Date]!
+    var itemName: String!
     
     init(
         documentId: String,
@@ -201,7 +202,8 @@ class ChatListModel: PostCoreModel {
         postingId: String,
         sellerMemberSince: Date,
         buyerMemberSince: Date,
-        isPinned: Bool = false
+        lastSeen: [String: Date],
+        itemName: String
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         self.latestMessage = latestMessage
@@ -214,6 +216,8 @@ class ChatListModel: PostCoreModel {
         self.postingId = postingId
         self.sellerMemberSince = sellerMemberSince
         self.buyerMemberSince = buyerMemberSince
+        self.lastSeen = lastSeen
+        self.itemName = itemName
     }
 }
 
@@ -377,6 +381,18 @@ enum ChatListCategory: String, CaseIterable {
         }
     }
     
+    static func getCategory(num: Int) -> String? {
+        guard num >= 0, num < ChatListCategory.allCases.count else { return nil }
+        switch num {
+            case 0:
+                return "sellerDisplayName"
+            case 1:
+                return "buyerDisplayName"
+            default:
+                return .none
+        }
+    }
+    
     static func getAll() -> [String] {
         return ChatListCategory.allCases.map { $0.rawValue }
     }
@@ -514,9 +530,13 @@ struct UserDefaultKeys {
 struct Message {
     let id: String
     let content: String
-    let displayName: String
     let sentAt: String
+    let sentAtFull: Date
     let imageURL: String?
+    let location: ShippingAddress?
+    let type: MessageType
+    let senderDisplayName: String
+    let recipientDisplayName: String
 }
 
 // MARK: - Review
@@ -859,4 +879,11 @@ struct ShippingInfo {
     let radius: Double
     let longitude: Double?
     let latitude: Double?
+}
+
+
+enum MessageType: String {
+    case text = "Text"
+    case image = "Image"
+    case location = "Location"
 }

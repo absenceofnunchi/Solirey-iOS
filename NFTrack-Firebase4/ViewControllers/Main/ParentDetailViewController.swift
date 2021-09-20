@@ -347,6 +347,8 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
             }
         } receiveValue: { [weak self] (docId) in
             let chatVC = ChatViewController()
+            // the name of the item to be displayed on ChatListVC as well as be used as a search term.
+            chatVC.itemName = self?.post.title
             chatVC.userInfo = self?.userInfo
             // docId is the chat's unique ID
             chatVC.docId = docId

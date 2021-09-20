@@ -70,7 +70,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
                         return
                     }
                     
-                    self?.imageCache.removeAllObjects()
+                    self?.cache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
                         // The collection is empty.
@@ -144,6 +144,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
     }
     
     override func executeAfterDragging() {
+        guard postArr.count > 0 else { return }
         refetchData(lastSnapshot: lastSnapshot)
     }
 }
