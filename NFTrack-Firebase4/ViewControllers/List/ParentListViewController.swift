@@ -155,6 +155,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     
     // MARK:- TableView Prefetching DataSource
     func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
+        print("prefetchRowsAt")
         for indexPath in indexPaths {
             if let _ = loadingOperations[indexPath] { return }
             if let dataLoader = dataStore.loadImage(at: indexPath.row) {

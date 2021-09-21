@@ -46,8 +46,6 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
     
     final func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
         if let selectedCategory = ScopeButtonCategory.getCategory(num: selectedScope) {
-            //            self.category = selectedCategory.rawValue
-            //            fetchData(category: self.category)
             self.category = selectedCategory
             switch selectedCategory {
                 case .latest:
@@ -61,7 +59,6 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
                                 self?.searchResultsController.postArr.removeAll()
                                 self?.getFilteredPosts(searchItems: self?.searchItems ?? [])
                                 self?.searchResultsController.tableView.reloadData()
-//                                searchBar.searchTextField.becomeFirstResponder()
                             }
                         }
                     }
@@ -69,23 +66,22 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
             }
             
         }
-        //        updateSearchResults(for: searchController)
     }
     
     // MARK: - searchBarSearchButtonClicked
     final func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        guard let text = searchController.searchBar.text else { return }
-        
-        // Strip out all the leading and trailing spaces.
-        let whitespaceCharacterSet = CharacterSet.whitespaces
-        let strippedString = text.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
-        let searchItems = strippedString.components(separatedBy: " ") as [String]
+        guard let searchItems = searchController.searchBar.text else { return }
         
         fetchData(category: category, searchItems: searchItems)
         searchBar.resignFirstResponder()
     }
     
-    final func fetchData(category: ScopeButtonCategory, searchItems: [String]) {
+    final func fetchData(category: ScopeButtonCategory, searchItems: String) {
+        // Strip out all the leading and trailing spaces.
+        let whitespaceCharacterSet = CharacterSet.whitespaces
+        let strippedString = searchItems.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+        let searchItems = strippedString.components(separatedBy: " ") as [String]
+        
         searchResultsController.postArr.removeAll()
         self.searchItems = searchItems
         switch category {
@@ -100,7 +96,7 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
 extension MainViewController: RefetchDataDelegate, PostParseDelegate {
     func getLatestSearchPosts(searchItems: [String]) {
         var first = db?.collection("post")
-            .limit(to: 10)
+            .limit(to: PAGINATION_LIMIT)
             .order(by: "date", descending: true)
         
         if !searchItems.isEmpty, searchItems.count > 0 {
@@ -116,6 +112,7 @@ extension MainViewController: RefetchDataDelegate, PostParseDelegate {
             
             if let _ = error {
                 self?.alert.showDetail("Sorry", with: "There was an error fetching the search result.", for: self)
+                return
             }
             
             if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
@@ -131,7 +128,7 @@ extension MainViewController: RefetchDataDelegate, PostParseDelegate {
     func refetchLatestSearchPost() {
         var next = db?.collection("post")
             .order(by: "date", descending: true)
-            .limit(to: 10)
+            .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)
         
         if !searchItems.isEmpty, searchItems.count > 0 {
@@ -140,12 +137,13 @@ extension MainViewController: RefetchDataDelegate, PostParseDelegate {
         
         next?.getDocuments(completion: { [weak self] (querySnapshot, error) in
             guard let querySnapshot = querySnapshot else {
-                self?.alert.showDetail("Sorry", with: error?.localizedDescription, for: self)
+                self?.alert.showDetail("Sorry", with: "Unable to fetch data.", for: self)
                 return
             }
             
             if let error = error {
                 self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                return
             }
             
             if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
@@ -171,7 +169,7 @@ extension MainViewController: RefetchDataDelegate, PostParseDelegate {
             .whereField("price", isLessThan: String(decoded.priceLimit))
             .order(by: "price", descending: decoded.priceIsDescending)
             .order(by: "date", descending: decoded.dateIsDescending)
-            .limit(to: 8)
+            .limit(to: PAGINATION_LIMIT)
 
         if !searchItems.isEmpty, searchItems.count > 0 {
             first = first?.whereField("tags", arrayContainsAny: searchItems)
@@ -183,13 +181,16 @@ extension MainViewController: RefetchDataDelegate, PostParseDelegate {
         }
 
         first?.getDocuments(completion: { [weak self] (querySnapshot, error) in
+            print("error", error as Any)
+            
             guard let querySnapshot = querySnapshot else {
-                self?.alert.showDetail("Sorry", with: error?.localizedDescription, for: self)
+                self?.alert.showDetail("Sorry", with: "Unable to fetch data.", for: self)
                 return
             }
             
             if let error = error {
                 self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                return
             }
 
             if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {
@@ -215,7 +216,7 @@ extension MainViewController: RefetchDataDelegate, PostParseDelegate {
             .whereField("price", isLessThan: decoded.priceLimit)
             .order(by: "price", descending: decoded.priceIsDescending)
             .order(by: "date", descending: decoded.dateIsDescending)
-            .limit(to: 8)
+            .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)
 
         if !searchItems.isEmpty, searchItems.count > 0 {
@@ -235,6 +236,7 @@ extension MainViewController: RefetchDataDelegate, PostParseDelegate {
             
             if let error = error {
                 self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                return
             }
             
             if let postArr = self?.parseDocuments(querySnapshot: querySnapshot) {

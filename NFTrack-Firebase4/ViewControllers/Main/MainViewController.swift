@@ -32,6 +32,7 @@ class MainViewController: UIViewController {
     final let db = FirebaseService.shared.db
     final var searchItems: [String]!
     final var lastSnapshot: QueryDocumentSnapshot!
+    final let PAGINATION_LIMIT: Int = 20
     
     override func viewDidLoad() {
         super.viewDidLoad()

@@ -549,6 +549,21 @@ extension ChatViewController {
     }
 }
 
+//class ChatClass {
+//    var from = ""
+//    var to = ""
+//    var msg = ""
+//    var timestamp = 0
+//    
+//    convenience init(withDoc: DocumentSnapshot) {
+//        self.init()
+//        self.from = withDoc.get("from") as! String
+//        self.to = withDoc.get("to") as! String
+//        self.msg = withDoc.get("msg") as! String
+//        self.timestamp = withDoc.get("timestamp") as! Int
+//    }
+//}
+
 extension ChatViewController {
     func seenRegister() {
         guard chatIsNew == false else { return }

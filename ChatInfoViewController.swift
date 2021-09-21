@@ -120,6 +120,9 @@ extension ChatInfoViewController {
 
         if seenTime != nil {
             if let sentTime = sentTime, let seenTime = seenTime {
+                print("seenTime", seenTime)
+                print("sentTime", sentTime)
+                print("seenTime > sentTime", seenTime > sentTime)
                 if seenTime > sentTime {
                     seenLabel = createLabel(text: "Seen")
                 } else {
@@ -136,10 +139,12 @@ extension ChatInfoViewController {
         scrollView.addSubview(sentTimeTitleLabel)
         
         let formatter = DateFormatter()
-        formatter.dateStyle = .full
+        formatter.dateFormat = "MMM d, h:mm a"
         let formattedSentTime = formatter.string(from: sentTime)
         
         sentTimeLabel = createLabel(text: formattedSentTime)
+        sentTimeLabel.numberOfLines = 0
+        sentTimeLabel.sizeToFit()
         scrollView.addSubview(sentTimeLabel)
         
         constraints.append(contentsOf: [

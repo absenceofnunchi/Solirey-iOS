@@ -219,8 +219,19 @@ class ChatInitializer {
                     return
                 }
                 
-                let displayName = UserDefaults.standard.string(forKey: UserDefaultKeys.displayName)
                 let photoURL = UserDefaults.standard.string(forKey: UserDefaultKeys.photoURL)
+                
+                // Create search terms
+                let whitespaceCharacterSet = CharacterSet.whitespaces
+                var displayName: String!
+                var searchableBuyerDisplayName: String!
+                if let dn = UserDefaults.standard.string(forKey: UserDefaultKeys.displayName) {
+                    displayName = dn
+                    searchableBuyerDisplayName = dn.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+                }
+                
+                let searchableSellerDisplayName = userInfo.displayName.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+                let searchableItemName = itemName.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
                 
                 self?.chatInfo = [
                     "members": [sellerUserId, userId],
@@ -236,7 +247,10 @@ class ChatInitializer {
                     "sellerMemberSince": sellerMemberSince,
                     "buyerMemberSince": buyerMemberSince,
                     "postingId": postingId,
-                    "itemName": itemName
+                    "itemName": itemName,
+                    "searchableItemName": searchableItemName,
+                    "searchableBuyerDisplayName": searchableBuyerDisplayName ?? "",
+                    "searchableSellerDisplayName": searchableSellerDisplayName
                 ]
                 
             } else {

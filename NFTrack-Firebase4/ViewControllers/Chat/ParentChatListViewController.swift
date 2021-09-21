@@ -146,8 +146,7 @@ extension ParentChatListViewController {
     }
     
     override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
-        guard let destinationViewController = animator.previewViewController as? ChatViewController else { return }
-        destinationViewController.tableView.scrollToTop()
+        guard let destinationViewController = animator.previewViewController else { return }
         animator.addAnimations { [weak self] in
             self?.show(destinationViewController, sender: self)
         }
@@ -194,7 +193,6 @@ extension ParentChatListViewController {
         let chatVC = ChatViewController()
         chatVC.userInfo = userInfo
         chatVC.chatListModel = post
-        chatVC.tableView?.scrollToTop()
         
         return chatVC
     }

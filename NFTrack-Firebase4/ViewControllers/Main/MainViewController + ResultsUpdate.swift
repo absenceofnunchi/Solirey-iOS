@@ -9,30 +9,17 @@ import UIKit
 
 extension MainViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
-//        guard let text = searchController.searchBar.text else { return }
-//        
-//        print("text", text)
-//        
-//        var filtered = data
-//        
-//        // Strip out all the leading and trailing spaces.
-//        let whitespaceCharacterSet = CharacterSet.whitespaces
-//        let strippedString = text.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
-//        let searchItems = strippedString.components(separatedBy: " ") as [String]
-//        
-//        // Filter results down by matching words. Can include multiple properties if the data type has them.
-//        var curTerm = searchItems[0]
-//        var idx = 0
-////        while curTerm != "" {
-////            filtered = filtered.filter { $0.name.lowercased().contains(curTerm) }
-////            idx += 1
-////            curTerm = (idx < searchItems.count) ? searchItems[idx] : ""
-////        }
-////
-////        self.searchResultsController.data = filtered
-//        
-//        DispatchQueue.main.async {
-//            self.searchResultsController.tableView.reloadData()
-//        }
+        guard let searchItems = searchController.searchBar.text else { return }
+        let trimmed = searchItems.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        
+        // If the current view controller is not the intial search result view controller (SearchResultsVC),
+        // pop back to the root VC as soon as the user searches another item into the search bar
+        if let nav = searchController.searchResultsController as? UINavigationController,
+           !(nav.topViewController is SearchResultsController) {
+            nav.popToRootViewController(animated: true)
+        }
+        
+        fetchData(category: category, searchItems: searchItems)
     }
 }

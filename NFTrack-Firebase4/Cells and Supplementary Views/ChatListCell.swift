@@ -24,7 +24,6 @@ class ChatListCell: ParentTableCell<ChatListModel> {
     private var itemNameLabel: UILabel!
     private var descLabel: UILabel!
     private var dateLabel: UILabel!
-    private var timeLabel: UILabel!
     var userId: String!
     private var displayName: String!
     private var photoURL: String!
@@ -73,8 +72,8 @@ class ChatListCell: ParentTableCell<ChatListModel> {
         
         itemNameLabel = UILabel()
         itemNameLabel.text = post.itemName
-        itemNameLabel.textColor = .lightGray
-        itemNameLabel.font = .rounded(ofSize: itemNameLabel.font.pointSize, weight: .semibold)
+        itemNameLabel.textColor = UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1)
+        itemNameLabel.font = .rounded(ofSize: 12, weight: .semibold)
         itemNameLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(itemNameLabel)
         
@@ -96,17 +95,6 @@ class ChatListCell: ParentTableCell<ChatListModel> {
         dateLabel.textAlignment = .right
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(dateLabel)
-        
-//        formatter.dateFormat = "HH:mm"
-//        let formattedTime = formatter.string(from: post.date)
-        
-        timeLabel = UILabel()
-        timeLabel.text = ""
-        timeLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
-        timeLabel.textColor = .lightGray
-        timeLabel.textAlignment = .right
-        timeLabel.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(timeLabel)
 
         NSLayoutConstraint.activate([
             thumbImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
@@ -114,36 +102,29 @@ class ChatListCell: ParentTableCell<ChatListModel> {
             thumbImageView.widthAnchor.constraint(equalToConstant: IMAGE_HEIGHT),
             thumbImageView.heightAnchor.constraint(equalToConstant: IMAGE_HEIGHT),
             
+            userDisplayNameLabel.topAnchor.constraint(equalTo: thumbImageView.topAnchor),
             userDisplayNameLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
-            userDisplayNameLabel.topAnchor.constraint(equalTo: thumbImageView.layoutMarginsGuide.topAnchor),
-            userDisplayNameLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
             userDisplayNameLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.5),
             
+            itemNameLabel.topAnchor.constraint(equalTo: userDisplayNameLabel.bottomAnchor, constant: 5),
             itemNameLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
-            itemNameLabel.topAnchor.constraint(equalTo: userDisplayNameLabel.layoutMarginsGuide.bottomAnchor),
-            itemNameLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
             itemNameLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.5),
             
-            descLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
-            descLabel.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
             descLabel.topAnchor.constraint(equalTo: itemNameLabel.layoutMarginsGuide.bottomAnchor),
+            descLabel.leadingAnchor.constraint(equalTo: thumbImageView.trailingAnchor, constant: 10),
             descLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.5),
+            descLabel.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
             
+            dateLabel.topAnchor.constraint(equalTo: thumbImageView.topAnchor),
             dateLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-            dateLabel.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-            dateLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
             dateLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.3),
-            
-            timeLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-            timeLabel.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
-            timeLabel.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.5),
-            timeLabel.widthAnchor.constraint(equalTo: contentView.layoutMarginsGuide.widthAnchor, multiplier: 0.3),
         ])
     }
     
     override func prepareForReuse() {
         userDisplayNameLabel.text = nil
         thumbImageView.image = nil
+        itemNameLabel.text = nil
         descLabel.text = nil
         dateLabel.text = nil
     }

@@ -368,26 +368,31 @@ enum ScopeButtonCategory: String, CaseIterable {
 enum ChatListCategory: String, CaseIterable {
     case seller = "Seller"
     case buyer = "Buyer"
+    case item = "Item"
     
-    static func getCategory(num: Int) -> ChatListCategory? {
-        guard num >= 0, num < ChatListCategory.allCases.count else { return nil }
-        switch num {
-            case 0:
-                return .seller
-            case 1:
-                return .buyer
-            default:
-                return .none
-        }
-    }
+//    static func getCategory(num: Int) -> ChatListCategory? {
+//        guard num >= 0, num < ChatListCategory.allCases.count else { return nil }
+//        switch num {
+//            case 0:
+//                return .seller
+//            case 1:
+//                return .buyer
+//            case 2:
+//                return .item
+//            default:
+//                return .none
+//        }
+//    }
     
     static func getCategory(num: Int) -> String? {
         guard num >= 0, num < ChatListCategory.allCases.count else { return nil }
         switch num {
             case 0:
-                return "sellerDisplayName"
+                return "searchableSellerDisplayName"
             case 1:
-                return "buyerDisplayName"
+                return "searchableBuyerDisplayName"
+            case 2:
+                return "searchableItemName"
             default:
                 return .none
         }

@@ -6,9 +6,13 @@
 //
 
 import UIKit
+import Combine
+import FirebaseFirestore
 
 class SearchResultsController: ParentListViewController<Post> {
     let CELL_HEIGHT: CGFloat = 330
+    var isSaved: Bool!
+    var storage = Set<AnyCancellable>()
     weak final var delegate: RefetchDataDelegate?
     override var postArr: [Post] {
         didSet {
@@ -59,5 +63,90 @@ class SearchResultsController: ParentListViewController<Post> {
         if postArr.count > 0 {
             delegate?.didFetchData()
         }
+    }
+}
+
+extension SearchResultsController: FetchUserConfigurable {
+    override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+        guard let destinationViewController = animator.previewViewController else { return }
+        animator.addAnimations { [weak self] in
+            self?.show(destinationViewController, sender: self)
+        }
+    }
+    
+    final override func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        return nil
+    }
+    
+    final override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let post = postArr[indexPath.row]
+        
+        if let savedBy = post.savedBy, savedBy.contains(userId) {
+            isSaved = true
+        } else {
+            isSaved = false
+        }
+        let starImage = isSaved ? "star.fill" : "star"
+        let posting = UIAction(title: "Save", image: UIImage(systemName: starImage)) { [weak self] action in
+            self?.savePost(post)
+        }
+        
+        let profile = UIAction(title: "Profile", image: UIImage(systemName: "person.crop.circle")) { [weak self] action in
+            guard let post = self?.postArr[indexPath.row] else { return }
+            self?.navToProfile(post)
+        }
+        
+        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC(post: post) }) { _ in
+            UIMenu(title: "", children: [posting, profile])
+        }
+    }
+    
+    private func savePost(_ post: Post) {
+        // saving the favourite post
+        isSaved = !isSaved
+        FirebaseService.shared.db
+            .collection("post")
+            .document(post.documentId)
+            .updateData([
+                "savedBy": isSaved ? FieldValue.arrayUnion(["\(userId!)"]) : FieldValue.arrayRemove(["\(userId!)"])
+            ]) {(error) in
+                if let error = error {
+                    self.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                }
+            }
+    }
+    
+    private func navToProfile(_ post: Post) {
+        showSpinner { [weak self] in
+            Future<UserInfo, PostingError> { promise in
+                self?.fetchUserData(userId: post.sellerUserId, promise: promise)
+            }
+            .sink { (completion) in
+                switch completion {
+                    case .failure(.generalError(reason: let err)):
+                        self?.alert.showDetail("Error", with: err, for: self)
+                        break
+                    case .finished:
+                        break
+                    default:
+                        break
+                }
+            } receiveValue: { (userInfo) in
+                self?.hideSpinner({
+                    DispatchQueue.main.async {
+                        let profileDetailVC = ProfileDetailViewController()
+                        profileDetailVC.userInfo = userInfo
+                        self?.navigationController?.pushViewController(profileDetailVC, animated: true)
+                    }
+                })
+            }
+            .store(in: &self!.storage)
+        }
+    }
+    
+    private func getPreviewVC(post: Post) -> ListDetailViewController {
+        let listDetailVC = ListDetailViewController()
+        listDetailVC.post = post
+        return listDetailVC
     }
 }
