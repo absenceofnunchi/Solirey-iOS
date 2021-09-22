@@ -36,7 +36,7 @@ extension ChatViewController: SharableDelegate {
             guard let message = self?.postArr[index],
                   let userId = self?.userId,
                   let chatListModel = self?.chatListModel,
-                  let lastSeen = chatListModel.lastSeen,
+                  let lastSeen = self?.lastSeen,
                   let seenId = chatListModel.buyerUserId == userId ? chatListModel.sellerUserId : chatListModel.buyerUserId else { return }
             
             let lastSeenDate = lastSeen[seenId]
@@ -78,7 +78,8 @@ extension ChatViewController: SharableDelegate {
             guard let message = self?.postArr[index],
                   let userId = self?.userId,
                   let chatListModel = self?.chatListModel,
-                  let lastSeen = chatListModel.lastSeen,
+                  let lastSeen = self?.lastSeen,
+                  let isOnline = self?.isOnline,
                   let seenId = chatListModel.buyerUserId == userId ? chatListModel.sellerUserId : chatListModel.buyerUserId,
                   let lastSeenDate = lastSeen[seenId] else { return }
             
@@ -86,7 +87,8 @@ extension ChatViewController: SharableDelegate {
                 seenTime: lastSeenDate,
                 sentTime: message.sentAtFull,
                 message: nil,
-                image: image
+                image: image,
+                isOnline: isOnline
             )
             self?.navigationController?.pushViewController(chatInfoVC, animated: true)
         }

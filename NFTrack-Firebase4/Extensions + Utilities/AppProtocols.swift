@@ -1217,7 +1217,6 @@ extension PostParseDelegate {
             var buyerDisplayName, sellerDisplayName, latestMessage, buyerPhotoURL, sellerPhotoURL, sellerUserId, buyerUserId, postingId, itemName: String!
             var date, sellerMemberSince, buyerMemberSince: Date!
             var members: [String]!
-            var lastSeen = [String: Date]()
             
             data.forEach { (item) in
                 switch item.key {
@@ -1248,16 +1247,6 @@ extension PostParseDelegate {
                     case "buyerMemberSince":
                         let timeStamp = item.value as? Timestamp
                         buyerMemberSince = timeStamp?.dateValue()
-                    case "lastSeen":
-                        if let tempDict = item.value as? [String: Timestamp] {
-                            for (key, value) in tempDict {
-                                lastSeen.updateValue(value.dateValue(), forKey: key)
-                            }
-//                            print("first.value", first.value)
-//                            let lastSeenDate = first.value.dateValue()
-//                            print("lastSeenDate in parse", lastSeenDate)
-//                            lastSeen = [first.key: lastSeenDate]
-                        }
                     case "itemName":
                         itemName = item.value as? String
                     default:
@@ -1279,7 +1268,6 @@ extension PostParseDelegate {
                 postingId: postingId,
                 sellerMemberSince: sellerMemberSince,
                 buyerMemberSince: buyerMemberSince,
-                lastSeen: lastSeen,
                 itemName: itemName
             )
             

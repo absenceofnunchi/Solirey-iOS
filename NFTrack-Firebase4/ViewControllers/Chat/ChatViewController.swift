@@ -74,6 +74,10 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     final var senderDisplayName: String! {
         return UserDefaults.standard.string(forKey: UserDefaultKeys.displayName)
     }
+    private var onlineStatusListener: ListenerRegistration!
+    final var lastSeen: [String: Date]!
+    final var isOnline: Bool = false
+    private var customTitleView: UIView!
     
     final override func setDataStore(postArr: [Message]) {
         dataStore = MessageImageDataStore(posts: postArr)
@@ -85,7 +89,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         configureUI()
         configureNavigationBar()
         setConstraints()
-        seenRegister()
+        configureOnlineStatus()
     }
     
     final override func viewWillAppear(_ animated: Bool) {
@@ -100,6 +104,13 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
    
         if isMovingFromParent {
             postCache.removeObject(forKey: "CachedPost")
+            Future<Bool, PostingError> { [weak self] promise in
+                self?.registerOnlineStatus(false, promise: promise)
+            }
+            .sink { (_) in
+            } receiveValue: { (_) in
+            }
+            .store(in: &storage)
         }
     }
     
@@ -275,7 +286,6 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] suggestedActions in
             let locationInTableView = interaction.location(in: self?.tableView)
             guard let indexPath = self?.tableView.indexPathForRow(at: locationInTableView) else {
-                print("no index")
                 return nil
             }
                         
@@ -324,10 +334,72 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     }
 }
 
+class CustomTitleView: UIView {
+    var buttonAction: ((UIButton) -> Void)?
+    var displayName: String!
+    var onlineImageView: UIImageView!
+    var isOnline: Bool = false {
+        didSet {
+            var color: UIColor!
+            if isOnline {
+                color = .green
+            } else {
+                color = .red
+            }
+            onlineImageView?.image = UIImage(systemName: imageString)?.withTintColor(color, renderingMode: .alwaysOriginal)
+        }
+    }
+    var imageString: String!
+    var button: UIButton!
+    
+    convenience init(displayName: String, imageString: String) {
+        self.init()
+        self.displayName = displayName
+        self.imageString = imageString
+        configure()
+        setContraints()
+    }
+    
+    func configure() {
+        let configuration = UIImage.SymbolConfiguration(pointSize: 9, weight: .medium, scale: .small)
+        guard let image = UIImage(systemName: imageString)?
+                .withConfiguration(configuration)
+                .withTintColor(.red, renderingMode: .alwaysOriginal) else { return }
+        onlineImageView = UIImageView(image: image)
+        onlineImageView.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(onlineImageView)
+        
+        button =  UIButton()
+        //        button.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
+        button.setTitle(displayName, for: .normal)
+        button.setTitleColor(.gray, for: .normal)
+        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        self.addSubview(button)
+    }
+    
+    func setContraints() {
+        NSLayoutConstraint.activate([
+            button.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            button.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            button.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.8),
+            
+            onlineImageView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            onlineImageView.trailingAnchor.constraint(equalTo: button.leadingAnchor),
+        ])
+    }
+    
+    @objc func buttonPressed(_ sender: UIButton) {
+        if let buttonAction = buttonAction {
+            buttonAction(button)
+        }
+    }
+}
+
 extension ChatViewController: PostParseDelegate {
     private func configureNavigationBar() {
         self.navigationItem.largeTitleDisplayMode = .never
 
+        
         let button =  UIButton()
         //        button.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
         button.setTitle(userInfo.displayName, for: .normal)
@@ -512,11 +584,12 @@ extension ChatViewController {
             let data = docSnapshot.data()
             let senderId = data["sender"] as? String ?? ""
             let content = data["content"] as? String ?? ""
-            let sentAt = data["sentAt"] as? Date ?? Date()
+            let sentAtBuffer = data["sentAt"] as? Timestamp
+            let sentAt = sentAtBuffer?.dateValue() ?? Date()
             let imageURL = data["imageURL"] as? String
             let senderDisplayName = data["senderDisplayName"] as? String ?? ""
             let recipientDisplayName = data["recipientDisplayName"] as? String ?? ""
-            
+
             var messageType: MessageType!
             if let type = data["type"] as? String {
                 messageType = MessageType(rawValue: type)
@@ -549,35 +622,154 @@ extension ChatViewController {
     }
 }
 
-//class ChatClass {
-//    var from = ""
-//    var to = ""
-//    var msg = ""
-//    var timestamp = 0
-//    
-//    convenience init(withDoc: DocumentSnapshot) {
-//        self.init()
-//        self.from = withDoc.get("from") as! String
-//        self.to = withDoc.get("to") as! String
-//        self.msg = withDoc.get("msg") as! String
-//        self.timestamp = withDoc.get("timestamp") as! Int
-//    }
-//}
+class OnlineStatus {
+    var lastSeen = [String: Date]()
+    var isOnline: [String: Bool]!
+    
+    convenience init(querySnapshot: DocumentSnapshot) {
+        self.init()
+        self.isOnline = querySnapshot.get("isOnline") as? [String: Bool]
+        if let lastSeenBuffer = querySnapshot.get("lastSeen") as? [String: Timestamp] {
+            for (key, value) in lastSeenBuffer {
+                lastSeen.updateValue(value.dateValue(), forKey: key)
+            }
+        }
+    }
+}
 
 extension ChatViewController {
-    func seenRegister() {
-        guard chatIsNew == false else { return }
+    private func configureOnlineStatus2() {
+        Future<Bool, PostingError> { [weak self] promise in
+            self?.registerOnlineStatus(true, promise: promise)
+        }
+        .eraseToAnyPublisher()
+        .flatMap { [weak self] (_) -> AnyPublisher<OnlineStatus, PostingError> in
+            Future<OnlineStatus, PostingError> { [weak self] promise in
+                self?.getOnlineStatus(promise: promise)
+            }
+            .eraseToAnyPublisher()
+        }
+        .sink { (completion) in
+            switch completion {
+                case .failure(.generalError(reason: let err)):
+                    print(err)
+                    break
+                case .finished:
+                    break
+                default:
+                    break
+            }
+        } receiveValue: { [weak self] (onlineStatus) in
+            print("onlineStatus", onlineStatus)
+            self?.lastSeen = onlineStatus.lastSeen
+            self?.showOnlineStatus(onlineStatus.isOnline)
+        }
+        .store(in: &storage)
+    }
+    
+    private func configureOnlineStatus() {
+        Future<Bool, PostingError> { [weak self] promise in
+            self?.registerOnlineStatus(true, promise: promise)
+        }
+        .eraseToAnyPublisher()
+        .sink { (completion) in
+            switch completion {
+                case .failure(.generalError(reason: let err)):
+                    print(err)
+                    break
+                case .finished:
+                    break
+                default:
+                    break
+            }
+        } receiveValue: { [weak self] (isRegistered) in
+            guard isRegistered == true,
+                  let docId = self?.docId else { return }
+            
+            self?.onlineStatusListener = FirebaseService.shared.db
+                .collection("onlineStatus")
+                .document(docId)
+                .addSnapshotListener { (querySnapshot, error) in
+                    if let _ = error {
+                        return
+                    }
+                    
+                    guard let querySnapshot = querySnapshot else { return }
+                    let onlineStatus = OnlineStatus(querySnapshot: querySnapshot)
+                    self?.lastSeen = onlineStatus.lastSeen
+                    self?.showOnlineStatus(onlineStatus.isOnline)
+                }
+        }
+        .store(in: &storage)
+    }
+    
+    private func showOnlineStatus(_ retrievedOnlineStatus: [String: Bool]) {
+        guard let recipientId = retrievedOnlineStatus.keys.filter({ $0 != userId }).first,
+              let isOnline = retrievedOnlineStatus[recipientId] else { return }
         
-        let lastSeen = [
-            "lastSeen": [
-                userId: Date()
+        if isOnline == true {
+            DispatchQueue.main.async { [weak self] in
+                self?.tableView.backgroundColor = .green
+            }
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.tableView.backgroundColor = .white
+            }
+        }
+    }
+    
+    private func registerOnlineStatus(
+        _ isOnline: Bool,
+        promise: @escaping (Result<Bool, PostingError>) -> Void
+    ) {
+        guard chatIsNew == false else { return }
+        var onlineStatus: [String: Any]!
+        
+        if isOnline {
+            onlineStatus = [
+                "lastSeen": [
+                    userId: Date(),
+                ],
+                "isOnline": [
+                    userId: true
+                ]
             ]
-        ]
+        } else {
+            onlineStatusListener?.remove()
+            onlineStatus = [
+                "isOnline": [
+                    userId: false
+                ]
+            ]
+        }
         
         FirebaseService.shared.db
-            .collection("chatrooms")
+            .collection("onlineStatus")
             .document(docId)
-            .setData(lastSeen, merge: true)
+            .setData(onlineStatus, merge: true) { (error) in
+                if let _ = error {
+                    promise(.failure(.generalError(reason: "Unable to register your online status.")))
+                    return
+                } else {
+                    promise(.success(true))
+                }
+            }
+    }
+    
+    private func getOnlineStatus(promise: @escaping (Result<OnlineStatus, PostingError>) -> Void) {
+        onlineStatusListener = FirebaseService.shared.db
+            .collection("onlineStatus")
+            .document(docId)
+            .addSnapshotListener { (querySnapshot, error) in
+                if let _ = error {
+                    promise(.failure(.generalError(reason: "Unable to get the online status of the chat member")))
+                    return
+                }
+                
+                guard let querySnapshot = querySnapshot else { return }
+                let onlineStatus = OnlineStatus(querySnapshot: querySnapshot)
+                promise(.success(onlineStatus))
+            }
     }
 }
 
@@ -644,7 +836,7 @@ extension ChatViewController {
 // Get the screenshot and the location from ChatMapVC
 // The sender sharing a location to the recipient
 extension ChatViewController: HandleMapSearch {
-    func getScreenshot(image: UIImage, address: ShippingAddress) {
+    final func getScreenshot(image: UIImage, address: ShippingAddress) {
         sendLocation(
             image: image,
             imageName: UUID().uuidString,

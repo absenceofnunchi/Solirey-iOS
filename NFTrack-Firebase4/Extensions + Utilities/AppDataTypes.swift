@@ -185,7 +185,6 @@ class ChatListModel: PostCoreModel {
     var postingId: String!
     var sellerMemberSince: Date!
     var buyerMemberSince: Date!
-    var lastSeen: [String: Date]!
     var itemName: String!
     
     init(
@@ -202,7 +201,6 @@ class ChatListModel: PostCoreModel {
         postingId: String,
         sellerMemberSince: Date,
         buyerMemberSince: Date,
-        lastSeen: [String: Date],
         itemName: String
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
@@ -216,7 +214,6 @@ class ChatListModel: PostCoreModel {
         self.postingId = postingId
         self.sellerMemberSince = sellerMemberSince
         self.buyerMemberSince = buyerMemberSince
-        self.lastSeen = lastSeen
         self.itemName = itemName
     }
 }

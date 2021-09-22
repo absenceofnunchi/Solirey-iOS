@@ -8,26 +8,29 @@
 import UIKit
 
 class ChatInfoViewController: UIViewController {
-    var scrollView: UIScrollView!
-    var seenTime: Date!
-    var sentTime: Date!
-    var messageLabel: UILabelPadding!
-    var imageView: UIImageView!
-    var seenTitleLabel: UILabel!
-    var seenLabel: UILabel!
-    var sentTimeTitleLabel: UILabel!
-    var sentTimeLabel: UILabelPadding!
-    var constraints = [NSLayoutConstraint]()
-
+    private var scrollView: UIScrollView!
+    private var seenTime: Date!
+    private var sentTime: Date!
+    private var messageLabel: UILabelPadding!
+    private var imageView: UIImageView!
+    private var seenTitleLabel: UILabel!
+    private var seenLabel: UILabel!
+    private var sentTimeTitleLabel: UILabel!
+    private var sentTimeLabel: UILabelPadding!
+    private var constraints = [NSLayoutConstraint]()
+    private var isOnline: Bool!
+    
     init(
         seenTime: Date?,
         sentTime: Date,
         message: String? = nil,
-        image: UIImage? = nil
+        image: UIImage? = nil,
+        isOnline: Bool = false
     ) {
         super.init(nibName: nil, bundle: nil)
         self.seenTime = seenTime
         self.sentTime = sentTime
+        self.isOnline = isOnline
         
         if message != nil {
             self.messageLabel = UILabelPadding()
@@ -41,12 +44,12 @@ class ChatInfoViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLoad() {
+    final override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
     }
     
-    override func viewDidLayoutSubviews() {
+    final override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
         if scrollView != nil {
@@ -62,7 +65,7 @@ class ChatInfoViewController: UIViewController {
         }
     }
     
-    func getContentHeight(_ v: UIView) -> CGFloat {
+    private func getContentHeight(_ v: UIView) -> CGFloat {
         return v.bounds.size.height +
             seenTitleLabel.bounds.size.height +
             seenLabel.bounds.size.height +
@@ -72,8 +75,8 @@ class ChatInfoViewController: UIViewController {
     }
 }
 
-extension ChatInfoViewController {
-    func configureUI() {
+private extension ChatInfoViewController {
+    private func configureUI() {
         view.backgroundColor = .white
         title = "Chat Information"
         
@@ -118,19 +121,26 @@ extension ChatInfoViewController {
             ])
         }
 
-        if seenTime != nil {
-            if let sentTime = sentTime, let seenTime = seenTime {
-                print("seenTime", seenTime)
-                print("sentTime", sentTime)
-                print("seenTime > sentTime", seenTime > sentTime)
-                if seenTime > sentTime {
-                    seenLabel = createLabel(text: "Seen")
-                } else {
-                    seenLabel = createLabel(text: "Not seen")
-                }
-            }
+        // If the recipient is currently online, all the messages have been seen.
+        // If not, check the last seen time:
+        //      1. If the last seen time doesn't exist, then the messages have not been seen.
+        //      2. The last seen time exists:
+        //          A. If the last seen time is greater (later) then the sent time of the messages, they have been read.
+        //          B. If the sent time of the messages is greater (later) then the last seen time of the recipient, then the messages have not been read.
+        if isOnline {
+            seenLabel = createLabel(text: "Seen")
         } else {
-            seenLabel = createLabel(text: "Not seen")
+            if seenTime != nil {
+                if let sentTime = sentTime, let seenTime = seenTime {
+                    if seenTime > sentTime {
+                        seenLabel = createLabel(text: "Seen")
+                    } else {
+                        seenLabel = createLabel(text: "Not seen")
+                    }
+                }
+            } else {
+                seenLabel = createLabel(text: "Not seen")
+            }
         }
         
         scrollView.addSubview(seenLabel)

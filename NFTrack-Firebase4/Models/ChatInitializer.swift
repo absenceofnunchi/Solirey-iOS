@@ -100,8 +100,9 @@ class ChatInitializer {
     private var chatInfo: [String: Any]!
     private var docId: String!
     private var postingId: String
+    // Required for a brand new chat. For existing chats, use ChatListModel.itemName
     private var itemName: String
-    
+
     init(
         chatIsNew: Bool = true,
         ref: DocumentReference,
@@ -133,9 +134,7 @@ class ChatInitializer {
         
         // Create or update the chat info
         if chatIsNew {
-            // If the chat is new, create a new chat info
-            // Only the buyer can initate the chat from ListDetailVC so no need to check whether the chat user is the buyer or the seller
-            guard let docId = self.docId,
+            guard let docId = docId,
                   let sellerUserId = userInfo.uid,
                   let sellerMemberSince = userInfo.memberSince,
                   let buyerMemberSince = UserDefaults.standard.object(forKey: UserDefaultKeys.memberSince) as? Date else {
@@ -143,8 +142,19 @@ class ChatInitializer {
                 return
             }
             
-            let displayName = UserDefaults.standard.string(forKey: UserDefaultKeys.displayName)
             let photoURL = UserDefaults.standard.string(forKey: UserDefaultKeys.photoURL)
+            
+            // Create search terms
+            let whitespaceCharacterSet = CharacterSet.whitespaces
+            var displayName: String!
+            var searchableBuyerDisplayName: String!
+            if let dn = UserDefaults.standard.string(forKey: UserDefaultKeys.displayName) {
+                displayName = dn
+                searchableBuyerDisplayName = dn.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+            }
+            
+            let searchableSellerDisplayName = userInfo.displayName.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+            let searchableItemName = itemName.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
             
             self.chatInfo = [
                 "members": [sellerUserId, userId],
@@ -160,7 +170,10 @@ class ChatInitializer {
                 "sellerMemberSince": sellerMemberSince,
                 "buyerMemberSince": buyerMemberSince,
                 "postingId": postingId,
-                "itemName": itemName
+                "itemName": itemName,
+                "searchableItemName": searchableItemName,
+                "searchableBuyerDisplayName": searchableBuyerDisplayName ?? "",
+                "searchableSellerDisplayName": searchableSellerDisplayName
             ]
         } else {
             // If the chat is not new, determine whether the sender is a seller or the buyer and how many members are in the chat currently
@@ -214,7 +227,7 @@ class ChatInitializer {
                       let sellerMemberSince = userInfo.memberSince,
                       let buyerMemberSince = UserDefaults.standard.object(forKey: UserDefaultKeys.memberSince) as? Date,
                       let postingId = self?.postingId,
-                      let itemName = self?.itemName else {
+                      let itemName = self?.chatListModel.itemName else {
                     promise(.failure(.generalError(reason: "Unable to retrieve the seller's info. Please try again.")))
                     return
                 }
