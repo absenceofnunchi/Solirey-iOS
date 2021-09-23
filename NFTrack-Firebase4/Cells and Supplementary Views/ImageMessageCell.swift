@@ -7,31 +7,16 @@
 
 import UIKit
 
-class ImageMessageCell: ParentTableCell<Message> {
+class ImageMessageCell: ChatCell<Message> {
     final class override var identifier: String {
         return "ImageMessageCell"
     }
     
-    final var stackView: UIStackView!
-    final var messageLabel = UILabelPadding()
-    final var dateLabel = UILabelPadding()
-    final var cellConstraints = [NSLayoutConstraint]()
-    // The user ID of the current chat user (sender) to distinguish the sender messages from the recipient messages
-    final var myUserId: String!
     final var buttonAction: (()->Void)?
     
     final override func configure(_ post: Message?) {
         guard let message = post,
               let myUserId = myUserId else { return }
-        
-        dateLabel.text = message.sentAt
-        dateLabel.top = 0
-        dateLabel.textColor = .lightGray
-        dateLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
-        dateLabel.adjustsFontForContentSizeCategory = true
-        dateLabel.sizeToFit()
-        dateLabel.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(dateLabel)
         
         stackView = UIStackView(arrangedSubviews: [thumbImageView])
         stackView.spacing = 3
@@ -42,13 +27,25 @@ class ImageMessageCell: ParentTableCell<Message> {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stackView)
         
+        dateLabel.text = message.sentAt
+        dateLabel.top = 0
+        dateLabel.textColor = .lightGray
+        dateLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        dateLabel.sizeToFit()
+        dateLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(dateLabel)
+        
         cellConstraints.append(contentsOf: [
             stackView.topAnchor.constraint(equalTo: contentView.topAnchor),
             stackView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.7),
             stackView.bottomAnchor.constraint(equalTo: dateLabel.topAnchor),
             
             dateLabel.topAnchor.constraint(equalTo: stackView.bottomAnchor),
-            dateLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+            dateLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            
+            seenImageView.topAnchor.constraint(equalTo: stackView.bottomAnchor),
+            seenImageView.heightAnchor.constraint(equalTo: dateLabel.heightAnchor, multiplier: 0.5),
+            seenImageView.widthAnchor.constraint(equalTo: seenImageView.heightAnchor)
         ])
         
         if let _ = message.imageURL {
@@ -66,8 +63,6 @@ class ImageMessageCell: ParentTableCell<Message> {
             
             cellConstraints.append(contentsOf: [
                 thumbImageView.heightAnchor.constraint(equalToConstant: 200),
-//                thumbImageView.widthAnchor.constraint(equalToConstant: 200),
-//                thumbImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
                 loadingIndicator.centerYAnchor.constraint(equalTo: thumbImageView.centerYAnchor),
                 loadingIndicator.centerXAnchor.constraint(equalTo: thumbImageView.centerXAnchor)
             ])
@@ -79,12 +74,14 @@ class ImageMessageCell: ParentTableCell<Message> {
                 
                 cellConstraints.append(contentsOf: [
                     stackView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-                    dateLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor)
+                    dateLabel.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+                    seenImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -55),
                 ])
             } else {
                 stackView.alignment = .leading
                 dateLabel.textAlignment = .left
                 dateLabel.left = 0
+                seenImageView.alpha = 0
                 
                 cellConstraints.append(contentsOf: [
                     stackView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),

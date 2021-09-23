@@ -1630,3 +1630,35 @@ extension SingleDocumentFetchDelegate {
         .store(in: &storage)
     }
 }
+
+protocol ChatDelegate {
+    func setSeenIndicator(isOnline: Bool, seenTime: Date?, sentTime: Date?) -> Bool
+}
+
+extension ChatDelegate {
+    func setSeenIndicator(isOnline: Bool, seenTime: Date?, sentTime: Date?) -> Bool {
+        // If the recipient is currently online, all the messages have been seen.
+        // If not, check the last seen time:
+        //      1. If the last seen time doesn't exist, then the messages have not been seen.
+        //      2. The last seen time exists:
+        //          A. If the last seen time is greater (later) then the sent time of the messages, they have been read.
+        //          B. If the sent time of the messages is greater (later) then the last seen time of the recipient, then the messages have not been read.
+        if isOnline {
+            return true
+        } else {
+            if seenTime != nil {
+                if let sentTime = sentTime, let seenTime = seenTime {
+                    if seenTime > sentTime {
+                        return true
+                    } else {
+                        return false
+                    }
+                } else {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+    }
+}

@@ -101,7 +101,7 @@ class ChatInitializer {
     private var docId: String!
     private var postingId: String
     // Required for a brand new chat. For existing chats, use ChatListModel.itemName
-    private var itemName: String
+    private var itemName: String?
 
     init(
         chatIsNew: Bool = true,
@@ -111,7 +111,7 @@ class ChatInitializer {
         chatListModel: ChatListModel?,
         docId: String,
         postingId: String,
-        itemName: String
+        itemName: String?
     ) {
         self.chatIsNew = chatIsNew
         self.ref = ref
@@ -154,7 +154,7 @@ class ChatInitializer {
             }
             
             let searchableSellerDisplayName = userInfo.displayName.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
-            let searchableItemName = itemName.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+            let searchableItemName = itemName?.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
             
             self.chatInfo = [
                 "members": [sellerUserId, userId],
@@ -170,8 +170,8 @@ class ChatInitializer {
                 "sellerMemberSince": sellerMemberSince,
                 "buyerMemberSince": buyerMemberSince,
                 "postingId": postingId,
-                "itemName": itemName,
-                "searchableItemName": searchableItemName,
+                "itemName": itemName ?? "NA",
+                "searchableItemName": searchableItemName ?? "",
                 "searchableBuyerDisplayName": searchableBuyerDisplayName ?? "",
                 "searchableSellerDisplayName": searchableSellerDisplayName
             ]

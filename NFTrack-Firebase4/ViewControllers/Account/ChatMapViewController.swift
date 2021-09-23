@@ -26,6 +26,18 @@ class ChatMapViewController: MapViewController {
     }
     
     final override func didSelectPin(_ selectedPin: MKPlacemark) {
+        alert.showDetail(
+            "Location Share",
+            with: "Would you like to share this location?",
+            for: self,
+            alertStyle: .withCancelButton,
+            buttonAction: { [weak self] in
+                self?.sendSnapShot(selectedPin)
+            }
+        )
+    }
+    
+    final func sendSnapShot(_ selectedPin: MKPlacemark) {
         showSpinner { [weak self]  in
             self?.takeSnapShot(selectedPin: selectedPin) { (image, error) in
                 if let error = error {

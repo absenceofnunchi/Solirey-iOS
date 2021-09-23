@@ -116,6 +116,12 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
     override func centerMapOnLocation() {
         guard let location = location else { return }
         self.placemark = MKPlacemark(coordinate: location)
+        print("self.placemark", self.placemark as Any)
+        if let pm = self.placemark {
+            mapView.removeAnnotations(mapView.annotations)
+            mapView.addAnnotation(pm)
+        }
+
         let coorindateRegion = MKCoordinateRegion.init(center: location, latitudinalMeters: regionRadius, longitudinalMeters: regionRadius)
         mapView.setRegion(coorindateRegion, animated: true)
         let _ = self.navigationController?.popViewController(animated: true)
@@ -143,6 +149,7 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         guard let coordinate = manager.location?.coordinate else { return }
         print("coordinate", coordinate)
         let placemark = MKPlacemark(coordinate: coordinate)
+        self.placemark = placemark
         let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
         let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
         mapView.setRegion(region, animated: true)
@@ -155,6 +162,7 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         guard let coordinate = manager.location?.coordinate else { return }
         print("coordinate", coordinate)
         let placemark = MKPlacemark(coordinate: coordinate)
+        self.placemark = placemark
         let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
         let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
         mapView.setRegion(region, animated: true)

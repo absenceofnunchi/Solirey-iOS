@@ -242,7 +242,6 @@ extension ChatViewController {
                     "type": MessageType.location.rawValue,
                     "sentAt": Date(),
                     "imageURL": urlRetainer.absoluteString,
-                    "recipient": recipient,
                     "location": addressDict,
                     "sender": userId,
                     "senderDisplayName": senderDisplayName,

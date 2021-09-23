@@ -101,9 +101,8 @@ extension ChatListViewController {
                     return
                 }
 
-                self?.postArr.removeAll()
                 if let chatListModels = self?.parseChatListModels(querySnapshot.documents) {
-                    self?.postArr.append(contentsOf: chatListModels)
+                    self?.postArr = chatListModels
                 }
             }
     }

@@ -155,6 +155,7 @@
 		499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9961266C061A00FC6CDE /* ParentNavViewController.swift */; };
 		499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9966266C195F00FC6CDE /* AccountCell.swift */; };
 		499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F998D266C8D9700FC6CDE /* ProgressCell.swift */; };
+		49A52E6726FAB1F600D1A0D2 /* CustomTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A52E6626FAB1F600D1A0D2 /* CustomTitleView.swift */; };
 		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
 		49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */; };
 		49BFB4BE269E4666008D908F /* AuctionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */; };
@@ -348,6 +349,7 @@
 		499F9961266C061A00FC6CDE /* ParentNavViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentNavViewController.swift; sourceTree = "<group>"; };
 		499F9966266C195F00FC6CDE /* AccountCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCell.swift; sourceTree = "<group>"; };
 		499F998D266C8D9700FC6CDE /* ProgressCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCell.swift; sourceTree = "<group>"; };
+		49A52E6626FAB1F600D1A0D2 /* CustomTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTitleView.swift; sourceTree = "<group>"; };
 		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
 		49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + ContextMenu.swift"; sourceTree = "<group>"; };
 		49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionDetailViewController.swift; sourceTree = "<group>"; };
@@ -556,6 +558,7 @@
 			isa = PBXGroup;
 			children = (
 				4964E4C02641E12A005B3268 /* BlurEffectContainerView.swift */,
+				49A52E6626FAB1F600D1A0D2 /* CustomTitleView.swift */,
 				4964E4EC26445AED005B3268 /* AlertsView.swift */,
 				493BF9CC264C493200B9C9D2 /* WalletButtonView.swift */,
 				493BF9C7264C166000B9C9D2 /* CreditCardView.swift */,
@@ -1209,6 +1212,7 @@
 				492C820526F574D30083C3B5 /* ImageMessageCell.swift in Sources */,
 				499F9953266AED0E00FC6CDE /* ParentDetailViewController.swift in Sources */,
 				49DEFF652686552E004C2DD0 /* PreviewPDFViewController.swift in Sources */,
+				49A52E6726FAB1F600D1A0D2 /* CustomTitleView.swift in Sources */,
 				499702A62672E0BA001DD80A /* ToolBarView.swift in Sources */,
 				49DEFF6026864CA4004C2DD0 /* Document.swift in Sources */,
 				497A9B1F2658927200F09CAA /* MainViewController.swift in Sources */,

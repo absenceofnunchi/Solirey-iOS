@@ -50,6 +50,14 @@ class ListViewController: ParentListViewController<Post> {
         lastSnapshot = nil
         loadingQueue.cancelAllOperations()
         loadingOperations.removeAll()
+        
+        if firstListener != nil {
+            firstListener.remove()
+        }
+        
+        if nextListener != nil {
+            nextListener.remove()
+        }
     }
     
     @objc func swiped(_ sender: UISwipeGestureRecognizer) {
@@ -262,9 +270,12 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
     // MARK: - configureDataFetch
     final func configureDataFetch(isBuyer: Bool, status: [String]) {
         guard let userId = userId else { return }
-        self.dataStore = nil
-        self.postArr.removeAll()
         
+        dataStore = nil
+        loadingQueue.cancelAllOperations()
+        loadingOperations.removeAll()
+        postArr.removeAll()
+
         firstListener = db.collection("post")
             .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
             .whereField("status", in: status)
@@ -358,9 +369,12 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
     // MARK: - configureAuctionFetch()
     final func configureAuctionFetch() {
         guard let userId = userId else { return }
-        self.dataStore = nil
-        self.postArr.removeAll()
         
+        dataStore = nil
+        loadingQueue.cancelAllOperations()
+        loadingOperations.removeAll()
+        postArr.removeAll()
+
         firstListener = db.collection("post")
             .whereField("bidders", arrayContains: userId)
             .whereField("status", in: [AuctionStatus.bid.rawValue, AuctionStatus.ended.rawValue, AuctionStatus.transferred.rawValue])
@@ -396,7 +410,7 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                     
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                         DispatchQueue.main.async {
-                            self?.postArr.append(contentsOf: data)
+                            self?.postArr = data
                         }
                     }
                 }
@@ -451,6 +465,14 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
     }
     
     final func transitionView(completion: @escaping () -> Void) {
+        if firstListener != nil {
+            firstListener.remove()
+        }
+        
+        if nextListener != nil {
+            nextListener.remove()
+        }
+        
         let newTableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
         newTableView.prefetchDataSource = self
         UIView.transition(from: tableView, to: newTableView, duration: 0, options: .transitionCrossDissolve) { (_) in

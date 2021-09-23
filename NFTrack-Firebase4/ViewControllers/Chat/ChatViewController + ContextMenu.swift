@@ -34,12 +34,12 @@ extension ChatViewController: SharableDelegate {
             feedbackGenerator.impactOccurred()
             
             guard let message = self?.postArr[index],
-                  let userId = self?.userId,
-                  let chatListModel = self?.chatListModel,
-                  let lastSeen = self?.lastSeen,
-                  let seenId = chatListModel.buyerUserId == userId ? chatListModel.sellerUserId : chatListModel.buyerUserId else { return }
+//                  let userId = self?.userId,
+//                  let chatListModel = self?.chatListModel,
+                  let lastSeenDate = self?.lastSeenDate else { return }
+//                  let seenId = chatListModel.buyerUserId == userId ? chatListModel.sellerUserId : chatListModel.buyerUserId
             
-            let lastSeenDate = lastSeen[seenId]
+//            let lastSeenDate = lastSeen[seenId]
             
             let chatInfoVC = ChatInfoViewController(
                 seenTime: lastSeenDate,
@@ -76,12 +76,12 @@ extension ChatViewController: SharableDelegate {
             feedbackGenerator.impactOccurred()
             
             guard let message = self?.postArr[index],
-                  let userId = self?.userId,
-                  let chatListModel = self?.chatListModel,
-                  let lastSeen = self?.lastSeen,
-                  let isOnline = self?.isOnline,
-                  let seenId = chatListModel.buyerUserId == userId ? chatListModel.sellerUserId : chatListModel.buyerUserId,
-                  let lastSeenDate = lastSeen[seenId] else { return }
+//                  let userId = self?.userId,
+//                  let chatListModel = self?.chatListModel,
+                  let lastSeenDate = self?.lastSeenDate,
+                  let isOnline = self?.isOnline else { return }
+//                  let seenId = chatListModel.buyerUserId == userId ? chatListModel.sellerUserId : chatListModel.buyerUserId,
+//                  let lastSeenDate = lastSeen[seenId]
             
             let chatInfoVC = ChatInfoViewController(
                 seenTime: lastSeenDate,

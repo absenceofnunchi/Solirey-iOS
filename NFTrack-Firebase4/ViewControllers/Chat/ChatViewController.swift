@@ -30,7 +30,7 @@ import UIKit
 import FirebaseFirestore
 import Combine
 
-class ChatViewController: ParentListViewController<Message>, FileUploadable, SingleDocumentFetchDelegate {
+class ChatViewController: ParentListViewController<Message>, FileUploadable, SingleDocumentFetchDelegate, ChatDelegate {
     final var userInfo: UserInfo!
     final var docId: String! {
         didSet {
@@ -45,8 +45,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     final var postingId: String!
     final var toolBarView: ToolBarView!
     private var toolBarBottomConstraint: NSLayoutConstraint!
-    private var lastCell: CGRect!
-    private var imageName: String!
+//    private var imageName: String!
     // If chatListModel is set, it means the channel info already exists, therefore the chat is not new
     final var chatListModel: ChatListModel! {
         didSet {
@@ -75,9 +74,13 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         return UserDefaults.standard.string(forKey: UserDefaultKeys.displayName)
     }
     private var onlineStatusListener: ListenerRegistration!
-    final var lastSeen: [String: Date]!
-    final var isOnline: Bool = false
-    private var customTitleView: UIView!
+    final var lastSeenDate: Date!
+    final lazy var isOnline: Bool = false {
+        didSet {
+            tableView.reloadRows(at: [IndexPath(row: 0, section: 0)], with: .none)
+        }
+    }
+    private var customTitleView: CustomTitleView!
     
     final override func setDataStore(postArr: [Message]) {
         dataStore = MessageImageDataStore(posts: postArr)
@@ -89,34 +92,43 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         configureUI()
         configureNavigationBar()
         setConstraints()
+    }
+    
+    final override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         configureOnlineStatus()
+        resignFirstResponder()
     }
     
     final override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         addKeyboardObserver()
         self.tabBarController?.tabBar.isHidden = true
+        NotificationCenter.default.addObserver(self, selector: #selector(appMovedToForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
     final override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
    
+        Future<Bool, PostingError> { [weak self] promise in
+            self?.registerOnlineStatus(false, promise: promise)
+        }
+        .sink { (_) in
+        } receiveValue: { (_) in
+        }
+        .store(in: &storage)
+        
         if isMovingFromParent {
             postCache.removeObject(forKey: "CachedPost")
-            Future<Bool, PostingError> { [weak self] promise in
-                self?.registerOnlineStatus(false, promise: promise)
-            }
-            .sink { (_) in
-            } receiveValue: { (_) in
-            }
-            .store(in: &storage)
         }
     }
     
     final override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         removeKeyboardObserver()
+        NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
     final override func configureUI() {
@@ -234,7 +246,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
                     indexPath: indexPath
                 )
             }
-            
+
             cell = imageCell
         } else {
             guard let messageCell = tableView.dequeueReusableCell(withIdentifier: MessageCell.identifier, for: indexPath) as? MessageCell else {
@@ -245,11 +257,16 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
             messageCell.selectionStyle = .none
             let post = postArr[indexPath.row]
             messageCell.configure(post)
-            //        messageCell.updateAppearanceFor(.pending(post))
             
             let interaction = UIContextMenuInteraction(delegate: self)
             messageCell.messageLabel.isUserInteractionEnabled = true
             messageCell.messageLabel.addInteraction(interaction)
+            
+            if post.id == userId, indexPath == IndexPath(row: 0, section: 0) {
+                let isSeen = setSeenIndicator(isOnline: isOnline, seenTime: lastSeenDate, sentTime: post.sentAtFull)
+                messageCell.seenImageView.alpha = isSeen ? 1 : 0
+            }
+            
             cell = messageCell
         }
 
@@ -334,79 +351,27 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     }
 }
 
-class CustomTitleView: UIView {
-    var buttonAction: ((UIButton) -> Void)?
-    var displayName: String!
-    var onlineImageView: UIImageView!
-    var isOnline: Bool = false {
-        didSet {
-            var color: UIColor!
-            if isOnline {
-                color = .green
-            } else {
-                color = .red
-            }
-            onlineImageView?.image = UIImage(systemName: imageString)?.withTintColor(color, renderingMode: .alwaysOriginal)
-        }
-    }
-    var imageString: String!
-    var button: UIButton!
-    
-    convenience init(displayName: String, imageString: String) {
-        self.init()
-        self.displayName = displayName
-        self.imageString = imageString
-        configure()
-        setContraints()
-    }
-    
-    func configure() {
-        let configuration = UIImage.SymbolConfiguration(pointSize: 9, weight: .medium, scale: .small)
-        guard let image = UIImage(systemName: imageString)?
-                .withConfiguration(configuration)
-                .withTintColor(.red, renderingMode: .alwaysOriginal) else { return }
-        onlineImageView = UIImageView(image: image)
-        onlineImageView.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(onlineImageView)
-        
-        button =  UIButton()
-        //        button.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
-        button.setTitle(displayName, for: .normal)
-        button.setTitleColor(.gray, for: .normal)
-        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
-        self.addSubview(button)
-    }
-    
-    func setContraints() {
-        NSLayoutConstraint.activate([
-            button.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-            button.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-            button.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.8),
-            
-            onlineImageView.centerYAnchor.constraint(equalTo: self.centerYAnchor),
-            onlineImageView.trailingAnchor.constraint(equalTo: button.leadingAnchor),
-        ])
-    }
-    
-    @objc func buttonPressed(_ sender: UIButton) {
-        if let buttonAction = buttonAction {
-            buttonAction(button)
-        }
-    }
-}
-
 extension ChatViewController: PostParseDelegate {
+    override func didMove(toParent parent: UIViewController?) {
+        super.didMove(toParent: parent)
+        
+        if parent != nil && self.navigationItem.titleView == nil {
+
+        }
+    }
+    
     private func configureNavigationBar() {
         self.navigationItem.largeTitleDisplayMode = .never
-
+        customTitleView = CustomTitleView(displayName: userInfo.displayName, imageString: "circle.fill")
+//        let width = customTitleView.sizeThatFits(CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)).width
+        let width: CGFloat = view.bounds.size.width / 0.7
+        customTitleView.frame = CGRect(origin:CGPoint.zero, size:CGSize(width: width, height: 500))
+        navigationItem.titleView = customTitleView
         
-        let button =  UIButton()
-        //        button.frame = CGRect(x: 0, y: 0, width: 100, height: 40)
-        button.setTitle(userInfo.displayName, for: .normal)
-        button.setTitleColor(.gray, for: .normal)
-        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
-        button.tag = 0
-        navigationItem.titleView = button
+        customTitleView.isUserInteractionEnabled = true
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped))
+        customTitleView.addGestureRecognizer(tap)
+
 
         guard let postBarImage = UIImage(systemName: "list.bullet.below.rectangle"),
               let reportImage = UIImage(systemName: "flag") else {
@@ -499,6 +464,12 @@ extension ChatViewController: PostParseDelegate {
             default:
                 break
         }
+    }
+    
+    @objc func tapped() {
+        let profileDetailVC = ProfileDetailViewController()
+        profileDetailVC.userInfo = userInfo
+        navigationController?.pushViewController(profileDetailVC, animated: true)
     }
 }
 
@@ -638,7 +609,23 @@ class OnlineStatus {
 }
 
 extension ChatViewController {
+    @objc func appMovedToBackground() {
+        Future<Bool, PostingError> { [weak self] promise in
+            self?.registerOnlineStatus(false, promise: promise)
+        }
+        .sink { (_) in
+        } receiveValue: { (_) in
+        }
+        .store(in: &storage)
+    }
+    
+    @objc func appMovedToForeground() {
+        configureOnlineStatus()
+    }
+    
     private func configureOnlineStatus2() {
+        NotificationCenter.default.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
+        
         Future<Bool, PostingError> { [weak self] promise in
             self?.registerOnlineStatus(true, promise: promise)
         }
@@ -660,14 +647,16 @@ extension ChatViewController {
                     break
             }
         } receiveValue: { [weak self] (onlineStatus) in
-            print("onlineStatus", onlineStatus)
-            self?.lastSeen = onlineStatus.lastSeen
-            self?.showOnlineStatus(onlineStatus.isOnline)
+            self?.showOnlineStatus(onlineStatus)
+//            self?.lastSeen = onlineStatus.lastSeen
+//            self?.showOnlineStatus(onlineStatus.isOnline)
         }
         .store(in: &storage)
     }
     
     private func configureOnlineStatus() {
+        NotificationCenter.default.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
+
         Future<Bool, PostingError> { [weak self] promise in
             self?.registerOnlineStatus(true, promise: promise)
         }
@@ -696,8 +685,9 @@ extension ChatViewController {
                     
                     guard let querySnapshot = querySnapshot else { return }
                     let onlineStatus = OnlineStatus(querySnapshot: querySnapshot)
-                    self?.lastSeen = onlineStatus.lastSeen
-                    self?.showOnlineStatus(onlineStatus.isOnline)
+                    self?.showOnlineStatus(onlineStatus)
+//                    self?.lastSeen = onlineStatus.lastSeen
+//                    self?.showOnlineStatus(onlineStatus.isOnline)
                 }
         }
         .store(in: &storage)
@@ -707,14 +697,25 @@ extension ChatViewController {
         guard let recipientId = retrievedOnlineStatus.keys.filter({ $0 != userId }).first,
               let isOnline = retrievedOnlineStatus[recipientId] else { return }
         
-        if isOnline == true {
-            DispatchQueue.main.async { [weak self] in
-                self?.tableView.backgroundColor = .green
-            }
-        } else {
-            DispatchQueue.main.async { [weak self] in
-                self?.tableView.backgroundColor = .white
-            }
+        self.isOnline = isOnline
+        DispatchQueue.main.async { [weak self] in
+            self?.customTitleView.isOnline = isOnline
+        }
+    }
+    
+    private func showOnlineStatus(_ onlineStatus: OnlineStatus) {
+        guard let retrievedOnlineStatus = onlineStatus.isOnline,
+              let recipientId = retrievedOnlineStatus.keys.filter({ $0 != userId }).first,
+              let isOnline = retrievedOnlineStatus[recipientId],
+              let lastSeenDate = onlineStatus.lastSeen[recipientId] else { return }
+
+        // to be used for the in message indicator
+        self.isOnline = isOnline
+        self.lastSeenDate = lastSeenDate
+        
+        // to be used for the custom title view
+        DispatchQueue.main.async { [weak self] in
+            self?.customTitleView.isOnline = isOnline
         }
     }
     

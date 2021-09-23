@@ -60,7 +60,6 @@ class ChatInfoViewController: UIViewController {
                 contentHeight = getContentHeight(imageView)
             }
              
-            print("contentHeight", contentHeight as Any)
             scrollView.contentSize = CGSize(width: view.bounds.size.width, height: contentHeight)
         }
     }
@@ -75,7 +74,7 @@ class ChatInfoViewController: UIViewController {
     }
 }
 
-private extension ChatInfoViewController {
+extension ChatInfoViewController: ChatDelegate {
     private func configureUI() {
         view.backgroundColor = .white
         title = "Chat Information"
@@ -121,27 +120,29 @@ private extension ChatInfoViewController {
             ])
         }
 
-        // If the recipient is currently online, all the messages have been seen.
-        // If not, check the last seen time:
-        //      1. If the last seen time doesn't exist, then the messages have not been seen.
-        //      2. The last seen time exists:
-        //          A. If the last seen time is greater (later) then the sent time of the messages, they have been read.
-        //          B. If the sent time of the messages is greater (later) then the last seen time of the recipient, then the messages have not been read.
-        if isOnline {
-            seenLabel = createLabel(text: "Seen")
-        } else {
-            if seenTime != nil {
-                if let sentTime = sentTime, let seenTime = seenTime {
-                    if seenTime > sentTime {
-                        seenLabel = createLabel(text: "Seen")
-                    } else {
-                        seenLabel = createLabel(text: "Not seen")
-                    }
-                }
-            } else {
-                seenLabel = createLabel(text: "Not seen")
-            }
-        }
+        let isSeen = setSeenIndicator(isOnline: isOnline, seenTime: seenTime, sentTime: sentTime)
+        seenLabel = createLabel(text: isSeen ? "Seen" : "Not seen")
+//        // If the recipient is currently online, all the messages have been seen.
+//        // If not, check the last seen time:
+//        //      1. If the last seen time doesn't exist, then the messages have not been seen.
+//        //      2. The last seen time exists:
+//        //          A. If the last seen time is greater (later) then the sent time of the messages, they have been read.
+//        //          B. If the sent time of the messages is greater (later) then the last seen time of the recipient, then the messages have not been read.
+//        if isOnline {
+//            seenLabel = createLabel(text: "Seen")
+//        } else {
+//            if seenTime != nil {
+//                if let sentTime = sentTime, let seenTime = seenTime {
+//                    if seenTime > sentTime {
+//                        seenLabel = createLabel(text: "Seen")
+//                    } else {
+//                        seenLabel = createLabel(text: "Not seen")
+//                    }
+//                }
+//            } else {
+//                seenLabel = createLabel(text: "Not seen")
+//            }
+//        }
         
         scrollView.addSubview(seenLabel)
         
