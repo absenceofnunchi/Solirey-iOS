@@ -117,9 +117,10 @@ extension UIViewController {
             textField.text = content
         }
         
-        textField.layer.borderWidth = 0.7
+        textField.dropShadow()
+//        textField.layer.borderWidth = 0.7
         textField.layer.cornerRadius = 5
-        textField.layer.borderColor = borderColor
+//        textField.layer.borderColor = borderColor
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }
