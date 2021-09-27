@@ -22,7 +22,6 @@ class NewPostViewController: UIViewController, SegmentConfigurable {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        applyBarTintColorToTheNavigationBar(titleTextColor: .white)
         configureSwitch()
         addBaseViewController(postVC)
     }

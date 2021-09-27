@@ -5,21 +5,31 @@
 //  Created by J C on 2021-09-26.
 //
 
-import Foundation
-import UIKit.UIView
+/*
+ Abstract: Simple curved background in MainVC
+ */
 
-class BackgroundView6: UIView {
-    let startingColor = UIColor(red: 112/255, green: 159/255, blue: 176/255, alpha: 1).cgColor
-    let finishingColor = UIColor(red: 102/255, green: 98/255, blue: 135/255, alpha: 1).cgColor
+import UIKit
+
+class BackgroundView6: SpectrumView {
+    var bgShapeLayer: CAShapeLayer!
+    var gradientLayer: CAGradientLayer!
+
     
-    init() {
-        super.init(frame: .zero)
-        self.isOpaque = false
-    }
+//    init(startingColor: CGColor, finishingColor: CGColor) {
+//        super.init(startingColor: startingColor, finishingColor: finishingColor)
+//    }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+//    init(colors: [CGColor] = [UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1).cgColor,
+//                              UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1).cgColor]) {
+//        super.init(startingColor: )
+//        self.isOpaque = false
+//        self.colors = colors
+//    }
+    
+//    required init?(coder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
 }
 
 extension BackgroundView6 {
@@ -28,23 +38,20 @@ extension BackgroundView6 {
         let x: CGFloat = self.bounds.size.width
         
         let initialPath = CGMutablePath()
-        initialPath.move(to: CGPoint(x: 0, y: y / 10 * 7))
-        initialPath.addArc(tangent1End: CGPoint(x: x / 11, y: y / 10 * 8.5), tangent2End: CGPoint(x: x / 8 * 8.5, y: y / 10 * 8.5), radius: 80)
-        initialPath.addArc(tangent1End: CGPoint(x: x / 8 * 8.5, y: y / 10 * 8.5), tangent2End: CGPoint(x: x, y: y), radius: 50)
-        initialPath.addLine(to: CGPoint(x: x, y: y))
-        initialPath.addLine(to: CGPoint(x: x, y: 0))
+        initialPath.move(to: CGPoint(x: 0, y: y))
+        initialPath.addQuadCurve(to: CGPoint(x: x, y: 0), control: CGPoint(x: x / 2, y: y))
+        initialPath.addLine(to: CGPoint(x: 0, y: 0))
         initialPath.addLine(to: .zero)
         initialPath.closeSubpath()
         
-        let bgShapeLayer = CAShapeLayer()
+        bgShapeLayer = CAShapeLayer()
         bgShapeLayer.path = initialPath
         bgShapeLayer.lineJoin = .round
         
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.startPoint = CGPoint(x: 0.5, y: 1)
-        gradientLayer.endPoint = CGPoint(x: 0.0, y: 0.0)
-        //        gradientLayer.colors = [startingColor , UIColor.white.cgColor]
-        gradientLayer.colors = [startingColor, startingColor]
+        gradientLayer = CAGradientLayer()
+        gradientLayer.startPoint = CGPoint(x: 0.7, y: 0.8)
+        gradientLayer.endPoint = CGPoint(x: 0.8, y: 1.0)
+        gradientLayer.colors = colors
         gradientLayer.frame = self.bounds
         gradientLayer.mask = bgShapeLayer
         

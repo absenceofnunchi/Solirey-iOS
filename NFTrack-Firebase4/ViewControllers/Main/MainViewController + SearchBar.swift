@@ -33,7 +33,7 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
         searchBar.tintColor = .black
         searchBar.searchBarStyle = .minimal
         searchBar.scopeButtonTitles = ScopeButtonCategory.getAll()
-        searchBar.setScopeBarButtonTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.red], for: .application)
+//        searchBar.setScopeBarButtonTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.red], for: .application)
 
         // Selected text
         let titleTextAttributesSelected = [NSAttributedString.Key.foregroundColor: UIColor.black]

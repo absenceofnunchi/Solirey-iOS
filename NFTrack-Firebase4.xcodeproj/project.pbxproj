@@ -113,6 +113,7 @@
 		4964E5812649A047005B3268 /* AppProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5802649A047005B3268 /* AppProtocols.swift */; };
 		4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */; };
 		4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5942649B6FA005B3268 /* PageViewController.swift */; };
+		4969A267270268F20093068C /* CustomNavViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969A266270268F20093068C /* CustomNavViewController.swift */; };
 		496D56B12659654A00C3E7FD /* CategoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56B02659654A00C3E7FD /* CategoryCell.swift */; };
 		496D56B62659E6F900C3E7FD /* MyDoneButtonVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */; };
 		496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */; };
@@ -150,6 +151,7 @@
 		4997030526769A36001DD80A /* CardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4997030426769A36001DD80A /* CardCell.swift */; };
 		4997030A2676CC00001DD80A /* SavedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499703092676CBFF001DD80A /* SavedViewController.swift */; };
 		4998E8512701305B00B1F5F0 /* BackgroundView6.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4998E8502701305B00B1F5F0 /* BackgroundView6.swift */; };
+		4998E856270255A900B1F5F0 /* SpectrumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4998E855270255A900B1F5F0 /* SpectrumView.swift */; };
 		499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9948266AB20700FC6CDE /* HistoryCell.swift */; };
 		499F994E266ADA0E00FC6CDE /* HistoryDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */; };
 		499F9953266AED0E00FC6CDE /* ParentDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9952266AED0E00FC6CDE /* ParentDetailViewController.swift */; };
@@ -310,6 +312,7 @@
 		4964E5802649A047005B3268 /* AppProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppProtocols.swift; sourceTree = "<group>"; };
 		4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePageViewController.swift; sourceTree = "<group>"; };
 		4964E5942649B6FA005B3268 /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
+		4969A266270268F20093068C /* CustomNavViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavViewController.swift; sourceTree = "<group>"; };
 		496D56B02659654A00C3E7FD /* CategoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryCell.swift; sourceTree = "<group>"; };
 		496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDoneButtonVC.swift; sourceTree = "<group>"; };
 		496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPickerViewController.swift; sourceTree = "<group>"; };
@@ -347,6 +350,7 @@
 		4997030426769A36001DD80A /* CardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardCell.swift; sourceTree = "<group>"; };
 		499703092676CBFF001DD80A /* SavedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedViewController.swift; sourceTree = "<group>"; };
 		4998E8502701305B00B1F5F0 /* BackgroundView6.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView6.swift; sourceTree = "<group>"; };
+		4998E855270255A900B1F5F0 /* SpectrumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectrumView.swift; sourceTree = "<group>"; };
 		499F9948266AB20700FC6CDE /* HistoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryCell.swift; sourceTree = "<group>"; };
 		499F994D266ADA0E00FC6CDE /* HistoryDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDetailViewController.swift; sourceTree = "<group>"; };
 		499F9952266AED0E00FC6CDE /* ParentDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentDetailViewController.swift; sourceTree = "<group>"; };
@@ -459,6 +463,8 @@
 		493BF9BE264B6CBE00B9C9D2 /* Background Views */ = {
 			isa = PBXGroup;
 			children = (
+				4998E855270255A900B1F5F0 /* SpectrumView.swift */,
+				49721DAE26D5C2F3009BA7E7 /* GradientBackgroundView.swift */,
 				493BF9BF264B6CD000B9C9D2 /* BackgroundView.swift */,
 				493BF9D6264C4DE100B9C9D2 /* BackgroundView2.swift */,
 				493BF9ED264C65FA00B9C9D2 /* BackgroundView3.swift */,
@@ -576,7 +582,6 @@
 				495FD2D726892FDB00F1D81D /* StarRatingView.swift */,
 				4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */,
 				49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */,
-				49721DAE26D5C2F3009BA7E7 /* GradientBackgroundView.swift */,
 				49054D4126CA310300ECCB58 /* PendingIndicatorView.swift */,
 			);
 			path = View;
@@ -614,6 +619,7 @@
 				499F996E266C68CD00FC6CDE /* Wallet */,
 				49221B9B2671DE8C0031A756 /* Chat */,
 				499F9989266C6A7D00FC6CDE /* ETC */,
+				4969A266270268F20093068C /* CustomNavViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -1159,9 +1165,11 @@
 				49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */,
 				49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */,
 				497CF7A726F82818003EF69E /* ParentLocationSearchViewController.swift in Sources */,
+				4969A267270268F20093068C /* CustomNavViewController.swift in Sources */,
 				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
 				496F6FFD2651F15200E4056B /* ListCell.swift in Sources */,
 				4958117526D6DAF1002C8F3B /* IPFSService.swift in Sources */,
+				4998E856270255A900B1F5F0 /* SpectrumView.swift in Sources */,
 				496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */,
 				4964E52126489564005B3268 /* BigPreviewViewController.swift in Sources */,
 				495FD2D32688043000F1D81D /* PDFPreviewViewController.swift in Sources */,

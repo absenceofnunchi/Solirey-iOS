@@ -14,6 +14,7 @@ import PDFKit
 
 class ImagePageViewController: UIViewController {
     var gallery: String!
+    var containerView: UIView!
     var imageView: UIImageView!
     var pdfView: PDFView!
     var loadingIndicator: UIActivityIndicatorView!
@@ -38,10 +39,16 @@ class ImagePageViewController: UIViewController {
 
 extension ImagePageViewController {
     func configureUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .clear
+        
+        containerView = UIView()
+        
+        
         imageView.addSubview(loadingIndicator)
         loadingIndicator.startAnimating()
         loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        
+        
         NSLayoutConstraint.activate([
             loadingIndicator.centerXAnchor.constraint(equalTo: imageView.centerXAnchor),
             loadingIndicator.centerYAnchor.constraint(equalTo: imageView.centerYAnchor),
@@ -56,23 +63,43 @@ extension ImagePageViewController {
                 self?.document = doc
                 self?.loadingIndicator.stopAnimating()
             }
-            pdfView.frame = CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 250))
+//            pdfView.frame = CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 250))
             let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
             pdfView.tag = 1
             pdfView.isUserInteractionEnabled = true
+            pdfView.layer.cornerRadius = 8
+            pdfView.clipsToBounds = true
             pdfView.addGestureRecognizer(tap)
+            pdfView.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(pdfView)
+            
+            NSLayoutConstraint.activate([
+                pdfView.topAnchor.constraint(equalTo: view.topAnchor),
+                pdfView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                pdfView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                pdfView.heightAnchor.constraint(equalToConstant: 250)
+            ])
         } else {
             imageView.setImage(from: gallery) { [weak self] in
                 self?.loadingIndicator.stopAnimating()
             }
             imageView.contentMode = .scaleAspectFill
-            imageView.frame = CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 250))
+//            imageView.frame = CGRect(origin: .zero, size: CGSize(width: view.bounds.size.width, height: 250))
             imageView.isUserInteractionEnabled = true
             let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
             imageView.tag = 2
             imageView.addGestureRecognizer(tap)
+            imageView.layer.cornerRadius = 8
+            imageView.clipsToBounds = true
+            imageView.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(imageView)
+            
+            NSLayoutConstraint.activate([
+                imageView.topAnchor.constraint(equalTo: view.topAnchor),
+                imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                imageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            ])
         }
     }
     

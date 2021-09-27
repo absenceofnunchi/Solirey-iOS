@@ -38,8 +38,6 @@ class MainViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        applyBarTintColorToTheNavigationBar()
         configureSearchController()
         configureSearchBar()
         configureHierarchy()
@@ -53,10 +51,6 @@ extension MainViewController {
     private func configureUI() {
         view.backgroundColor = .white
         extendedLayoutIncludesOpaqueBars = true
-        
-        customNavView = BackgroundView5()
-        customNavView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView?.addSubview(customNavView)
     }
     
     /// - Tag: TwoColumn
@@ -85,8 +79,6 @@ extension MainViewController: UICollectionViewDelegate {
     private func configureHierarchy() {
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout())
         collectionView.backgroundColor = .white
-//        collectionView.backgroundView?.backgroundColor = UIColor.clear.withAlphaComponent(0)
-//        collectionView.backgroundColor = UIColor.clear.withAlphaComponent(0)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(CategoryCell.self, forCellWithReuseIdentifier: CategoryCell.identifier)
@@ -96,6 +88,10 @@ extension MainViewController: UICollectionViewDelegate {
         collectionView.contentSize = CGSize(width: view.bounds.size.width, height: height)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(collectionView)
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.addSubview(customNavView)
     }
     
     private func setConstraints() {
@@ -188,45 +184,13 @@ extension MainViewController {
     @objc private func buttonPressed(_ sender: UIButton) {
         switch sender.tag {
             case 0:
-                    let savedVC = SavedViewController()
-                    self.navigationController?.pushViewController(savedVC, animated: true)
-                case 1:
-                    let checkVC = QuickUICheckViewController()
-                    self.navigationController?.pushViewController(checkVC, animated: true)
-                default:
-                    break
-            }
+                let savedVC = SavedViewController()
+                self.navigationController?.pushViewController(savedVC, animated: true)
+            case 1:
+                let checkVC = QuickUICheckViewController()
+                self.navigationController?.pushViewController(checkVC, animated: true)
+            default:
+                break
         }
-}
-
-class CustomNavView: UIView {
-    var color: UIColor!
-    
-    convenience init(color: UIColor) {
-        self.init()
-        self.color = color
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        configure()
-    }
-    
-    func configure() {
-        let rect = CGRect(origin: .zero, size: CGSize(width: self.bounds.width, height: self.bounds.height))
-        let myView = UIView(frame: rect)
-        myView.transform = CGAffineTransform(rotationAngle: CGFloat.pi)
-        myView.backgroundColor = color
-        
-        let maskPath = UIBezierPath(roundedRect: myView.bounds, byRoundingCorners: UIRectCorner.allCorners, cornerRadii: CGSize(width: myView.bounds.width, height: myView.bounds.height))
-        let maskLayer = CAShapeLayer()
-        maskLayer.frame = myView.bounds
-        maskLayer.path = maskPath.cgPath
-        myView.layer.mask = maskLayer
-        
-        let frame = myView.bounds.divided(atDistance: self.bounds.width / 2, from: CGRectEdge.maxYEdge)
-        let frame2 = frame.remainder.divided(atDistance: 0, from: CGRectEdge.maxXEdge)
-        myView.frame = frame2.remainder
-        self.addSubview(myView)
     }
 }

@@ -154,28 +154,29 @@ extension UIViewController {
         }
     }
     
-    func applyBarTintColorToTheNavigationBar(
-        tintColor: UIColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1),
-        titleTextColor: UIColor = .white
-    ) {
-        guard let navController = navigationController else { return }
-        
-        // For comparison, apply the same barTintColor to the toolbar, which has been configured to be opaque.
-        navController.toolbar.barTintColor = tintColor
-        navController.toolbar.isTranslucent = true
-        
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithDefaultBackground()
-        appearance.backgroundImage = UIImage()
-        appearance.backgroundColor = tintColor
-        appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: titleTextColor, NSAttributedString.Key.font: UIFont.rounded(ofSize: 30, weight: .bold)]
-        appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: titleTextColor]
-        
-        let navigationBarAppearance = navController.navigationBar
-        navigationBarAppearance.prefersLargeTitles = true
-        navigationBarAppearance.scrollEdgeAppearance = appearance
-        navigationBarAppearance.standardAppearance = appearance
-    }
+//    func applyBarTintColorToTheNavigationBar(
+//        tintColor: UIColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1),
+//        titleTextColor: UIColor = .white
+//    ) {
+//        guard let navController = navigationController else { return }
+//        navController.isHiddenHairline = true
+//
+//        // For comparison, apply the same barTintColor to the toolbar, which has been configured to be opaque.
+//        navController.toolbar.barTintColor = tintColor
+//        navController.toolbar.isTranslucent = true
+//
+//        let appearance = UINavigationBarAppearance()
+//        appearance.configureWithDefaultBackground()
+//        appearance.backgroundImage = UIImage()
+//        appearance.backgroundColor = tintColor
+//        appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: titleTextColor, NSAttributedString.Key.font: UIFont.rounded(ofSize: 30, weight: .bold)]
+//        appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: titleTextColor]
+//
+//        let navigationBarAppearance = navController.navigationBar
+//        navigationBarAppearance.prefersLargeTitles = true
+//        navigationBarAppearance.scrollEdgeAppearance = appearance
+//        navigationBarAppearance.standardAppearance = appearance
+//    }
     
     func applyImageBackgroundToTheNavigationBar() {
         guard let navController = self.navigationController else { return }
@@ -186,7 +187,7 @@ extension UIViewController {
         shapeLayer.path = roundedPath.cgPath
         
         let view = UIView(frame: bounds)
-        view.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        view.backgroundColor = .white
         view.layer.mask = shapeLayer
         
         UIGraphicsBeginImageContext(bounds.size)
@@ -213,7 +214,6 @@ extension UIViewController {
     /// Configures the navigation bar to use an image as its background.
     /// - Tag: BackgroundImageExample
     func applyImageBackgroundToTheNavigationBar(vc: UIViewController) {
-        view.backgroundColor = .white
         
         guard let bounds = navigationController?.navigationBar.bounds else { return }
         let startingColor: UIColor = UIColor(red: 248/255, green: 237/255, blue: 227/255, alpha: 1)
@@ -476,6 +476,18 @@ extension UIImageView {
         }
         task.resume()
     }
+    
+    func applyshadowWithCorner(containerView : UIView, cornerRadious : CGFloat){
+        containerView.clipsToBounds = false
+        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowOpacity = 1
+        containerView.layer.shadowOffset = CGSize.zero
+        containerView.layer.shadowRadius = 10
+        containerView.layer.cornerRadius = cornerRadious
+        containerView.layer.shadowPath = UIBezierPath(roundedRect: containerView.bounds, cornerRadius: cornerRadious).cgPath
+        self.clipsToBounds = true
+        self.layer.cornerRadius = cornerRadious
+    }
 }
 
 import PDFKit
@@ -640,5 +652,33 @@ extension Publisher {
 extension String {
     func trimmingAllSpaces(using characterSet: CharacterSet) -> String {
         return components(separatedBy: characterSet).joined()
+    }
+}
+
+extension UINavigationController {
+    var isHiddenHairline: Bool {
+        get {
+            guard let hairline = findHairlineImageViewUnder(navigationBar) else { return true }
+            return hairline.isHidden
+        }
+        set {
+            if let hairline = findHairlineImageViewUnder(navigationBar) {
+                hairline.isHidden = newValue
+            }
+        }
+    }
+    
+    private func findHairlineImageViewUnder(_ view: UIView) -> UIImageView? {
+        if view is UIImageView && view.bounds.size.height <= 1.0 {
+            return view as? UIImageView
+        }
+        
+        for subview in view.subviews {
+            if let imageView = self.findHairlineImageViewUnder(subview) {
+                return imageView
+            }
+        }
+        
+        return nil
     }
 }

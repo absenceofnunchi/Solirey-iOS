@@ -12,24 +12,24 @@
 import UIKit.UIView
 import UIKit.UIColor
 
-class BackgroundView5: UIView {
+class BackgroundView5: SpectrumView {
     var bgShapeLayer: CAShapeLayer!
     var gradientLayer: CAGradientLayer!
-    var colors: [CGColor]! {
-        didSet {
-            gradientLayer?.colors = colors
-        }
-    }
+//    override var startingColor: UIColor! {
+//        return UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+//    }
+//    override var finishingColor: UIColor! {
+//        return UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+//    }
     
-    init(colors: [CGColor] = [UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1).cgColor, UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1).cgColor]) {
-        super.init(frame: .zero)
-        self.isOpaque = false
-        self.colors = colors
-    }
+//    required init(startingColor: UIColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1),
+//                  finishingColor: UIColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)) {
+//        super.init(startingColor: startingColor, finishingColor: finishingColor)
+//    }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+//    required init?(coder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
 }
 
 extension BackgroundView5 {
@@ -39,7 +39,6 @@ extension BackgroundView5 {
         
         let initialPath = CGMutablePath()
         initialPath.move(to: CGPoint(x: 0, y: 20))
-//        initialPath.addQuadCurve(to: CGPoint(x: x, y: y), control: CGPoint(x: 2 * x / 3, y: y))
         initialPath.addQuadCurve(to: CGPoint(x: x, y: 20), control: CGPoint(x: x / 2, y: y))
         initialPath.addLine(to: CGPoint(x: x, y: 0))
         initialPath.addLine(to: .zero)

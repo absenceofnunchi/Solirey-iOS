@@ -12,10 +12,15 @@
 
 import UIKit
 
-class GradientBackgroundView: UIView {
-    var startingColor: UIColor = UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1)
-    var finishingColor: UIColor = UIColor(red: 217/255, green: 158/255, blue: 172/255, alpha: 1)
-    lazy var backgroundColorArr: [CGColor] = [startingColor.cgColor, finishingColor.cgColor]
+class GradientBackgroundView: SpectrumView {
+    required init(startingColor: UIColor = UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1),
+                     finishingColor: UIColor = UIColor(red: 217/255, green: 158/255, blue: 172/255, alpha: 1)) {
+        super.init(startingColor: startingColor, finishingColor: finishingColor)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     func drawPattern (arcCenter: CGPoint, radius: CGFloat) {
         let path = UIBezierPath(arcCenter: arcCenter, radius: radius, startAngle: 0, endAngle: CGFloat.pi * 2, clockwise: true)

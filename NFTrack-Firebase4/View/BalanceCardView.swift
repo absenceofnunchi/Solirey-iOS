@@ -14,14 +14,18 @@ class BalanceCardView: GradientBackgroundView {
     var walletAddressLabel: UILabel!
     var expiryLabel: UILabel!
     
-    init() {
-        super.init(frame: .zero)
+    required init(startingColor: UIColor = UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1),
+        finishingColor: UIColor = UIColor(red: 217/255, green: 158/255, blue: 172/255, alpha: 1)) {
+        super.init(startingColor: startingColor, finishingColor: finishingColor)
         configure()
         setConstraints()
     }
     
-    init(titleString: String, subtitleString: String) {
-        super.init(frame: .zero)
+    init(titleString: String,
+         subtitleString: String,
+         startingColor: UIColor = UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1),
+         finishingColor: UIColor = UIColor(red: 217/255, green: 158/255, blue: 172/255, alpha: 1)) {
+        super.init(startingColor: startingColor, finishingColor: finishingColor)
         
         self.titleLabel?.text = titleString
         self.subtitleLabel?.text = subtitleString

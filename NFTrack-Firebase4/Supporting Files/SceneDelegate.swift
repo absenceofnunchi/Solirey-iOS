@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import Firebase
+import FirebaseAuth
 import Combine
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
@@ -70,31 +70,31 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
                     let mainVC = MainViewController()
                     mainVC.title = "Main"
 
-                    let mainNav = UINavigationController(rootViewController: mainVC)
+                    let mainNav = CustomNavController(rootViewController: mainVC)
                     tabBar.addChild(mainNav)
 
                     let listVC = ListViewController()
                     listVC.title = "List"
 
-                    let listNav = UINavigationController(rootViewController: listVC)
+                    let listNav = CustomNavController(rootViewController: listVC)
                     tabBar.addChild(listNav)
                     
                     let newPostVC = NewPostViewController()
                     newPostVC.title = "Post"
                     
-                    let postNav = UINavigationController(rootViewController: newPostVC)
+                    let postNav = CustomNavController(rootViewController: newPostVC)
                     tabBar.addChild(postNav)
 
                     let chatListVC = ChatListViewController()
                     chatListVC.title = "Inbox"
 
-                    let chatListNav = UINavigationController(rootViewController: chatListVC)
+                    let chatListNav = CustomNavController(rootViewController: chatListVC)
                     tabBar.addChild(chatListNav)
 
                     let acctVC = AccountViewController()
                     acctVC.title = "Account"
 
-                    let acctNav = UINavigationController(rootViewController: acctVC)
+                    let acctNav = CustomNavController(rootViewController: acctVC)
                     tabBar.addChild(acctNav)
                     
                     self?.window!.rootViewController = tabBar

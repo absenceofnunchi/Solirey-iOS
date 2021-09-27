@@ -65,7 +65,8 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         }
     }
     private var isSaved: Bool!
-    
+    private var customNavView: BackgroundView5!
+
     final override func setDataStore(postArr: [Post]) {
         dataStore = PostImageDataStore(posts: postArr)
     }
@@ -74,14 +75,32 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         super.viewDidLoad()
         configureNavigationItem()
         fetchSubscriptionStatus()
+        setConstraints()
     }
 
     final override func configureUI() {
         super.configureUI()
+        extendedLayoutIncludesOpaqueBars = true
+
         tableView = configureTableView(delegate: self, dataSource: self, height: 330, cellType: CardCell.self, identifier: CardCell.identifier)
+        tableView.contentInset = UIEdgeInsets(top: 65, left: 0, bottom: 0, right: 0)
+        tableView.contentInsetAdjustmentBehavior = .never
         tableView.prefetchDataSource = self
         view.addSubview(tableView)
         tableView.fill()
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.addSubview(customNavView)
+    }
+    
+    private func setConstraints() {
+        NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: -65),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50)
+        ])
     }
     
     private func configureNavigationItem() {

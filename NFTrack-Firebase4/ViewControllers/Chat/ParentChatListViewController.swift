@@ -12,12 +12,13 @@ import Combine
 class ParentChatListViewController: ParentListViewController<ChatListModel>, PostParseDelegate, SingleDocumentFetchDelegate {
     var storage: Set<AnyCancellable>!
     var postCache: NSCache<NSString, Post>!
+    private var customNavView: BackgroundView5!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        applyBarTintColorToTheNavigationBar()
         postCache = NSCache<NSString, Post>()
         storage = Set<AnyCancellable>()
+        setCustomNavConstraints()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -32,9 +33,22 @@ class ParentChatListViewController: ParentListViewController<ChatListModel>, Pos
     override func configureUI() {
         super.configureUI()
         tableView = configureTableView(delegate: self, dataSource: self, height: 110, cellType: ChatListCell.self, identifier: ChatListCell.identifier)
+        tableView.contentInset = UIEdgeInsets(top: 65, left: 0, bottom: 0, right: 0)
         tableView.prefetchDataSource = self
         view.addSubview(tableView)
         tableView.fill()
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.addSubview(customNavView)
+    }
+    
+    private func setCustomNavConstraints() {
+        NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: -65),
+            customNavView.widthAnchor.constraint(equalTo: tableView.widthAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50)
+        ])
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

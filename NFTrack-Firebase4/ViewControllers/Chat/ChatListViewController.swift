@@ -18,7 +18,6 @@ class ChatListViewController: ParentChatListViewController {
         super.viewDidLoad()
         configureSearchController()
         configureSearchBar()
-        
         fetchChatList()
     }
 
@@ -35,7 +34,7 @@ extension ChatListViewController {
         searchController.delegate = self
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.obscuresBackgroundDuringPresentation = false
-        
+
         guard let searchBar = searchController?.searchBar else { return }
         searchBar.sizeToFit()
 //        searchBar.placeholder = "Search for places"
@@ -61,6 +60,7 @@ extension ChatListViewController {
         searchTextField.borderStyle = .roundedRect
         searchTextField.layer.cornerRadius = 8
         searchTextField.textColor = .gray
+        searchTextField.backgroundColor = .white
         searchTextField.attributedPlaceholder = NSAttributedString(string: "Enter Search Here", attributes: [NSAttributedString.Key.foregroundColor : UIColor.gray])
     }
 }

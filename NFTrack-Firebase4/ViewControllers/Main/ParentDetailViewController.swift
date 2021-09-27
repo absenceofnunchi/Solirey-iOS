@@ -74,7 +74,8 @@ class ParentDetailViewController: UIViewController, SharableDelegate, PostEditDe
     let LIST_DETAIL_HEIGHT: CGFloat = 50
     var storage = Set<AnyCancellable>()
     var optionsBarItem: UIBarButtonItem!
-
+    private var customNavView: BackgroundView6!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureBackground()
@@ -106,15 +107,17 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
     // MARK: - configureBackground
     func configureBackground() {
         galleries = [String]()
+        alert = Alerts()
+        constraints = [NSLayoutConstraint]()
         
         view.backgroundColor = .white
         scrollView = UIScrollView()
-        scrollView.backgroundColor = .white
         view.addSubview(scrollView)
         scrollView.fill()
         
-        alert = Alerts()
-        constraints = [NSLayoutConstraint]()
+        customNavView = BackgroundView6()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(customNavView)
     }
     
     // MARK: - configureUI
@@ -168,6 +171,11 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         setNameDisplayConstraints(topView: pv)
         
         constraints.append(contentsOf: [
+            customNavView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 0),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
             priceTitleLabel.topAnchor.constraint(equalTo: usernameContainer.bottomAnchor, constant: 40),
             priceTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
             priceTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor),
@@ -250,7 +258,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
                 UIAction(title: NSLocalizedString("Report", comment: ""), image: reportImage, handler: menuHandler),
             ])
             
-            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
+            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withTintColor(.white, renderingMode: .alwaysOriginal)
             optionsBarItem = UIBarButtonItem(title: nil, image: image, primaryAction: nil, menu: barButtonMenu)
             navigationItem.rightBarButtonItem = optionsBarItem
         } else {

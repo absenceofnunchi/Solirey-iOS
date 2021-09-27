@@ -882,9 +882,9 @@ extension PageVCConfigurable {
         guard let pv = pvc.view else { return }
         constraints.append(contentsOf: [
             imageHeightConstraint,
-            pv.topAnchor.constraint(equalTo: v.topAnchor, constant: 0),
-            pv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            pv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            pv.topAnchor.constraint(equalTo: v.topAnchor, constant: 40),
+            pv.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
+            pv.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
         ])
     }
 }
@@ -1662,3 +1662,26 @@ extension ChatDelegate {
         }
     }
 }
+
+protocol CustomNavBarConfigurable where Self: UIViewController  {
+    associatedtype T where T: SpectrumView
+    var customNavView: T! { get set }
+    func configureCustomNavBar(v: UIView)
+}
+
+extension CustomNavBarConfigurable {
+    func configureCustomNavBar(v: UIView) {
+        customNavView = T()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        v.addSubview(customNavView)
+        
+        NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: v.topAnchor, constant: -65),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50)
+        ])
+    }
+}
+
+
