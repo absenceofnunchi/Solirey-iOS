@@ -25,24 +25,22 @@ class ListViewController: ParentListViewController<Post> {
         }
         set {}
     }
-    
+    private var customNavView: BackgroundView5!
+
     final override func viewDidLoad() {
         super.viewDidLoad()
-        configureNavigationBar(vc: self)
+        applyBarTintColorToTheNavigationBar()
         configureSwitch()
-        
-        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
-        swipeLeft.direction = .left
-        view.addGestureRecognizer(swipeLeft)
-        
-        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
-        swipeRight.direction = .right
-        view.addGestureRecognizer(swipeRight)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+        
+        if tableView == nil {
+            configureTableView()
+        }
+        
+        didRefreshTableView(index: currentIndex)
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -85,13 +83,41 @@ class ListViewController: ParentListViewController<Post> {
         dataStore = PostImageDataStore(posts: postArr)
     }
     
+    private func configureTableView() {
+        tableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
+        tableView.prefetchDataSource = self
+        tableView.contentInset = UIEdgeInsets(top: 65, left: 0, bottom: 0, right: 0)
+        view.addSubview(tableView)
+        tableView.fill()
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.addSubview(customNavView)
+        setCustomNavConstraints()
+    }
+    
     final override func configureUI() {
         super.configureUI()
         
-        tableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
-        tableView.prefetchDataSource = self
-        view.addSubview(tableView)
-        tableView.fill()
+        if tableView == nil {
+            configureTableView()
+        }
+        
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
+        swipeLeft.direction = .left
+        view.addGestureRecognizer(swipeLeft)
+        
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
+        swipeRight.direction = .right
+        view.addGestureRecognizer(swipeRight)
+    }
+    
+    final func setCustomNavConstraints() {
+        NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: -65),
+            customNavView.widthAnchor.constraint(equalTo: tableView.widthAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50)
+        ])
     }
     
     final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -147,32 +173,51 @@ class ListViewController: ParentListViewController<Post> {
         }
     }
     
-//    // MARK: - didRefreshTableView
-//    final override func didRefreshTableView(index: Int = 0) {
-//        segmentedControl.selectedSegmentIndex = index
-//        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
-//        view.layoutIfNeeded()
-//        
-//        // for swiping left and right so that the index doesn't overflow
-//        currentIndex = index
-//        
-//        switch index {
-//            case 0:
-//                // buying
-//                configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
-//            case 1:
-//                // selling
-//                configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
-//            case 2:                
-//                // auction
-//                configureAuctionFetch()
-//            case 3:
-//                // posts
-//                configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
-//            default:
-//                break
+    // MARK: - didRefreshTableView
+    final override func didRefreshTableView(index: Int = 0) {
+        segmentedControl.selectedSegmentIndex = index
+        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
+        view.layoutIfNeeded()
+        
+        // for swiping left and right so that the index doesn't overflow
+        currentIndex = index
+  
+        switch index {
+            case 0:
+                // buying
+                self.configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+            case 1:
+                // selling
+                self.configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+            case 2:
+                // auction
+                self.configureAuctionFetch()
+            case 3:
+                // posts
+                self.configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
+            default:
+                break
+        }
+        
+//        transitionView { [weak self] in
+//            switch index {
+//                case 0:
+//                    // buying
+//                    self?.configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+//                case 1:
+//                    // selling
+//                    self?.configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+//                case 2:
+//                    // auction
+//                    self?.configureAuctionFetch()
+//                case 3:
+//                    // posts
+//                    self?.configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
+//                default:
+//                    break
+//            }
 //        }
-//    }
+    }
     
     final override func executeAfterDragging() {
         guard postArr.count > 0 else { return }
@@ -249,22 +294,27 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
         
         switch segment {
             case .buying:
-                transitionView { [weak self] in
-                    self?.configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
-                }
+                self.configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
             case .selling:
-                transitionView { [weak self] in
-                    self?.configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
-                }
+                self.configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
             case .auction:
-                transitionView { [weak self] in
-                    self?.configureAuctionFetch()
-                }
+                self.configureAuctionFetch()
             case .posts:
-                transitionView { [weak self] in
-                    self?.configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
-                }
+                self.configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
         }
+        
+//        transitionView { [weak self] in
+//            switch segment {
+//                case .buying:
+//                    self?.configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+//                case .selling:
+//                    self?.configureDataFetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
+//                case .auction:
+//                    self?.configureAuctionFetch()
+//                case .posts:
+//                    self?.configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
+//            }
+//        }
     }
     
     // MARK: - configureDataFetch
@@ -289,15 +339,6 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                         return
                     }
                     
-                    self?.cache.removeAllObjects()
-                    
-                    guard let lastSnapshot = querySnapshot.documents.last else {
-                        // The collection is empty.
-                        return
-                    }
-                    
-                    self?.lastSnapshot = lastSnapshot
-                    
                     defer {
                         DispatchQueue.main.async {
                             self?.tableView.reloadData()
@@ -308,6 +349,15 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                             }
                         }
                     }
+                    
+                    self?.cache.removeAllObjects()
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
                     
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                         DispatchQueue.main.async {
@@ -320,7 +370,6 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
     
     func configureDataRefetch(isBuyer: Bool, status: [String], lastSnapshot: QueryDocumentSnapshot) {
         guard let userId = userId else { return }
-        
         nextListener = db.collection("post")
             .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
             .whereField("status", in: status)
@@ -335,15 +384,6 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                         return
                     }
                     
-                    self?.cache.removeAllObjects()
-                    
-                    guard let lastSnapshot = querySnapshot.documents.last else {
-                        // The collection is empty.
-                        return
-                    }
-                    
-                    self?.lastSnapshot = lastSnapshot
-                    
                     defer {
                         DispatchQueue.main.async {
                             self?.tableView.reloadData()
@@ -355,6 +395,15 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                         }
                     }
                     
+                    self?.cache.removeAllObjects()
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                         DispatchQueue.main.async {
                             self?.postArr.append(contentsOf: data)
@@ -363,9 +412,7 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                 }
             }
     }
-    
-    
-    
+        
     // MARK: - configureAuctionFetch()
     final func configureAuctionFetch() {
         guard let userId = userId else { return }
@@ -475,10 +522,18 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
         
         let newTableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
         newTableView.prefetchDataSource = self
-        UIView.transition(from: tableView, to: newTableView, duration: 0, options: .transitionCrossDissolve) { (_) in
-            newTableView.fill()
-            self.tableView = newTableView
-            completion()
+        UIView.transition(from: tableView, to: newTableView, duration: 0, options: .transitionCrossDissolve) { [weak self] (_) in
+            DispatchQueue.main.async {
+                newTableView.fill()
+                self?.tableView = newTableView
+                self?.customNavView = BackgroundView5()
+                self?.customNavView.translatesAutoresizingMaskIntoConstraints = false
+                guard let cnv = self?.customNavView else { return }
+                self?.tableView.addSubview(cnv)
+                self?.setCustomNavConstraints()
+                completion()
+            }
         }
     }
 }
+

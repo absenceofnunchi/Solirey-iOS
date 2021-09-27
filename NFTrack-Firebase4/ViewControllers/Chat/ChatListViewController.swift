@@ -10,9 +10,9 @@ import FirebaseFirestore
 import Combine
 
 class ChatListViewController: ParentChatListViewController {
-    var searchController: UISearchController!
-    var searchCategory: String = "searchableSellerDisplayName"
-    var searchTermRetainer: String!
+    private var searchController: UISearchController!
+    private var searchCategory: String = "searchableSellerDisplayName"
+    private var searchTermRetainer: String!
     
     final override func viewDidLoad() {
         super.viewDidLoad()
@@ -66,7 +66,7 @@ extension ChatListViewController {
 }
 
 extension ChatListViewController {
-    func fetchChatList() {
+    final func fetchChatList() {
         loadingOperations.removeAll()
         loadingQueue.cancelAllOperations()
 
@@ -107,7 +107,7 @@ extension ChatListViewController {
             }
     }
         
-    func refetchChatList(lastSnapshot: QueryDocumentSnapshot) {
+    final func refetchChatList(lastSnapshot: QueryDocumentSnapshot) {
         FirebaseService.shared.db
             .collection("chatrooms")
             .whereField("members", arrayContains: userId as String)
@@ -148,7 +148,7 @@ extension ChatListViewController {
 }
 
 extension ChatListViewController: UISearchResultsUpdating, UISearchControllerDelegate, UISearchBarDelegate {
-    func updateSearchResults(for searchController: UISearchController) {
+    final func updateSearchResults(for searchController: UISearchController) {
         guard searchController.searchBar.text?.isEmpty != true,
               let searchTerm = searchController.searchBar.text else {
             fetchChatList()
@@ -160,7 +160,6 @@ extension ChatListViewController: UISearchResultsUpdating, UISearchControllerDel
     final func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
         guard let selectedCategory: String = ChatListCategory.getCategory(num: selectedScope),
               let searchTerm = searchBar.text, !searchTerm.isEmpty else { return }
-        print("selectedScope", selectedScope)
         fetchSearchedData(selectedCategory: selectedCategory, searchTerm: searchTerm)
     }
     
@@ -171,11 +170,11 @@ extension ChatListViewController: UISearchResultsUpdating, UISearchControllerDel
         searchBar.resignFirstResponder()
     }
 
-    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+    final func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         fetchChatList()
     }
     
-    func fetchSearchedData(selectedCategory: String, searchTerm: String) {
+    final func fetchSearchedData(selectedCategory: String, searchTerm: String) {
         let strippedSearchTerm = searchTerm.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !strippedSearchTerm.isEmpty else { return }
         searchTermRetainer = strippedSearchTerm

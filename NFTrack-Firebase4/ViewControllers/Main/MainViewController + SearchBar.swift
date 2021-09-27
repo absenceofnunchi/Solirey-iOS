@@ -33,11 +33,27 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
         searchBar.tintColor = .black
         searchBar.searchBarStyle = .minimal
         searchBar.scopeButtonTitles = ScopeButtonCategory.getAll()
+        searchBar.setScopeBarButtonTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.red], for: .application)
+
+        // Selected text
+        let titleTextAttributesSelected = [NSAttributedString.Key.foregroundColor: UIColor.black]
+        UISegmentedControl.appearance().setTitleTextAttributes(titleTextAttributesSelected, for: .selected)
+        
+        // Normal text
+        let titleTextAttributesNormal = [NSAttributedString.Key.foregroundColor: UIColor.white]
+        UISegmentedControl.appearance().setTitleTextAttributes(titleTextAttributesNormal, for: .normal)
+        
+        // background color for the non-selected background
+        UISegmentedControl.appearance().backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.1)
+        
+        let cancelButtonAttributes: [NSAttributedString.Key : Any] = [NSAttributedString.Key.foregroundColor: UIColor.white]
+        UIBarButtonItem.appearance().setTitleTextAttributes(cancelButtonAttributes, for: UIControl.State.normal)
         
         // search text field attributes
         let searchTextField = searchBar.searchTextField
         searchTextField.borderStyle = .roundedRect
         searchTextField.layer.cornerRadius = 8
+        searchTextField.backgroundColor = .white
 //        searchTextField.layer.borderWidth = 1
 //        searchTextField.layer.borderColor = UIColor(red: 224/255, green: 224/255, blue: 224/255, alpha: 1).cgColor
         searchTextField.textColor = .gray

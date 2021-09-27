@@ -39,32 +39,32 @@ class ShippingAddressChecker: ParseAddressDelegate {
             }
             
             let buyerLocation = CLLocation(latitude: latitude, longitude: longitude)
-            let geocoder = CLGeocoder()
             
-            // Convert the CLLocation to placemark, not String to placemark because the latter only gives you the coordinates, not the address divided into city, country, etc
-            geocoder.reverseGeocodeLocation(buyerLocation) { (placemarks, error) in
-                if let _ = error {
-                    promise(.success(.unableToProcessAddress))
-                }
-                                
-                guard let placemark = placemarks?.first else { return }
-                let mk = MKPlacemark(placemark: placemark)
-                // parses the buyer's address according to the scope that the seller has specified.
-                let buyersAddress = self.parseAddress(selectedItem: mk , scope: self.shippingInfo.scope)
+            if self.shippingInfo.scope == .distance {
+                guard let sellerLongitude = self.shippingInfo.longitude,
+                      let sellerLatitude = self.shippingInfo.latitude else { return }
                 
-                if self.shippingInfo.scope == .distance {
-                    guard let sellerLongitude = self.shippingInfo.longitude,
-                          let sellerLatitude = self.shippingInfo.latitude else { return }
-                    
-                    let sellerLocation = CLLocation(latitude: sellerLatitude, longitude: sellerLongitude)
-                    let distanceInMeters: CLLocationDistance = sellerLocation.distance(from: buyerLocation)
-                    
-                    if distanceInMeters < self.shippingInfo.radius {
-                        promise(.success(.eligible))
-                    } else {
-                        promise(.success(.notEligible))
-                    }
+                let sellerLocation = CLLocation(latitude: sellerLatitude, longitude: sellerLongitude)
+                let distanceInMeters: CLLocationDistance = sellerLocation.distance(from: buyerLocation)
+
+                if distanceInMeters < self.shippingInfo.radius {
+                    promise(.success(.eligible))
                 } else {
+                    promise(.success(.notEligible))
+                }
+            } else {
+                // Convert the CLLocation to placemark, not String to placemark because the latter only gives you the coordinates, not the address divided into city, country, etc
+                let geocoder = CLGeocoder()
+                geocoder.reverseGeocodeLocation(buyerLocation) { (placemarks, error) in
+                    if let _ = error {
+                        promise(.success(.unableToProcessAddress))
+                    }
+                        
+                    guard let placemark = placemarks?.first else { return }
+                    let mk = MKPlacemark(placemark: placemark)
+                    // parses the buyer's address according to the scope that the seller has specified.
+                    let buyersAddress = self.parseAddress(selectedItem: mk , scope: self.shippingInfo.scope)
+
                     if self.shippingInfo.addresses.contains(buyersAddress) {
                         // the buyer's address is within the seller's shipping limitation
                         promise(.success(.eligible))

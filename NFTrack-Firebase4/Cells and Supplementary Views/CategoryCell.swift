@@ -28,7 +28,7 @@ class CategoryCell: UICollectionViewCell {
 
 extension CategoryCell {
     func configure() {
-        self.backgroundColor = .white
+        self.backgroundColor = .clear
         
         imageView.contentMode = .scaleAspectFill
         imageView.layer.cornerRadius = 5

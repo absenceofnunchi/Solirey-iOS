@@ -159,6 +159,8 @@ extension ListDetailViewController: ParseAddressDelegate {
                             // The purchase button should only be available to the potential buyer that meets the shipping criteria.
                             guard let shippingInfo = post.shippingInfo else { return }
                             if post.shippingInfo?.scope != .none {
+                                print("post.shippingInfo?.scope", post.shippingInfo?.scope as Any)
+
                                 let shippingAddressChecker = ShippingAddressChecker(shippingInfo: shippingInfo)
                                 shippingAddressChecker.checkAddress()
                                     .sink { (_) in

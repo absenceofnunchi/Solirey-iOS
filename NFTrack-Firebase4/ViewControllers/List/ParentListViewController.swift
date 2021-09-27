@@ -108,7 +108,6 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         // Check the cache for an existing image
 //        if let cachedImage = cache.object(forKey: indexPath.row as NSNumber) {
         if let cachedImage: UIImage = cache[indexPath.row as NSNumber] as? UIImage {
-            print("cachedImage", cachedImage)
             cell.updateAppearanceFor(.fetched(cachedImage))
             loadingOperations.removeValue(forKey: indexPath)
         } else {
@@ -155,7 +154,6 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
     
     // MARK:- TableView Prefetching DataSource
     func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
-        print("prefetchRowsAt")
         for indexPath in indexPaths {
             if let _ = loadingOperations[indexPath] { return }
             if let dataLoader = dataStore.loadImage(at: indexPath.row) {

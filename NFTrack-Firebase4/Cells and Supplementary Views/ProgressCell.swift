@@ -40,7 +40,7 @@ class ProgressCell: CardCell {
         super.configure(post)
         
         guard let post = post else { return }
-
+        self.backgroundColor = .clear
         meterContainer.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(meterContainer)
         

@@ -69,13 +69,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
                     
                     let mainVC = MainViewController()
                     mainVC.title = "Main"
-                    
+
                     let mainNav = UINavigationController(rootViewController: mainVC)
                     tabBar.addChild(mainNav)
-                    
+
                     let listVC = ListViewController()
                     listVC.title = "List"
-                    
+
                     let listNav = UINavigationController(rootViewController: listVC)
                     tabBar.addChild(listNav)
                     
@@ -84,19 +84,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
                     
                     let postNav = UINavigationController(rootViewController: newPostVC)
                     tabBar.addChild(postNav)
-                    
+
                     let chatListVC = ChatListViewController()
                     chatListVC.title = "Inbox"
-                    
-//                    let chatListVC = TestViewController()
-//                    chatListVC.title = "Inbox"
-                    
+
                     let chatListNav = UINavigationController(rootViewController: chatListVC)
                     tabBar.addChild(chatListNav)
-                    
+
                     let acctVC = AccountViewController()
                     acctVC.title = "Account"
-                    
+
                     let acctNav = UINavigationController(rootViewController: acctVC)
                     tabBar.addChild(acctNav)
                     

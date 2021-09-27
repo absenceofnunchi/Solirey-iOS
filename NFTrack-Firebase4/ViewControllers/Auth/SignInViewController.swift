@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import Firebase
+import FirebaseAuth
 
 class SignInViewController: UIViewController {
     private var titleLabel: UILabel!

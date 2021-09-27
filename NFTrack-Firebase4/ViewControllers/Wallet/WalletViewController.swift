@@ -42,7 +42,8 @@ extension WalletViewController {
         oldPageVC.beginAppearanceTransition(false, animated: true)
         newPageVC.beginAppearanceTransition(true, animated: true)
         
-        UIView.transition(from: oldPageVC.view, to: newPageVC.view, duration: 0.1, options: .transitionCrossDissolve) { (_) in
+        UIView.transition(from: oldPageVC.view, to: newPageVC.view, duration: 0.1, options: .transitionCrossDissolve) { [weak self] (_) in
+            guard let self = self else { return }
             self.oldPageVC.endAppearanceTransition()
             self.newPageVC.endAppearanceTransition()
             self.newPageVC.didMove(toParent: self)

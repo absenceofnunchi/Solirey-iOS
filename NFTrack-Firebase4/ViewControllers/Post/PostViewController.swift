@@ -49,7 +49,7 @@ class PostViewController: ParentPostViewController {
     
     final override func viewDidLoad() {
         super.viewDidLoad()
-        
+  
         deliveryInfoButton.tag = 20
         deliveryMethodLabel.isUserInteractionEnabled = true
         deliveryMethodLabel.tag = 1
@@ -77,7 +77,7 @@ class PostViewController: ParentPostViewController {
         scanButton = UIButton.systemButton(with: scanImage.withTintColor(.black, renderingMode: .alwaysOriginal), target: self, action: #selector(buttonPressed))
         scanButton.layer.cornerRadius = 5
         scanButton.layer.borderWidth = 0.7
-        scanButton.layer.borderColor = UIColor.lightGray.cgColor
+        scanButton.layer.borderColor =   UIColor.lightGray.cgColor
         scanButton.tag = 7
         scanButton.translatesAutoresizingMaskIntoConstraints = false
         idContainerView.addSubview(scanButton)

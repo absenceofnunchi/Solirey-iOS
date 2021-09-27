@@ -33,36 +33,49 @@ class MainViewController: UIViewController {
     final var searchItems: [String]!
     final var lastSnapshot: QueryDocumentSnapshot!
     final let PAGINATION_LIMIT: Int = 20
+    private let CELL_HEIGHT: CGFloat = 200
+    private var customNavView: BackgroundView5!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        configureNavigationBar(vc: self)
+        applyBarTintColorToTheNavigationBar()
         configureSearchController()
         configureSearchBar()
         configureHierarchy()
+        configureUI()
         setConstraints()
         configureOptionsBar()
     }
 }
 
 extension MainViewController {
+    private func configureUI() {
+        view.backgroundColor = .white
+        extendedLayoutIncludesOpaqueBars = true
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView?.addSubview(customNavView)
+    }
+    
     /// - Tag: TwoColumn
     private func createLayout() -> UICollectionViewLayout {
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
                                               heightDimension: .fractionalHeight(1.0))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 5, bottom: 0, trailing: 5)
-        
-        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                               heightDimension: .absolute(200))
+
+        let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1),
+                                               heightDimension: .absolute(CELL_HEIGHT))
         let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitem: item, count: 2)
         let spacing = CGFloat(20)
         group.interItemSpacing = .fixed(spacing)
-        
+
         let section = NSCollectionLayoutSection(group: group)
         section.interGroupSpacing = spacing
-        
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
+
         let layout = UICollectionViewCompositionalLayout(section: section)
         return layout
     }
@@ -71,41 +84,49 @@ extension MainViewController {
 extension MainViewController: UICollectionViewDelegate {
     private func configureHierarchy() {
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: createLayout())
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.backgroundColor = .white
+//        collectionView.backgroundView?.backgroundColor = UIColor.clear.withAlphaComponent(0)
+//        collectionView.backgroundColor = UIColor.clear.withAlphaComponent(0)
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(CategoryCell.self, forCellWithReuseIdentifier: CategoryCell.identifier)
-        collectionView.contentInset = UIEdgeInsets(top: 64, left: 0, bottom: 0, right: 0)
-        collectionView.contentOffset = CGPoint(x: 0, y: -64)
+        collectionView.contentInset = UIEdgeInsets(top: 65, left: 0, bottom: 0, right: 0)
         collectionView.isScrollEnabled = true
-        let height = CGFloat(200 * (data.count / 2) + 300)
+        let height = CELL_HEIGHT * CGFloat(data.count / 2) + 350
         collectionView.contentSize = CGSize(width: view.bounds.size.width, height: height)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(collectionView)
     }
     
     private func setConstraints() {
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
-            collectionView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            customNavView.topAnchor.constraint(equalTo: collectionView.topAnchor, constant: -65),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50)
         ])
     }
 }
 
 extension MainViewController: UICollectionViewDataSource {
-    func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
+    final func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
         return 1
     }
     
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    final func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return data.count
     }
     
     // make a cell for each cell index path
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CategoryCell.identifier, for: indexPath as IndexPath) as! CategoryCell
+    final func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CategoryCell.identifier, for: indexPath as IndexPath) as? CategoryCell else {
+            fatalError()
+        }
         
         let mainMenu = data[indexPath.row]
         cell.set(mainMenu: mainMenu)
@@ -118,7 +139,7 @@ extension MainViewController: UICollectionViewDataSource {
     }
     
     // MARK: - UICollectionViewDelegate protocol
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    final func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         // handle tap events
         let mainMenu = data[indexPath.item]
         let mainDetailVC = MainDetailViewController()
@@ -129,9 +150,8 @@ extension MainViewController: UICollectionViewDataSource {
 
 extension MainViewController {
     private func configureOptionsBar() {
-        
         if #available(iOS 14.0, *) {
-            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
+            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withTintColor(.white, renderingMode: .alwaysOriginal)
             let barButtonMenu = UIMenu(title: "", children: [
                 UIAction(title: NSLocalizedString("Saved Items", comment: ""), image: UIImage(systemName: "star"), handler: menuHandler),
                 UIAction(title: NSLocalizedString("Quick UI Check", comment: ""), image: UIImage(systemName: "barcode.viewfinder"), handler: menuHandler),
@@ -139,8 +159,8 @@ extension MainViewController {
             optionsBarItem = UIBarButtonItem(title: nil, image: image, primaryAction: nil, menu: barButtonMenu)
             navigationItem.rightBarButtonItem = optionsBarItem
         } else {
-            guard let saveImage = UIImage(systemName: "star"),
-                  let idCheckImage = UIImage(systemName: "barcode.viewfinder") else { return }
+            guard let saveImage = UIImage(systemName: "star")?.withTintColor(.white, renderingMode: .alwaysOriginal),
+                  let idCheckImage = UIImage(systemName: "barcode.viewfinder")?.withTintColor(.white, renderingMode: .alwaysOriginal) else { return }
             
             saveBarButton = UIBarButtonItem(image: saveImage, style: .plain, target: self, action: #selector(buttonPressed(_:)))
             saveBarButton.tag = 0
@@ -168,13 +188,45 @@ extension MainViewController {
     @objc private func buttonPressed(_ sender: UIButton) {
         switch sender.tag {
             case 0:
-                let savedVC = SavedViewController()
-                self.navigationController?.pushViewController(savedVC, animated: true)
-            case 1:
-                let checkVC = QuickUICheckViewController()
-                self.navigationController?.pushViewController(checkVC, animated: true)
-            default:
-                break
+                    let savedVC = SavedViewController()
+                    self.navigationController?.pushViewController(savedVC, animated: true)
+                case 1:
+                    let checkVC = QuickUICheckViewController()
+                    self.navigationController?.pushViewController(checkVC, animated: true)
+                default:
+                    break
+            }
         }
+}
+
+class CustomNavView: UIView {
+    var color: UIColor!
+    
+    convenience init(color: UIColor) {
+        self.init()
+        self.color = color
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        configure()
+    }
+    
+    func configure() {
+        let rect = CGRect(origin: .zero, size: CGSize(width: self.bounds.width, height: self.bounds.height))
+        let myView = UIView(frame: rect)
+        myView.transform = CGAffineTransform(rotationAngle: CGFloat.pi)
+        myView.backgroundColor = color
+        
+        let maskPath = UIBezierPath(roundedRect: myView.bounds, byRoundingCorners: UIRectCorner.allCorners, cornerRadii: CGSize(width: myView.bounds.width, height: myView.bounds.height))
+        let maskLayer = CAShapeLayer()
+        maskLayer.frame = myView.bounds
+        maskLayer.path = maskPath.cgPath
+        myView.layer.mask = maskLayer
+        
+        let frame = myView.bounds.divided(atDistance: self.bounds.width / 2, from: CGRectEdge.maxYEdge)
+        let frame2 = frame.remainder.divided(atDistance: 0, from: CGRectEdge.maxXEdge)
+        myView.frame = frame2.remainder
+        self.addSubview(myView)
     }
 }

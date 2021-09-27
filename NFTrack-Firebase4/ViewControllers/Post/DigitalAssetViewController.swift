@@ -127,8 +127,6 @@ class DigitalAssetViewController: ParentPostViewController {
                             self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.CONTENT_SIZE_HEIGHT_WITH_AUCTION_FIELDS)
                         }
                     }
-                default:
-                    break
             }
         }
     }
@@ -143,7 +141,7 @@ class DigitalAssetViewController: ParentPostViewController {
     // MARK: - configureUI
     final override func configureUI() {
         super.configureUI()
-        
+                
         deliveryInfoButton.isHidden = true
         deliveryInfoButton.isEnabled = false
         deliveryMethodLabel.text = "Online Transfer"

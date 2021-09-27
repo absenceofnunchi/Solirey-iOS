@@ -81,7 +81,7 @@ extension UIViewController {
     }
     
     // MARK: - createLabel
-    func createLabel(text: String, hashType: HashType? = nil, cornerRadius: CGFloat = 5, target: UIViewController? = nil, action: Selector? = nil) -> UILabelPadding {
+    func createLabel(text: String, hashType: HashType? = nil, cornerRadius: CGFloat = 10, target: UIViewController? = nil, action: Selector? = nil) -> UILabelPadding {
         let label = UILabelPadding()
         if let hashType = hashType {
             label.tag = hashType.rawValue
@@ -90,9 +90,11 @@ extension UIViewController {
             label.addGestureRecognizer(tap)
         }
         label.text = text
+        label.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
         label.layer.cornerRadius = cornerRadius
-        label.layer.borderColor = UIColor.lightGray.cgColor
-        label.layer.borderWidth = 0.5
+        label.clipsToBounds = true
+//        label.layer.borderColor = UIColor.lightGray.cgColor
+//        label.layer.borderWidth = 0.5
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }
@@ -117,9 +119,9 @@ extension UIViewController {
             textField.text = content
         }
         
-        textField.dropShadow()
-//        textField.layer.borderWidth = 0.7
-        textField.layer.cornerRadius = 5
+        textField.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
+//        textField.layer.borderWidth = 0.5
+        textField.layer.cornerRadius = 10
 //        textField.layer.borderColor = borderColor
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
@@ -127,33 +129,178 @@ extension UIViewController {
     
     // MARK: - configureNavigationBar
     func configureNavigationBar(vc: UIViewController) {
-        vc.view.backgroundColor = .white
+        let bgColor = UIColor(red: 250/255, green: 250/255, blue: 250/255, alpha: 1)
+
+        vc.view.backgroundColor = bgColor
         // navigation controller
         vc.navigationController?.navigationBar.tintColor = UIColor.gray
         vc.navigationController?.navigationBar.isTranslucent = true
         vc.navigationController?.navigationBar.prefersLargeTitles = true
-        
+
         if #available(iOS 13.0, *) {
             let appearance = UINavigationBarAppearance()
             appearance.configureWithDefaultBackground()
-            appearance.backgroundColor = .white
+            appearance.backgroundColor = bgColor
             appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
             appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
             
             vc.navigationController?.navigationBar.standardAppearance = appearance
             vc.navigationController?.navigationBar.scrollEdgeAppearance = appearance
             vc.navigationController?.navigationBar.compactAppearance = appearance
-            
         } else {
-            vc.navigationController?.navigationBar.barTintColor = .white
+            vc.navigationController?.navigationBar.barTintColor = bgColor
             vc.navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
             vc.navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
         }
     }
     
+    func applyBarTintColorToTheNavigationBar(
+        tintColor: UIColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1),
+        titleTextColor: UIColor = .white
+    ) {
+        guard let navController = navigationController else { return }
+        
+        // For comparison, apply the same barTintColor to the toolbar, which has been configured to be opaque.
+        navController.toolbar.barTintColor = tintColor
+        navController.toolbar.isTranslucent = true
+        
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithDefaultBackground()
+        appearance.backgroundImage = UIImage()
+        appearance.backgroundColor = tintColor
+        appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: titleTextColor, NSAttributedString.Key.font: UIFont.rounded(ofSize: 30, weight: .bold)]
+        appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: titleTextColor]
+        
+        let navigationBarAppearance = navController.navigationBar
+        navigationBarAppearance.prefersLargeTitles = true
+        navigationBarAppearance.scrollEdgeAppearance = appearance
+        navigationBarAppearance.standardAppearance = appearance
+    }
+    
+    func applyImageBackgroundToTheNavigationBar() {
+        guard let navController = self.navigationController else { return }
+        let bounds = navController.navigationBar.bounds
+        
+        let roundedPath = UIBezierPath(roundedRect: bounds, byRoundingCorners: [.bottomLeft, .bottomRight], cornerRadii: bounds.size)
+        let shapeLayer = CAShapeLayer()
+        shapeLayer.path = roundedPath.cgPath
+        
+        let view = UIView(frame: bounds)
+        view.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        view.layer.mask = shapeLayer
+        
+        UIGraphicsBeginImageContext(bounds.size)
+        view.layer.render(in:UIGraphicsGetCurrentContext()!)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+//        let renderer = UIGraphicsImageRenderer(bounds: bounds)
+//        let image = renderer.image { (_) in
+//            view.draw(bounds)
+//        }
+        
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithDefaultBackground()
+        appearance.backgroundImage = image
+        
+        let navigationBarAppearance = navController.navigationBar
+        navigationBarAppearance.prefersLargeTitles = true
+//        navigationBarAppearance.setBackgroundImage(image, for: .default)
+        navigationBarAppearance.scrollEdgeAppearance = appearance
+        navigationBarAppearance.standardAppearance = appearance
+    }
+    
+    /// Configures the navigation bar to use an image as its background.
+    /// - Tag: BackgroundImageExample
+    func applyImageBackgroundToTheNavigationBar(vc: UIViewController) {
+        view.backgroundColor = .white
+        
+        guard let bounds = navigationController?.navigationBar.bounds else { return }
+        let startingColor: UIColor = UIColor(red: 248/255, green: 237/255, blue: 227/255, alpha: 1)
+//        let finishingColor: UIColor = UIColor(red: 217/255, green: 158/255, blue: 172/255, alpha: 1)
+        
+        var backImageForDefaultBarMetrics =
+            UIImage.gradientImage(bounds: bounds,
+                                  colors: [startingColor.cgColor, startingColor.cgColor])
+        var backImageForLandscapePhoneBarMetrics =
+            UIImage.gradientImage(bounds: bounds,
+                                  colors: [UIColor.systemTeal.cgColor, UIColor.systemFill.cgColor])
+
+        backImageForDefaultBarMetrics =
+            backImageForDefaultBarMetrics.resizableImage(
+                withCapInsets: UIEdgeInsets(top: 0,
+                                            left: 0,
+                                            bottom: backImageForDefaultBarMetrics.size.height,
+                                            right: backImageForDefaultBarMetrics.size.width))
+        backImageForLandscapePhoneBarMetrics =
+            backImageForLandscapePhoneBarMetrics.resizableImage(
+                withCapInsets: UIEdgeInsets(top: 0,
+                                            left: 0,
+                                            bottom: backImageForLandscapePhoneBarMetrics.size.height - 1,
+                                            right: backImageForLandscapePhoneBarMetrics.size.width - 1))
+   
+        guard let navController = navigationController else { return }
+        let navigationBarAppearance = navController.navigationBar
+        navigationBarAppearance.setBackgroundImage(backImageForDefaultBarMetrics, for: .default)
+        navigationBarAppearance.setBackgroundImage(backImageForLandscapePhoneBarMetrics, for: .compact)
+        navigationBarAppearance.barTintColor = .white
+        navigationBarAppearance.prefersLargeTitles = true
+        navigationBarAppearance.isTranslucent = false
+        navigationBarAppearance.backgroundColor = .white
+        
+        navController.toolbar.barTintColor = .white
+        navController.toolbar.backgroundColor = .white
+        navController.toolbar.isTranslucent = true
+    }
+    
+    /// Configures the navigation bar to use a transparent background (see-through but without any blur).
+    func applyTransparentBackgroundToTheNavigationBar(_ opacity: CGFloat, vc: UIViewController) {
+        vc.view.backgroundColor = .white
+        var transparentBackground: UIImage
+        
+        /** The background of a navigation bar switches from being translucent to transparent when a background image is applied.
+         The intensity of the background image's alpha channel is inversely related to the transparency of the bar.
+         That is, a smaller alpha channel intensity results in a more transparent bar and vise-versa.
+         Below, a background image is dynamically generated with the desired opacity.
+         */
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: 1, height: 1),
+                                               false,
+                                               navigationController!.navigationBar.layer.contentsScale)
+        let context = UIGraphicsGetCurrentContext()!
+        context.setFillColor(red: 1, green: 1, blue: 1, alpha: opacity)
+        UIRectFill(CGRect(x: 0, y: 0, width: 1, height: 1))
+        transparentBackground = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        /** Use the appearance proxy to customize the appearance of UIKit elements.
+         However changes made to an element's appearance proxy do not affect any existing instances of that element currently
+         in the view hierarchy. Normally this is not an issue because you will likely be performing your appearance customizations in
+         -application:didFinishLaunchingWithOptions:. However, this example allows you to toggle between appearances at runtime
+         which necessitates applying appearance customizations directly to the navigation bar.
+         */
+        
+        let navigationBarAppearance = self.navigationController!.navigationBar
+        navigationBarAppearance.setBackgroundImage(transparentBackground, for: .default)
+    }
+    
     func delay(_ delay:Double, closure:@escaping ()->()) {
         let when = DispatchTime.now() + delay
         DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
+    }
+}
+
+extension UIImage {
+    static func gradientImage(bounds: CGRect, colors: [CGColor]) -> UIImage {
+        let gradient = CAGradientLayer()
+        gradient.frame = bounds
+        gradient.colors = colors
+        
+        UIGraphicsBeginImageContext(gradient.bounds.size)
+        gradient.render(in: UIGraphicsGetCurrentContext()!)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return image!
     }
 }
 
@@ -197,7 +344,7 @@ extension UIFont {
 
 extension UIView {
     // MARK: - dropShadow
-    func dropShadow() {
+    func dropShadow2() {
         //        layer.masksToBounds = false
         //        layer.shadowColor = UIColor.black.cgColor
         //        layer.shadowOpacity = 0.5
@@ -217,6 +364,15 @@ extension UIView {
         self.layer.shadowOpacity = 0.2
         self.layer.shadowRadius = 4.0
         self.layer.backgroundColor = UIColor.white.cgColor
+    }
+    
+    func dropShadow() {
+        self.layer.shadowRadius = 10
+        self.layer.shadowOffset = .zero
+        self.layer.shadowOpacity = 0.5
+        self.layer.shadowColor = UIColor.black.cgColor
+        self.layer.shadowPath = UIBezierPath(rect: self.bounds).cgPath
+        self.clipsToBounds = true
     }
     
     // MARK: - fill

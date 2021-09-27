@@ -14,6 +14,11 @@ import QuickLook
 class ParentPostViewController: UIViewController, ButtonPanelConfigurable, TokenConfigurable, ShippingDelegate, CoreSpotlightDelegate {
     let db = FirebaseService.shared.db!
     var scrollView: UIScrollView!
+    var infoImage: UIImage! {
+        return UIImage(systemName: "info.circle")?.withTintColor(.lightGray, renderingMode: .alwaysOriginal)
+    }
+    let tintColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+    var backgroundView: BackgroundView4!
     var titleLabel: UILabel!
     var titleTextField: UITextField!
     var priceLabel: UILabel!
@@ -153,17 +158,24 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var mintHash: String!
     var senderAddress: String!
     var shippingInfo: ShippingInfo!
-    
+    var colorPatchView = UIView()
+    lazy var colorPatchViewHeight: NSLayoutConstraint = colorPatchView.heightAnchor.constraint(equalToConstant: 0)
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        configureNavigationBar(vc: self)
         configureUI()
         configureImagePreview()
         setConstraints()
+        setColorPatchView()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        DispatchQueue.main.async { [weak self] in
+            self?.navigationController?.navigationBar.sizeToFit()
+        }
     }
  
-
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         /// whenever the image picker is dismissed, the collection view has to be updated
@@ -201,16 +213,24 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
 
 extension ParentPostViewController {
     @objc func configureUI() {
+        view.backgroundColor = .white
         title = "Post"
         previewDataArr = [PreviewData]()
         self.hideKeyboardWhenTappedAround()
         alert = Alerts()
         constraints = [NSLayoutConstraint]()
+        extendedLayoutIncludesOpaqueBars = true
         
         scrollView = UIScrollView()
+        scrollView.delegate = self
         scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT)
         view.addSubview(scrollView)
         scrollView.fill()
+        
+        let colors = [tintColor.cgColor, tintColor.cgColor]
+        backgroundView = BackgroundView4(colors: colors)
+        backgroundView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(backgroundView)
         
         titleLabel = createTitleLabel(text: "Title")
         scrollView.addSubview(titleLabel)
@@ -222,7 +242,6 @@ extension ParentPostViewController {
         priceLabel = createTitleLabel(text: "Price")
         scrollView.addSubview(priceLabel)
         
-        guard let infoImage = UIImage(systemName: "info.circle") else { return }
         priceInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
         priceInfoButton.translatesAutoresizingMaskIntoConstraints = false
         priceLabel.addSubview(priceInfoButton)
@@ -237,13 +256,11 @@ extension ParentPostViewController {
         
         descTextView = UITextView()
         descTextView.delegate = self
-        descTextView.layer.borderWidth = 0.7
-        descTextView.layer.borderColor = UIColor.lightGray.cgColor
-        descTextView.layer.cornerRadius = 5
+        descTextView.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 245/255)
+        descTextView.layer.cornerRadius = 10
         descTextView.contentInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         descTextView.clipsToBounds = true
         descTextView.isScrollEnabled = true
-        descTextView.layer.borderColor = UIColor.gray.withAlphaComponent(0.5).cgColor
         descTextView.font = UIFont.preferredFont(forTextStyle: .body)
         descTextView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(descTextView)
@@ -279,8 +296,7 @@ extension ParentPostViewController {
         saleMethodTitleLabel.isUserInteractionEnabled = true
         scrollView.addSubview(saleMethodTitleLabel)
         
-        guard let saleInfoImage = UIImage(systemName: "info.circle") else { return }
-        saleMethodInfoButton = UIButton.systemButton(with: saleInfoImage, target: self, action: #selector(buttonPressed(_:)))
+        saleMethodInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
         saleMethodInfoButton.translatesAutoresizingMaskIntoConstraints = false
         saleMethodTitleLabel.addSubview(saleMethodInfoButton)
         
@@ -291,8 +307,7 @@ extension ParentPostViewController {
         saleMethodLabel = createLabel(text: "")
         saleMethodLabelContainer.addSubview(saleMethodLabel)
         
-        guard let paymentInfoImage = UIImage(systemName: "info.circle") else { return }
-        paymentInfoButton = UIButton.systemButton(with: paymentInfoImage, target: self, action: #selector(buttonPressed(_:)))
+        paymentInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
         paymentInfoButton.translatesAutoresizingMaskIntoConstraints = false
         paymentMethodTitleLabel.addSubview(paymentInfoButton)
         
@@ -322,16 +337,17 @@ extension ParentPostViewController {
         tagTitleLabel = createTitleLabel(text: "Tags")
         scrollView.addSubview(tagTitleLabel)
         
+        let bgColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
         tagTextField = UISearchTextField()
         tagTextField.placeholder = "Up to 5 tags"
         let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: tagTextField.frame.size.height))
+        paddingView.backgroundColor = bgColor
         tagTextField.leftView = paddingView
         tagTextField.leftViewMode = .always
         tagTextField.delegate = self
-        tagTextField.layer.borderWidth = 0.7
-        tagTextField.layer.cornerRadius = 5
-        tagTextField.layer.borderColor = UIColor.lightGray.cgColor
-        tagTextField.backgroundColor = .white
+        tagTextField.layer.cornerRadius = 10
+        tagTextField.backgroundColor = bgColor
+        tagTextField.alpha = 0.5
         tagTextField.translatesAutoresizingMaskIntoConstraints = false
         tagContainerView.addSubview(tagTextField)
         
@@ -359,133 +375,137 @@ extension ParentPostViewController {
         postButton.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(postButton)
     }
-    
+
     // MARK: - setConstraints
     @objc func setConstraints() {
         priceLabelConstraintHeight = priceLabel.heightAnchor.constraint(equalToConstant: 50)
         priceTextFieldConstraintHeight = priceTextField.heightAnchor.constraint(equalToConstant: 50)
         saleMethodContainerConstraintHeight = saleMethodLabelContainer.heightAnchor.constraint(equalToConstant: 50)
         imagePreviewConstraintHeight = imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 0)
-        constraints.append(contentsOf: [
-            titleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            titleLabel.heightAnchor.constraint(equalToConstant: 50),
-            titleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            titleLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 20),
-            
-            titleTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            titleTextField.heightAnchor.constraint(equalToConstant: 50),
-            titleTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            titleTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 0),
-            
-            priceLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            priceLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            priceLabel.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 20),
-            priceLabelConstraintHeight,
-            
-            priceInfoButton.trailingAnchor.constraint(equalTo: priceLabel.trailingAnchor),
-            priceInfoButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            priceTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            priceTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            priceTextField.topAnchor.constraint(equalTo: priceLabel.bottomAnchor, constant: 0),
-            priceTextFieldConstraintHeight,
-            
-            descLabel.topAnchor.constraint(equalTo: priceTextField.bottomAnchor, constant: 20),
-            descLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            descLabel.heightAnchor.constraint(equalToConstant: 50),
-            descLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            
-            descTextView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            descTextView.heightAnchor.constraint(equalToConstant: 150),
-            descTextView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            descTextView.topAnchor.constraint(equalTo: descLabel.bottomAnchor, constant: 0),
-            
-            deliveryMethodTitleLabel.topAnchor.constraint(equalTo: descTextView.bottomAnchor, constant: 20),
-            deliveryMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            deliveryMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-            deliveryMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            
-            deliveryInfoButton.trailingAnchor.constraint(equalTo: deliveryMethodTitleLabel.trailingAnchor),
-            deliveryInfoButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            deliveryMethodLabel.topAnchor.constraint(equalTo: deliveryMethodTitleLabel.bottomAnchor, constant: 0),
-            deliveryMethodLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            deliveryMethodLabel.heightAnchor.constraint(equalToConstant: 50),
-            deliveryMethodLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            
-            addressTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            addressTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            addressTitleLabel.topAnchor.constraint(equalTo: deliveryMethodLabel.bottomAnchor, constant: 20),
-            addressTitleLabelConstraintHeight,
-            
-            addressLabel.topAnchor.constraint(equalTo: addressTitleLabel.bottomAnchor, constant: 0),
-            addressLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            addressLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            addressLabelConstraintHeight,
-            
-            saleMethodTopConstraint,
-            saleMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            saleMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-            saleMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            
-            saleMethodInfoButton.trailingAnchor.constraint(equalTo: saleMethodTitleLabel.trailingAnchor),
-            saleMethodInfoButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            saleMethodLabelContainer.topAnchor.constraint(equalTo: saleMethodTitleLabel.bottomAnchor, constant: 0),
-            saleMethodLabelContainer.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            saleMethodLabelContainer.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            saleMethodContainerConstraintHeight,
-            
-            saleMethodLabel.topAnchor.constraint(equalTo: saleMethodLabelContainer.topAnchor),
-            saleMethodLabel.leadingAnchor.constraint(equalTo: saleMethodLabelContainer.leadingAnchor),
-            saleMethodLabel.trailingAnchor.constraint(equalTo: saleMethodLabelContainer.trailingAnchor),
-            saleMethodLabel.heightAnchor.constraint(equalToConstant: 50),
-            
-            paymentMethodTitleLabel.topAnchor.constraint(equalTo: saleMethodLabelContainer.bottomAnchor, constant: 20),
-            paymentMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            paymentMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-            paymentMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            
-            paymentInfoButton.trailingAnchor.constraint(equalTo: paymentMethodTitleLabel.trailingAnchor),
-            paymentInfoButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            paymentMethodLabel.topAnchor.constraint(equalTo: paymentMethodTitleLabel.bottomAnchor, constant: 0),
-            paymentMethodLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            paymentMethodLabel.heightAnchor.constraint(equalToConstant: 50),
-            paymentMethodLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            
-            // category
-            pickerTitleLabel.topAnchor.constraint(equalTo: paymentMethodLabel.bottomAnchor, constant: 20),
-            pickerTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            pickerTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-            pickerTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            
-            pickerLabel.topAnchor.constraint(equalTo: pickerTitleLabel.bottomAnchor, constant: 0),
-            pickerLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            pickerLabel.heightAnchor.constraint(equalToConstant: 50),
-            pickerLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            
-            tagTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            tagTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-            tagTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            tagTitleLabel.topAnchor.constraint(equalTo: pickerLabel.bottomAnchor, constant: 20),
-            
-            tagContainerView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            tagContainerView.heightAnchor.constraint(equalToConstant: 50),
-            tagContainerView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            tagContainerView.topAnchor.constraint(equalTo: tagTitleLabel.bottomAnchor, constant: 0),
-            
-            tagTextField.widthAnchor.constraint(equalTo: tagContainerView.widthAnchor, multiplier: 0.75),
-            tagTextField.heightAnchor.constraint(equalToConstant: 50),
-            tagTextField.leadingAnchor.constraint(equalTo: tagContainerView.leadingAnchor),
-            tagTextField.topAnchor.constraint(equalTo: tagContainerView.topAnchor),
-            
-            addTagButton.widthAnchor.constraint(equalTo: tagContainerView.widthAnchor, multiplier: 0.2),
-            addTagButton.heightAnchor.constraint(equalToConstant: 50),
-            addTagButton.trailingAnchor.constraint(equalTo: tagContainerView.trailingAnchor),
-            addTagButton.topAnchor.constraint(equalTo: tagContainerView.topAnchor),
-        ])
         
+        backgroundView.topAnchor.constraint(equalTo: scrollView.topAnchor).isActive = true
+        backgroundView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        backgroundView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        backgroundView.heightAnchor.constraint(equalToConstant: 100).isActive = true
+        
+        titleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        titleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        titleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        titleLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 20).isActive = true
+        
+        titleTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        titleTextField.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        titleTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        titleTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 0).isActive = true
+        
+        priceLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        priceLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        priceLabel.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 20).isActive = true
+        priceLabelConstraintHeight.isActive = true
+        
+        priceInfoButton.trailingAnchor.constraint(equalTo: priceLabel.trailingAnchor).isActive = true
+        priceInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        
+        priceTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        priceTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        priceTextField.topAnchor.constraint(equalTo: priceLabel.bottomAnchor, constant: 0).isActive = true
+        priceTextFieldConstraintHeight.isActive = true
+        
+        descLabel.topAnchor.constraint(equalTo: priceTextField.bottomAnchor, constant: 20).isActive = true
+        descLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        descLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        descLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        
+        descTextView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        descTextView.heightAnchor.constraint(equalToConstant: 150).isActive = true
+        descTextView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        descTextView.topAnchor.constraint(equalTo: descLabel.bottomAnchor, constant: 0).isActive = true
+        
+        deliveryMethodTitleLabel.topAnchor.constraint(equalTo: descTextView.bottomAnchor, constant: 20).isActive = true
+        deliveryMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        deliveryMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        deliveryMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        
+        deliveryInfoButton.trailingAnchor.constraint(equalTo: deliveryMethodTitleLabel.trailingAnchor).isActive = true
+        deliveryInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        
+        deliveryMethodLabel.topAnchor.constraint(equalTo: deliveryMethodTitleLabel.bottomAnchor, constant: 0).isActive = true
+        deliveryMethodLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        deliveryMethodLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        deliveryMethodLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        
+        addressTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        addressTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        addressTitleLabel.topAnchor.constraint(equalTo: deliveryMethodLabel.bottomAnchor, constant: 20).isActive = true
+        addressTitleLabelConstraintHeight.isActive = true
+        
+        addressLabel.topAnchor.constraint(equalTo: addressTitleLabel.bottomAnchor, constant: 0).isActive = true
+        addressLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        addressLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        addressLabelConstraintHeight.isActive = true
+        
+        saleMethodTopConstraint.isActive = true
+        saleMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        saleMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        saleMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        
+        saleMethodInfoButton.trailingAnchor.constraint(equalTo: saleMethodTitleLabel.trailingAnchor).isActive = true
+        saleMethodInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        
+        saleMethodLabelContainer.topAnchor.constraint(equalTo: saleMethodTitleLabel.bottomAnchor, constant: 0).isActive = true
+        saleMethodLabelContainer.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        saleMethodLabelContainer.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        saleMethodContainerConstraintHeight.isActive = true
+        
+        saleMethodLabel.topAnchor.constraint(equalTo: saleMethodLabelContainer.topAnchor).isActive = true
+        saleMethodLabel.leadingAnchor.constraint(equalTo: saleMethodLabelContainer.leadingAnchor).isActive = true
+        saleMethodLabel.trailingAnchor.constraint(equalTo: saleMethodLabelContainer.trailingAnchor).isActive = true
+        saleMethodLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        
+        paymentMethodTitleLabel.topAnchor.constraint(equalTo: saleMethodLabelContainer.bottomAnchor, constant: 20).isActive = true
+        paymentMethodTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        paymentMethodTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        paymentMethodTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        
+        paymentInfoButton.trailingAnchor.constraint(equalTo: paymentMethodTitleLabel.trailingAnchor).isActive = true
+        paymentInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        
+        paymentMethodLabel.topAnchor.constraint(equalTo: paymentMethodTitleLabel.bottomAnchor, constant: 0).isActive = true
+        paymentMethodLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        paymentMethodLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        paymentMethodLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        
+        // category
+        pickerTitleLabel.topAnchor.constraint(equalTo: paymentMethodLabel.bottomAnchor, constant: 20).isActive = true
+        pickerTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        pickerTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        pickerTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        
+        pickerLabel.topAnchor.constraint(equalTo: pickerTitleLabel.bottomAnchor, constant: 0).isActive = true
+        pickerLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        pickerLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        pickerLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        
+        tagTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        tagTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        tagTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        tagTitleLabel.topAnchor.constraint(equalTo: pickerLabel.bottomAnchor, constant: 20).isActive = true
+        
+        tagContainerView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        tagContainerView.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        tagContainerView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        tagContainerView.topAnchor.constraint(equalTo: tagTitleLabel.bottomAnchor, constant: 0).isActive = true
+        
+        tagTextField.widthAnchor.constraint(equalTo: tagContainerView.widthAnchor, multiplier: 0.75).isActive = true
+        tagTextField.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        tagTextField.leadingAnchor.constraint(equalTo: tagContainerView.leadingAnchor).isActive = true
+        tagTextField.topAnchor.constraint(equalTo: tagContainerView.topAnchor).isActive = true
+        
+        addTagButton.widthAnchor.constraint(equalTo: tagContainerView.widthAnchor, multiplier: 0.2).isActive = true
+        addTagButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        addTagButton.trailingAnchor.constraint(equalTo: tagContainerView.trailingAnchor).isActive = true
+        addTagButton.topAnchor.constraint(equalTo: tagContainerView.topAnchor).isActive = true
+
         setIDFieldConstraints()
         setButtonPanelConstraints(topView: idContainerView)
         
@@ -967,17 +987,24 @@ extension ParentPostViewController: ScannerDelegate {
     }
 }
 
-
-/// hash image
-/// https://stackoverflow.com/questions/55868751/sha256-hash-of-camera-image-differs-after-it-was-saved-to-photo-album
-//let imageData = UIImage(named: "Example")!.pngData()!
-//print(imageData.base64EncodedString())
-//// 'iVBORw0KGgoAAAANSUhEUgAAAG8AAACACAQAAACv3v+8AAAM82lD [...] gAAAABJRU5ErkJggg=='
-//let imageHash = getImageHash(data: imageData)
-//print(imageHash)
-//// '145036245c9f675963cc8de2147887f9feded5813b0539d2320d201d9ce63397'
-
-// when you send the receipt, send the image and file binaries as well
-// the token gets sent to firestore directly
-// the image and file binaries get sent to storage
-// the storage trigger updates the firestore
+extension ParentPostViewController: UIScrollViewDelegate {
+    // To fill the gap that shows during the scroll view bounce.
+    // Since the backgroundView and the navigationBar are separate, when the scrollView is dragged downward, the white view behind is shown through.
+    // If the bounce is set false, it feels unnatural. Pluse the large title disappears when scrolled.
+    func setColorPatchView() {
+        colorPatchView.backgroundColor = tintColor
+        colorPatchView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(colorPatchView)
+        
+        colorPatchView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        colorPatchView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        colorPatchView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        colorPatchViewHeight.isActive = true
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if -scrollView.contentOffset.y > 0 {
+            colorPatchViewHeight.constant = -scrollView.contentOffset.y
+        }
+    }
+}

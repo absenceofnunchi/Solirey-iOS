@@ -45,7 +45,7 @@ class AccountViewController: UIViewController {
 //            data.insert(AccountMenu(imageTitle: "folder.circle", imageColor: UIColor(red: 238/255, green: 183/255, blue: 107/255, alpha: 1), titleString: "Wallet"), at: 0)
 //        }
 
-        configureNavigationBar(vc: self)
+        applyBarTintColorToTheNavigationBar()
         configureUI()
         setConstraints()
     }
@@ -78,6 +78,7 @@ class AccountViewController: UIViewController {
 
 extension AccountViewController: TableViewConfigurable {
     func configureUI() {
+        view.backgroundColor = .white
         scrollView = UIScrollView()
         scrollView.automaticallyAdjustsScrollIndicatorInsets = false
         scrollView.contentInsetAdjustmentBehavior = .never
