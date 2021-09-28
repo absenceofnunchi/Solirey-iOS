@@ -60,9 +60,9 @@ extension ParentProfileViewController {
         scrollView.addSubview(displayNameTitleLabel)
         
         displayNameTextField.setLeftPaddingPoints(10)
+        displayNameTextField.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
         displayNameTextField.delegate = self
-        displayNameTextField.layer.borderWidth = 0.7
-        displayNameTextField.layer.cornerRadius = 5
+        displayNameTextField.layer.cornerRadius = 10
         displayNameTextField.layer.borderColor = UIColor.lightGray.cgColor
         displayNameTextField.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(displayNameTextField)
@@ -83,28 +83,6 @@ extension ParentProfileViewController {
             displayNameTextField.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
             displayNameTextField.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
         ])
-        
-//        NSLayoutConstraint.activate([
-//            profileImageButton.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 150),
-//            profileImageButton.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-//            profileImageButton.heightAnchor.constraint(equalToConstant: 100),
-//            profileImageButton.widthAnchor.constraint(equalToConstant: 100),
-//
-//            displayNameTitleLabel.topAnchor.constraint(equalTo: profileImageButton.bottomAnchor, constant: 50),
-//            displayNameTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-//            displayNameTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-//            displayNameTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-//
-//            displayNameTextField.topAnchor.constraint(equalTo: displayNameTitleLabel.bottomAnchor, constant: 10),
-//            displayNameTextField.heightAnchor.constraint(equalToConstant: 50),
-//            displayNameTextField.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
-//            displayNameTextField.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
-            
-//            segmentedControl.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 50),
-//            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-//            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-//            segmentedControl.heightAnchor.constraint(equalToConstant: 50),
-//        ])
     }
 
     @objc func configureCustomProfileImage(from url: String) {

@@ -39,7 +39,7 @@ class AccountViewController: UIViewController {
 
     final override func viewDidLoad() {
         super.viewDidLoad()
-
+        applyBarTintColorToTheNavigationBar()
         configureUI()
         setConstraints()
     }

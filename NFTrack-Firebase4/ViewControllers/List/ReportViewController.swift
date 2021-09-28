@@ -10,8 +10,7 @@ import UIKit
 class ReportViewController: UIViewController {
     var post: Post!
     var scrollView: UIScrollView!
-    var reportView: GradientBackgroundView!
-    var titleContainer: UIView!
+    var customNavView: BackgroundView6!
     var titleLabel: UILabel!
     var itemTitleLabel: UILabel!
     var usernameLabel: UILabel!
@@ -30,8 +29,10 @@ class ReportViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        let contentSizeHeight: CGFloat = reportView.bounds.size.height + submitButton.bounds.size.height + textView.bounds.size.height + 200
+        let contentSizeHeight: CGFloat = titleLabel.bounds.size.height + itemTitleLabel.bounds.size.height + commentTitleLabel.bounds.height + submitButton.bounds.size.height + textView.bounds.size.height + 200
         scrollView.contentSize = CGSize(width: view.bounds.size.width, height: contentSizeHeight)
+        
+//        let v = UIView(frame: CGRect(origin: .zero, size: ))
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -55,38 +56,32 @@ extension ReportViewController {
         scrollView.fill()
         
         alert = Alerts()
+    
+        customNavView = BackgroundView6()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(customNavView)
         
-        reportView = GradientBackgroundView()
-        reportView.layer.cornerRadius = 10
-        reportView.clipsToBounds = true
-        reportView.layer.masksToBounds = true
-        reportView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 15, leading: 30, bottom: 15, trailing: 20)
-        reportView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(reportView)
+        titleLabel = createTitleLabel(text: "Item Title")
+        scrollView.addSubview(titleLabel)
         
-        titleContainer = UIView()
-        titleContainer.translatesAutoresizingMaskIntoConstraints = false
-        reportView.addSubview(titleContainer)
-        
-//        titleLabel = createTitleLabel(text: "Item Title")
-//        titleLabel.textColor = .white
-//        titleContainer.addSubview(titleLabel)
-        
-        itemTitleLabel = UILabel()
-        itemTitleLabel.text = post.title
-        itemTitleLabel.textColor = .white
-        itemTitleLabel.lineBreakMode = .byTruncatingTail
-        itemTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        titleContainer.addSubview(itemTitleLabel)
+        itemTitleLabel = createLabel(text: post.title)
+        scrollView.addSubview(itemTitleLabel)
+//        itemTitleLabel = UILabelPadding()
+//        itemTitleLabel.text = post.title
+//        itemTitleLabel.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
+//        itemTitleLabel.lineBreakMode = .byTruncatingTail
+//        itemTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+//        scrollView.addSubview(itemTitleLabel)
         
         commentTitleLabel = createTitleLabel(text: "Comment")
         commentTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(commentTitleLabel)
         
         textView = UITextView()
-        textView.layer.borderWidth = 0.7
-        textView.layer.borderColor = UIColor.lightGray.cgColor
-        textView.layer.cornerRadius = 5
+//        textView.layer.borderWidth = 0.7
+//        textView.layer.borderColor = UIColor.lightGray.cgColor
+        textView.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
+        textView.layer.cornerRadius = 10
         textView.contentInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         textView.clipsToBounds = true
         textView.isScrollEnabled = true
@@ -97,7 +92,7 @@ extension ReportViewController {
         
         submitButton = UIButton()
         submitButton.setTitle("Submit", for: .normal)
-        submitButton.backgroundColor = UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1)
+        submitButton.backgroundColor = .black
         submitButton.layer.cornerRadius = 5
         submitButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
         submitButton.translatesAutoresizingMaskIntoConstraints = false
@@ -106,28 +101,21 @@ extension ReportViewController {
     
     func setConstraints() {
         NSLayoutConstraint.activate([
-            reportView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 50),
-            reportView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            reportView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            reportView.heightAnchor.constraint(equalToConstant: 150),
+            customNavView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
             
-            titleContainer.centerYAnchor.constraint(equalTo: reportView.centerYAnchor),
-            titleContainer.centerXAnchor.constraint(equalTo: reportView.centerXAnchor),
-            titleContainer.heightAnchor.constraint(equalToConstant: 100),
-            titleContainer.widthAnchor.constraint(equalTo: reportView.widthAnchor, multiplier: 0.8),
+            titleLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 100),
+            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
-//            titleLabel.topAnchor.constraint(equalTo: titleContainer.topAnchor),
-//            titleLabel.leadingAnchor.constraint(equalTo: titleContainer.leadingAnchor),
-//            titleLabel.widthAnchor.constraint(equalTo: titleContainer.widthAnchor),
-//            titleLabel.heightAnchor.constraint(equalToConstant: 50),
-            
-//            itemTitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
-//            itemTitleLabel.leadingAnchor.constraint(equalTo: titleContainer.leadingAnchor),
-            itemTitleLabel.widthAnchor.constraint(equalTo: titleContainer.widthAnchor),
+            itemTitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
+            itemTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            itemTitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             itemTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-            itemTitleLabel.centerYAnchor.constraint(equalTo: titleContainer.centerYAnchor),
             
-            commentTitleLabel.topAnchor.constraint(equalTo: reportView.bottomAnchor, constant: 40),
+            commentTitleLabel.topAnchor.constraint(equalTo: itemTitleLabel.bottomAnchor, constant: 40),
             commentTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             commentTitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             

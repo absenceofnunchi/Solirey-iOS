@@ -30,7 +30,6 @@ class CustomTitleView: UIView {
     }
     var imageString: String!
     var button: UIButton!
-    
     var titleLabel: UILabel!
     
     override var intrinsicContentSize: CGSize {
@@ -51,7 +50,7 @@ class CustomTitleView: UIView {
                 .withTintColor(.red, renderingMode: .alwaysOriginal) else { return }
         onlineImageView = UIImageView(image: image)
         onlineImageView.translatesAutoresizingMaskIntoConstraints = false
-        onlineImageView.backgroundColor = .yellow
+        onlineImageView.backgroundColor = .clear
         self.addSubview(onlineImageView)
         
 //        button =  UIButton()
@@ -62,6 +61,7 @@ class CustomTitleView: UIView {
 //        self.addSubview(button)
         
         titleLabel = UILabel()
+        titleLabel.textColor = .white
         titleLabel.text = displayName
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(titleLabel)

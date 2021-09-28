@@ -154,6 +154,32 @@ extension UIViewController {
         }
     }
     
+    func applyBarTintColorToTheNavigationBar(
+        tintColor: UIColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1),
+        titleTextColor: UIColor = .white
+    ) {
+        guard let navController = navigationController else { return }
+        navController.isHiddenHairline = true
+        
+        // For comparison, apply the same barTintColor to the toolbar, which has been configured to be opaque.
+        navController.toolbar.barTintColor = tintColor
+        navController.toolbar.isTranslucent = true
+        
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithDefaultBackground()
+        appearance.backgroundImage = UIImage()
+        appearance.backgroundColor = tintColor
+        appearance.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: titleTextColor, NSAttributedString.Key.font: UIFont.rounded(ofSize: 30, weight: .bold)]
+        appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: titleTextColor]
+        
+        let navigationBarAppearance = navController.navigationBar
+        navigationBarAppearance.prefersLargeTitles = true
+        navigationBarAppearance.scrollEdgeAppearance = appearance
+        navigationBarAppearance.standardAppearance = appearance
+        navigationBarAppearance.tintColor = titleTextColor
+        navigationBarAppearance.sizeToFit()
+    }
+    
 //    func applyBarTintColorToTheNavigationBar(
 //        tintColor: UIColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1),
 //        titleTextColor: UIColor = .white
@@ -475,18 +501,6 @@ extension UIImageView {
             }
         }
         task.resume()
-    }
-    
-    func applyshadowWithCorner(containerView : UIView, cornerRadious : CGFloat){
-        containerView.clipsToBounds = false
-        containerView.layer.shadowColor = UIColor.black.cgColor
-        containerView.layer.shadowOpacity = 1
-        containerView.layer.shadowOffset = CGSize.zero
-        containerView.layer.shadowRadius = 10
-        containerView.layer.cornerRadius = cornerRadious
-        containerView.layer.shadowPath = UIBezierPath(roundedRect: containerView.bounds, cornerRadius: cornerRadious).cgPath
-        self.clipsToBounds = true
-        self.layer.cornerRadius = cornerRadious
     }
 }
 

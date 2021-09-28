@@ -81,6 +81,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         }
     }
     private var customTitleView: CustomTitleView!
+    private var customNavView: BackgroundView7!
     
     final override func setDataStore(postArr: [Message]) {
         dataStore = MessageImageDataStore(posts: postArr)
@@ -110,7 +111,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     final override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
-   
+        
         Future<Bool, PostingError> { [weak self] promise in
             self?.registerOnlineStatus(false, promise: promise)
         }
@@ -137,6 +138,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         alert = Alerts()
         postCache = NSCache<NSString, Post>()
         storage = Set<AnyCancellable>()
+        navigationController?.navigationBar.tintColor = .white
         
         tableView = UITableView()
         tableView.allowsSelection = false
@@ -153,6 +155,10 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
         tableView.frame = CGRect(origin: .zero, size: view.bounds.size)
         tableView.transform = CGAffineTransform(scaleX: 1, y: -1)
         view.addSubview(tableView)
+        
+        customNavView = BackgroundView7()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        view.insertSubview(customNavView, aboveSubview: tableView)
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ChatViewController.dismissKeyboard))
         tap.cancelsTouchesInView = false
@@ -203,6 +209,7 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
                     break
             }
         }
+        
         toolBarView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(toolBarView)
         
@@ -216,6 +223,11 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     private func setConstraints() {
         toolBarBottomConstraint = toolBarView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
             toolBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             toolBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             toolBarView.heightAnchor.constraint(greaterThanOrEqualToConstant: 60),
@@ -372,7 +384,6 @@ extension ChatViewController: PostParseDelegate {
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped))
         customTitleView.addGestureRecognizer(tap)
 
-
         guard let postBarImage = UIImage(systemName: "list.bullet.below.rectangle"),
               let reportImage = UIImage(systemName: "flag") else {
             return
@@ -389,7 +400,7 @@ extension ChatViewController: PostParseDelegate {
             }
             let barButtonMenu = UIMenu(title: "", children: buttonArr)
             
-            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withRenderingMode(.alwaysOriginal)
+            let image = UIImage(systemName: "line.horizontal.3.decrease")?.withTintColor(.white, renderingMode: .alwaysOriginal)
             optionsBarItem = UIBarButtonItem(title: nil, image: image, primaryAction: nil, menu: barButtonMenu)
             navigationItem.rightBarButtonItem = optionsBarItem
         } else {

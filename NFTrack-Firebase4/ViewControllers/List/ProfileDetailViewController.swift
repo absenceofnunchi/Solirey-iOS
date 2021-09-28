@@ -13,6 +13,7 @@ import UIKit
 import FirebaseFirestore
 
 class ProfileDetailViewController: ParentProfileViewController {
+    private var customNavView: BackgroundView5!
     private var memberHistoryTitleLabel: UILabel!
     private var memberHistoryTextField: UITextField!
     private var detailButton: UIButton!
@@ -26,7 +27,7 @@ class ProfileDetailViewController: ParentProfileViewController {
     final override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.navigationController?.navigationBar.prefersLargeTitles = true
-        self.navigationItem.largeTitleDisplayMode = .always
+//        self.navigationItem.largeTitleDisplayMode = .always
     }
 
     final override func viewDidLayoutSubviews() {
@@ -46,7 +47,12 @@ class ProfileDetailViewController: ParentProfileViewController {
 extension ProfileDetailViewController {
     final override func configureUI() {
         super.configureUI()
+        title = "Profile"
         displayNameTextField.isUserInteractionEnabled = false
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(customNavView)
         
         memberHistoryTitleLabel = createTitleLabel(text: "Member Since")
         scrollView.addSubview(memberHistoryTitleLabel)
@@ -73,6 +79,11 @@ extension ProfileDetailViewController {
         scrollView.addSubview(detailButton)
 
         NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
             memberHistoryTitleLabel.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 30),
             memberHistoryTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
             memberHistoryTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),

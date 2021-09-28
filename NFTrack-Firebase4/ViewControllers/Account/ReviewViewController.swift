@@ -13,10 +13,12 @@ import UIKit
 class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
     internal var segmentedControl: UISegmentedControl!
     private var userIdField: String!
-    
+    private var customNavView: BackgroundView5!
+
     final override func viewDidLoad() {
         super.viewDidLoad()
         
+        setConstraints()
         configureSwitch()
         configureDataFetch(userIdField: "buyerUserId")
     }
@@ -30,11 +32,24 @@ class ReviewViewController: ParentListViewController<Post>, PostParseDelegate {
         title = "Pending Reviews"
         
         tableView = configureTableView(delegate: self, dataSource: self, height: 150, cellType: ListCell.self, identifier: ListCell.identifier)
+        tableView.contentInset = UIEdgeInsets(top: 60, left: 0, bottom: 0, right: 0)
         tableView.prefetchDataSource = self
         view.addSubview(tableView)
         tableView.fill()
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.addSubview(customNavView)
     }
     
+    private func setConstraints() {
+        NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: -60),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50)
+        ])
+    }
 
     final func configureDataFetch(userIdField: String) {
         guard let userId = userId else {

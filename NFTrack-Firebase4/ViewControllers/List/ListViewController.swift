@@ -29,6 +29,7 @@ class ListViewController: ParentListViewController<Post> {
 
     final override func viewDidLoad() {
         super.viewDidLoad()
+        applyBarTintColorToTheNavigationBar()
         configureSwitch()
     }
     

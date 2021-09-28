@@ -59,7 +59,6 @@ extension ReviewDetailViewController: PageVCConfigurable, UsernameBannerConfigur
     func configureUI() {
         title = "Review"
         view.backgroundColor = .white
-//        scrollView = UIScrollView()
         view.addSubview(scrollView)
         scrollView.fill()
         galleries = [String]()

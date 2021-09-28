@@ -163,6 +163,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        applyBarTintColorToTheNavigationBar()
         configureUI()
         configureImagePreview()
         setConstraints()

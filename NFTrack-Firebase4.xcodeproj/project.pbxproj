@@ -114,6 +114,7 @@
 		4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */; };
 		4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5942649B6FA005B3268 /* PageViewController.swift */; };
 		4969A267270268F20093068C /* CustomNavViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969A266270268F20093068C /* CustomNavViewController.swift */; };
+		4969A26C2702C8810093068C /* BackgroundView7.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969A26B2702C8810093068C /* BackgroundView7.swift */; };
 		496D56B12659654A00C3E7FD /* CategoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56B02659654A00C3E7FD /* CategoryCell.swift */; };
 		496D56B62659E6F900C3E7FD /* MyDoneButtonVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */; };
 		496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */; };
@@ -313,6 +314,7 @@
 		4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePageViewController.swift; sourceTree = "<group>"; };
 		4964E5942649B6FA005B3268 /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
 		4969A266270268F20093068C /* CustomNavViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavViewController.swift; sourceTree = "<group>"; };
+		4969A26B2702C8810093068C /* BackgroundView7.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView7.swift; sourceTree = "<group>"; };
 		496D56B02659654A00C3E7FD /* CategoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryCell.swift; sourceTree = "<group>"; };
 		496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDoneButtonVC.swift; sourceTree = "<group>"; };
 		496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPickerViewController.swift; sourceTree = "<group>"; };
@@ -471,6 +473,7 @@
 				490C3FA026FD6B830093C323 /* BackgroundView4.swift */,
 				490C3FD026FFBBE00093C323 /* BackgroundView5.swift */,
 				4998E8502701305B00B1F5F0 /* BackgroundView6.swift */,
+				4969A26B2702C8810093068C /* BackgroundView7.swift */,
 			);
 			path = "Background Views";
 			sourceTree = "<group>";
@@ -1193,6 +1196,7 @@
 				496D56C52659FF2100C3E7FD /* MainDetailViewController.swift in Sources */,
 				4964E57726499D74005B3268 /* RegisteredWalletViewController.swift in Sources */,
 				4933335C26825D6700B8BFC2 /* CustomSegmentedControl.swift in Sources */,
+				4969A26C2702C8810093068C /* BackgroundView7.swift in Sources */,
 				493BF9E4264C549D00B9C9D2 /* ScannerViewController.swift in Sources */,
 				4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */,
 				49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */,

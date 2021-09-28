@@ -8,14 +8,11 @@
 import UIKit
 
 class CustomNavController: UINavigationController {
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        applyBarTintColorToTheNavigationBar5()
-    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.navigationBar.sizeToFit()
+        print("CustomNavController")
+        applyBarTintColorToTheNavigationBar5()
     }
     
     func applyBarTintColorToTheNavigationBar5(
@@ -40,5 +37,6 @@ class CustomNavController: UINavigationController {
         navigationBarAppearance.scrollEdgeAppearance = appearance
         navigationBarAppearance.standardAppearance = appearance
         navigationBarAppearance.tintColor = titleTextColor
+        navigationBarAppearance.sizeToFit()
     }
 }

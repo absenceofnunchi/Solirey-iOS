@@ -70,31 +70,31 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
                     let mainVC = MainViewController()
                     mainVC.title = "Main"
 
-                    let mainNav = CustomNavController(rootViewController: mainVC)
+                    let mainNav = UINavigationController(rootViewController: mainVC)
                     tabBar.addChild(mainNav)
 
                     let listVC = ListViewController()
                     listVC.title = "List"
 
-                    let listNav = CustomNavController(rootViewController: listVC)
+                    let listNav = UINavigationController(rootViewController: listVC)
                     tabBar.addChild(listNav)
                     
                     let newPostVC = NewPostViewController()
                     newPostVC.title = "Post"
                     
-                    let postNav = CustomNavController(rootViewController: newPostVC)
+                    let postNav = UINavigationController(rootViewController: newPostVC)
                     tabBar.addChild(postNav)
 
                     let chatListVC = ChatListViewController()
                     chatListVC.title = "Inbox"
 
-                    let chatListNav = CustomNavController(rootViewController: chatListVC)
+                    let chatListNav = UINavigationController(rootViewController: chatListVC)
                     tabBar.addChild(chatListNav)
 
                     let acctVC = AccountViewController()
                     acctVC.title = "Account"
 
-                    let acctNav = CustomNavController(rootViewController: acctVC)
+                    let acctNav = UINavigationController(rootViewController: acctVC)
                     tabBar.addChild(acctNav)
                     
                     self?.window!.rootViewController = tabBar

@@ -96,10 +96,10 @@ extension ProfileViewController {
         scrollView.addSubview(addressDeleteButton)
         
         addressLabel = UILabelPadding()
-        addressLabel.layer.borderWidth = 0.7
-        addressLabel.layer.cornerRadius = 5
-        addressLabel.layer.borderColor = UIColor.lightGray.cgColor
+        addressLabel.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
+        addressLabel.layer.cornerRadius = 10
         addressLabel.isUserInteractionEnabled = true
+        addressLabel.clipsToBounds = true
         addressLabel.tag = 5
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         addressLabel.addGestureRecognizer(tap)

@@ -882,7 +882,7 @@ extension PageVCConfigurable {
         guard let pv = pvc.view else { return }
         constraints.append(contentsOf: [
             imageHeightConstraint,
-            pv.topAnchor.constraint(equalTo: v.topAnchor, constant: 40),
+            pv.topAnchor.constraint(equalTo: v.topAnchor, constant: 20),
             pv.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
             pv.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
         ])

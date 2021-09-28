@@ -16,6 +16,7 @@ class ParentChatListViewController: ParentListViewController<ChatListModel>, Pos
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        applyBarTintColorToTheNavigationBar()
         postCache = NSCache<NSString, Post>()
         storage = Set<AnyCancellable>()
         setCustomNavConstraints()

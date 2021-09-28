@@ -77,14 +77,22 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         fetchSubscriptionStatus()
         setConstraints()
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        DispatchQueue.main.async { [weak self] in
+            self?.navigationController?.navigationBar.sizeToFit()
+        }
+    }
 
     final override func configureUI() {
         super.configureUI()
         extendedLayoutIncludesOpaqueBars = true
-
+//        edgesForExtendedLayout = []
+        
         tableView = configureTableView(delegate: self, dataSource: self, height: 330, cellType: CardCell.self, identifier: CardCell.identifier)
-        tableView.contentInset = UIEdgeInsets(top: 65, left: 0, bottom: 0, right: 0)
-        tableView.contentInsetAdjustmentBehavior = .never
+        tableView.contentInset = UIEdgeInsets(top: 60, left: 0, bottom: 0, right: 0)
+        tableView.contentInsetAdjustmentBehavior = .always
         tableView.prefetchDataSource = self
         view.addSubview(tableView)
         tableView.fill()
@@ -96,7 +104,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     
     private func setConstraints() {
         NSLayoutConstraint.activate([
-            customNavView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: -65),
+            customNavView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: -60),
             customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             customNavView.heightAnchor.constraint(equalToConstant: 50)

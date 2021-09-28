@@ -17,34 +17,50 @@ import UIKit
 import FirebaseFirestore
 
 class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate {
-    let CELL_HEIGHT: CGFloat = 450
+    private let CELL_HEIGHT: CGFloat = 450
+    private var customNavView: BackgroundView5!
 
-    override var postArr: [Post] {
+    final override var postArr: [Post] {
         didSet {
             tableView.contentSize = CGSize(width: self.view.bounds.size.width, height: CGFloat(postArr.count) * CELL_HEIGHT + 80)
             tableView.reloadData()
         }
     }
     
-    override func configureUI() {
-        super.configureUI()
-        title = "Purchases"
-        tableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
-        tableView.prefetchDataSource = self
-        view.addSubview(tableView)
-        tableView.fill()
-    }
-    
-    override func setDataStore(postArr: [Post]) {
+    final override func setDataStore(postArr: [Post]) {
         dataStore = PostImageDataStore(posts: postArr)
     }
     
-    override func viewDidLoad() {
+    final override func viewDidLoad() {
         super.viewDidLoad()
         fetchData()
+        setConstraints()
     }
     
-    func fetchData() {
+    final override func configureUI() {
+        super.configureUI()
+        title = "Purchases"
+        tableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
+        tableView.contentInset = UIEdgeInsets(top: 60, left: 0, bottom: 0, right: 0)
+        tableView.prefetchDataSource = self
+        view.addSubview(tableView)
+        tableView.fill()
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.addSubview(customNavView)
+    }
+    
+    private func setConstraints() {
+        NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: -60),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50)
+        ])
+    }
+    
+    private func fetchData() {
         guard let userId = userId else { return }
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
@@ -86,7 +102,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
             }
     }
     
-    func refetchData(lastSnapshot: QueryDocumentSnapshot) {
+    private func refetchData(lastSnapshot: QueryDocumentSnapshot) {
         guard let userId = userId else { return }
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
@@ -127,7 +143,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
             }
     }
     
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: CardCell.identifier) as? CardCell else {
             fatalError("Sorry, could not load cell")
         }
@@ -137,13 +153,13 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
         return cell
     }
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = postArr[indexPath.row]
         self.navigationController?.pushViewController(listDetailVC, animated: true)
     }
     
-    override func executeAfterDragging() {
+    final override func executeAfterDragging() {
         guard postArr.count > 0 else { return }
         refetchData(lastSnapshot: lastSnapshot)
     }
