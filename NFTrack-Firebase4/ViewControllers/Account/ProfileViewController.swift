@@ -56,14 +56,7 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
-        if addressLabel != nil, addressDeleteButton != nil {
-            if (addressLabel.text == "" || addressLabel.text == nil) {
-                addressDeleteButton.alpha = 0
-            } else {
-                addressDeleteButton.alpha = 1
-            }
-        }
+        loadingAnimation()
     }
     
     final override func viewWillDisappear(_ animated: Bool) {
@@ -72,6 +65,57 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
         // Show the navigation bar on other view controllers
         self.navigationController?.setNavigationBarHidden(false, animated: animated)
     }
+    
+    func loadingAnimation() {
+        let totalCount = 4
+        let duration = 1.0 / Double(totalCount)
+        
+        let animation = UIViewPropertyAnimator(duration: 0.7, timingParameters: UICubicTimingParameters())
+        animation.addAnimations {
+            UIView.animateKeyframes(withDuration: 0, delay: 0, animations: { [weak self] in
+                UIView.addKeyframe(withRelativeStartTime: 1 / Double(totalCount), relativeDuration: duration) {
+                    self?.displayNameTitleLabel.alpha = 1
+                    self?.displayNameTitleLabel.transform = .identity
+                    
+                    self?.displayNameTextField.alpha = 1
+                    self?.displayNameTextField.transform = .identity
+                }
+                
+                UIView.addKeyframe(withRelativeStartTime: 2 / Double(totalCount), relativeDuration: duration) {
+                    self?.emailTitleLabel.alpha = 1
+                    self?.emailTitleLabel.transform = .identity
+                    
+                    self?.emailTextField.alpha = 1
+                    self?.emailTextField.transform = .identity
+                }
+                
+                UIView.addKeyframe(withRelativeStartTime: 3 / Double(totalCount), relativeDuration: duration) {
+                    self?.addressTitleLabel.alpha = 1
+                    self?.addressTitleLabel.transform = .identity
+                    
+                    self?.addressLabel.alpha = 1
+                    self?.addressLabel.transform = .identity
+                    
+                    if self?.addressLabel != nil, self?.addressDeleteButton != nil {
+                        if (self?.addressLabel.text == "" || self?.addressLabel.text == nil) {
+                            self?.addressDeleteButton.alpha = 0
+                        } else {
+                            self?.addressDeleteButton.alpha = 1
+                        }
+                    }
+                    
+                    self?.addressDeleteButton.transform = .identity
+                }
+                
+                UIView.addKeyframe(withRelativeStartTime: 4 / Double(totalCount), relativeDuration: duration) {
+                    self?.updateButton.alpha = 1
+                    self?.updateButton.transform = .identity
+                }
+            })
+        }
+        
+        animation.startAnimation()
+    }
 }
 
 extension ProfileViewController {
@@ -79,23 +123,38 @@ extension ProfileViewController {
         super.configureUI()
         self.hideKeyboardWhenTappedAround()
         
+        displayNameTitleLabel.transform = CGAffineTransform(translationX: 0, y: 40)
+        displayNameTitleLabel.alpha = 0
+        displayNameTextField.transform = CGAffineTransform(translationX: 0, y: 40)
+        displayNameTextField.alpha = 0
+        
         emailTitleLabel = createTitleLabel(text: "Email")
+        emailTitleLabel.transform = CGAffineTransform(translationX: 0, y: 40)
+        emailTitleLabel.alpha = 0
         scrollView.addSubview(emailTitleLabel)
         
         emailTextField = createTextField(content: nil, delegate: self)
+        emailTextField.alpha = 0
+        emailTextField.transform = CGAffineTransform(translationX: 0, y: 40)
         scrollView.addSubview(emailTextField)
         
         addressTitleLabel = createTitleLabel(text: "Shipping Address")
+        addressTitleLabel.alpha = 0
+        addressTitleLabel.transform = CGAffineTransform(translationX: 0, y: 40)
         addressTitleLabel.sizeToFit()
         scrollView.addSubview(addressTitleLabel)
         
         guard let deleteImage = deleteImage else { return }
         addressDeleteButton = UIButton.systemButton(with: deleteImage, target: self, action: #selector(buttonPressed(_:)))
         addressDeleteButton.tag = 4
+        addressDeleteButton.transform = CGAffineTransform(translationX: 0, y: 40)
+        addressDeleteButton.alpha = 0
         addressDeleteButton.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(addressDeleteButton)
         
         addressLabel = UILabelPadding()
+        addressLabel.transform = CGAffineTransform(translationX: 0, y: 40)
+        addressLabel.alpha = 0
         addressLabel.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
         addressLabel.layer.cornerRadius = 10
         addressLabel.isUserInteractionEnabled = true
@@ -107,6 +166,8 @@ extension ProfileViewController {
         scrollView.addSubview(addressLabel)
         
         updateButton = UIButton()
+        updateButton.transform = CGAffineTransform(translationX: 0, y: 40)
+        updateButton.alpha = 0
         updateButton.backgroundColor = .black
         updateButton.tag = 2
         updateButton.layer.cornerRadius = 5

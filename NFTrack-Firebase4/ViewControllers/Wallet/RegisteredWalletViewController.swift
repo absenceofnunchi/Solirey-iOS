@@ -22,11 +22,16 @@ class RegisteredWalletViewController: UIViewController {
     private var deleteWalletButton: UIButton!
     private var privateKeyButton: UIButton!
     private var resetPassword: UIButton!
-    
     private let localDatabase = LocalDatabase()
     private let keyService = KeysService()
     private let transactionService = TransactionService()
     private let alert = Alerts()
+    private let buttonArr: [ButtonModel] = [
+        ButtonModel(titleString: NSLocalizedString("Transaction History", comment: ""), imageName: "book.circle", tintColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), tag: 0),
+        ButtonModel(titleString: NSLocalizedString("Reset Password", comment: ""), imageName: "lock.rotation", tintColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), tag: 1),
+        ButtonModel(titleString: NSLocalizedString("Private Key", comment: ""), imageName: "lock.circle", tintColor: UIColor(red: 255/255, green: 160/255, blue: 160/255, alpha: 1), tag: 2),
+        ButtonModel(titleString: NSLocalizedString("Delete Wallet", comment: ""), imageName: "trash.circle", tintColor: UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1), tag: 3)
+    ]
     
     // MARK: - viewDidLoad
     override func viewDidLoad() {
@@ -42,13 +47,64 @@ class RegisteredWalletViewController: UIViewController {
         super.viewDidAppear(animated)
         
         presentingController = presentingViewController
+        loadingAnimation()
     }
+    
+    func loadingAnimation() {
+        let totalCount = 7
+        let duration = 1.0 / Double(totalCount)
+        
+        let animation = UIViewPropertyAnimator(duration: 1.2, timingParameters: UICubicTimingParameters())
+        animation.addAnimations {
+            UIView.animateKeyframes(withDuration: 0, delay: 0, animations: { [weak self] in
+                UIView.addKeyframe(withRelativeStartTime: 1 / Double(totalCount), relativeDuration: duration) {
+                    self?.balanceLabel.alpha = 1
+                    self?.balanceLabel.transform = .identity
+                }
+                
+                UIView.addKeyframe(withRelativeStartTime: 2 / Double(totalCount), relativeDuration: duration) {
+                    self?.sendButton.alpha = 1
+                    self?.sendButton.transform = .identity
+                    
+                    self?.receiveButton.alpha = 1
+                    self?.receiveButton.transform = .identity
+                }
+                
+                UIView.addKeyframe(withRelativeStartTime: 3 / Double(totalCount), relativeDuration: duration) {
+                    self?.lowerContainer.alpha = 1
+                    self?.lowerContainer.transform = .identity
+                }
+                
+                guard let buttonCount = self?.buttonArr.count else { return }
+                for i in 0...buttonCount - 1 {
+                    UIView.addKeyframe(withRelativeStartTime: Double(i + 3) / Double(totalCount), relativeDuration: duration) {
+                        self?.stackView.arrangedSubviews[i].alpha = 1
+                        self?.stackView.arrangedSubviews[i].transform = .identity
+                    }
+                }
+            })
+        }
+        
+        animation.startAnimation()
+    }
+}
+
+struct ButtonModel {
+    let titleString: String
+    let imageName: String
+    let tintColor: UIColor
+    let tag: Int
 }
 
 extension RegisteredWalletViewController: UITextFieldDelegate {
     // MARK: - configure
     func configure() {
-        view.backgroundColor = UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1)
+//        view.backgroundColor = UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1)
+//        view.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        let gradientBackgroundView = GradientBackgroundView(startingColor: UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1),
+                                                            finishingColor: UIColor(red: 66/255, green: 110/255, blue: 148/255, alpha: 1))
+        view.addSubview(gradientBackgroundView)
+        gradientBackgroundView.fill()
         
         upperContainer = UIView()
         upperContainer.isUserInteractionEnabled = true
@@ -56,7 +112,7 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         view.addSubview(upperContainer)
         
         // refresh button
-        let refreshImage = UIImage(systemName: "arrow.clockwise")!.withTintColor(.white, renderingMode: .alwaysOriginal)
+        guard let refreshImage = UIImage(systemName: "arrow.clockwise")?.withTintColor(.white, renderingMode: .alwaysOriginal) else { return }
         refreshButton = UIButton.systemButton(with: refreshImage, target: self, action: #selector(buttonHandler))
         refreshButton.tag = 4
         refreshButton.translatesAutoresizingMaskIntoConstraints = false
@@ -77,6 +133,8 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         balanceLabel = UILabel()
         balanceLabel.textAlignment = .center
         balanceLabel.text = "0 ETH"
+        balanceLabel.transform = CGAffineTransform(translationX: 0, y: 40)
+        balanceLabel.alpha = 0
         balanceLabel.textColor = .white
         balanceLabel.font = UIFont.systemFont(ofSize: 30, weight: .regular)
         balanceLabel.sizeToFit()
@@ -84,7 +142,9 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         upperContainer.addSubview(balanceLabel)
         
         // send button
-        sendButton = WalletButtonView(imageName: "arrow.up.to.line", labelName: "Send", bgColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), labelTextColor: .white, imageTintColor: .white)
+        sendButton = WalletButtonView(imageName: "arrow.up.to.line", labelName: "Send", bgColor: UIColor(red: 167/255, green: 197/255, blue: 235/255, alpha: 1), labelTextColor: .white, imageTintColor: .white)
+        sendButton.transform = CGAffineTransform(translationX: 0, y: 40)
+        sendButton.alpha = 0
         sendButton.buttonAction = { [weak self] in
             let sendVC = SendViewController()
             sendVC.modalPresentationStyle = .fullScreen
@@ -94,7 +154,9 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         upperContainer.addSubview(sendButton)
         
         // receive button
-        receiveButton = WalletButtonView(imageName: "arrow.down.to.line", labelName: "Receive", bgColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), labelTextColor: .white, imageTintColor: .white)
+        receiveButton = WalletButtonView(imageName: "arrow.down.to.line", labelName: "Receive", bgColor: UIColor(red: 167/255, green: 197/255, blue: 235/255, alpha: 1), labelTextColor: .white, imageTintColor: .white)
+        receiveButton.transform = CGAffineTransform(translationX: 0, y: 40)
+        receiveButton.alpha = 0
         receiveButton.buttonAction = { [weak self] in
             let receiveVC = ReceiveViewController()
             receiveVC.modalPresentationStyle = .fullScreen
@@ -104,59 +166,171 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         view.addSubview(receiveButton)
         
         lowerContainer = BackgroundView()
+        lowerContainer.transform = CGAffineTransform(translationX: 0, y: 50)
+        lowerContainer.alpha = 0
         lowerContainer.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(lowerContainer)
         
         stackView = UIStackView()
         stackView.axis = .vertical
         stackView.distribution = .fillEqually
-        stackView.spacing = 20
+        stackView.spacing = 30
         stackView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(stackView)
         
-        historyButton = UIButton()
-        historyButton.dropShadow()
-        historyButton.setTitle("Transaction History", for: .normal)
-        historyButton.setTitleColor(.black, for: .normal)
-        historyButton.addTarget(self, action: #selector(buttonHandler), for: .touchUpInside)
-        historyButton.backgroundColor = .white
-        historyButton.layer.cornerRadius = 10
-        historyButton.tag = 6
-        historyButton.translatesAutoresizingMaskIntoConstraints = false
-        stackView.addArrangedSubview(historyButton)
+        buttonArr.forEach { (buttonModel) in
+            guard let buttonView = createButton(
+                    titleString: buttonModel.titleString,
+                    imageName: buttonModel.imageName,
+                    tintColor: buttonModel.tintColor,
+                    tag: buttonModel.tag
+            ) else { return }
+            
+            stackView.addArrangedSubview(buttonView)
+        }
+    }
+    
+    func createButton(
+        titleString: String,
+        imageName: String,
+        tintColor: UIColor,
+        tag: Int
+    ) -> UIView? {
+        let containerView = UIView()
+        containerView.tag = tag
+        containerView.backgroundColor = .white
+        containerView.layer.cornerRadius = 10
+        containerView.transform = CGAffineTransform(translationX: 0, y: 40)
+        containerView.alpha = 0
+        containerView.dropShadow()
         
-        resetPassword = UIButton()
-        resetPassword.dropShadow()
-        resetPassword.setTitle("Reset Password", for: .normal)
-        resetPassword.setTitleColor(.black, for: .normal)
-        resetPassword.addTarget(self, action: #selector(buttonHandler), for: .touchUpInside)
-        resetPassword.backgroundColor = .white
-        resetPassword.layer.cornerRadius = 10
-        resetPassword.tag = 3
-        resetPassword.translatesAutoresizingMaskIntoConstraints = false
-        stackView.addArrangedSubview(resetPassword)
+        guard let image = UIImage(systemName: imageName)?
+                .withTintColor(tintColor, renderingMode: .alwaysOriginal) else { return nil }
         
-        privateKeyButton = UIButton()
-        privateKeyButton.dropShadow()
-        privateKeyButton.setTitle("Private Key", for: .normal)
-        privateKeyButton.setTitleColor(.black, for: .normal)
-        privateKeyButton.addTarget(self, action: #selector(buttonHandler), for: .touchUpInside)
-        privateKeyButton.backgroundColor = .white
-        privateKeyButton.layer.cornerRadius = 10
-        privateKeyButton.tag = 2
-        privateKeyButton.translatesAutoresizingMaskIntoConstraints = false
-        stackView.addArrangedSubview(privateKeyButton)
+        let imageView = UIImageView(image: image)
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(imageView)
         
-        deleteWalletButton = UIButton()
-        deleteWalletButton.dropShadow()
-        deleteWalletButton.setTitle("Delete Wallet", for: .normal)
-        deleteWalletButton.setTitleColor(.black, for: .normal)
-        deleteWalletButton.addTarget(self, action: #selector(buttonHandler), for: .touchUpInside)
-        deleteWalletButton.backgroundColor = .white
-        deleteWalletButton.layer.cornerRadius = 10
-        deleteWalletButton.tag = 1
-        deleteWalletButton.translatesAutoresizingMaskIntoConstraints = false
-        stackView.addArrangedSubview(deleteWalletButton)
+        let titleLabel = UILabel()
+        titleLabel.textAlignment = .left
+        titleLabel.text = titleString
+        titleLabel.textColor = .lightGray
+        titleLabel.font = UIFont.rounded(ofSize: 16, weight: .medium)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(titleLabel)
+        
+        NSLayoutConstraint.activate([
+            imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 40),
+            imageView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            imageView.heightAnchor.constraint(equalToConstant: 40),
+            imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor),
+            
+            titleLabel.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 20),
+            titleLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.layoutMarginsGuide.trailingAnchor),
+        ])
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+        containerView.addGestureRecognizer(tap)
+        return containerView
+    }
+    
+    @objc func tapped(_ sender: UITapGestureRecognizer) {
+        guard let v = sender.view else { return }
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
+        switch v.tag {
+            case 0:
+                guard let walletAddress = Web3swiftService.currentAddressString else {
+                    self.alert.showDetail("Error", with: "Could not retrieve the wallet address.", for: self)
+                    return
+                }
+                
+                let webVC = WebViewController()
+                let hashType = "address"
+                webVC.urlString = "https://rinkeby.etherscan.io/\(hashType)/\(walletAddress)"
+                self.present(webVC, animated: true, completion: nil)
+            case 1:
+                // reset your password
+                let prVC = PasswordResetViewController()
+                prVC.titleString = "Reset your password"
+                prVC.buttonAction = { [weak self]vc in
+                    self?.dismiss(animated: true, completion: {
+                        let prVC = vc as! PasswordResetViewController
+                        guard let oldPassword = prVC.currentPasswordTextField.text,
+                              let newPassword = prVC.passwordTextField.text else { return }
+                        
+                        self?.keyService.resetPassword(oldPassword: oldPassword, newPassword: newPassword) { [weak self](wallet, error) in
+                            if let error = error {
+                                switch error {
+                                    case .failureToFetchOldPassword:
+                                        self?.alert.showDetail("Error", with: "Sorry, the old password couldn't be fetched", alignment: .center, for: self)
+                                    case .failureToRegeneratePassword:
+                                        self?.alert.showDetail("Error", with: "Sorry, a new password couldn't be generated", alignment: .left, for: self)
+                                }
+                            }
+                            
+                            if let wallet = wallet {
+                                self?.localDatabase.saveWallet(isRegistered: false, wallet: wallet) { (error) in
+                                    if let _ = error {
+                                        self?.alert.showDetail("Error", with: "Sorry, there was an error generating a new password. Check to see if you're using the correct password.", alignment: .left, for: self)
+                                    }
+                                    
+                                    self?.alert.showDetail("Success", with: "A new password has been generated!", alignment: .center, for: self)
+                                }
+                            }
+                        }
+                    })
+                }
+                present(prVC, animated: true, completion: nil)
+            case 2:
+                // show private key
+                let ac = UIAlertController(title: "Enter the password", message: nil, preferredStyle: .alert)
+                ac.addTextField { (textField: UITextField!) in
+                    textField.delegate = self
+                }
+                
+                let enterAction = UIAlertAction(title: "Enter", style: .default) { [unowned ac, weak self](_) in
+                    guard let textField = ac.textFields?.first, let text = textField.text else { return }
+                    
+                    do {
+                        let privateKey = try self?.keyService.getWalletPrivateKey(password: text)
+                        self?.alert.showDetail("Private Key", with: privateKey, height: 350, for: self, buttonAction:  { [weak self] in
+                            self?.alert.fading(controller: self, toBePasted: privateKey ?? "Not available")
+                        })
+                    } catch {
+                        self?.alert.showDetail("Error", with: "Wrong password", alignment: .center, for: self)
+                    }
+                }
+                
+                let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+                ac.addAction(enterAction)
+                ac.addAction(cancelAction)
+                self.present(ac, animated: true, completion: nil)
+            case 3:
+                // delete
+                let content = [
+                    StandardAlertContent(
+                        titleString: "Delete Wallet",
+                        body: ["": "Are you sure you want to delete your wallet from your local storage?"],
+                        messageTextAlignment: .left,
+                        alertStyle: .withCancelButton,
+                        buttonAction: { [weak self](_) in
+                            self?.dismiss(animated: true, completion: nil)
+                            self?.localDatabase.deleteWallet { (error) in
+                                if let error = error {
+                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                                }
+                                self?.delegate?.didProcessWallet()
+                            }
+                        })
+                ]
+                let alertVC = AlertViewController(height: 300, standardAlertContent: content)
+                self.present(alertVC, animated: true, completion: nil)
+            default:
+                break
+        }
     }
     
     @objc func configureWallet() {
@@ -193,12 +367,6 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         }
     }
     
-//    override func configureCloseButton() {
-//        super.configureCloseButton()
-//
-//        closeButtonImage.withTintColor(.white, renderingMode: .alwaysOriginal)
-//    }
-    
     // MARK: - setConstraints
     func setConstraints() {
         NSLayoutConstraint.activate([
@@ -208,7 +376,7 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
             upperContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             upperContainer.bottomAnchor.constraint(equalTo: lowerContainer.topAnchor),
             
-            refreshButton.topAnchor.constraint(equalTo: upperContainer.layoutMarginsGuide.topAnchor, constant: 0),
+            refreshButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor, constant: 0),
             refreshButton.trailingAnchor.constraint(equalTo: upperContainer.layoutMarginsGuide.trailingAnchor),
             refreshButton.widthAnchor.constraint(equalToConstant: 60),
             refreshButton.heightAnchor.constraint(equalToConstant: 60),
@@ -247,7 +415,7 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
             stackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             stackView.centerYAnchor.constraint(equalTo: lowerContainer.centerYAnchor),
             stackView.heightAnchor.constraint(equalTo: lowerContainer.heightAnchor, multiplier: 0.6),
-            stackView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.6),
+            stackView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.7),
             
             // reset wallet password button
 //            resetPassword.bottomAnchor.constraint(equalTo: privateKeyButton.topAnchor, constant: -30),

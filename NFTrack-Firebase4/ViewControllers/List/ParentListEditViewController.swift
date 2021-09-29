@@ -37,6 +37,9 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate, CoreS
     ]
     var SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat!
     weak var delegate: PostEditDelegate?
+    private var customNavView: BackgroundView6!
+    private var colorPatchView = UIView()
+    lazy var colorPatchViewHeight: NSLayoutConstraint = colorPatchView.heightAnchor.constraint(equalToConstant: 0)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -64,9 +67,18 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate, CoreS
         self.hideKeyboardWhenTappedAround()
         title = "Edit Post"
         view.backgroundColor = .white
+        scrollView.delegate = self
         view.addSubview(scrollView)
         scrollView.fill()
                 
+        customNavView = BackgroundView6()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(customNavView)
+        
+        colorPatchView.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        colorPatchView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(colorPatchView)
+        
         titleLabel = createTitleLabel(text: "Title")
         titleLabel.sizeToFit()
         scrollView.addSubview(titleLabel)
@@ -95,6 +107,16 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate, CoreS
     
     func setConstraints() {        
         NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 0),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
+            colorPatchView.topAnchor.constraint(equalTo: view.topAnchor),
+            colorPatchView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            colorPatchView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            colorPatchViewHeight,
+            
             titleLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: TOP_MARGIN),
             titleLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             
@@ -288,5 +310,13 @@ extension ParentListEditViewController {
         self.scrollView.contentInset = .zero
         self.scrollView.scrollIndicatorInsets = .zero
         self.view.endEditing(true)
+    }
+}
+
+extension ParentListEditViewController: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if -scrollView.contentOffset.y > 0 {
+            colorPatchViewHeight.constant = -scrollView.contentOffset.y
+        }
     }
 }

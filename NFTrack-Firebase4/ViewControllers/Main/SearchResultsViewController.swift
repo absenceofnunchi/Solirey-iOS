@@ -14,6 +14,7 @@ class SearchResultsController: ParentListViewController<Post>, UISearchBarDelega
     var isSaved: Bool!
     var storage = Set<AnyCancellable>()
     weak final var delegate: RefetchDataDelegate?
+    weak final var keyboardDelegate: GeneralPurposeDelegate?
     override var postArr: [Post] {
         didSet {
             tableView.contentSize = CGSize(width: self.view.bounds.size.width, height: CGFloat(postArr.count) * CELL_HEIGHT + 80)
@@ -33,6 +34,8 @@ class SearchResultsController: ParentListViewController<Post>, UISearchBarDelega
     
     override func configureUI() {
         super.configureUI()
+        applyBarTintColorToTheNavigationBar()
+        
         tableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: CardCell.self, identifier: CardCell.identifier)
         tableView.prefetchDataSource = self
         tableView.keyboardDismissMode = .onDrag
@@ -59,8 +62,7 @@ class SearchResultsController: ParentListViewController<Post>, UISearchBarDelega
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        navigationItem.searchController?.searchBar.searchTextField.resignFirstResponder()
-        navigationController?.navigationItem.searchController?.searchBar.searchTextField.resignFirstResponder()
+        keyboardDelegate?.doSomething()
         
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = postArr[indexPath.row]

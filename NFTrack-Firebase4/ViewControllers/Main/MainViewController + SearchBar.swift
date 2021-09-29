@@ -13,14 +13,13 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
     func configureSearchController() {
         searchResultsController = SearchResultsController()
         searchResultsController.delegate = self
+        searchResultsController.keyboardDelegate = self
         let nav = UINavigationController(rootViewController: searchResultsController)
-        nav.navigationBar.backgroundColor = .clear
-        nav.toolbar.backgroundColor = .clear
         searchController = UISearchController(searchResultsController: nav)
         searchController.searchResultsUpdater = self
         searchController.delegate = self
-        //        searchController.hidesNavigationBarDuringPresentation = false
-        searchController.obscuresBackgroundDuringPresentation = false
+//        searchController.hidesNavigationBarDuringPresentation = true
+        searchController.obscuresBackgroundDuringPresentation = true
 
         definesPresentationContext = true
         navigationItem.searchController = searchController
@@ -29,7 +28,8 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
     
     final func configureSearchBar() {
         // search bar attributes
-        let searchBar = searchController!.searchBar
+        guard let searchController = searchController else { return }
+        let searchBar = searchController.searchBar
         searchBar.delegate = self
         searchBar.autocapitalizationType = .none
         searchBar.tintColor = .black
@@ -110,7 +110,7 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
     }
 }
 
-extension MainViewController: RefetchDataDelegate, PostParseDelegate {
+extension MainViewController: RefetchDataDelegate, PostParseDelegate, GeneralPurposeDelegate {
     func getLatestSearchPosts(searchItems: [String]) {
         var first = db?.collection("post")
             .limit(to: PAGINATION_LIMIT)
@@ -275,5 +275,9 @@ extension MainViewController: RefetchDataDelegate, PostParseDelegate {
             default:
                 break
         }
+    }
+    
+    func doSomething() {
+        navigationItem.searchController?.searchBar.endEditing(true)
     }
 }

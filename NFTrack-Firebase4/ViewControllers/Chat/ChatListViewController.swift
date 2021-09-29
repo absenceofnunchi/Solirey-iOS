@@ -192,7 +192,6 @@ extension ChatListViewController: UISearchResultsUpdating, UISearchControllerDel
             .limit(to: PAGINATION_LIMIT)
             .order(by: "sentAt", descending: true)
             .getDocuments { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
-                print("error", error)
                 if let _ = error {
                     self?.alert.showDetail("Sorry", with: "Unable to fetch your chat.", for: self)
                     return

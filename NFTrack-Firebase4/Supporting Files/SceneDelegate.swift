@@ -95,7 +95,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
                     tabBarVC.viewControllers = [mainNav, listNav, postNav, chatListNav, acctNav]
                     
                     guard let items = tabBarVC.tabBar.items else { return }
-                    let config = UIImage.SymbolConfiguration(weight: .bold)
+                    let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold, scale: .large)
                     let tabHome = items[0]
                     tabHome.title = nil
                     tabHome.image = UIImage(systemName: "house")

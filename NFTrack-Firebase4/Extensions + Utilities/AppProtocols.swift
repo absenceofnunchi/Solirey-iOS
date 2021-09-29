@@ -1684,4 +1684,6 @@ extension CustomNavBarConfigurable {
     }
 }
 
-
+protocol GeneralPurposeDelegate: AnyObject {
+    func doSomething()
+}
