@@ -9,9 +9,9 @@ import UIKit
 
 class ReceiveViewController: UIViewController, ModalConfigurable {
     var closeButton: UIButton!
-    private var localDatabase: LocalDatabase!
-    private var wallet: KeyWalletModel!
-    private var address: String!
+//    private var localDatabase: LocalDatabase!
+//    private var wallet: KeyWalletModel!
+    var address: String!
     private var backgroundView: BackgroundView3!
     private var copyButton: WalletButtonView!
     private var shareButton: WalletButtonView!
@@ -21,12 +21,13 @@ class ReceiveViewController: UIViewController, ModalConfigurable {
     private var addressLabel: EdgeInsetLabel!
     private let alert = Alerts()
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         configureCloseButton()
         setButtonConstraints()
-        configureWallet()
+//        configureWallet()
         configureUI()
         setConstraints()
     }
@@ -67,11 +68,11 @@ class ReceiveViewController: UIViewController, ModalConfigurable {
 }
 
 extension ReceiveViewController {
-    func configureWallet() {
-        localDatabase = LocalDatabase()
-        wallet = localDatabase.getWallet()
-        address = wallet.address
-    }
+//    func configureWallet() {
+//        localDatabase = LocalDatabase()
+//        wallet = localDatabase.getWallet()
+//        address = wallet.address
+//    }
     
     func configureUI() {
         view.backgroundColor = .white

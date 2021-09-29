@@ -159,6 +159,8 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
         receiveButton.alpha = 0
         receiveButton.buttonAction = { [weak self] in
             let receiveVC = ReceiveViewController()
+            let address = self?.localDatabase.getWallet()?.address
+            receiveVC.address = address
             receiveVC.modalPresentationStyle = .fullScreen
             self?.present(receiveVC, animated: true, completion: nil)
         }
@@ -286,28 +288,40 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
                 present(prVC, animated: true, completion: nil)
             case 2:
                 // show private key
-                let ac = UIAlertController(title: "Enter the password", message: nil, preferredStyle: .alert)
-                ac.addTextField { (textField: UITextField!) in
-                    textField.delegate = self
-                }
+                let content = [
+                    StandardAlertContent(
+                        titleString: "",
+                        body: [AlertModalDictionary.passwordSubtitle: ""],
+                        isEditable: true,
+                        fieldViewHeight: 40,
+                        messageTextAlignment: .left,
+                        alertStyle: .withCancelButton
+                    ),
+                ]
                 
-                let enterAction = UIAlertAction(title: "Enter", style: .default) { [unowned ac, weak self](_) in
-                    guard let textField = ac.textFields?.first, let text = textField.text else { return }
-                    
-                    do {
-                        let privateKey = try self?.keyService.getWalletPrivateKey(password: text)
-                        self?.alert.showDetail("Private Key", with: privateKey, height: 350, for: self, buttonAction:  { [weak self] in
-                            self?.alert.fading(controller: self, toBePasted: privateKey ?? "Not available")
+                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+                alertVC.action = { [weak self] (modal, mainVC) in
+                    mainVC.buttonAction = { _ in
+                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                              !password.isEmpty else {
+                            self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                            return
+                        }
+                        
+                        self?.dismiss(animated: true, completion: {
+                            do {
+                                let privateKey = try self?.keyService.getWalletPrivateKey(password: password)
+                                let receiveVC = ReceiveViewController()
+                                receiveVC.address = privateKey
+                                receiveVC.modalPresentationStyle = .fullScreen
+                                self?.present(receiveVC, animated: true, completion: nil)
+                            } catch {
+                                self?.alert.showDetail("Error", with: "Wrong password", alignment: .center, for: self)
+                            }
                         })
-                    } catch {
-                        self?.alert.showDetail("Error", with: "Wrong password", alignment: .center, for: self)
                     }
                 }
-                
-                let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-                ac.addAction(enterAction)
-                ac.addAction(cancelAction)
-                self.present(ac, animated: true, completion: nil)
+                present(alertVC, animated: true, completion: nil)
             case 3:
                 // delete
                 let content = [

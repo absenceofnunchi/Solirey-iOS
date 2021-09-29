@@ -18,6 +18,7 @@ import web3swift
 class AccountViewController: UIViewController {
     private let alert = Alerts()
     private let localDatabase = LocalDatabase()
+    private let keyService = KeysService()
     private var scrollView: UIScrollView!
     private let balanceCardView = BalanceCardView(startingColor: UIColor(red: 167/255, green: 197/255, blue: 235/255, alpha: 1),
                                                   finishingColor: UIColor(red: 105/255, green: 156/255, blue: 221/255, alpha: 1))
@@ -53,6 +54,10 @@ class AccountViewController: UIViewController {
     
     final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        getWalletInfo()
+    }
+    
+    func getWalletInfo() {
         guard let address = Web3swiftService.currentAddress else {
             balanceCardView.balanceLabel.text = "No wallet"
             balanceCardView.walletAddressLabel?.text = ""
@@ -102,6 +107,9 @@ extension AccountViewController: TableViewConfigurable {
         balanceCardView.addGestureRecognizer(tap)
         balanceCardView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(balanceCardView)
+        
+        let interaction = UIContextMenuInteraction(delegate: self)
+        balanceCardView.addInteraction(interaction)
         
         tableView = configureTableView(
             delegate: self,
@@ -299,5 +307,150 @@ extension AccountViewController {
     final func review() {
         let reviewVC = ReviewViewController()
         self.navigationController?.pushViewController(reviewVC, animated: true)
+    }
+}
+
+extension AccountViewController: FetchUserConfigurable, UIContextMenuInteractionDelegate {
+    final func contextMenuInteraction(_ interaction: UIContextMenuInteraction, willCommitWithAnimator animator: UIContextMenuInteractionCommitAnimating) {
+        animator.addCompletion { [weak self] in
+            guard let self = self else { return }
+            self.show(WalletViewController(), sender: self)
+        }
+    }
+    
+    final func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        if let _ = localDatabase.getWallet() {
+            let send = UIAction(title: "Send", image: UIImage(systemName: "arrow.up.to.line")) { [weak self] action in
+                let sendVC = SendViewController()
+                sendVC.modalPresentationStyle = .fullScreen
+                self?.present(sendVC, animated: true, completion: nil)
+            }
+            
+            let receive = UIAction(title: "Receive", image: UIImage(systemName: "arrow.down.to.line")) { [weak self] action in
+                let receiveVC = ReceiveViewController()
+                receiveVC.modalPresentationStyle = .fullScreen
+                self?.present(receiveVC, animated: true, completion: nil)
+            }
+            
+            let history = UIAction(title: "History", image: UIImage(systemName: "book.circle")) { [weak self] action in
+                guard let walletAddress = Web3swiftService.currentAddressString else {
+                    self?.alert.showDetail("Error", with: "Could not retrieve the wallet address.", for: self)
+                    return
+                }
+                
+                let webVC = WebViewController()
+                let hashType = "address"
+                webVC.urlString = "https://rinkeby.etherscan.io/\(hashType)/\(walletAddress)"
+                self?.present(webVC, animated: true, completion: nil)
+            }
+            
+            let resetPassword = UIAction(title: "Reset Password", image: UIImage(systemName: "lock.rotation")) { [weak self] action in
+                // reset your password
+                let prVC = PasswordResetViewController()
+                prVC.titleString = "Reset your password"
+                prVC.buttonAction = { [weak self]vc in
+                    self?.dismiss(animated: true, completion: {
+                        let prVC = vc as! PasswordResetViewController
+                        guard let oldPassword = prVC.currentPasswordTextField.text,
+                              let newPassword = prVC.passwordTextField.text else { return }
+                        
+                        self?.keyService.resetPassword(oldPassword: oldPassword, newPassword: newPassword) { [weak self](wallet, error) in
+                            if let error = error {
+                                switch error {
+                                    case .failureToFetchOldPassword:
+                                        self?.alert.showDetail("Error", with: "Sorry, the old password couldn't be fetched", alignment: .center, for: self)
+                                    case .failureToRegeneratePassword:
+                                        self?.alert.showDetail("Error", with: "Sorry, a new password couldn't be generated", alignment: .left, for: self)
+                                }
+                            }
+                            
+                            if let wallet = wallet {
+                                self?.localDatabase.saveWallet(isRegistered: false, wallet: wallet) { (error) in
+                                    if let _ = error {
+                                        self?.alert.showDetail("Error", with: "Sorry, there was an error generating a new password. Check to see if you're using the correct password.", alignment: .left, for: self)
+                                    }
+                                    
+                                    self?.alert.showDetail("Success", with: "A new password has been generated!", alignment: .center, for: self)
+                                }
+                            }
+                        }
+                    })
+                }
+                self?.present(prVC, animated: true, completion: nil)
+            }
+            
+            let delete = UIAction(title: "Delete Wallet", image: UIImage(systemName: "trash.circle")) { [weak self] action in
+                // delete
+                let content = [
+                    StandardAlertContent(
+                        titleString: "Delete Wallet",
+                        body: ["": "Are you sure you want to delete your wallet from your local storage?"],
+                        messageTextAlignment: .left,
+                        alertStyle: .withCancelButton,
+                        buttonAction: { [weak self](_) in
+                            self?.dismiss(animated: true, completion: nil)
+                            self?.localDatabase.deleteWallet { (error) in
+                                if let error = error {
+                                    self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
+                                } else {
+                                    self?.getWalletInfo()
+                                }
+                            }
+                        })
+                ]
+                let alertVC = AlertViewController(height: 300, standardAlertContent: content)
+                self?.present(alertVC, animated: true, completion: nil)
+            }
+            
+            let privateKey = UIAction(title: "Private Key", image: UIImage(systemName: "lock.circle")) { [weak self] action in
+                let content = [
+                    StandardAlertContent(
+                        titleString: "",
+                        body: [AlertModalDictionary.passwordSubtitle: ""],
+                        isEditable: true,
+                        fieldViewHeight: 40,
+                        messageTextAlignment: .left,
+                        alertStyle: .withCancelButton
+                    ),
+                ]
+                
+                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+                alertVC.action = { [weak self] (modal, mainVC) in
+                    mainVC.buttonAction = { _ in
+                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                              !password.isEmpty else {
+                            self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                            return
+                        }
+                        
+                        self?.dismiss(animated: true, completion: {
+                            do {
+                                let privateKey = try self?.keyService.getWalletPrivateKey(password: password)
+                                let receiveVC = ReceiveViewController()
+                                receiveVC.address = privateKey
+                                receiveVC.modalPresentationStyle = .fullScreen
+                                self?.present(receiveVC, animated: true, completion: nil)
+                            } catch {
+                                self?.alert.showDetail("Error", with: "Wrong password", alignment: .center, for: self)
+                            }
+                        })
+                    }
+                }
+                self?.present(alertVC, animated: true, completion: nil)
+            }
+            
+            return UIContextMenuConfiguration(identifier: "WalletPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC() }) { _ in
+                UIMenu(title: "", children: [send, receive, history, resetPassword, privateKey, delete])
+            }
+        } else {
+            return UIContextMenuConfiguration(identifier: "WalletPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC() }) { _ in
+                UIMenu(title: "", children: [])
+            }
+        }
+    }
+
+    private func getPreviewVC() -> WalletViewController {
+        let walletVC = WalletViewController()
+        return walletVC
     }
 }

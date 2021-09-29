@@ -37,7 +37,7 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate, CoreS
     ]
     var SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat!
     weak var delegate: PostEditDelegate?
-    private var customNavView: BackgroundView6!
+    private var customNavView: BackgroundView7!
     private var colorPatchView = UIView()
     lazy var colorPatchViewHeight: NSLayoutConstraint = colorPatchView.heightAnchor.constraint(equalToConstant: 0)
     
@@ -71,7 +71,7 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate, CoreS
         view.addSubview(scrollView)
         scrollView.fill()
                 
-        customNavView = BackgroundView6()
+        customNavView = BackgroundView7()
         customNavView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(customNavView)
         

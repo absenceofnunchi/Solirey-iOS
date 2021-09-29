@@ -186,7 +186,8 @@ class PostViewController: ParentPostViewController {
                 fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
-            )]
+            )
+        ]
         
         self.hideSpinner {
             DispatchQueue.main.async {
