@@ -453,6 +453,9 @@ extension PostViewController {
     }
     
     @objc func doDone() { // user tapped button in accessory view
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         switch pickerTag {
             case 1:
                 self.deliveryMethodLabel.text = deliveryMethodPicker.currentPep

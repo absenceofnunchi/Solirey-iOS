@@ -20,7 +20,9 @@ class ReportViewController: UIViewController {
     var userId: String!
     var alert: Alerts!
     let TEXTVIEW_HEIGHT: CGFloat = 250
-
+    private var colorPatchView = UIView()
+    lazy var colorPatchViewHeight: NSLayoutConstraint = colorPatchView.heightAnchor.constraint(equalToConstant: 0)
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configure()
@@ -29,10 +31,8 @@ class ReportViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        let contentSizeHeight: CGFloat = titleLabel.bounds.size.height + itemTitleLabel.bounds.size.height + commentTitleLabel.bounds.height + submitButton.bounds.size.height + textView.bounds.size.height + 200
-        scrollView.contentSize = CGSize(width: view.bounds.size.width, height: contentSizeHeight)
-        
-//        let v = UIView(frame: CGRect(origin: .zero, size: ))
+//        let contentSizeHeight: CGFloat = titleLabel.bounds.size.height + itemTitleLabel.bounds.size.height + commentTitleLabel.bounds.height + submitButton.bounds.size.height + textView.bounds.size.height + 300
+        scrollView.contentSize = CGSize(width: view.bounds.size.width, height: 620)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -52,6 +52,7 @@ extension ReportViewController {
         self.hideKeyboardWhenTappedAround()
         view.backgroundColor = .white
         scrollView = UIScrollView()
+        scrollView.delegate = self
         view.addSubview(scrollView)
         scrollView.fill()
         
@@ -60,6 +61,10 @@ extension ReportViewController {
         customNavView = BackgroundView6()
         customNavView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(customNavView)
+        
+        colorPatchView.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        colorPatchView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(colorPatchView)
         
         titleLabel = createTitleLabel(text: "Item Title")
         scrollView.addSubview(titleLabel)
@@ -106,7 +111,12 @@ extension ReportViewController {
             customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             customNavView.heightAnchor.constraint(equalToConstant: 50),
             
-            titleLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 100),
+            colorPatchView.topAnchor.constraint(equalTo: view.topAnchor),
+            colorPatchView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            colorPatchView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            colorPatchViewHeight,
+            
+            titleLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 80),
             titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
@@ -196,7 +206,7 @@ extension ReportViewController {
     }
 }
 
-extension ReportViewController {
+extension ReportViewController: UIScrollViewDelegate {
     // MARK: - addKeyboardObserver
     private func addKeyboardObserver() {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
@@ -233,5 +243,11 @@ extension ReportViewController {
         self.scrollView.contentInset = .zero
         self.scrollView.scrollIndicatorInsets = .zero
         self.view.endEditing(true)
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if -scrollView.contentOffset.y > 0 {
+            colorPatchViewHeight.constant = -scrollView.contentOffset.y
+        }
     }
 }

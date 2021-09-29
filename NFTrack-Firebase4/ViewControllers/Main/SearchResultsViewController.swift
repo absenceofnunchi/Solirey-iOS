@@ -9,7 +9,7 @@ import UIKit
 import Combine
 import FirebaseFirestore
 
-class SearchResultsController: ParentListViewController<Post> {
+class SearchResultsController: ParentListViewController<Post>, UISearchBarDelegate {
     let CELL_HEIGHT: CGFloat = 330
     var isSaved: Bool!
     var storage = Set<AnyCancellable>()
@@ -35,8 +35,13 @@ class SearchResultsController: ParentListViewController<Post> {
         super.configureUI()
         tableView = configureTableView(delegate: self, dataSource: self, height: CELL_HEIGHT, cellType: CardCell.self, identifier: CardCell.identifier)
         tableView.prefetchDataSource = self
+        tableView.keyboardDismissMode = .onDrag
         view.addSubview(tableView)
         tableView.fill()
+        
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(SearchResultsController.dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        tableView.addGestureRecognizer(tap)
     }
     
     override func setDataStore(postArr: [Post]) {
@@ -54,6 +59,9 @@ class SearchResultsController: ParentListViewController<Post> {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        navigationItem.searchController?.searchBar.searchTextField.resignFirstResponder()
+        navigationController?.navigationItem.searchController?.searchBar.searchTextField.resignFirstResponder()
+        
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = postArr[indexPath.row]
         self.navigationController?.pushViewController(listDetailVC, animated: true)
@@ -64,11 +72,18 @@ class SearchResultsController: ParentListViewController<Post> {
             delegate?.didFetchData()
         }
     }
+    
+    @objc override func dismissKeyboard() {
+        super.dismissKeyboard()
+        navigationController?.navigationItem.searchController?.searchBar.resignFirstResponder()
+        navigationItem.searchController?.searchBar.resignFirstResponder()
+    }
 }
 
 extension SearchResultsController: FetchUserConfigurable {
     override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
         guard let destinationViewController = animator.previewViewController else { return }
+        view.endEditing(true)
         animator.addAnimations { [weak self] in
             self?.show(destinationViewController, sender: self)
         }
@@ -80,7 +95,8 @@ extension SearchResultsController: FetchUserConfigurable {
     
     final override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let post = postArr[indexPath.row]
-        
+        view.endEditing(true)
+
         if let savedBy = post.savedBy, savedBy.contains(userId) {
             isSaved = true
         } else {

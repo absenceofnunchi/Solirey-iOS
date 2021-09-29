@@ -70,6 +70,9 @@ extension PendingIndicatorView {
     }
     
     @objc func tapped(_ sender: UITapGestureRecognizer) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         if let buttonAction = buttonAction {
             buttonAction(self)
         }

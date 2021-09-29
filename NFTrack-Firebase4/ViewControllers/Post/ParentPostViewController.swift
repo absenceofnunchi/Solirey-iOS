@@ -581,6 +581,10 @@ extension ParentPostViewController {
     
     @objc func tapped(_ sender: UITapGestureRecognizer) {
         guard let v = sender.view else { return }
+        
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         switch v.tag {
             case 11:
                 let shippingVC = ShippingViewController()

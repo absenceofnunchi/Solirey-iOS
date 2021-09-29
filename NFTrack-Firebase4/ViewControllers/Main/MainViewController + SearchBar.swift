@@ -14,6 +14,8 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
         searchResultsController = SearchResultsController()
         searchResultsController.delegate = self
         let nav = UINavigationController(rootViewController: searchResultsController)
+        nav.navigationBar.backgroundColor = .clear
+        nav.toolbar.backgroundColor = .clear
         searchController = UISearchController(searchResultsController: nav)
         searchController.searchResultsUpdater = self
         searchController.delegate = self
@@ -87,7 +89,6 @@ extension MainViewController: UISearchBarDelegate, UISearchControllerDelegate  {
     // MARK: - searchBarSearchButtonClicked
     final func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         guard let searchItems = searchController.searchBar.text else { return }
-        
         fetchData(category: category, searchItems: searchItems)
         searchBar.resignFirstResponder()
     }

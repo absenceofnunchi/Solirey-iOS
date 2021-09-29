@@ -118,6 +118,10 @@ extension ReviewDetailViewController: PageVCConfigurable, UsernameBannerConfigur
     
     @objc func tapped(_ sender: UITapGestureRecognizer!) {
         let tag = sender.view?.tag
+
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         switch tag {
             case 1:
                 // tapping on the user profile

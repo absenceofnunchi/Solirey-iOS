@@ -281,6 +281,8 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
     // MARK: - buttonPressed
     @objc final override func buttonPressed(_ sender: UIButton) {
         super.buttonPressed(sender)
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
         
         switch sender.tag {
             case 1:

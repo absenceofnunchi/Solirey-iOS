@@ -154,6 +154,9 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     final func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         switch indexPath.row {
             case 0:
                 didUpdateProfile()
@@ -177,6 +180,9 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
     
     @objc final func tapped(_ sender: UITapGestureRecognizer) {
         guard let v = sender.view else { return }
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         switch v.tag {
             case 7:
                 let walletVC = WalletViewController()

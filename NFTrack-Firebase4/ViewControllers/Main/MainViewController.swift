@@ -87,6 +87,7 @@ extension MainViewController: UICollectionViewDelegate {
         collectionView.isScrollEnabled = true
         let height = CELL_HEIGHT * CGFloat(data.count / 2) + 350
         collectionView.contentSize = CGSize(width: view.bounds.size.width, height: height)
+        collectionView.keyboardDismissMode = .onDrag
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(collectionView)
         

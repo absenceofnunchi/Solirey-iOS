@@ -65,41 +65,71 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
 //                        }
 //                    })
                     
-                    let tabBar = UITabBarController()
+                    let tabBarVC = CustomTabBarViewController()
                     
                     let mainVC = MainViewController()
                     mainVC.title = "Main"
-
+                    
                     let mainNav = UINavigationController(rootViewController: mainVC)
-                    tabBar.addChild(mainNav)
 
                     let listVC = ListViewController()
                     listVC.title = "List"
 
                     let listNav = UINavigationController(rootViewController: listVC)
-                    tabBar.addChild(listNav)
                     
                     let newPostVC = NewPostViewController()
                     newPostVC.title = "Post"
                     
                     let postNav = UINavigationController(rootViewController: newPostVC)
-                    tabBar.addChild(postNav)
 
                     let chatListVC = ChatListViewController()
                     chatListVC.title = "Inbox"
 
                     let chatListNav = UINavigationController(rootViewController: chatListVC)
-                    tabBar.addChild(chatListNav)
 
                     let acctVC = AccountViewController()
                     acctVC.title = "Account"
 
                     let acctNav = UINavigationController(rootViewController: acctVC)
-                    tabBar.addChild(acctNav)
                     
-                    self?.window!.rootViewController = tabBar
+                    tabBarVC.viewControllers = [mainNav, listNav, postNav, chatListNav, acctNav]
+                    
+                    guard let items = tabBarVC.tabBar.items else { return }
+                    let config = UIImage.SymbolConfiguration(weight: .bold)
+                    let tabHome = items[0]
+                    tabHome.title = nil
+                    tabHome.image = UIImage(systemName: "house")
+                    tabHome.selectedImage = UIImage(systemName: "house.fill")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
+
+                    let tabList = items[1]
+                    tabList.title = nil
+                    tabList.image = UIImage(systemName: "list.dash")
+                    tabList.selectedImage = UIImage(systemName: "list.dash")?.withTintColor(.black, renderingMode: .alwaysOriginal).withConfiguration(config)
+
+                    let tabPost = items[2]
+                    tabPost.title = nil
+                    tabPost.image = UIImage(systemName: "plus")
+                    tabPost.selectedImage = UIImage(systemName: "plus")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
+
+                    let tabChat = items[3]
+                    tabChat.title = nil
+                    tabChat.image = UIImage(systemName: "message")
+                    tabChat.selectedImage = UIImage(systemName: "message.fill")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
+
+                    let tabAccount = items[4]
+                    tabAccount.title = nil
+                    
+                    if #available(iOS 14.0, *) {
+                        tabAccount.image = UIImage(systemName: "gearshape")
+                        tabAccount.selectedImage = UIImage(systemName: "gearshape.fill")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
+                    } else {
+                        tabAccount.image = UIImage(systemName: "gear")
+                        tabAccount.selectedImage = UIImage(systemName: "gear")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
+                    }
+
+                    self?.window?.rootViewController = tabBarVC                    
                 } else {
-                    self?.window!.rootViewController = SignInViewController()
+                    self?.window?.rootViewController = SignInViewController()
                 }
                 
                 self?.window!.makeKeyAndVisible()

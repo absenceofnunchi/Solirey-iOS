@@ -262,6 +262,9 @@ extension ProfileViewController {
     
     @objc final func tapped(_ sender: UITapGestureRecognizer) {
         guard let v = sender.view else { return }
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         switch v.tag {
             case 5:
                 let mapVC = MapViewController()

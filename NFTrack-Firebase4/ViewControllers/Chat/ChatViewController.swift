@@ -405,14 +405,14 @@ extension ChatViewController: PostParseDelegate {
             navigationItem.rightBarButtonItem = optionsBarItem
         } else {
             var buttonArr = [UIBarButtonItem]()
-            reportBarButton = UIBarButtonItem(image: reportImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            reportBarButton = UIBarButtonItem(image: reportImage.withTintColor(.white, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
             reportBarButton.tag = 1
             buttonArr.append(reportBarButton)
 
             if let navController = self.navigationController, navController.viewControllers.count >= 2 {
                 let viewController = navController.viewControllers[navController.viewControllers.count - 2]
                 if let _ = viewController as? ChatListViewController {
-                    postBarButton = UIBarButtonItem(image: postBarImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+                    postBarButton = UIBarButtonItem(image: postBarImage.withTintColor(.white, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
                     postBarButton.tag = 2
                     buttonArr.append(postBarButton)
                 }
@@ -478,6 +478,9 @@ extension ChatViewController: PostParseDelegate {
     }
     
     @objc func tapped() {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         let profileDetailVC = ProfileDetailViewController()
         profileDetailVC.userInfo = userInfo
         navigationController?.pushViewController(profileDetailVC, animated: true)

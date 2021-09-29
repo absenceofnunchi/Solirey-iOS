@@ -14,6 +14,8 @@ import FirebaseFirestore
 
 class ProfileDetailViewController: ParentProfileViewController {
     private var customNavView: BackgroundView5!
+    private var colorPatchView = UIView()
+    lazy var colorPatchViewHeight: NSLayoutConstraint = colorPatchView.heightAnchor.constraint(equalToConstant: 0)
     private var memberHistoryTitleLabel: UILabel!
     private var memberHistoryTextField: UITextField!
     private var detailButton: UIButton!
@@ -54,6 +56,10 @@ extension ProfileDetailViewController {
         customNavView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(customNavView)
         
+        colorPatchView.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        colorPatchView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(colorPatchView)
+        
         memberHistoryTitleLabel = createTitleLabel(text: "Member Since")
         scrollView.addSubview(memberHistoryTitleLabel)
 
@@ -83,6 +89,11 @@ extension ProfileDetailViewController {
             customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
+            colorPatchView.topAnchor.constraint(equalTo: view.topAnchor),
+            colorPatchView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            colorPatchView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            colorPatchViewHeight,
             
             memberHistoryTitleLabel.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 30),
             memberHistoryTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
@@ -135,6 +146,12 @@ extension ProfileDetailViewController {
                 loadingIndicator.stopAnimating()
                 strongSelf.profileImageButton = strongSelf.createProfileImageButton(strongSelf.profileImageButton, image: image)
             }
+        }
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if -scrollView.contentOffset.y > 0 {
+            colorPatchViewHeight.constant = -scrollView.contentOffset.y
         }
     }
 }

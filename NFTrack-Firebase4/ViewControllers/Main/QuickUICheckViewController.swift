@@ -8,22 +8,23 @@
 import UIKit
 
 class QuickUICheckViewController: ParentListViewController<Post> {
-    var scrollView = UIScrollView()
-    var idTitleLabel: UILabel!
-    var idContainerView: UIView!
-    var idTextField: UITextField!
-    var scanButton: UIButton!
-    var idTitleTextFieldConstraints: NSLayoutConstraint!
-    var postButton: UIButton!
-    let CELL_HEIGHT: CGFloat = 330
-    var statusLabel: UILabel!
-    var infoButtonItem: UIBarButtonItem!
-    
-    override func setDataStore(postArr: [Post]) {
+    private var scrollView = UIScrollView()
+    private var idTitleLabel: UILabel!
+    private var idContainerView: UIView!
+    private var idTextField: UITextField!
+    private var scanButton: UIButton!
+    private var idTitleTextFieldConstraints: NSLayoutConstraint!
+    private var postButton: UIButton!
+    private let CELL_HEIGHT: CGFloat = 330
+    private var statusLabel: UILabel!
+    private var infoButtonItem: UIBarButtonItem!
+    private var customNavView: BackgroundView5!
+
+    final override func setDataStore(postArr: [Post]) {
         dataStore = PostImageDataStore(posts: postArr)
     }
     
-    override func viewDidLoad() {
+    final override func viewDidLoad() {
         super.viewDidLoad()
         setConstraint()
         configureNavigationBar()
@@ -36,13 +37,17 @@ class QuickUICheckViewController: ParentListViewController<Post> {
         self.navigationItem.rightBarButtonItem = infoButtonItem
     }
     
-    override func configureUI() {
+    final override func configureUI() {
         super.configureUI()
         title = "Quick UI Check"
         self.hideKeyboardWhenTappedAround()
         
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(customNavView)
         
         idTitleLabel = createTitleLabel(text: "Unique Identifier")
         scrollView.addSubview(idTitleLabel)
@@ -88,7 +93,7 @@ class QuickUICheckViewController: ParentListViewController<Post> {
         scrollView.addSubview(statusLabel)
     }
     
-    func setConstraint() {
+    private func setConstraint() {
         idTitleTextFieldConstraints = idTitleLabel.centerYAnchor.constraint(equalTo: scrollView.centerYAnchor, constant: -150)
         
         NSLayoutConstraint.activate([
@@ -96,6 +101,10 @@ class QuickUICheckViewController: ParentListViewController<Post> {
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            customNavView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 0),
+            customNavView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
             
             idTitleTextFieldConstraints,
             idTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
@@ -132,7 +141,7 @@ class QuickUICheckViewController: ParentListViewController<Post> {
         ])
     }
     
-    @objc func buttonPressed(_ sender: UIButton!) {
+    @objc private func buttonPressed(_ sender: UIButton!) {
         switch sender.tag {
             case 1:
                 let scannerVC = ScannerViewController()
@@ -149,7 +158,7 @@ class QuickUICheckViewController: ParentListViewController<Post> {
         }
     }
     
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: CardCell.identifier) as? CardCell else {
             fatalError("Sorry, could not load cell")
         }
@@ -160,7 +169,7 @@ class QuickUICheckViewController: ParentListViewController<Post> {
         return cell
     }
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = post
@@ -170,13 +179,13 @@ class QuickUICheckViewController: ParentListViewController<Post> {
 
 extension QuickUICheckViewController: ScannerDelegate {
     // MARK: - scannerDidOutput
-    func scannerDidOutput(code: String) {
+    final func scannerDidOutput(code: String) {
         idTextField.text = code
     }
 }
 
 extension QuickUICheckViewController: UITextFieldDelegate {
-    func textFieldDidBeginEditing(_ textField: UITextField) {
+    final  func textFieldDidBeginEditing(_ textField: UITextField) {
         idTitleTextFieldConstraints.isActive = false
         idTitleTextFieldConstraints = idTitleLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 40)
         idTitleTextFieldConstraints.isActive = true
@@ -187,7 +196,7 @@ extension QuickUICheckViewController: UITextFieldDelegate {
 }
 
 extension QuickUICheckViewController: PostParseDelegate {
-    func fetchData() {
+    private func fetchData() {
         cache.removeAllObjects()
         
         guard let text = idTextField.text, !text.isEmpty else {

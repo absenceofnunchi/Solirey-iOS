@@ -113,8 +113,8 @@
 		4964E5812649A047005B3268 /* AppProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5802649A047005B3268 /* AppProtocols.swift */; };
 		4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */; };
 		4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5942649B6FA005B3268 /* PageViewController.swift */; };
-		4969A267270268F20093068C /* CustomNavViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969A266270268F20093068C /* CustomNavViewController.swift */; };
 		4969A26C2702C8810093068C /* BackgroundView7.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969A26B2702C8810093068C /* BackgroundView7.swift */; };
+		4969A27427036DAD0093068C /* CustomTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969A27327036DAD0093068C /* CustomTabBarController.swift */; };
 		496D56B12659654A00C3E7FD /* CategoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56B02659654A00C3E7FD /* CategoryCell.swift */; };
 		496D56B62659E6F900C3E7FD /* MyDoneButtonVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */; };
 		496D56BB2659E72100C3E7FD /* MyPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */; };
@@ -313,8 +313,8 @@
 		4964E5802649A047005B3268 /* AppProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppProtocols.swift; sourceTree = "<group>"; };
 		4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePageViewController.swift; sourceTree = "<group>"; };
 		4964E5942649B6FA005B3268 /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
-		4969A266270268F20093068C /* CustomNavViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNavViewController.swift; sourceTree = "<group>"; };
 		4969A26B2702C8810093068C /* BackgroundView7.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView7.swift; sourceTree = "<group>"; };
+		4969A27327036DAD0093068C /* CustomTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBarController.swift; sourceTree = "<group>"; };
 		496D56B02659654A00C3E7FD /* CategoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryCell.swift; sourceTree = "<group>"; };
 		496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyDoneButtonVC.swift; sourceTree = "<group>"; };
 		496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyPickerViewController.swift; sourceTree = "<group>"; };
@@ -622,7 +622,6 @@
 				499F996E266C68CD00FC6CDE /* Wallet */,
 				49221B9B2671DE8C0031A756 /* Chat */,
 				499F9989266C6A7D00FC6CDE /* ETC */,
-				4969A266270268F20093068C /* CustomNavViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -818,6 +817,7 @@
 				492A007C26A3AE44008B9B34 /* PaginatedViewController.swift */,
 				4964E5942649B6FA005B3268 /* PageViewController.swift */,
 				499F9961266C061A00FC6CDE /* ParentNavViewController.swift */,
+				4969A27327036DAD0093068C /* CustomTabBarController.swift */,
 			);
 			path = ETC;
 			sourceTree = "<group>";
@@ -1168,7 +1168,6 @@
 				49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */,
 				49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */,
 				497CF7A726F82818003EF69E /* ParentLocationSearchViewController.swift in Sources */,
-				4969A267270268F20093068C /* CustomNavViewController.swift in Sources */,
 				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
 				496F6FFD2651F15200E4056B /* ListCell.swift in Sources */,
 				4958117526D6DAF1002C8F3B /* IPFSService.swift in Sources */,
@@ -1185,6 +1184,7 @@
 				4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */,
 				490D275D267ECEA1003500C1 /* ProgressModalViewController.swift in Sources */,
 				49E759AD26669ACB0064BB34 /* ParentPostViewController.swift in Sources */,
+				4969A27427036DAD0093068C /* CustomTabBarController.swift in Sources */,
 				49054D3D26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift in Sources */,
 				499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */,
 				497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */,

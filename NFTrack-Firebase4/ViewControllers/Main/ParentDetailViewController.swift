@@ -75,6 +75,8 @@ class ParentDetailViewController: UIViewController, SharableDelegate, PostEditDe
     var storage = Set<AnyCancellable>()
     var optionsBarItem: UIBarButtonItem!
     private var customNavView: BackgroundView6!
+    private var colorPatchView = UIView()
+    lazy var colorPatchViewHeight: NSLayoutConstraint = colorPatchView.heightAnchor.constraint(equalToConstant: 0)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -109,15 +111,21 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
         galleries = [String]()
         alert = Alerts()
         constraints = [NSLayoutConstraint]()
+        hideKeyboardWhenTappedAround()
         
         view.backgroundColor = .white
         scrollView = UIScrollView()
+        scrollView.delegate = self
         view.addSubview(scrollView)
         scrollView.fill()
         
         customNavView = BackgroundView6()
         customNavView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(customNavView)
+        
+        colorPatchView.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        colorPatchView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(colorPatchView)
     }
     
     // MARK: - configureUI
@@ -175,6 +183,11 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
             customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
+            colorPatchView.topAnchor.constraint(equalTo: view.topAnchor),
+            colorPatchView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            colorPatchView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            colorPatchViewHeight,
             
             priceTitleLabel.topAnchor.constraint(equalTo: usernameContainer.bottomAnchor, constant: 40),
             priceTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor),
@@ -263,12 +276,12 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
             navigationItem.rightBarButtonItem = optionsBarItem
         } else {
             var buttonItemsArr = [UIBarButtonItem]()
-            chatButtonItem = UIBarButtonItem(image: chatImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            chatButtonItem = UIBarButtonItem(image: chatImage.withTintColor(.white, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
             chatButtonItem.tag = 6
             buttonItemsArr.append(chatButtonItem)
             
             let finalImage = isSaved ? starImageFill : starImage
-            starButtonItem = UIBarButtonItem(image: finalImage.withTintColor(isSaved ? .red : .gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            starButtonItem = UIBarButtonItem(image: finalImage.withTintColor(isSaved ? .red : .white, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
             starButtonItem.tag = 7
             buttonItemsArr.append(starButtonItem)
             
@@ -276,7 +289,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable, PageVCConfigur
             shareButtonItem.tag = 12
             buttonItemsArr.append(shareButtonItem)
             
-            reportButtonItem = UIBarButtonItem(image: reportImage.withTintColor(.gray, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+            reportButtonItem = UIBarButtonItem(image: reportImage.withTintColor(.white, renderingMode: .alwaysOriginal), style: .plain, target: self, action: #selector(buttonPressed(_:)))
             reportButtonItem.tag = 13
             buttonItemsArr.append(reportButtonItem)
             
@@ -490,6 +503,14 @@ extension ParentDetailViewController {
             return self.galleries.firstIndex(of: gallery)!
         } else {
             return 0
+        }
+    }
+}
+
+extension ParentDetailViewController: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if -scrollView.contentOffset.y > 0 {
+            colorPatchViewHeight.constant = -scrollView.contentOffset.y
         }
     }
 }
