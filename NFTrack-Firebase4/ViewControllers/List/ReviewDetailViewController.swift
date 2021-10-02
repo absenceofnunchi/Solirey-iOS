@@ -10,8 +10,6 @@ import UIKit
 class ReviewDetailViewController: UIViewController {
     var post: Review!
     let scrollView = UIScrollView()
-    var pvc: UIPageViewController!
-    var galleries: [String]!
     var constraints: [NSLayoutConstraint]!
     var userInfo: UserInfo! {
         didSet {
@@ -28,7 +26,8 @@ class ReviewDetailViewController: UIViewController {
     var reviewTitleLabel: UILabel!
     var reviewLabel: UILabelPadding!
     var starRatingView: StarRatingView!
-    var singlePageVC: ImagePageViewController!
+    var pvc: PageViewController<SmallSinglePageViewController<String>>!
+    var singlePageVC: SmallSinglePageViewController<String>!
     var imageHeightConstraint: NSLayoutConstraint!
 
     override func viewDidLoad() {   
@@ -39,7 +38,7 @@ class ReviewDetailViewController: UIViewController {
             profileImageView.addGestureRecognizer(tap)
             displayNameLabel.addGestureRecognizer(tap)
         }
-        configureImageDisplay(post: post, v: scrollView)
+        configureImageDisplay(post: post)
         fetchUserData(id: post.reviewerUserId)
         setConstraints()
     }
@@ -54,14 +53,13 @@ class ReviewDetailViewController: UIViewController {
     }
 }
 
-extension ReviewDetailViewController: PageVCConfigurable, UsernameBannerConfigurable {
+extension ReviewDetailViewController: UsernameBannerConfigurable {
     // MARK: - configureUI()
     func configureUI() {
         title = "Review"
         view.backgroundColor = .white
         view.addSubview(scrollView)
         scrollView.fill()
-        galleries = [String]()
         constraints = [NSLayoutConstraint]()
         alert = Alerts()
         
@@ -116,6 +114,31 @@ extension ReviewDetailViewController: PageVCConfigurable, UsernameBannerConfigur
         NSLayoutConstraint.activate(constraints)
     }
     
+    func configureImageDisplay(post: MediaConfigurable) {
+        guard let files = post.files, files.count > 0 else { return }
+        pvc = PageViewController<SmallSinglePageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: files)
+        singlePageVC = SmallSinglePageViewController(gallery: files[0])
+        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+        pvc.view.translatesAutoresizingMaskIntoConstraints = false
+        addChild(pvc)
+        scrollView.addSubview(pvc.view)
+        pvc.didMove(toParent: self)
+        
+        let pageControl = UIPageControl.appearance()
+        pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
+        pageControl.currentPageIndicatorTintColor = .gray
+        pageControl.backgroundColor = .clear
+    }
+    
+    func setImageDisplayConstraints<T: UIView>(v: T, topConstant: CGFloat = 20) {
+        constraints.append(contentsOf: [
+            imageHeightConstraint,
+            pvc.view.topAnchor.constraint(equalTo: v.topAnchor, constant: topConstant),
+            pvc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
+            pvc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
+        ])
+    }
+    
     @objc func tapped(_ sender: UITapGestureRecognizer!) {
         let tag = sender.view?.tag
 
@@ -135,38 +158,38 @@ extension ReviewDetailViewController: PageVCConfigurable, UsernameBannerConfigur
     }
 }
 
-extension ReviewDetailViewController {
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
-        index -= 1
-        if index < 0 {
-            return nil
-        }
-        
-        return ImagePageViewController(gallery: galleries[index])
-    }
-    
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
-        index += 1
-        if index >= galleries.count {
-            return nil
-        }
-        
-        return ImagePageViewController(gallery: galleries[index])
-    }
-    
-    func presentationCount(for pageViewController: UIPageViewController) -> Int {
-        return self.galleries.count
-    }
-    
-    func presentationIndex(for pageViewController: UIPageViewController) -> Int {
-        let page = pageViewController.viewControllers![0] as! ImagePageViewController
-        
-        if let gallery = page.gallery {
-            return self.galleries.firstIndex(of: gallery)!
-        } else {
-            return 0
-        }
-    }
-}
+//extension ReviewDetailViewController {
+//    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+//        guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
+//        index -= 1
+//        if index < 0 {
+//            return nil
+//        }
+//        
+//        return ImagePageViewController(gallery: galleries[index])
+//    }
+//    
+//    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+//        guard let gallery = (viewController as! ImagePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
+//        index += 1
+//        if index >= galleries.count {
+//            return nil
+//        }
+//        
+//        return ImagePageViewController(gallery: galleries[index])
+//    }
+//    
+//    func presentationCount(for pageViewController: UIPageViewController) -> Int {
+//        return self.galleries.count
+//    }
+//    
+//    func presentationIndex(for pageViewController: UIPageViewController) -> Int {
+//        let page = pageViewController.viewControllers![0] as! ImagePageViewController
+//        
+//        if let gallery = page.gallery {
+//            return self.galleries.firstIndex(of: gallery)!
+//        } else {
+//            return 0
+//        }
+//    }
+//}

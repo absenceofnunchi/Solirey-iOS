@@ -147,16 +147,20 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
                 
         switch header {
             case .image:
+                // if the image is locally saved to disk
                 if let image = UIImage(contentsOfFile: "\(filePath.path)") {
                     cell.imageView.image = image
                 }
             case .document:
+                // if the file is a PDF document
                 generateThumbnail(fileAt: filePath) { (image) in
+                    print("thumbnail", image)
                     DispatchQueue.main.async {
                         cell.imageView.image = image
                     }
                 }
             case .remoteImage:
+                // if the URL is of the remote server, not the local disk
                 cell.contentView.insertSubview(loadingIndicator, belowSubview: cell.closeButton)
                 loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
                 NSLayoutConstraint.activate([
@@ -290,34 +294,35 @@ extension ImagePreviewViewController {
     }
 }
 
-extension ImagePreviewViewController: UIContextMenuInteractionDelegate {
-    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
-        return nil
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-        func getPreviewVC(indexPath: IndexPath) -> UIViewController? {
-            let bigVC = BigPreviewViewController()
-            let filePath = data[indexPath.row].filePath
-            var image: UIImage!
-            
-            switch data[indexPath.row].header {
-                case .remoteImage:
-                    image = UIImage(data: remoteImageData)
-                default:
-                    image = UIImage(contentsOfFile: "\(filePath.path)")
-            }
-            
-            bigVC.imageView.image = image
-            return bigVC
-        }
-        
-        let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] action in
-            self?.deletePreviewImage(indexPath: indexPath)
-        }
-        
-        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSString, previewProvider: { getPreviewVC(indexPath: indexPath) }) { _ in
-            UIMenu(title: "", children: [deleteAction])
-        }
-    }
-}
+//extension ImagePreviewViewController: UIContextMenuInteractionDelegate {
+//    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+//        return nil
+//    }
+//    
+//    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+//        func getPreviewVC(indexPath: IndexPath) -> UIViewController? {
+//            let datum = data[indexPath.row]
+//            let filePath = datum.filePath
+//            let bigVC = BigPreviewViewController(files: datum.)
+//            var image: UIImage!
+//            
+//            switch data[indexPath.row].header {
+//                case .remoteImage:
+//                    image = UIImage(data: remoteImageData)
+//                default:
+//                    image = UIImage(contentsOfFile: "\(filePath.path)")
+//            }
+//            
+//            bigVC.imageView.image = image
+//            return bigVC
+//        }
+//        
+//        let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] action in
+//            self?.deletePreviewImage(indexPath: indexPath)
+//        }
+//        
+//        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSString, previewProvider: { getPreviewVC(indexPath: indexPath) }) { _ in
+//            UIMenu(title: "", children: [deleteAction])
+//        }
+//    }
+//}

@@ -131,6 +131,14 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                 button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
             }
         }
+  
+//        if let files = post.files, files.count > 0 {
+//            previewDataArr = files.map({ (file) -> PreviewData in
+//                if let url = URL(string: file), url.lastPathComponent == "pdf" {
+//                    return PreviewData(header: .remoteImage, filePath: file)
+//                }
+//            })
+//        }
         
         if let files = post.files, files.count > 0 {
             downloadFiles(files: files)
@@ -546,7 +554,10 @@ extension TangibleListEditViewController {
 extension TangibleListEditViewController {
     final func downloadFiles(files: [String]) {
         let previewDataPublishers = files.map { (file) -> AnyPublisher<PreviewData, PostingError> in
-            if file.contains("pdf") {
+            print("file", file)
+            if let url = URL(string: file), url.pathExtension == "pdf" {
+                print("url.pathExtension", url.pathExtension)
+                print("equal", url.pathExtension == "pdf")
                 return downloadFiles(urlString: file, type: .document)
             } else {
                 return downloadFiles(urlString: file, type: .image)
@@ -569,11 +580,12 @@ extension TangibleListEditViewController {
                 }
             } receiveValue: { [weak self] (previewArr) in
                 self?.previewDataArr = previewArr
-                self?.imagePreviewVC.data = previewArr                
+//                self?.imagePreviewVC.data = previewArr
             }
             .store(in: &self.storage)
     }
     
+    // save documents
     final func saveFile(fileName: String, data: Data, promise: @escaping (Result<PreviewData, PostingError>) -> Void) {
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             promise(.failure(.generalError(reason: "Could not create a URL to save the image.")))
@@ -599,6 +611,7 @@ extension TangibleListEditViewController {
         }
     }
     
+    // save images
     final func saveImage(imageName: String, image: UIImage, promise: @escaping (Result<PreviewData, PostingError>) -> Void) {
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             promise(.failure(.generalError(reason: "Could not create a URL to save the image.")))

@@ -115,8 +115,13 @@ extension ModalConfigurable {
         closeButton.setImage(closeButtonImage, for: .normal)
         closeButton.tag = 10
         closeButton.tintColor = tintColor
+        closeButton.alpha = 0
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(closeButton)
+        
+        UIView.animate(withDuration: 1) { [weak self] in
+            self?.closeButton.alpha = 1
+        }
     }
     
     
@@ -842,52 +847,104 @@ extension FetchUserConfigurable {
     }
 }
 
-// displays images and pdf documents
-protocol PageVCConfigurable: UIPageViewControllerDataSource, UIPageViewControllerDelegate where Self: UIViewController {
-    var pvc: UIPageViewController! { get set }
-    var galleries: [String]! { get set }
-    var singlePageVC: ImagePageViewController! { get set }
-    var constraints: [NSLayoutConstraint]! { get set }
-    var imageHeightConstraint: NSLayoutConstraint! { get set }
-    func configureImageDisplay<T: MediaConfigurable, U: UIView>(post: T, v: U)
-    func setImageDisplayConstraints<T: UIView>(v: T)
+protocol PageDataType where Self: UIViewController {
+    associatedtype Assoc where Assoc: Equatable
+    var gallery: Assoc! { get set }
+    var galleries: [Assoc]! { get set }
+    init(gallery: Assoc, galleries: [Assoc])
 }
 
-extension PageVCConfigurable {
-    func configureImageDisplay<T: MediaConfigurable, U: UIView>(post: T, v: U) {
-        
-        if let files = post.files, files.count > 0 {
-            self.galleries.append(contentsOf: files)
-            singlePageVC = ImagePageViewController(gallery: galleries[0])
-        } else {
-            self.galleries.append(contentsOf: [])
-            singlePageVC = ImagePageViewController(gallery: nil)
-        }
-        pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
-        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
-        pvc.dataSource = self
-        pvc.delegate = self
-        addChild(pvc)
-        v.addSubview(pvc.view)
-        pvc.view.translatesAutoresizingMaskIntoConstraints = false
-        pvc.didMove(toParent: self)
-        
-        let pageControl = UIPageControl.appearance()
-        pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
-        pageControl.currentPageIndicatorTintColor = .gray
-        pageControl.backgroundColor = .white
-    }
-    
-    func setImageDisplayConstraints<T: UIView>(v: T) {
-        guard let pv = pvc.view else { return }
-        constraints.append(contentsOf: [
-            imageHeightConstraint,
-            pv.topAnchor.constraint(equalTo: v.topAnchor, constant: 20),
-            pv.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
-            pv.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
-        ])
-    }
-}
+//protocol PageVCConfigurable {
+//    associatedtype T where T: PageDataType
+//    associatedtype U where U: Equatable
+//    var pvc: PageViewController<T, U>! { get set }
+//}
+//
+//extension PageVCConfigurable {
+//    mutating func configureImageDisplay<T: PageDataType, U: Equatable>(post: Post, newPVC: PageViewController<T, U>, newSinglePageVC: ParentSinglePageViewController<String>.Type) {
+//        guard let files = post.files, files.count > 0 else { return }
+//        pvc = newPVC
+//    }
+//}
+
+//// displays images and pdf documents
+////protocol PageVCConfigurable: UIPageViewControllerDataSource, UIPageViewControllerDelegate where Self: UIViewController {
+//protocol PageVCConfigurable where Self: UIViewController {
+//    associatedtype T where T: PageDataType
+//    associatedtype U where U: Equatable
+//    var pvc: PageViewController<T, U>! { get set }
+//    var singlePageVC: SmallSinglePageViewController! { get set }
+//    var constraints: [NSLayoutConstraint]! { get set }
+//    var imageHeightConstraint: NSLayoutConstraint! { get set }
+//    func configureImageDisplay<T: MediaConfigurable, U: UIView>(post: T, v: U, margin: CGFloat)
+////    func configureImageDisplay<T: UIView>(files: [String]?, v: T)
+//    func setImageDisplayConstraints<T: UIView>(v: T, topConstant: CGFloat)
+//}
+//
+//extension PageVCConfigurable {
+//    func configureImageDisplay<T: PageDataType, U: Equatable>(post: Post, newPVC: PageViewController<T, U>, newSinglePageVC: ParentSinglePageViewController<String>.Type) {
+//        guard let files = post.files, files.count > 0 else { return }
+//        //        pvc = PageViewController<SmallSinglePageViewController<String>, String>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: files)
+//        pvc = newPVC
+////        singlePageVC = SmallSinglePageViewController(gallery: files[0])
+//        singlePageVC = newSinglePageVC.init(gallery: files[0])
+//        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+//        pvc.view.translatesAutoresizingMaskIntoConstraints = false
+//        addChild(pvc)
+//        view.addSubview(pvc.view)
+//        pvc.didMove(toParent: self)
+//        
+//        let pageControl = UIPageControl.appearance()
+//        pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
+//        pageControl.currentPageIndicatorTintColor = .gray
+//        pageControl.backgroundColor = .clear
+//    }
+//
+//    func configureImageDisplay<T: MediaConfigurable, U: UIView>(post: T, v: U, margin: CGFloat = 0) {
+//        if let files = post.files, files.count > 0 {
+//            pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: files)
+//            singlePageVC = SmallSinglePageViewController(gallery: files.first, margin: margin)
+//        } else {
+//            pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: nil)
+//            singlePageVC = SmallSinglePageViewController(gallery: nil)
+//        }
+//        configurePageVC(v: v)
+//    }
+//    
+//    func configureImageDisplay1<T: UIView>(files: [String]?, v: T) {
+//        if let files = files, files.count > 0 {
+//            pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: files)
+//            singlePageVC = SmallSinglePageViewController(gallery: files.first)
+//        } else {
+//            pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: nil)
+//            singlePageVC = SmallSinglePageViewController(gallery: nil)
+//        }
+//        configurePageVC(v: v)
+//    }
+//    
+//    private func configurePageVC<T: UIView>(v: T) {
+//        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+//        addChild(pvc)
+//        v.addSubview(pvc.view)
+//        pvc.view.translatesAutoresizingMaskIntoConstraints = false
+//        pvc.didMove(toParent: self)
+//        
+//        let pageControl = UIPageControl.appearance()
+//        pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
+//        pageControl.currentPageIndicatorTintColor = .gray
+//        pageControl.backgroundColor = .clear
+//    }
+//    
+//    func setImageDisplayConstraints<T: UIView>(v: T, topConstant: CGFloat = 20) {
+//        guard let pv = pvc.view else { return }
+//        constraints.append(contentsOf: [
+//            imageHeightConstraint,
+//            pv.topAnchor.constraint(equalTo: v.topAnchor, constant: topConstant),
+//            pv.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
+//            pv.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
+//        ])
+//    }
+//}
 
 protocol MediaConfigurable {
     var files: [String]? { get set }

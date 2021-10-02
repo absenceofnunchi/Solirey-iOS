@@ -104,7 +104,7 @@ extension ChatViewController: SharableDelegate {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
-        let previewVC = BigPreviewViewController()
+        let previewVC = BigImagePreviewViewController()
         previewVC.imageView.image = image
         previewVC.view.backgroundColor = .black
         previewVC.modalPresentationStyle = .fullScreen
@@ -116,11 +116,10 @@ extension ChatViewController: SharableDelegate {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
-        let previewVC = BigPreviewViewController()
-        previewVC.imageURL = imageURL
-        previewVC.view.backgroundColor = .black
-        previewVC.modalPresentationStyle = .fullScreen
-        previewVC.modalTransitionStyle = .crossDissolve
-        self.present(previewVC, animated: true, completion: nil)
+//        let previewVC = BigPreviewViewController(files: [imageURL])
+//        previewVC.view.backgroundColor = .black
+//        previewVC.modalPresentationStyle = .fullScreen
+//        previewVC.modalTransitionStyle = .crossDissolve
+//        self.present(previewVC, animated: true, completion: nil)
     }
 }

@@ -1,5 +1,5 @@
 //
-//  SinglePageViewController.swift
+//  SingleWalletPageViewController.swift
 //  NFTrack-Firebase4
 //
 //  Created by J C on 2021-05-10.
@@ -7,8 +7,7 @@
 
 import UIKit
 
-class SinglePageViewController: UIViewController {
-    var gallery: String!
+class SingleWalletPageViewController<T: Equatable>: ParentSinglePageViewController<T>, UITextFieldDelegate {
     var containerView: BlurEffectContainerView!
     var textFields = [UITextField]()
     private let keyService = KeysService()
@@ -29,20 +28,14 @@ class SinglePageViewController: UIViewController {
     var importButton: UIButton!
     var enterPrivateKeyTextField: UITextField!
     
-    init(gallery: String) {
-        self.gallery = gallery
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        configure()
-        
+        configureContainerView()
+    }
+    
+    final override func configureString() {
+        guard let gallery = gallery as? String else { return }
         if gallery == "1" {
             configureCreateWallet()
             setCreateWalletConstraints()
@@ -51,18 +44,16 @@ class SinglePageViewController: UIViewController {
             setImportWalletConstraints()
         }
     }
-}
-
-extension SinglePageViewController {
-    func configure() {
+    
+    func configureContainerView() {
         self.hideKeyboardWhenTappedAround()
-
+        
         containerView = BlurEffectContainerView()
         containerView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(containerView)
         containerView.fill(inset: 30)
     }
-
+    
     func configureCreateWallet() {
         // passwords don't match label
         passwordsDontMatch = UILabel()
@@ -221,11 +212,10 @@ extension SinglePageViewController {
                 break
         }
     }
-}
 
-extension SinglePageViewController: UITextFieldDelegate {
     // MARK: - textFieldDidBeginEditing
     func textFieldDidBeginEditing(_ textField: UITextField) {
+        guard let gallery = gallery as? String else { return }
         if gallery == "1" {
             textField.returnKeyType = createButton.isEnabled ? UIReturnKeyType.done : .next
             textField.textColor = UIColor.orange
@@ -238,6 +228,7 @@ extension SinglePageViewController: UITextFieldDelegate {
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        guard let gallery = gallery as? String else { return false }
         let currentText = (textField.text ?? "") as NSString
         let futureString = currentText.replacingCharacters(in: range, with: string) as String
 
@@ -312,6 +303,7 @@ extension SinglePageViewController: UITextFieldDelegate {
     
     // MARK: - textFieldShouldEndEditing
     func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+        guard let gallery = gallery as? String else { return false }
         if gallery == "1" {
             textField.textColor = UIColor.darkGray
             guard textField == repeatPasswordTextField ||
@@ -370,7 +362,7 @@ extension SinglePageViewController: UITextFieldDelegate {
     }
 }
 
-extension SinglePageViewController {
+extension SingleWalletPageViewController {
     // MARK: - createWallet
     func createWallet() {
         guard let password = passwordTextField.text, !password.isEmpty else {

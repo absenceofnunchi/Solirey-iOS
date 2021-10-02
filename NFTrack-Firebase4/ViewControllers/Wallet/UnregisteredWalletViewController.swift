@@ -46,17 +46,16 @@ class UnregisteredWalletViewController: UIViewController, ModalConfigurable {
 extension UnregisteredWalletViewController {
     // MARK: - configurePageVC
     func configurePageVC() {
-        let singlePageVC = SinglePageViewController(gallery: "1")
+        let singlePageVC = SingleWalletPageViewController<String>(gallery: "1")
         guard let walletVC = self.parent as? WalletViewController else { return }
         singlePageVC.delegate =  walletVC // wallet view controller for a protocol
         
-        pvc = PageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+        pvc = PageViewController<SingleWalletPageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: ["sting"])
         pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
-        pvc.dataSource = self
         addChild(pvc)
+        pvc.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(pvc.view)
         pvc.didMove(toParent: self)
-        pvc.view.translatesAutoresizingMaskIntoConstraints = false
         
         let pageControl = UIPageControl.appearance()
         pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
@@ -95,42 +94,42 @@ extension UnregisteredWalletViewController {
     }
 }
 
-extension UnregisteredWalletViewController: UIPageViewControllerDataSource {
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        guard let gallery = (viewController as! SinglePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
-        index -= 1
-        if index < 0 {
-            return nil
-        }
-        let spv = SinglePageViewController(gallery: galleries[index])
-        guard let walletVC = self.parent as? WalletViewController else { return nil }
-        spv.delegate = walletVC
-        return spv
-    }
-    
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        guard let gallery = (viewController as! SinglePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
-        index += 1
-        if index >= galleries.count {
-            return nil
-        }
-        let spv = SinglePageViewController(gallery: galleries[index])
-        guard let walletVC = self.parent as? WalletViewController else { return nil }
-        spv.delegate = walletVC
-        return spv
-//        return SinglePageViewController(gallery: galleries[index])
-    }
-    
-    func presentationCount(for pageViewController: UIPageViewController) -> Int {
-        return self.galleries.count
-    }
-    
-    func presentationIndex(for pageViewController: UIPageViewController) -> Int {
-        let page = pageViewController.viewControllers![0] as! SinglePageViewController
-        let gallery = page.gallery!
-        return self.galleries.firstIndex(of: gallery)!
-    }
-}
+//extension UnregisteredWalletViewController: UIPageViewControllerDataSource {
+//    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+//        guard let gallery = (viewController as! SinglePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
+//        index -= 1
+//        if index < 0 {
+//            return nil
+//        }
+//        let spv = SinglePageViewController(gallery: galleries[index])
+//        guard let walletVC = self.parent as? WalletViewController else { return nil }
+//        spv.delegate = walletVC
+//        return spv
+//    }
+//
+//    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+//        guard let gallery = (viewController as! SinglePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
+//        index += 1
+//        if index >= galleries.count {
+//            return nil
+//        }
+//        let spv = SinglePageViewController(gallery: galleries[index])
+//        guard let walletVC = self.parent as? WalletViewController else { return nil }
+//        spv.delegate = walletVC
+//        return spv
+////        return SinglePageViewController(gallery: galleries[index])
+//    }
+//
+//    func presentationCount(for pageViewController: UIPageViewController) -> Int {
+//        return self.galleries.count
+//    }
+//
+//    func presentationIndex(for pageViewController: UIPageViewController) -> Int {
+//        let page = pageViewController.viewControllers![0] as! SinglePageViewController
+//        let gallery = page.gallery!
+//        return self.galleries.firstIndex(of: gallery)!
+//    }
+//}
 
 extension UnregisteredWalletViewController {
     // MARK: - addKeyboardObserver

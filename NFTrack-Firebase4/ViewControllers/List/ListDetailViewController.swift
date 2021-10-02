@@ -151,16 +151,18 @@ class ListDetailViewController: ParentDetailViewController {
         self.title = title
         descLabel.text = desc
         
-        if let imagesString = imagesString, imagesString.count > 0 {
-            self.galleries.removeAll()
-            self.galleries.append(contentsOf: imagesString)
-            singlePageVC = ImagePageViewController(gallery: galleries[0])
+        if let imagesString = imagesString,
+           imagesString.count > 0,
+           let firstImageString = imagesString.first {
+            pvc.galleries = imagesString
+            singlePageVC = SmallSinglePageViewController(gallery: firstImageString, galleries: imagesString)
             imageHeightConstraint.constant = 250
         } else {
-            self.galleries.removeAll()
-            singlePageVC = ImagePageViewController(gallery: nil)
+            pvc.galleries?.removeAll()
+//            singlePageVC = nil
             imageHeightConstraint.constant = 0
         }
+        
         pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
         
         // in case TangibleListEditVC gets pushed again

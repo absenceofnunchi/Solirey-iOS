@@ -24,7 +24,6 @@
 		49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B7D2670FA190031A756 /* ParentListViewController.swift */; };
 		49221B892670FC2F0031A756 /* TempViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B882670FC2F0031A756 /* TempViewController.swift */; };
 		49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B90267112200031A756 /* ParentProfileViewController.swift */; };
-		492A007D26A3AE44008B9B34 /* PaginatedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A007C26A3AE44008B9B34 /* PaginatedViewController.swift */; };
 		492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */; };
 		492A00B326A4AA7B008B9B34 /* AlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A00B226A4AA7B008B9B34 /* AlertViewController.swift */; };
 		492C81E526F2312F0083C3B5 /* ChatInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81E426F2312F0083C3B5 /* ChatInitializer.swift */; };
@@ -55,6 +54,8 @@
 		493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */; };
 		49409A75265946870060193C /* SearchResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A74265946870060193C /* SearchResultsViewController.swift */; };
 		49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */; };
+		4957CF5127054CD0004F7320 /* BigImagePreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4957CF5027054CD0004F7320 /* BigImagePreviewViewController.swift */; };
+		4957CF5D2705730E004F7320 /* ParentSinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4957CF5C2705730E004F7320 /* ParentSinglePageViewController.swift */; };
 		4958117526D6DAF1002C8F3B /* IPFSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958117426D6DAF1002C8F3B /* IPFSService.swift */; };
 		4958118426D898C1002C8F3B /* AddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958118326D898C1002C8F3B /* AddressViewController.swift */; };
 		4958118A26D978EF002C8F3B /* LocationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958118926D978EF002C8F3B /* LocationSearchViewController.swift */; };
@@ -111,7 +112,7 @@
 		4964E57726499D74005B3268 /* RegisteredWalletViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E57626499D74005B3268 /* RegisteredWalletViewController.swift */; };
 		4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E57B26499FBE005B3268 /* UnregisteredWalletViewController.swift */; };
 		4964E5812649A047005B3268 /* AppProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5802649A047005B3268 /* AppProtocols.swift */; };
-		4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */; };
+		4964E5902649B5CF005B3268 /* SingleWalletPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E58F2649B5CE005B3268 /* SingleWalletPageViewController.swift */; };
 		4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5942649B6FA005B3268 /* PageViewController.swift */; };
 		4969A26C2702C8810093068C /* BackgroundView7.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969A26B2702C8810093068C /* BackgroundView7.swift */; };
 		4969A27427036DAD0093068C /* CustomTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969A27327036DAD0093068C /* CustomTabBarController.swift */; };
@@ -126,7 +127,7 @@
 		496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F6FF72651AD6300E4056B /* ListViewController.swift */; };
 		496F6FFD2651F15200E4056B /* ListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F6FFC2651F15100E4056B /* ListCell.swift */; };
 		496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F70012652029F00E4056B /* ListDetailViewController.swift */; };
-		496F7007265207A700E4056B /* ImagePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F7006265207A700E4056B /* ImagePageViewController.swift */; };
+		496F7007265207A700E4056B /* SmallSinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F7006265207A700E4056B /* SmallSinglePageViewController.swift */; };
 		496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F700B265421E200E4056B /* TxDetailViewController.swift */; };
 		49721DA226D58385009BA7E7 /* ReportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49721DA126D58384009BA7E7 /* ReportViewController.swift */; };
 		49721DAF26D5C2F3009BA7E7 /* GradientBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49721DAE26D5C2F3009BA7E7 /* GradientBackgroundView.swift */; };
@@ -161,12 +162,14 @@
 		499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9961266C061A00FC6CDE /* ParentNavViewController.swift */; };
 		499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9966266C195F00FC6CDE /* AccountCell.swift */; };
 		499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F998D266C8D9700FC6CDE /* ProgressCell.swift */; };
+		49A0AE622707FC02003A5F27 /* PDFCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A0AE612707FC02003A5F27 /* PDFCell.swift */; };
 		49A52E6726FAB1F600D1A0D2 /* CustomTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A52E6626FAB1F600D1A0D2 /* CustomTitleView.swift */; };
 		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
 		49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */; };
 		49BFB4BE269E4666008D908F /* AuctionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */; };
 		49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */; };
 		49D59C762663326500107F79 /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D59C752663326500107F79 /* SocketDelegate.swift */; };
+		49D95C0727057E95004C6EEF /* BigSinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D95C0627057E95004C6EEF /* BigSinglePageViewController.swift */; };
 		49DEFF5526841C54004C2DD0 /* ReviewDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */; };
 		49DEFF5B268649A3004C2DD0 /* DocumentPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF5A268649A2004C2DD0 /* DocumentPicker.swift */; };
 		49DEFF6026864CA4004C2DD0 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF5F26864CA4004C2DD0 /* Document.swift */; };
@@ -219,7 +222,6 @@
 		49221B7D2670FA190031A756 /* ParentListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentListViewController.swift; sourceTree = "<group>"; };
 		49221B882670FC2F0031A756 /* TempViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempViewController.swift; sourceTree = "<group>"; };
 		49221B90267112200031A756 /* ParentProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentProfileViewController.swift; sourceTree = "<group>"; };
-		492A007C26A3AE44008B9B34 /* PaginatedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginatedViewController.swift; sourceTree = "<group>"; };
 		492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardAlertViewController.swift; sourceTree = "<group>"; };
 		492A00B226A4AA7B008B9B34 /* AlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertViewController.swift; sourceTree = "<group>"; };
 		492C81E426F2312F0083C3B5 /* ChatInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInitializer.swift; sourceTree = "<group>"; };
@@ -249,6 +251,8 @@
 		493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ERC721PresetABI.swift; sourceTree = "<group>"; };
 		49409A74265946870060193C /* SearchResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsViewController.swift; sourceTree = "<group>"; };
 		49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + ResultsUpdate.swift"; sourceTree = "<group>"; };
+		4957CF5027054CD0004F7320 /* BigImagePreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigImagePreviewViewController.swift; sourceTree = "<group>"; };
+		4957CF5C2705730E004F7320 /* ParentSinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSinglePageViewController.swift; sourceTree = "<group>"; };
 		4958117426D6DAF1002C8F3B /* IPFSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPFSService.swift; sourceTree = "<group>"; };
 		4958118326D898C1002C8F3B /* AddressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddressViewController.swift; sourceTree = "<group>"; };
 		4958118926D978EF002C8F3B /* LocationSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSearchViewController.swift; sourceTree = "<group>"; };
@@ -311,7 +315,7 @@
 		4964E57626499D74005B3268 /* RegisteredWalletViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisteredWalletViewController.swift; sourceTree = "<group>"; };
 		4964E57B26499FBE005B3268 /* UnregisteredWalletViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnregisteredWalletViewController.swift; sourceTree = "<group>"; };
 		4964E5802649A047005B3268 /* AppProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppProtocols.swift; sourceTree = "<group>"; };
-		4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePageViewController.swift; sourceTree = "<group>"; };
+		4964E58F2649B5CE005B3268 /* SingleWalletPageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleWalletPageViewController.swift; sourceTree = "<group>"; };
 		4964E5942649B6FA005B3268 /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
 		4969A26B2702C8810093068C /* BackgroundView7.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView7.swift; sourceTree = "<group>"; };
 		4969A27327036DAD0093068C /* CustomTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBarController.swift; sourceTree = "<group>"; };
@@ -326,7 +330,7 @@
 		496F6FF72651AD6300E4056B /* ListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewController.swift; sourceTree = "<group>"; };
 		496F6FFC2651F15100E4056B /* ListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListCell.swift; sourceTree = "<group>"; };
 		496F70012652029F00E4056B /* ListDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailViewController.swift; sourceTree = "<group>"; };
-		496F7006265207A700E4056B /* ImagePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePageViewController.swift; sourceTree = "<group>"; };
+		496F7006265207A700E4056B /* SmallSinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallSinglePageViewController.swift; sourceTree = "<group>"; };
 		496F700B265421E200E4056B /* TxDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TxDetailViewController.swift; sourceTree = "<group>"; };
 		49721DA126D58384009BA7E7 /* ReportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportViewController.swift; sourceTree = "<group>"; };
 		49721DAE26D5C2F3009BA7E7 /* GradientBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientBackgroundView.swift; sourceTree = "<group>"; };
@@ -361,12 +365,14 @@
 		499F9961266C061A00FC6CDE /* ParentNavViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentNavViewController.swift; sourceTree = "<group>"; };
 		499F9966266C195F00FC6CDE /* AccountCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCell.swift; sourceTree = "<group>"; };
 		499F998D266C8D9700FC6CDE /* ProgressCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCell.swift; sourceTree = "<group>"; };
+		49A0AE612707FC02003A5F27 /* PDFCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFCell.swift; sourceTree = "<group>"; };
 		49A52E6626FAB1F600D1A0D2 /* CustomTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTitleView.swift; sourceTree = "<group>"; };
 		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
 		49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + ContextMenu.swift"; sourceTree = "<group>"; };
 		49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionDetailViewController.swift; sourceTree = "<group>"; };
 		49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		49D59C752663326500107F79 /* SocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
+		49D95C0627057E95004C6EEF /* BigSinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigSinglePageViewController.swift; sourceTree = "<group>"; };
 		49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewDetailViewController.swift; sourceTree = "<group>"; };
 		49DEFF5A268649A2004C2DD0 /* DocumentPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPicker.swift; sourceTree = "<group>"; };
 		49DEFF5F26864CA4004C2DD0 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
@@ -486,6 +492,21 @@
 				49B47E9B26953B05003D6F7A /* AuctionABI.swift */,
 			);
 			path = Contracts;
+			sourceTree = "<group>";
+		};
+		4957CF55270571EB004F7320 /* Page */ = {
+			isa = PBXGroup;
+			children = (
+				495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */,
+				4957CF5027054CD0004F7320 /* BigImagePreviewViewController.swift */,
+				4964E58F2649B5CE005B3268 /* SingleWalletPageViewController.swift */,
+				4964E5942649B6FA005B3268 /* PageViewController.swift */,
+				4964E52026489564005B3268 /* BigPreviewViewController.swift */,
+				496F7006265207A700E4056B /* SmallSinglePageViewController.swift */,
+				49D95C0627057E95004C6EEF /* BigSinglePageViewController.swift */,
+				4957CF5C2705730E004F7320 /* ParentSinglePageViewController.swift */,
+			);
+			path = Page;
 			sourceTree = "<group>";
 		};
 		4964E44F2641B001005B3268 = {
@@ -620,6 +641,7 @@
 				499F997C266C698200FC6CDE /* List */,
 				499F9988266C6A4200FC6CDE /* Account */,
 				499F996E266C68CD00FC6CDE /* Wallet */,
+				4957CF55270571EB004F7320 /* Page */,
 				49221B9B2671DE8C0031A756 /* Chat */,
 				499F9989266C6A7D00FC6CDE /* ETC */,
 			);
@@ -631,6 +653,7 @@
 			children = (
 				492C820426F574D20083C3B5 /* ImageMessageCell.swift */,
 				4964E515264777BF005B3268 /* ImageCell.swift */,
+				49A0AE612707FC02003A5F27 /* PDFCell.swift */,
 				499F9948266AB20700FC6CDE /* HistoryCell.swift */,
 				496F6FFC2651F15100E4056B /* ListCell.swift */,
 				496D56B02659654A00C3E7FD /* CategoryCell.swift */,
@@ -725,7 +748,6 @@
 				495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */,
 				49E759B72666BCCF0064BB34 /* ResellViewController.swift */,
 				4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */,
-				4964E52026489564005B3268 /* BigPreviewViewController.swift */,
 				496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */,
 				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
 				490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */,
@@ -751,14 +773,12 @@
 				4984292126CDBD9A0062CD43 /* DigitalListEditViewController.swift */,
 				49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */,
 				495FB37926BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift */,
-				496F7006265207A700E4056B /* ImagePageViewController.swift */,
 				496F700B265421E200E4056B /* TxDetailViewController.swift */,
 				49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */,
 				49333360268281B800B8BFC2 /* ProfilePostingsViewController.swift */,
 				4933336A26828E4600B8BFC2 /* ProfileListViewController.swift */,
 				49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */,
 				495FD2DF26895B3300F1D81D /* ProfileReviewListViewController.swift */,
-				495FD2D22688043000F1D81D /* PDFPreviewViewController.swift */,
 				49721DA126D58384009BA7E7 /* ReportViewController.swift */,
 				4938D17626ED478C00624A60 /* UserDetailViewController.swift */,
 			);
@@ -813,9 +833,6 @@
 		499F9989266C6A7D00FC6CDE /* ETC */ = {
 			isa = PBXGroup;
 			children = (
-				4964E58F2649B5CE005B3268 /* SinglePageViewController.swift */,
-				492A007C26A3AE44008B9B34 /* PaginatedViewController.swift */,
-				4964E5942649B6FA005B3268 /* PageViewController.swift */,
 				499F9961266C061A00FC6CDE /* ParentNavViewController.swift */,
 				4969A27327036DAD0093068C /* CustomTabBarController.swift */,
 			);
@@ -1109,14 +1126,14 @@
 			files = (
 				493BF9DC264C515C00B9C9D2 /* TransactionService.swift in Sources */,
 				4964E57226498541005B3268 /* Web3swiftService.swift in Sources */,
-				4964E5902649B5CF005B3268 /* SinglePageViewController.swift in Sources */,
+				4964E5902649B5CF005B3268 /* SingleWalletPageViewController.swift in Sources */,
 				49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */,
 				495FD2E026895B3300F1D81D /* ProfileReviewListViewController.swift in Sources */,
 				497CF79F26F7C050003EF69E /* ChatMapViewController.swift in Sources */,
 				496D56D0265AEDAB00C3E7FD /* ImageDataStore.swift in Sources */,
 				499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */,
 				496D56B12659654A00C3E7FD /* CategoryCell.swift in Sources */,
-				496F7007265207A700E4056B /* ImagePageViewController.swift in Sources */,
+				496F7007265207A700E4056B /* SmallSinglePageViewController.swift in Sources */,
 				493BF9F8264C6ECF00B9C9D2 /* PresentationController.swift in Sources */,
 				495FD317268AAB3100F1D81D /* DigitalAssetViewController.swift in Sources */,
 				4964E50026445EDB005B3268 /* DetailViewController.swift in Sources */,
@@ -1135,7 +1152,6 @@
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
 				495FB37A26BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift in Sources */,
 				495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */,
-				492A007D26A3AE44008B9B34 /* PaginatedViewController.swift in Sources */,
 				4962FB1126F6967A004B01A8 /* ChatInfoViewController.swift in Sources */,
 				49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */,
 				493BF9BA264AC28E00B9C9D2 /* AppDataTypes.swift in Sources */,
@@ -1164,6 +1180,7 @@
 				499702AB2673F75E001DD80A /* MessageCell.swift in Sources */,
 				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
 				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
+				49D95C0727057E95004C6EEF /* BigSinglePageViewController.swift in Sources */,
 				49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */,
 				49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */,
 				49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */,
@@ -1191,6 +1208,7 @@
 				4938D17726ED478D00624A60 /* UserDetailViewController.swift in Sources */,
 				4964E56D2649694A005B3268 /* CoreDataServices.swift in Sources */,
 				49221B79266FE4CB0031A756 /* ProfileDetailViewController.swift in Sources */,
+				4957CF5127054CD0004F7320 /* BigImagePreviewViewController.swift in Sources */,
 				493BF9C8264C166000B9C9D2 /* CreditCardView.swift in Sources */,
 				493BF9EE264C65FA00B9C9D2 /* BackgroundView3.swift in Sources */,
 				496D56C52659FF2100C3E7FD /* MainDetailViewController.swift in Sources */,
@@ -1218,6 +1236,7 @@
 				4998E8512701305B00B1F5F0 /* BackgroundView6.swift in Sources */,
 				492C81E526F2312F0083C3B5 /* ChatInitializer.swift in Sources */,
 				49DEFF6A26868065004C2DD0 /* ImagePreviewHeaderView.swift in Sources */,
+				49A0AE622707FC02003A5F27 /* PDFCell.swift in Sources */,
 				49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */,
 				49D59C762663326500107F79 /* SocketDelegate.swift in Sources */,
 				49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */,
@@ -1226,6 +1245,7 @@
 				4958118A26D978EF002C8F3B /* LocationSearchViewController.swift in Sources */,
 				49054D0626C5B2D000ECCB58 /* BalanceCardView.swift in Sources */,
 				49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */,
+				4957CF5D2705730E004F7320 /* ParentSinglePageViewController.swift in Sources */,
 				49054D4726CAC21700ECCB58 /* ListDetailViewController + UpdateState.swift in Sources */,
 				493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */,
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
