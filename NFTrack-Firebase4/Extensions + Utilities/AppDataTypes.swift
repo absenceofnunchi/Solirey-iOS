@@ -889,3 +889,8 @@ enum MessageType: String {
     case image = "Image"
     case location = "Location"
 }
+
+struct ProgressMeterNode {
+    let statusLabelText: String
+    var dateLabelText: String? = ""
+}

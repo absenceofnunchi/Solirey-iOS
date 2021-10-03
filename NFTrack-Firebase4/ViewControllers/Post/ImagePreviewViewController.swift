@@ -7,6 +7,7 @@
 
 import UIKit
 import QuickLook
+import PDFKit
 
 // to distinguish the sections when displayed
 // however, no sections are being implemented at the moment
@@ -111,6 +112,7 @@ extension ImagePreviewViewController: UICollectionViewDelegate {
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(ImageCell.self, forCellWithReuseIdentifier: ImageCell.reuseIdentifier)
+        collectionView.register(PDFCell.self, forCellWithReuseIdentifier: PDFCell.reuseIdentifier)
 //        collectionView.register(ImagePreviewHeaderView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: ImagePreviewHeaderView.identifier)
         collectionView.isScrollEnabled = false
         collectionView.contentInset = UIEdgeInsets(top: 10, left: 0, bottom: 0, right: 0)
@@ -138,29 +140,45 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
     
     // make a cell for each cell index path
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageCell.reuseIdentifier, for: indexPath as IndexPath) as? ImageCell else {
-            fatalError("ImageCell fatal error")
-        }
-        
         let header = data[indexPath.row].header
         let filePath = data[indexPath.row].filePath
-                
+        var newCell: PreviewCell!
+        
         switch header {
             case .image:
                 // if the image is locally saved to disk
+                guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageCell.reuseIdentifier, for: indexPath as IndexPath) as? ImageCell else {
+                    fatalError("ImageCell fatal error")
+                }
+                
                 if let image = UIImage(contentsOfFile: "\(filePath.path)") {
                     cell.imageView.image = image
                 }
+                
+                newCell = cell
             case .document:
                 // if the file is a PDF document
-                generateThumbnail(fileAt: filePath) { (image) in
-                    print("thumbnail", image)
-                    DispatchQueue.main.async {
-                        cell.imageView.image = image
-                    }
+                guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PDFCell.reuseIdentifier, for: indexPath as IndexPath) as? PDFCell else {
+                    fatalError("ImageCell fatal error")
                 }
+                
+//                generateThumbnail(fileAt: filePath) { (image) in
+//                    print("thumbnail", image)
+//                    DispatchQueue.main.async {
+//                        cell.imageView.image = image
+//                    }
+//                }
+                if let pdfDocument = PDFDocument(url: filePath) {
+                    cell.pdfView.document = pdfDocument
+                }
+            
+                newCell = cell
             case .remoteImage:
                 // if the URL is of the remote server, not the local disk
+                guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageCell.reuseIdentifier, for: indexPath as IndexPath) as? ImageCell else {
+                    fatalError("ImageCell fatal error")
+                }
+                
                 cell.contentView.insertSubview(loadingIndicator, belowSubview: cell.closeButton)
                 loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
                 NSLayoutConstraint.activate([
@@ -174,19 +192,37 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
                     self?.remoteImageData = imageData
                     self?.loadingIndicator.stopAnimating()
                 }
+                
+                newCell = cell
         }
         
-        cell.buttonAction = { [weak self] _ in
+
+        newCell.buttonAction = { [weak self] _ in
             self?.deletePreviewImage(indexPath: indexPath)
         }
         
-        return cell
+        return newCell
     }
     
     // MARK: - UICollectionViewDelegate protocol
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        // handle tap events
-        print("You selected cell #\(indexPath.item)!")
+        let galleries = data.map { (previewData: PreviewData) -> String in
+            return "\(previewData.filePath)"
+        }
+        
+        let pvc = PageViewController<BigLocalSinglePageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: galleries)
+        let singlePageVC = BigLocalSinglePageViewController(gallery: galleries[indexPath.row], galleries: galleries)
+        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+        pvc.modalPresentationStyle = .fullScreen
+        pvc.modalTransitionStyle = .crossDissolve
+        present(pvc, animated: true, completion: nil)
+        
+//        guard let datum = self?.data[indexPath.row] else { return }
+//        let filePath = datum.filePath
+//        let bigVC = BigSinglePageViewController(gallery: "\(filePath)")
+//        bigVC.modalPresentationStyle = .fullScreen
+//        bigVC.modalTransitionStyle = .crossDissolve
+//        self?.present(bigVC, animated: true, completion: nil)
     }
     
 //    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
@@ -266,7 +302,6 @@ extension ImagePreviewViewController {
             if let documentPath = documentsPath
             {
                 let fileNames = try fileManager.contentsOfDirectory(atPath: "\(documentPath)")
-                print("all files in cache: \(fileNames)")
                 for fileName in fileNames {
                     
                     if (fileName.hasSuffix(".png"))
@@ -294,35 +329,41 @@ extension ImagePreviewViewController {
     }
 }
 
-//extension ImagePreviewViewController: UIContextMenuInteractionDelegate {
-//    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
-//        return nil
-//    }
-//    
-//    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-//        func getPreviewVC(indexPath: IndexPath) -> UIViewController? {
-//            let datum = data[indexPath.row]
-//            let filePath = datum.filePath
-//            let bigVC = BigPreviewViewController(files: datum.)
-//            var image: UIImage!
-//            
-//            switch data[indexPath.row].header {
-//                case .remoteImage:
-//                    image = UIImage(data: remoteImageData)
-//                default:
-//                    image = UIImage(contentsOfFile: "\(filePath.path)")
-//            }
-//            
-//            bigVC.imageView.image = image
-//            return bigVC
-//        }
-//        
-//        let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] action in
-//            self?.deletePreviewImage(indexPath: indexPath)
-//        }
-//        
-//        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSString, previewProvider: { getPreviewVC(indexPath: indexPath) }) { _ in
-//            UIMenu(title: "", children: [deleteAction])
-//        }
-//    }
-//}
+extension ImagePreviewViewController: UIContextMenuInteractionDelegate {
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        return nil
+    }
+    
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+        guard let destinationViewController = animator.previewViewController else { return }
+        animator.addAnimations { [weak self] in
+            self?.show(destinationViewController, sender: self)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        func getPreviewVC(indexPath: IndexPath) -> UIViewController? {
+            let datum = data[indexPath.row]
+            let filePath = datum.filePath
+            let bigVC = BigSinglePageViewController(gallery: "\(filePath)")
+            return bigVC
+        }
+        
+        let previewAction = UIAction(title: "Preview", image: UIImage(systemName: "magnifyingglass")) { [weak self] action in
+            guard let datum = self?.data[indexPath.row] else { return }
+            let filePath = datum.filePath
+            let bigVC = BigSinglePageViewController(gallery: "\(filePath)")
+            bigVC.modalPresentationStyle = .fullScreen
+            bigVC.modalTransitionStyle = .crossDissolve
+            self?.present(bigVC, animated: true, completion: nil)
+        }
+        
+        let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] action in
+            self?.deletePreviewImage(indexPath: indexPath)
+        }
+        
+        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSString, previewProvider: { getPreviewVC(indexPath: indexPath) }) { _ in
+            UIMenu(title: "", children: [previewAction, deleteAction])
+        }
+    }
+}

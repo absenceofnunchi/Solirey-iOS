@@ -163,9 +163,14 @@
 		499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F9966266C195F00FC6CDE /* AccountCell.swift */; };
 		499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499F998D266C8D9700FC6CDE /* ProgressCell.swift */; };
 		49A0AE622707FC02003A5F27 /* PDFCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A0AE612707FC02003A5F27 /* PDFCell.swift */; };
+		49A0AE672708013E003A5F27 /* PreviewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A0AE662708013E003A5F27 /* PreviewCell.swift */; };
 		49A52E6726FAB1F600D1A0D2 /* CustomTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A52E6626FAB1F600D1A0D2 /* CustomTitleView.swift */; };
 		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
 		49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */; };
+		49BF2CE327083BD4009CA5F2 /* ImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */; };
+		49BF2CE827083E11009CA5F2 /* NoImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */; };
+		49BF2CEE27084599009CA5F2 /* ImageProgressCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CED27084599009CA5F2 /* ImageProgressCardCell.swift */; };
+		49BF2CF6270845BF009CA5F2 /* NoImageProgressCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CF5270845BF009CA5F2 /* NoImageProgressCardCell.swift */; };
 		49BFB4BE269E4666008D908F /* AuctionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */; };
 		49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */; };
 		49D59C762663326500107F79 /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D59C752663326500107F79 /* SocketDelegate.swift */; };
@@ -366,9 +371,14 @@
 		499F9966266C195F00FC6CDE /* AccountCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCell.swift; sourceTree = "<group>"; };
 		499F998D266C8D9700FC6CDE /* ProgressCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressCell.swift; sourceTree = "<group>"; };
 		49A0AE612707FC02003A5F27 /* PDFCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFCell.swift; sourceTree = "<group>"; };
+		49A0AE662708013E003A5F27 /* PreviewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewCell.swift; sourceTree = "<group>"; };
 		49A52E6626FAB1F600D1A0D2 /* CustomTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTitleView.swift; sourceTree = "<group>"; };
 		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
 		49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + ContextMenu.swift"; sourceTree = "<group>"; };
+		49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCardCell.swift; sourceTree = "<group>"; };
+		49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoImageCardCell.swift; sourceTree = "<group>"; };
+		49BF2CED27084599009CA5F2 /* ImageProgressCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProgressCardCell.swift; sourceTree = "<group>"; };
+		49BF2CF5270845BF009CA5F2 /* NoImageProgressCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoImageProgressCardCell.swift; sourceTree = "<group>"; };
 		49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionDetailViewController.swift; sourceTree = "<group>"; };
 		49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		49D59C752663326500107F79 /* SocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
@@ -651,18 +661,18 @@
 		4964E5142647779E005B3268 /* Cells and Supplementary Views */ = {
 			isa = PBXGroup;
 			children = (
+				49BF2CEC27084575009CA5F2 /* ProgressCard */,
 				492C820426F574D20083C3B5 /* ImageMessageCell.swift */,
 				4964E515264777BF005B3268 /* ImageCell.swift */,
+				49A0AE662708013E003A5F27 /* PreviewCell.swift */,
 				49A0AE612707FC02003A5F27 /* PDFCell.swift */,
 				499F9948266AB20700FC6CDE /* HistoryCell.swift */,
 				496F6FFC2651F15100E4056B /* ListCell.swift */,
 				496D56B02659654A00C3E7FD /* CategoryCell.swift */,
 				499F9966266C195F00FC6CDE /* AccountCell.swift */,
-				499F998D266C8D9700FC6CDE /* ProgressCell.swift */,
 				499702AF2674533E001DD80A /* ParentCell.swift */,
 				496D56C9265A0BD700C3E7FD /* ChatListCell.swift */,
 				499702DC26745BC0001DD80A /* ChatCell.swift */,
-				4997030426769A36001DD80A /* CardCell.swift */,
 				499702AA2673F75E001DD80A /* MessageCell.swift */,
 				49E7D650267AA77000E8815A /* MeesageCells1.swift */,
 				493333652682860000B8BFC2 /* ReviewCell.swift */,
@@ -837,6 +847,19 @@
 				4969A27327036DAD0093068C /* CustomTabBarController.swift */,
 			);
 			path = ETC;
+			sourceTree = "<group>";
+		};
+		49BF2CEC27084575009CA5F2 /* ProgressCard */ = {
+			isa = PBXGroup;
+			children = (
+				499F998D266C8D9700FC6CDE /* ProgressCell.swift */,
+				4997030426769A36001DD80A /* CardCell.swift */,
+				49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */,
+				49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */,
+				49BF2CED27084599009CA5F2 /* ImageProgressCardCell.swift */,
+				49BF2CF5270845BF009CA5F2 /* NoImageProgressCardCell.swift */,
+			);
+			path = ProgressCard;
 			sourceTree = "<group>";
 		};
 		F64A6E3DD6EC3840BC56EC30 /* Frameworks */ = {
@@ -1159,6 +1182,7 @@
 				496F6FF3264EA3D100E4056B /* FirebaseService.swift in Sources */,
 				495FD2D826892FDC00F1D81D /* StarRatingView.swift in Sources */,
 				492A00B326A4AA7B008B9B34 /* AlertViewController.swift in Sources */,
+				49BF2CE327083BD4009CA5F2 /* ImageCardCell.swift in Sources */,
 				4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */,
 				495FD329268D284E00F1D81D /* MainViewController + SearchBar.swift in Sources */,
 				492C820026F52DA60083C3B5 /* ChatViewController + SendMessage.swift in Sources */,
@@ -1233,7 +1257,10 @@
 				496D56CA265A0BD700C3E7FD /* ChatListCell.swift in Sources */,
 				496D56B62659E6F900C3E7FD /* MyDoneButtonVC.swift in Sources */,
 				4964E56226496852005B3268 /* KeysService.swift in Sources */,
+				49A0AE672708013E003A5F27 /* PreviewCell.swift in Sources */,
 				4998E8512701305B00B1F5F0 /* BackgroundView6.swift in Sources */,
+				49BF2CF6270845BF009CA5F2 /* NoImageProgressCardCell.swift in Sources */,
+				49BF2CEE27084599009CA5F2 /* ImageProgressCardCell.swift in Sources */,
 				492C81E526F2312F0083C3B5 /* ChatInitializer.swift in Sources */,
 				49DEFF6A26868065004C2DD0 /* ImagePreviewHeaderView.swift in Sources */,
 				49A0AE622707FC02003A5F27 /* PDFCell.swift in Sources */,
@@ -1250,6 +1277,7 @@
 				493BF9C0264B6CD000B9C9D2 /* BackgroundView.swift in Sources */,
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
+				49BF2CE827083E11009CA5F2 /* NoImageCardCell.swift in Sources */,
 				49054D5426CC785C00ECCB58 /* ParentListEditViewController.swift in Sources */,
 				49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */,
 				492C820526F574D30083C3B5 /* ImageMessageCell.swift in Sources */,

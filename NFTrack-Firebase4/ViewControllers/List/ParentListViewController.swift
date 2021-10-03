@@ -106,7 +106,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         }
         
         // Check the cache for an existing image
-//        if let cachedImage = cache.object(forKey: indexPath.row as NSNumber) {
+//        if let cachedImage = cache.object(forKey: ["string": "string"] as NSDictionary) {
         if let cachedImage: UIImage = cache[indexPath.row as NSNumber] as? UIImage {
             cell.updateAppearanceFor(.fetched(cachedImage))
             loadingOperations.removeValue(forKey: indexPath)
@@ -200,9 +200,9 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         
     }
     
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        
-    }
+//    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+//        
+//    }
     
     // MARK: - didRefreshTableView
     @objc func didRefreshTableView(index: Int = 0) {}
@@ -215,7 +215,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         let y = offset.y + bounds.size.height - inset.bottom
         let h = size.height
         let reload_distance:CGFloat = 10.0
-        if y > (h + reload_distance) {
+        if offset.y > 0 && y > (h + reload_distance) {
             guard self.postArr.count > 0 else { return }
             executeAfterDragging()
         }

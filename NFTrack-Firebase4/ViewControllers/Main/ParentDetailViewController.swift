@@ -229,9 +229,13 @@ extension ParentDetailViewController: UsernameBannerConfigurable {
     }
       
     func configureImageDisplay(post: Post) {
-        guard let files = post.files, files.count > 0 else { return }
-        pvc = PageViewController<SmallSinglePageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: files)
-        singlePageVC = SmallSinglePageViewController(gallery: files[0], galleries: files)
+        pvc = PageViewController<SmallSinglePageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: post.files)
+        if let files = post.files, files.count > 0 {
+            singlePageVC = SmallSinglePageViewController(gallery: files[0], galleries: files)
+        } else {
+            singlePageVC = SmallSinglePageViewController(gallery: nil, galleries: nil)
+        }
+        
         pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
         pvc.view.translatesAutoresizingMaskIntoConstraints = false
         addChild(pvc)

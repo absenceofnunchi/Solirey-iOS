@@ -131,29 +131,14 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                 button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
             }
         }
-  
-//        if let files = post.files, files.count > 0 {
-//            previewDataArr = files.map({ (file) -> PreviewData in
-//                if let url = URL(string: file), url.lastPathComponent == "pdf" {
-//                    return PreviewData(header: .remoteImage, filePath: file)
-//                }
-//            })
-//        }
         
+        // Two reasons for writing the files to the disk instead of using the data form
+        //  1. The newly added image/pdf files will be used with the url from the disk.
+        //  2. ImagePreviewController used in posting will require the url from the disk.
         if let files = post.files, files.count > 0 {
             downloadFiles(files: files)
         }
         
-//        if let files = post.files, files.count > 0 {
-//            for file in files {
-//                if file.contains("pdf") {
-//                    downloadFiles(urlString: file, type: .document)
-//                } else {
-//                    downloadFiles(urlString: file, type: .image)
-//                }
-//            }
-//        }
-//
         // the digital type should never run
         if post.type == "digital" {
             configureImagePreview(postType: .digital(.onlineDirect), superView: scrollView)
@@ -512,18 +497,20 @@ extension TangibleListEditViewController: UIImagePickerControllerDelegate & UINa
     }
 }
 
-extension TangibleListEditViewController: DocumentDelegate, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
-    final func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
-        return 1
-    }
+//extension TangibleListEditViewController: DocumentDelegate, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
+//    final func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
+//        return 1
+//    }
+//
+//    final func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+//        //        return self.url as QLPreviewItem
+//        let docTitle = UUID().uuidString
+//        let previewItem = CustomPreviewItem(url: url, title: docTitle)
+//        return previewItem as QLPreviewItem
+//    }
     
-    final func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
-        //        return self.url as QLPreviewItem
-        let docTitle = UUID().uuidString
-        let previewItem = CustomPreviewItem(url: url, title: docTitle)
-        return previewItem as QLPreviewItem
-    }
-    
+extension TangibleListEditViewController: DocumentDelegate {
+
     // MARK: - didPickDocument
     final func didPickDocument(document: Document?) {
         if let pickedDoc = document {
@@ -533,13 +520,12 @@ extension TangibleListEditViewController: DocumentDelegate, QLPreviewControllerD
                 return
             }
             url = fileURL
+            
             let previewData = PreviewData(header: .document, filePath: fileURL)
             previewDataArr.append(previewData)
             
-            let preview = PreviewPDFViewController()
-            preview.delegate = self
-            preview.dataSource = self
-            present(preview, animated: true, completion: nil)
+//            let preview = PreviewPDFViewController()
+//            present(preview, animated: true, completion: nil)
         }
     }
 }
@@ -554,10 +540,7 @@ extension TangibleListEditViewController {
 extension TangibleListEditViewController {
     final func downloadFiles(files: [String]) {
         let previewDataPublishers = files.map { (file) -> AnyPublisher<PreviewData, PostingError> in
-            print("file", file)
             if let url = URL(string: file), url.pathExtension == "pdf" {
-                print("url.pathExtension", url.pathExtension)
-                print("equal", url.pathExtension == "pdf")
                 return downloadFiles(urlString: file, type: .document)
             } else {
                 return downloadFiles(urlString: file, type: .image)
@@ -566,21 +549,17 @@ extension TangibleListEditViewController {
         return Publishers.MergeMany(previewDataPublishers)
             .collect()
             .eraseToAnyPublisher()
-//            .map { (previewDataPublishers) -> [PreviewData] in
-//                return previewDataPublishers
-//            }
             .sink { [weak self] (completion) in
                 switch completion {
                     case .failure(.generalError(reason: let error)):
                         self?.alert.showDetail("Image/Doc Fetch Error", with: error, for: self)
                     case .finished:
-                        print("download finished")
+                        break
                     default:
                         self?.alert.showDetail("Image/Doc Fetch Error", with: "Unable to fetch the data.", for: self)
                 }
             } receiveValue: { [weak self] (previewArr) in
                 self?.previewDataArr = previewArr
-//                self?.imagePreviewVC.data = previewArr
             }
             .store(in: &self.storage)
     }
@@ -592,7 +571,7 @@ extension TangibleListEditViewController {
             return
         }
         
-        let fileURL = documentsDirectory.appendingPathComponent(fileName)
+        let fileURL = documentsDirectory.appendingPathComponent(fileName).appendingPathExtension("pdf")
         
         //Checks if file exists, removes it if so.
         if FileManager.default.fileExists(atPath: fileURL.path) {
@@ -605,7 +584,7 @@ extension TangibleListEditViewController {
         
         do {
             try data.write(to: fileURL)
-            promise(.success(PreviewData(header: .document, filePath: fileURL)))
+            promise(.success(PreviewData(header: .document, filePath: fileURL.absoluteURL)))
         } catch {
             promise(.failure(.generalError(reason: "Error saving file with error")))
         }

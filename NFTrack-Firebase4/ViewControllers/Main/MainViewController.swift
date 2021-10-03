@@ -35,6 +35,7 @@ class MainViewController: UIViewController {
     final let PAGINATION_LIMIT: Int = 20
     private let CELL_HEIGHT: CGFloat = 200
     private var customNavView: BackgroundView5!
+    private var colorPatchView = UIView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -94,6 +95,10 @@ extension MainViewController: UICollectionViewDelegate {
         customNavView = BackgroundView5()
         customNavView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.addSubview(customNavView)
+        
+        colorPatchView.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        colorPatchView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(colorPatchView)
     }
     
     private func setConstraints() {
@@ -106,7 +111,12 @@ extension MainViewController: UICollectionViewDelegate {
             customNavView.topAnchor.constraint(equalTo: collectionView.topAnchor, constant: -65),
             customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            customNavView.heightAnchor.constraint(equalToConstant: 50)
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
+            colorPatchView.topAnchor.constraint(equalTo: view.topAnchor, constant: -65),
+            colorPatchView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            colorPatchView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            colorPatchView.bottomAnchor.constraint(equalTo: customNavView.topAnchor)
         ])
     }
 }
@@ -193,6 +203,32 @@ extension MainViewController {
                 self.navigationController?.pushViewController(checkVC, animated: true)
             default:
                 break
+        }
+    }
+}
+
+extension MainViewController: UIContextMenuInteractionDelegate {
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        return nil
+    }
+    
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+        guard let destinationViewController = animator.previewViewController else { return }
+        animator.addAnimations { [weak self] in
+            self?.show(destinationViewController, sender: self)
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        func getPreviewVC(indexPath: IndexPath) -> UIViewController? {
+            let mainMenu = data[indexPath.item]
+            let mainDetailVC = MainDetailViewController()
+            mainDetailVC.category = mainMenu.title
+            return mainDetailVC
+        }
+        
+        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSString, previewProvider: { getPreviewVC(indexPath: indexPath) }) { _ in
+            UIMenu(title: "", children: [])
         }
     }
 }

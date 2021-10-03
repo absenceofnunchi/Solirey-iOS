@@ -12,7 +12,9 @@ import Combine
 import FirebaseMessaging
 
 class MainDetailViewController: ParentListViewController<Post>, PostParseDelegate {
-    private var storage = Set<AnyCancellable>()
+    var storage: Set<AnyCancellable>! = {
+        return Set<AnyCancellable>()
+    }()
     final var category: String! {
         didSet {
             guard let category = category,
@@ -90,10 +92,17 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         extendedLayoutIncludesOpaqueBars = true
 //        edgesForExtendedLayout = []
         
-        tableView = configureTableView(delegate: self, dataSource: self, height: 330, cellType: CardCell.self, identifier: CardCell.identifier)
+        tableView = UITableView()
+        tableView.register(ImageCardCell.self, forCellReuseIdentifier: ImageCardCell.identifier)
+        tableView.register(NoImageCardCell.self, forCellReuseIdentifier: NoImageCardCell.identifier)
+        tableView.estimatedRowHeight = 330
+        tableView.rowHeight = 330
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.prefetchDataSource = self
+        tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.contentInset = UIEdgeInsets(top: 60, left: 0, bottom: 0, right: 0)
         tableView.contentInsetAdjustmentBehavior = .always
-        tableView.prefetchDataSource = self
         view.addSubview(tableView)
         tableView.fill()
         
@@ -196,14 +205,27 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     }
     
     final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: CardCell.identifier) as? CardCell else {
-            fatalError("Sorry, could not load cell")
-        }
-        cell.selectionStyle = .none
         let post = postArr[indexPath.row]
-        cell.updateAppearanceFor(.pending(post))
+        var newCell: CardCell!
         
-        return cell
+        if let files = post.files, files.count > 0 {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: ImageCardCell.identifier) as? ImageCardCell else {
+                fatalError("Sorry, could not load cell")
+            }
+        
+            newCell = cell
+        } else {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: NoImageCardCell.identifier) as? NoImageCardCell else {
+                fatalError("Sorry, could not load cell")
+            }
+    
+            newCell = cell
+        }
+    
+        newCell.updateAppearanceFor(.pending(post))
+        newCell.selectionStyle = .none
+
+        return newCell
     }
     
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -303,7 +325,7 @@ extension MainDetailViewController {
     }
 }
 
-extension MainDetailViewController: FetchUserConfigurable {
+extension MainDetailViewController: ContextAction {
     override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
         guard let destinationViewController = animator.previewViewController else { return }
         animator.addAnimations { [weak self] in
@@ -317,6 +339,7 @@ extension MainDetailViewController: FetchUserConfigurable {
     
     final override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let post = postArr[indexPath.row]
+        var actionArray = [UIAction]()
         
         if let savedBy = post.savedBy, savedBy.contains(userId) {
             isSaved = true
@@ -327,14 +350,31 @@ extension MainDetailViewController: FetchUserConfigurable {
         let posting = UIAction(title: "Save", image: UIImage(systemName: starImage)) { [weak self] action in
             self?.savePost(post)
         }
+        actionArray.append(posting)
         
         let profile = UIAction(title: "Profile", image: UIImage(systemName: "person.crop.circle")) { [weak self] action in
             guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToProfile(post)
         }
+        actionArray.append(profile)
+        
+        if let files = post.files, files.count > 0 {
+            let images = UIAction(title: "Images", image: UIImage(systemName: "photo")) { [weak self] action in
+                guard let post = self?.postArr[indexPath.row] else { return }
+                self?.imagePreivew(post)
+            }
+            
+            actionArray.append(images)
+        }
+        
+        let history = UIAction(title: "Tx Detail", image: UIImage(systemName: "rectangle.stack")) { [weak self] action in
+            guard let post = self?.postArr[indexPath.row] else { return }
+            self?.navToHistory(post)
+        }
+        actionArray.append(history)
         
         return UIContextMenuConfiguration(identifier: "DetailPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC(post: post) }) { _ in
-            UIMenu(title: "", children: [posting, profile])
+            UIMenu(title: "", children: actionArray)
         }
     }
 
@@ -351,39 +391,5 @@ extension MainDetailViewController: FetchUserConfigurable {
                     self.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                 }
             }
-    }
-    
-    private func navToProfile(_ post: Post) {
-        showSpinner { [weak self] in
-            Future<UserInfo, PostingError> { promise in
-                self?.fetchUserData(userId: post.sellerUserId, promise: promise)
-            }
-            .sink { (completion) in
-                switch completion {
-                    case .failure(.generalError(reason: let err)):
-                        self?.alert.showDetail("Error", with: err, for: self)
-                        break
-                    case .finished:
-                        break
-                    default:
-                        break
-                }
-            } receiveValue: { (userInfo) in
-                self?.hideSpinner({
-                    DispatchQueue.main.async {
-                        let profileDetailVC = ProfileDetailViewController()
-                        profileDetailVC.userInfo = userInfo
-                        self?.navigationController?.pushViewController(profileDetailVC, animated: true)
-                    }
-                })
-            }
-            .store(in: &self!.storage)
-        }
-    }
-    
-    private func getPreviewVC(post: Post) -> ListDetailViewController {
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = post
-        return listDetailVC
     }
 }

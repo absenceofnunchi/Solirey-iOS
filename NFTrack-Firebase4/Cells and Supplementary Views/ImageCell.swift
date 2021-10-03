@@ -7,28 +7,16 @@
 
 import UIKit
 
-class ImageCell: UICollectionViewCell {
+class ImageCell: PreviewCell {
     let imageView = UIImageView()
-    var closeButton: UIButton!
     static let reuseIdentifier = "image-cell-reuse-identifier"
-    var buttonAction: ((UICollectionViewCell)->Void)?
     
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        configure()
-        setConstraints()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("not implemnted")
-    }
-}
-
-extension ImageCell {
-    func configure() {
+    override func configure() {
         imageView.contentMode = .scaleAspectFit
-        imageView.layer.cornerRadius = 5
+        imageView.layer.cornerRadius = 10
         imageView.clipsToBounds = true
+        imageView.dropShadow()
+        imageView.backgroundColor = .white
         self.addSubview(imageView)
         imageView.fill(inset: 4)
         
@@ -37,14 +25,8 @@ extension ImageCell {
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(closeButton)
     }
-    
-    @objc func buttonPressed() {
-        if let buttonAction = self.buttonAction {
-            buttonAction(self)
-        }
-    }
-    
-    func setConstraints() {
+
+    override func setConstraints() {
         NSLayoutConstraint.activate([
             closeButton.topAnchor.constraint(equalTo: self.topAnchor, constant: -5),
             closeButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 5),

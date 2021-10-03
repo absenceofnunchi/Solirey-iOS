@@ -17,11 +17,6 @@
 
 import UIKit
 
-struct ProgressMeterNode {
-    let statusLabelText: String
-    var dateLabelText: String? = ""
-}
-
 class ProgressCell: CardCell {
     class override var identifier: String {
         return "ProgressCell"
@@ -49,7 +44,7 @@ class ProgressCell: CardCell {
         nodeStackView.distribution = .fillEqually
         nodeStackView.translatesAutoresizingMaskIntoConstraints = false
         meterContainer.addSubview(nodeStackView)
-
+        
         // constraints of the meter container depending on the existence of the thumb image
         var progressConstraints = [NSLayoutConstraint]()
         if let files = post.files, files.count > 0 {
@@ -57,11 +52,11 @@ class ProgressCell: CardCell {
                 meterContainer.topAnchor.constraint(equalTo: thumbImageView.bottomAnchor, constant: 10),
             ]
         } else {
-            progressConstraints += [
-                meterContainer.topAnchor.constraint(equalTo: descContainer.bottomAnchor, constant: 10),
-            ]            
+//            progressConstraints += [
+//                meterContainer.topAnchor.constraint(equalTo: descContainer.bottomAnchor, constant: 10),
+//            ]
         }
-
+        
         progressConstraints += [
             meterContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 0),
             meterContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: 0),
@@ -84,7 +79,7 @@ class ProgressCell: CardCell {
             // auction first node
             let bidNode = ProgressMeterNode(statusLabelText: AuctionStatus.bid.toDisplay, dateLabelText: processDate(date: post.bidDate))
             progressMeterNodeArr.append(bidNode)
-
+            
             // auction second node
             let endedNode = ProgressMeterNode(statusLabelText: AuctionStatus.ended.toDisplay, dateLabelText: processDate(date: post.auctionEndDate))
             progressMeterNodeArr.append(endedNode)
@@ -235,7 +230,7 @@ extension ProgressCell {
                 statusLabel.textColor = .gray
                 statusLabel.text?.removeAll()
             }
-
+            
             if let dateLabel = viewWithTag(600 + i) as? UILabel {
                 dateLabel.textColor = .gray
                 dateLabel.text?.removeAll()

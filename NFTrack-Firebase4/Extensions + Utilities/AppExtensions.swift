@@ -401,6 +401,13 @@ extension UIView {
         self.clipsToBounds = true
     }
     
+    func dropShadow3() {
+        self.layer.cornerRadius = 10
+        self.layer.shadowColor = UIColor.darkGray.cgColor
+        self.layer.shadowOpacity = 1
+        self.layer.shadowOffset = CGSize.zero
+    }
+    
     // MARK: - fill
     func fill(inset: CGFloat = 0) {
         self.translatesAutoresizingMaskIntoConstraints = false

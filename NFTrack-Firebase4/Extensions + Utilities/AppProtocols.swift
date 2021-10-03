@@ -849,9 +849,9 @@ extension FetchUserConfigurable {
 
 protocol PageDataType where Self: UIViewController {
     associatedtype Assoc where Assoc: Equatable
-    var gallery: Assoc! { get set }
-    var galleries: [Assoc]! { get set }
-    init(gallery: Assoc, galleries: [Assoc])
+    var gallery: Assoc? { get set }
+    var galleries: [Assoc]? { get set }
+    init(gallery: Assoc?, galleries: [Assoc]?)
 }
 
 //protocol PageVCConfigurable {
@@ -1743,4 +1743,209 @@ extension CustomNavBarConfigurable {
 
 protocol GeneralPurposeDelegate: AnyObject {
     func doSomething()
+}
+
+protocol ProgressPanel where Self: CardCell {
+    var containerView: UIView! { get set }
+    var strokeColor: UIColor! { get set }
+    var lineWidth: CGFloat! { get set }
+    var selectedColor: UIColor! { get }
+    // contains the entire meter: the circle, line, node title, date
+    var meterContainer: UIView! { get set }
+    // contains the node title and the date
+    var nodeStackView: UIStackView! { get set }
+    var nodeCount: CGFloat! { get set }
+    var progressMeterNodeArr: [ProgressMeterNode]! { get set }
+    func configureMeterContainer(post: Post, topView: UIView)
+    //    func configureProgressMeter(nodeArray: [ProgressMeterNode], offset: CGFloat)
+    //    func createStatusLabel(text: String) -> UILabel
+    //    func processDate(date: Date?) -> String?
+    func configurePrepareForeReuse()
+}
+
+extension ProgressPanel {
+    func configureMeterContainer(post: Post, topView: UIView) {
+//        meterContainer = UIView()
+        meterContainer.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(meterContainer)
+        
+        nodeStackView = UIStackView()
+        nodeStackView.axis = .horizontal
+        nodeStackView.distribution = .fillEqually
+        nodeStackView.translatesAutoresizingMaskIntoConstraints = false
+        meterContainer.addSubview(nodeStackView)
+
+        NSLayoutConstraint.activate([
+            meterContainer.topAnchor.constraint(equalTo: topView.bottomAnchor, constant: 10),
+            meterContainer.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 0),
+            meterContainer.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: 0),
+            meterContainer.heightAnchor.constraint(equalToConstant: 100),
+            
+            nodeStackView.leadingAnchor.constraint(equalTo: meterContainer.leadingAnchor),
+            nodeStackView.trailingAnchor.constraint(equalTo: meterContainer.trailingAnchor),
+            nodeStackView.heightAnchor.constraint(equalTo: meterContainer.heightAnchor, multiplier: 0.5),
+            nodeStackView.bottomAnchor.constraint(equalTo: meterContainer.bottomAnchor)
+        ])
+        meterContainer.layoutIfNeeded()
+        
+        progressMeterNodeArr = [ProgressMeterNode]()
+        // parse Post so that the node title like "Bid" or "Purchase" is paired up with its own dates accordingly
+        if post.saleFormat == SaleFormat.openAuction.rawValue {
+            // auction
+            
+            // auction first node
+            let bidNode = ProgressMeterNode(statusLabelText: AuctionStatus.bid.toDisplay, dateLabelText: processDate(date: post.bidDate))
+            progressMeterNodeArr.append(bidNode)
+            
+            // auction second node
+            let endedNode = ProgressMeterNode(statusLabelText: AuctionStatus.ended.toDisplay, dateLabelText: processDate(date: post.auctionEndDate))
+            progressMeterNodeArr.append(endedNode)
+            
+            // auction third node
+            let auctionTransferNode = ProgressMeterNode(statusLabelText: AuctionStatus.transferred.toDisplay, dateLabelText: processDate(date: post.auctionTransferredDate))
+            progressMeterNodeArr.append(auctionTransferNode)
+        } else {
+            // tangible and digital escrow
+            
+            // first node
+            let purchaseDateNode = ProgressMeterNode(statusLabelText: "Purchased", dateLabelText: processDate(date: post.confirmPurchaseDate))
+            progressMeterNodeArr.append(purchaseDateNode)
+            
+            // second node
+            let transferNode = ProgressMeterNode(statusLabelText: "Transferred", dateLabelText: processDate(date: post.transferDate))
+            progressMeterNodeArr.append(transferNode)
+            
+            // third node
+            let receivedNode = ProgressMeterNode(statusLabelText: "Received", dateLabelText: processDate(date: post.confirmReceivedDate))
+            progressMeterNodeArr.append(receivedNode)
+        }
+        
+        configureProgressMeter(nodeArray: progressMeterNodeArr)
+    }
+    
+    // 2 points
+    // (1 / 2) * (1 / 2) = 1 / 4
+    // 1 / 4, 3 / 4
+    
+    // 3 points
+    // (1 / 3) * (1 / 2) = 1 / 6
+    // 1 / 6, 5 / 5
+    
+    // 4 points
+    // (1 / 4) * (1 / 2) = 1 / 8
+    // 1 / 8, 7 / 8
+    
+    private func configureProgressMeter(
+        nodeArray: [ProgressMeterNode],
+        offset: CGFloat = -20
+    ) {
+        // multiplied by 2 because we're finding the middle point between the nodes
+        // as specified in the above example calculations, the midpoint is always 1/2 of any number of nodes
+        nodeCount = CGFloat(nodeArray.count) * 2
+        
+        // the horizontal line throught the circular nodes
+        let path = UIBezierPath()
+        path.move(to: CGPoint(x: meterContainer.bounds.width / (nodeCount), y: meterContainer.bounds.midY + offset))
+        path.addLine(to: CGPoint(x: (meterContainer.bounds.width / (nodeCount)) * (nodeCount - 1), y: meterContainer.bounds.midY + offset))
+        let shapeLayer = CAShapeLayer()
+        shapeLayer.path = path.cgPath
+        shapeLayer.lineWidth = lineWidth
+        shapeLayer.strokeColor = strokeColor.cgColor
+        meterContainer.layer.addSublayer(shapeLayer)
+        
+        // the circular nodes + node containers (status label + date label)
+        for (i, element) in stride(from: 1, to: Int(nodeCount), by: 2).enumerated() {
+            let circlePath = UIBezierPath(
+                arcCenter: CGPoint(x: (meterContainer.bounds.width / (nodeCount)) * CGFloat(element),
+                                   y: meterContainer.bounds.midY + offset),
+                radius: 8, startAngle: CGFloat(0),
+                endAngle: CGFloat.pi * 2,
+                clockwise: true
+            )
+            circlePath.lineWidth = lineWidth
+            
+            let circleShapeLayer = CAShapeLayer()
+            circleShapeLayer.strokeColor = strokeColor.cgColor
+            circleShapeLayer.fillColor = UIColor.white.cgColor
+            circleShapeLayer.lineWidth = lineWidth
+            circleShapeLayer.path = circlePath.cgPath
+            circleShapeLayer.lineWidth = lineWidth
+            circleShapeLayer.name = "circle"
+            meterContainer.layer.addSublayer(circleShapeLayer)
+            
+            let nodeContainer = UIView()
+            nodeContainer.translatesAutoresizingMaskIntoConstraints = false
+            nodeStackView.addArrangedSubview(nodeContainer)
+            
+            let progressMeterNode = nodeArray[i]
+            
+            let statusLabel = createStatusLabel(text: progressMeterNode.statusLabelText)
+            statusLabel.textAlignment = .center
+            statusLabel.tag = 500 + i
+            statusLabel.translatesAutoresizingMaskIntoConstraints = false
+            nodeContainer.addSubview(statusLabel)
+            
+            let dateLabel = createStatusLabel(text: progressMeterNode.dateLabelText ?? "")
+            dateLabel.textAlignment = .center
+            dateLabel.tag = 600 + i
+            dateLabel.translatesAutoresizingMaskIntoConstraints = false
+            nodeContainer.addSubview(dateLabel)
+            
+            // if the date isn't null, it means the execution happened on those dates, therefore change the color of the node accordingly
+            if progressMeterNode.dateLabelText != nil {
+                circleShapeLayer.fillColor = selectedColor.cgColor
+                circleShapeLayer.strokeColor = selectedColor.cgColor
+                statusLabel.textColor = selectedColor
+                dateLabel.textColor = selectedColor
+            }
+            
+            NSLayoutConstraint.activate([
+                statusLabel.topAnchor.constraint(equalTo: nodeContainer.topAnchor),
+                statusLabel.widthAnchor.constraint(equalTo: nodeContainer.widthAnchor),
+                statusLabel.heightAnchor.constraint(equalTo: nodeContainer.heightAnchor, multiplier: 0.50),
+                
+                dateLabel.bottomAnchor.constraint(equalTo: nodeContainer.bottomAnchor),
+                dateLabel.widthAnchor.constraint(equalTo: nodeContainer.widthAnchor),
+                dateLabel.heightAnchor.constraint(equalTo: nodeContainer.heightAnchor, multiplier: 0.50)
+            ])
+        }
+    }
+    
+    private func createStatusLabel(text: String) -> UILabel {
+        let statusLabel = UILabel()
+        statusLabel.text = text
+        statusLabel.textColor = .lightGray
+        statusLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        statusLabel.sizeToFit()
+        statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        return statusLabel
+    }
+    
+    private func processDate(date: Date?) -> String? {
+        guard let date = date else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        let formattedDate = formatter.string(from: date)
+        return formattedDate
+    }
+    
+    func configurePrepareForeReuse() {
+        let circleShapeLayerArr = meterContainer.layer.sublayers?.filter { $0.name == "circle" } as? [CAShapeLayer]
+        circleShapeLayerArr?.forEach {
+            $0.fillColor = UIColor.gray.cgColor;
+            $0.strokeColor = UIColor.gray.cgColor
+        }
+        
+        for i in 0..<Int(nodeCount) {
+            if let statusLabel = viewWithTag(500 + i) as? UILabel {
+                statusLabel.textColor = .gray
+                statusLabel.text?.removeAll()
+            }
+            
+            if let dateLabel = viewWithTag(600 + i) as? UILabel {
+                dateLabel.textColor = .gray
+                dateLabel.text?.removeAll()
+            }
+        }
+    }
 }

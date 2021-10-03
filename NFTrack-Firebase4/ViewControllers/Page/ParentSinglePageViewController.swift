@@ -17,13 +17,13 @@ import PDFKit
 
 class ParentSinglePageViewController<T: Equatable>: UIViewController, PageDataType {
     typealias Assoc = T
-    var gallery: Assoc!
-    var galleries: [Assoc]!
+    var gallery: Assoc?
+    var galleries: [Assoc]?
     var imageView = UIImageView()
     var pdfView: PDFView!
     var loadingIndicator = UIActivityIndicatorView()
     
-    required init(gallery: Assoc, galleries: [Assoc]) {
+    required init(gallery: Assoc?, galleries: [Assoc]?) {
         self.gallery = gallery
         self.galleries = galleries
         super.init(nibName: nil, bundle: nil)

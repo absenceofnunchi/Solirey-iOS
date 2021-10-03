@@ -8,28 +8,17 @@
 import UIKit
 import PDFKit
 
-class PDFCell: UICollectionViewCell {
+class PDFCell: PreviewCell {
     let pdfView = PDFView()
-    var closeButton: UIButton!
     static let reuseIdentifier = "pdf-cell-reuse-identifier"
-    var buttonAction: ((UICollectionViewCell)->Void)?
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        configure()
-        setConstraints()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("not implemnted")
-    }
-}
 
-extension PDFCell {
-    func configure() {
+    override func configure() {
         pdfView.contentMode = .scaleAspectFit
-        pdfView.layer.cornerRadius = 5
+        pdfView.layer.cornerRadius = 10
         pdfView.clipsToBounds = true
+        pdfView.autoScales = true
+        pdfView.dropShadow()
+        pdfView.backgroundColor = .white
         self.addSubview(pdfView)
         pdfView.fill(inset: 4)
         
@@ -38,14 +27,7 @@ extension PDFCell {
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         self.contentView.addSubview(closeButton)
     }
-    
-    @objc func buttonPressed() {
-        if let buttonAction = self.buttonAction {
-            buttonAction(self)
-        }
-    }
-    
-    func setConstraints() {
+    override func setConstraints() {
         NSLayoutConstraint.activate([
             closeButton.topAnchor.constraint(equalTo: self.topAnchor, constant: -5),
             closeButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: 5),

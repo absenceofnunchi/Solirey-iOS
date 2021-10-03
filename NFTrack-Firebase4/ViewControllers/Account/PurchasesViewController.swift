@@ -40,9 +40,16 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
     final override func configureUI() {
         super.configureUI()
         title = "Purchases"
-        tableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
-        tableView.contentInset = UIEdgeInsets(top: 60, left: 0, bottom: 0, right: 0)
+        
+        tableView = UITableView()
+        tableView.register(ImageProgressCardCell.self, forCellReuseIdentifier: ImageProgressCardCell.identifier)
+        tableView.register(NoImageProgressCardCell.self, forCellReuseIdentifier: NoImageProgressCardCell.identifier)
+        tableView.estimatedRowHeight = 450
+        tableView.rowHeight = 450
+        tableView.dataSource = self
+        tableView.delegate = self
         tableView.prefetchDataSource = self
+        tableView.contentInset = UIEdgeInsets(top: 60, left: 0, bottom: 0, right: 0)
         view.addSubview(tableView)
         tableView.fill()
         
@@ -144,14 +151,28 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
     }
     
     final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: CardCell.identifier) as? CardCell else {
-            fatalError("Sorry, could not load cell")
-        }
-        cell.selectionStyle = .none
         let post = postArr[indexPath.row]
-        cell.updateAppearanceFor(.pending(post))
-        return cell
+        var newCell: CardCell!
+        
+        if let files = post.files, files.count > 0 {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: ImageProgressCardCell.identifier) as? ImageProgressCardCell else {
+                fatalError("Sorry, could not load cell")
+            }
+            
+            newCell = cell
+        } else {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: NoImageProgressCardCell.identifier) as? NoImageProgressCardCell else {
+                fatalError("Sorry, could not load cell")
+            }
+            
+            newCell = cell
+        }
+        
+        newCell.selectionStyle = .none
+        newCell.updateAppearanceFor(.pending(post))
+        return newCell
     }
+    
     
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let listDetailVC = ListDetailViewController()

@@ -17,7 +17,9 @@ class ListViewController: ParentListViewController<Post> {
     private var db: Firestore! {
         return FirebaseService.shared.db
     }
-    private var storage = Set<AnyCancellable>()
+    var storage: Set<AnyCancellable>! = {
+        return Set<AnyCancellable>()
+    }()
     private var segmentRetainer: Segment!
     override var PAGINATION_LIMIT: Int {
         get {
@@ -25,37 +27,16 @@ class ListViewController: ParentListViewController<Post> {
         }
         set {}
     }
-    private var customNavView: BackgroundView5!
 
+    private var customNavView: BackgroundView5!
+    private var colorPatchView = UIView()
+    lazy var colorPatchViewHeight: NSLayoutConstraint = colorPatchView.heightAnchor.constraint(equalToConstant: 0)
+//    private var newTableView: UITableView!
+    
     final override func viewDidLoad() {
         super.viewDidLoad()
         applyBarTintColorToTheNavigationBar()
         configureSwitch()
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        if tableView == nil {
-            configureTableView()
-        }
-        
-        didRefreshTableView(index: currentIndex)
-    }
-
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        lastSnapshot = nil
-        loadingQueue.cancelAllOperations()
-        loadingOperations.removeAll()
-        
-        if firstListener != nil {
-            firstListener.remove()
-        }
-        
-        if nextListener != nil {
-            nextListener.remove()
-        }
     }
     
     @objc func swiped(_ sender: UISwipeGestureRecognizer) {
@@ -83,8 +64,14 @@ class ListViewController: ParentListViewController<Post> {
         dataStore = PostImageDataStore(posts: postArr)
     }
     
-    private func configureTableView() {
-        tableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
+    private func configureTableView(tableView: UITableView?) {
+        guard let tableView = tableView else { return }
+        tableView.register(ImageProgressCardCell.self, forCellReuseIdentifier: ImageProgressCardCell.identifier)
+        tableView.register(NoImageProgressCardCell.self, forCellReuseIdentifier: NoImageProgressCardCell.identifier)
+        tableView.estimatedRowHeight = 450
+        tableView.rowHeight = 450
+        tableView.dataSource = self
+        tableView.delegate = self
         tableView.prefetchDataSource = self
         tableView.contentInset = UIEdgeInsets(top: 65, left: 0, bottom: 0, right: 0)
         view.addSubview(tableView)
@@ -93,15 +80,29 @@ class ListViewController: ParentListViewController<Post> {
         customNavView = BackgroundView5()
         customNavView.translatesAutoresizingMaskIntoConstraints = false
         tableView.addSubview(customNavView)
-        setCustomNavConstraints()
+        
+        colorPatchView.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        colorPatchView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(colorPatchView)
+        
+        NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: -65),
+            customNavView.widthAnchor.constraint(equalTo: tableView.widthAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
+            colorPatchView.topAnchor.constraint(equalTo: view.topAnchor),
+            colorPatchView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            colorPatchView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            colorPatchViewHeight,
+        ])
     }
     
     final override func configureUI() {
         super.configureUI()
         
-        if tableView == nil {
-            configureTableView()
-        }
+        tableView = UITableView()
+        configureTableView(tableView: tableView)
+        configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
         
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
         swipeLeft.direction = .left
@@ -112,23 +113,27 @@ class ListViewController: ParentListViewController<Post> {
         view.addGestureRecognizer(swipeRight)
     }
     
-    final func setCustomNavConstraints() {
-        NSLayoutConstraint.activate([
-            customNavView.topAnchor.constraint(equalTo: tableView.topAnchor, constant: -65),
-            customNavView.widthAnchor.constraint(equalTo: tableView.widthAnchor),
-            customNavView.heightAnchor.constraint(equalToConstant: 50)
-        ])
-    }
-    
     final override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: ProgressCell.identifier) as? ProgressCell else {
-            fatalError("Sorry, could not load cell")
+        let post = postArr[indexPath.row]
+        var newCell: CardCell!
+          
+        if let files = post.files, files.count > 0 {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: ImageProgressCardCell.identifier) as? ImageProgressCardCell else {
+                fatalError("Sorry, could not load cell")
+            }
+
+            newCell = cell
+        } else {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: NoImageProgressCardCell.identifier) as? NoImageProgressCardCell else {
+                fatalError("Sorry, could not load cell")
+            }
+
+            newCell = cell
         }
         
-        cell.selectionStyle = .none
-        let post = postArr[indexPath.row]
-        cell.updateAppearanceFor(.pending(post))
-        return cell
+        newCell.selectionStyle = .none
+        newCell.updateAppearanceFor(.pending(post))
+        return newCell
     }
     
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -182,6 +187,14 @@ class ListViewController: ParentListViewController<Post> {
         // for swiping left and right so that the index doesn't overflow
         currentIndex = index
   
+        if firstListener != nil {
+            firstListener.remove()
+        }
+
+        if nextListener != nil {
+            nextListener.remove()
+        }
+        
         switch index {
             case 0:
                 // buying
@@ -292,6 +305,14 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
         loadingQueue.cancelAllOperations()
         loadingOperations.removeAll()
         
+        if firstListener != nil {
+            firstListener.remove()
+        }
+
+        if nextListener != nil {
+            nextListener.remove()
+        }
+        
         switch segment {
             case .buying:
                 self.configureDataFetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue])
@@ -325,6 +346,7 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
         loadingQueue.cancelAllOperations()
         loadingOperations.removeAll()
         postArr.removeAll()
+        tableView.reloadData()
 
         firstListener = db.collection("post")
             .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
@@ -416,11 +438,11 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
     // MARK: - configureAuctionFetch()
     final func configureAuctionFetch() {
         guard let userId = userId else { return }
-        
         dataStore = nil
         loadingQueue.cancelAllOperations()
         loadingOperations.removeAll()
         postArr.removeAll()
+        tableView.reloadData()
 
         firstListener = db.collection("post")
             .whereField("bidders", arrayContains: userId)
@@ -438,7 +460,6 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                     self?.cache.removeAllObjects()
                     
                     guard let lastSnapshot = querySnapshot.documents.last else {
-                        // The collection is empty.
                         return
                     }
                     
@@ -511,33 +532,32 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
             }
     }
     
-    final func transitionView(completion: @escaping () -> Void) {
-        if firstListener != nil {
-            firstListener.remove()
-        }
-        
-        if nextListener != nil {
-            nextListener.remove()
-        }
-        
-        let newTableView = configureTableView(delegate: self, dataSource: self, height: 450, cellType: ProgressCell.self, identifier: ProgressCell.identifier)
-        newTableView.prefetchDataSource = self
-        UIView.transition(from: tableView, to: newTableView, duration: 0, options: .transitionCrossDissolve) { [weak self] (_) in
-            DispatchQueue.main.async {
-                newTableView.fill()
-                self?.tableView = newTableView
-                self?.customNavView = BackgroundView5()
-                self?.customNavView.translatesAutoresizingMaskIntoConstraints = false
-                guard let cnv = self?.customNavView else { return }
-                self?.tableView.addSubview(cnv)
-                self?.setCustomNavConstraints()
-                completion()
-            }
-        }
-    }
+//    final func transitionView(completion: @escaping () -> Void) {
+//        if firstListener != nil {
+//            firstListener.remove()
+//        }
+//
+//        if nextListener != nil {
+//            nextListener.remove()
+//        }
+//
+//        if newTableView == nil {
+//            newTableView = UITableView()
+//            configureTableView(tableView: newTableView)
+//        }
+//
+//        UIView.transition(from: tableView, to: newTableView, duration: 0, options: .transitionCrossDissolve) { [weak self] (_) in
+//            DispatchQueue.main.async {
+//                self?.tableView = self?.newTableView
+//                self?.configureTableView(tableView: self!.newTableView)
+//                self?.newTableView = nil
+//                completion()
+//            }
+//        }
+//    }
 }
 
-extension ListViewController: FetchUserConfigurable {
+extension ListViewController: ContextAction {
     override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
         guard let destinationViewController = animator.previewViewController else { return }
         animator.addAnimations { [weak self] in
@@ -551,48 +571,38 @@ extension ListViewController: FetchUserConfigurable {
     
     final override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let post = postArr[indexPath.row]
+        var actionArray = [UIAction]()
         
         let profile = UIAction(title: "Profile", image: UIImage(systemName: "person.crop.circle")) { [weak self] action in
             guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToProfile(post)
         }
+        actionArray.append(profile)
+        
+        if let files = post.files, files.count > 0 {
+            let profile = UIAction(title: "Images", image: UIImage(systemName: "photo")) { [weak self] action in
+                guard let post = self?.postArr[indexPath.row] else { return }
+                self?.imagePreivew(post)
+            }
+            actionArray.append(profile)
+        }
+        
+        let history = UIAction(title: "Tx Detail", image: UIImage(systemName: "rectangle.stack")) { [weak self] action in
+            guard let post = self?.postArr[indexPath.row] else { return }
+            self?.navToHistory(post)
+        }
+        actionArray.append(history)
         
         return UIContextMenuConfiguration(identifier: "DetailPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC(post: post) }) { _ in
-            UIMenu(title: "", children: [profile])
+            UIMenu(title: "", children: actionArray)
         }
     }
-    
-    private func navToProfile(_ post: Post) {
-        showSpinner { [weak self] in
-            Future<UserInfo, PostingError> { promise in
-                self?.fetchUserData(userId: post.sellerUserId, promise: promise)
-            }
-            .sink { (completion) in
-                switch completion {
-                    case .failure(.generalError(reason: let err)):
-                        self?.alert.showDetail("Error", with: err, for: self)
-                        break
-                    case .finished:
-                        break
-                    default:
-                        break
-                }
-            } receiveValue: { (userInfo) in
-                self?.hideSpinner({
-                    DispatchQueue.main.async {
-                        let profileDetailVC = ProfileDetailViewController()
-                        profileDetailVC.userInfo = userInfo
-                        self?.navigationController?.pushViewController(profileDetailVC, animated: true)
-                    }
-                })
-            }
-            .store(in: &self!.storage)
+}
+
+extension ListViewController {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if -scrollView.contentOffset.y > 0 {
+            colorPatchViewHeight.constant = -scrollView.contentOffset.y
         }
-    }
-    
-    private func getPreviewVC(post: Post) -> ListDetailViewController {
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = post
-        return listDetailVC
     }
 }

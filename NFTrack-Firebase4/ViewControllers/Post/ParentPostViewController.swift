@@ -1001,7 +1001,7 @@ extension ParentPostViewController: UIScrollViewDelegate {
         colorPatchView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(colorPatchView)
         
-        colorPatchView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        colorPatchView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
         colorPatchView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         colorPatchView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
         colorPatchViewHeight.isActive = true

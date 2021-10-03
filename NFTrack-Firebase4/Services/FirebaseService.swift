@@ -25,7 +25,7 @@ class FirebaseService {
     
     let storage = Storage.storage()
     lazy var storageRef = storage.reference()
-    var imageRef: StorageReference!
+    var ref: StorageReference!
     var cancellable = Set<AnyCancellable>()
 }
 
@@ -38,9 +38,9 @@ extension FirebaseService: PostParseDelegate {
                 let metadata = StorageMetadata()
 //                metadata.contentType = "image/*"
                 
-                imageRef = storageRef.child(userId).child(fileName)
+                ref = storageRef.child(userId).child(fileName)
                 // Upload file and metadata to the object 'images/mountains.jpg'
-                let uploadTask = imageRef.putFile(from: localFile, metadata: metadata)
+                let uploadTask = ref.putFile(from: localFile, metadata: metadata)
                 
                 completion(uploadTask, nil)
             } else {
@@ -54,11 +54,9 @@ extension FirebaseService: PostParseDelegate {
     final func uploadFile(fileURL: URL, userId: String, completion: @escaping (StorageUploadTask?, FileUploadError?) -> Void) {
         if FileManager.default.fileExists(atPath: fileURL.path) {
             let metadata = StorageMetadata()
-            //                metadata.contentType = "image/*"
-            
-            imageRef = storageRef.child(userId).child(fileURL.lastPathComponent)
+            ref = storageRef.child(userId).child(fileURL.lastPathComponent)
             // Upload file and metadata to the object 'images/mountains.jpg'
-            let uploadTask = imageRef.putFile(from: fileURL, metadata: metadata)
+            let uploadTask = ref.putFile(from: fileURL, metadata: metadata)
             
             completion(uploadTask, nil)
         } else {
@@ -72,9 +70,9 @@ extension FirebaseService: PostParseDelegate {
             let metadata = StorageMetadata()
             metadata.contentType = "image/*"
             
-            imageRef = storageRef.child(userId).child(fileURL.lastPathComponent)
+            ref = storageRef.child(userId).child(fileURL.lastPathComponent)
             // Upload file and metadata to the object 'images/mountains.jpg'
-            let uploadTask = imageRef.putFile(from: fileURL, metadata: metadata)
+            let uploadTask = ref.putFile(from: fileURL, metadata: metadata)
             
             completion(uploadTask, nil)
         } else {
@@ -84,7 +82,7 @@ extension FirebaseService: PostParseDelegate {
     
     // Upload image with data
     final func uploadImage(image: UIImage, imageName: String, userId: String, completion: @escaping (StorageUploadTask?, FileUploadError?) -> Void) {
-        imageRef = storageRef.child(userId).child(imageName)
+        ref = storageRef.child(userId).child(imageName)
         // Upload file and metadata to the object 'images/mountains.jpg'
         
         let metadata = StorageMetadata()
@@ -95,7 +93,7 @@ extension FirebaseService: PostParseDelegate {
             return
         }
         
-        let uploadTask = imageRef.putData(compressedImage, metadata: metadata)
+        let uploadTask = ref.putData(compressedImage, metadata: metadata)
         completion(uploadTask, nil)
     }
     

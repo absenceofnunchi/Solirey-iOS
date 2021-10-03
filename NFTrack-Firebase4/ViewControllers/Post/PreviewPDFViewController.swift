@@ -13,10 +13,16 @@ class PreviewPDFViewController: QLPreviewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        UINavigationBar.appearance().tintColor = UIColor.gray
+        UINavigationBar.appearance().barTintColor = UIColor.blue
+        UINavigationBar.appearance().titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.gray]
+//        UINavigationBar.appearance().setBackgroundImage(fromColor(color: UIColor.blue), for: .default)
+        UINavigationBar.appearance().isTranslucent = false
+        
 //        let barButton = UIBarButtonItem(title: "Upload", style: .plain, target: self, action: #selector(buttonTapped))
 //        self.navigationItem.rightBarButtonItems = [barButton]
 //        self.navigationItem.setLeftBarButtonItems([], animated: true)
-        //        self.navigationItem.hidesBackButton = true
+//        self.navigationItem.hidesBackButton = true
     }
     
     override func viewWillDisappear(_ animated: Bool) {
