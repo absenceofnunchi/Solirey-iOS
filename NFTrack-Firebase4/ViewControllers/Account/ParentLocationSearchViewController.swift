@@ -8,12 +8,12 @@
 import UIKit
 import MapKit
 
-class ParentLocationSearchViewController<T>: UITableViewController, ParseAddressDelegate, UISearchResultsUpdating {
-    var data = [T]()
+class ParentLocationSearchViewController: UITableViewController, ParseAddressDelegate, UISearchResultsUpdating, UISearchBarDelegate {
     var request: MKLocalSearch.Request!
     var regionRadius: CLLocationDistance!
     var location: CLLocationCoordinate2D! {
         didSet {
+            print("didSet location", location as Any)
             if request != nil, location != nil {
                 request.region = MKCoordinateRegion.init(center: location, latitudinalMeters: regionRadius, longitudinalMeters: regionRadius)
             }
@@ -22,9 +22,10 @@ class ParentLocationSearchViewController<T>: UITableViewController, ParseAddress
     var alert: Alerts!
     weak var handleMapSearchDelegate: HandleMapSearch? = nil
     
-    init(regionRadius: CLLocationDistance) {
+    init(regionRadius: CLLocationDistance, location: CLLocationCoordinate2D?) {
         super.init(nibName: nil, bundle: nil)
         self.regionRadius = regionRadius
+        self.location = location
     }
     
     required init?(coder: NSCoder) {
@@ -35,10 +36,6 @@ class ParentLocationSearchViewController<T>: UITableViewController, ParseAddress
         super.viewDidLoad()
         tableView.keyboardDismissMode = .onDrag
         alert = Alerts()
-    }
-    
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return data.count
     }
     
     func updateSearchResults(for searchController: UISearchController) { }

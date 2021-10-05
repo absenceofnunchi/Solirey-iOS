@@ -8,7 +8,8 @@
 import UIKit
 import MapKit
 
-class FilteredLocationSearchViewController: ParentLocationSearchViewController<String> {
+class FilteredLocationSearchViewController: ParentLocationSearchViewController {
+    var data = [String]()
     var scopeRetainer: ShippingRestriction! = .cities
     var searchController: UISearchController!
     
@@ -73,7 +74,7 @@ extension FilteredLocationSearchViewController {
     }
 }
 
-extension FilteredLocationSearchViewController: UISearchBarDelegate {
+extension FilteredLocationSearchViewController {
     final func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
         guard let scope = ShippingRestriction(rawValue: selectedScope) else { return }
         scopeRetainer = scope
@@ -95,6 +96,10 @@ extension FilteredLocationSearchViewController: UISearchBarDelegate {
 
 // MARK: - Table view data source
 extension FilteredLocationSearchViewController: HandleMapSearch {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return data.count
+    }
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
         

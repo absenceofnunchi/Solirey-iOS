@@ -104,13 +104,30 @@ class ChatViewController: ParentListViewController<Message>, FileUploadable, Sin
     final override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         addKeyboardObserver()
-        self.tabBarController?.tabBar.isHidden = true
+
+        // If navigated to ChatVC from SearchResultsVC, the tab bar is still visible
+        if let parentVC = parent?.parent, parentVC.isKind(of: UISearchController.self),
+           let window = UIApplication.shared.windows.first,
+           let rootVC = window.rootViewController as? CustomTabBarViewController {
+            rootVC.tabBar.isHidden = true
+        } else {
+            self.tabBarController?.tabBar.isHidden = true
+        }
+        
         NotificationCenter.default.addObserver(self, selector: #selector(appMovedToForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
     final override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        self.tabBarController?.tabBar.isHidden = false
+        
+        if let parentVC = parent?.parent, parentVC.isKind(of: UISearchController.self),
+           let window = UIApplication.shared.windows.first,
+           let rootVC = window.rootViewController as? CustomTabBarViewController {
+            rootVC.tabBar.isHidden = false
+        } else {
+            self.tabBarController?.tabBar.isHidden = false
+        }
+        
         
         Future<Bool, PostingError> { [weak self] promise in
             self?.registerOnlineStatus(false, promise: promise)

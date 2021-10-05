@@ -158,7 +158,26 @@ extension SearchResultsController: ContextAction {
         }
         actionArray.append(history)
         
-        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC(post: post) }) { _ in
+        let reviews = UIAction(title: "Reviews", image: UIImage(systemName: "square.and.pencil")) { [weak self] action in
+            guard let post = self?.postArr[indexPath.row] else { return }
+            self?.navToReviews(post)
+        }
+        actionArray.append(reviews)
+        
+        if userId != post.sellerUserId {
+            let chat = UIAction(title: "Chat", image: UIImage(systemName: "message")) { [weak self] action in
+                self?.navToChatVC(userId: self?.userId, post: post)
+            }
+            actionArray.append(chat)
+            
+            let report = UIAction(title: "Report", image: UIImage(systemName: "flag")) { [weak self] action in
+                guard let userId = self?.userId else { return }
+                self?.navToReport(userId: userId, post: post)
+            }
+            actionArray.append(report)
+        }
+        
+        return UIContextMenuConfiguration(identifier: "SearchResultsPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC(post: post) }) { _ in
             UIMenu(title: "", children: actionArray)
         }
     }
@@ -176,62 +195,5 @@ extension SearchResultsController: ContextAction {
                     self.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                 }
             }
-    }
-}
-
-protocol ContextAction: FetchUserConfigurable {
-    var storage: Set<AnyCancellable>! { get set }
-    var alert: Alerts! { get set }
-}
-
-extension ContextAction where Self: UIViewController {
-    func navToProfile(_ post: Post) {
-        showSpinner { [weak self] in
-            Future<UserInfo, PostingError> { promise in
-                self?.fetchUserData(userId: post.sellerUserId, promise: promise)
-            }
-            .sink { (completion) in
-                switch completion {
-                    case .failure(.generalError(reason: let err)):
-                        self?.alert.showDetail("Error", with: err, for: self)
-                        break
-                    case .finished:
-                        break
-                    default:
-                        break
-                }
-            } receiveValue: { (userInfo) in
-                self?.hideSpinner({
-                    DispatchQueue.main.async {
-                        let profileDetailVC = ProfileDetailViewController()
-                        profileDetailVC.userInfo = userInfo
-                        self?.navigationController?.pushViewController(profileDetailVC, animated: true)
-                    }
-                })
-            }
-            .store(in: &self!.storage)
-        }
-    }
-    
-    func imagePreivew(_ post: Post) {
-        guard let galleries = post.files, galleries.count > 0 else { return }
-        let pvc = PageViewController<BigSinglePageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: galleries)
-        let singlePageVC = BigSinglePageViewController(gallery: galleries.first, galleries: galleries)
-        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
-        pvc.modalPresentationStyle = .fullScreen
-        pvc.modalTransitionStyle = .crossDissolve
-        present(pvc, animated: true, completion: nil)
-    }
-    
-    func navToHistory(_ post: Post) {
-        let historyDetailVC = HistoryDetailViewController()
-        historyDetailVC.post = post
-        self.navigationController?.pushViewController(historyDetailVC, animated: true)
-    }
-    
-    func getPreviewVC(post: Post) -> ListDetailViewController {
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = post
-        return listDetailVC
     }
 }

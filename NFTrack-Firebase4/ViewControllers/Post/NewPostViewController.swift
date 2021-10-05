@@ -19,9 +19,16 @@ class NewPostViewController: UIViewController, SegmentConfigurable {
     var digitalVC: DigitalAssetViewController! {
         return DigitalAssetViewController()
     }
+    // Value passed from ListDetailVC during resell
+    var post: Post?
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        initialConfig()
+    }
+    
+    // To be overriden by ResaleVC
+    func initialConfig() {
         configureSwitch()
         addBaseViewController(postVC)
     }
@@ -56,9 +63,8 @@ class NewPostViewController: UIViewController, SegmentConfigurable {
     }
     
     // MARK: - Switching Between View Controllers
-    
     /// Adds a child view controller to the container.
-    private func addBaseViewController<T: UIViewController>(_ viewController: T) {
+    func addBaseViewController<T: ParentPostViewController>(_ viewController: T) {
         addChild(viewController)
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(viewController.view)
@@ -67,7 +73,7 @@ class NewPostViewController: UIViewController, SegmentConfigurable {
     }
     
     /// Removes a child view controller from the container.
-    private func removeBaseViewController(_ viewController: UIViewController?) {
+    private func removeBaseViewController(_ viewController: ParentPostViewController?) {
         guard let viewController = viewController else { return }
         viewController.willMove(toParent: nil)
         viewController.view.removeFromSuperview()

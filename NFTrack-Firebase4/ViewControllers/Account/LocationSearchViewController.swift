@@ -9,7 +9,8 @@
 import UIKit
 import MapKit
 
-class LocationSearchViewController: ParentLocationSearchViewController<MKMapItem> {    
+class LocationSearchViewController: ParentLocationSearchViewController {
+    var data = [MKMapItem]()
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.register(AddressCell.self, forCellReuseIdentifier: AddressCell.reuseIdentifier)
@@ -46,6 +47,10 @@ class LocationSearchViewController: ParentLocationSearchViewController<MKMapItem
 
 // MARK: - Table view data source
 extension LocationSearchViewController {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return data.count
+    }
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: AddressCell.reuseIdentifier, for: indexPath) as? AddressCell else {
             fatalError()

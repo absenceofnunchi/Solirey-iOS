@@ -156,33 +156,14 @@ extension ListDetailViewController: ParseAddressDelegate {
                             }
                             self?.configureStatusButton(buttonTitle: PurchaseMethods.abort.rawValue, tag: 1)
                         } else {
-                            // The purchase button should only be available to the potential buyer that meets the shipping criteria.
-                            guard let shippingInfo = post.shippingInfo else { return }
-                            if post.shippingInfo?.scope != .none {
-                                print("post.shippingInfo?.scope", post.shippingInfo?.scope as Any)
-
-                                let shippingAddressChecker = ShippingAddressChecker(shippingInfo: shippingInfo)
-                                shippingAddressChecker.checkAddress()
-                                    .sink { (_) in
-                                    } receiveValue: { (shippingEligibility) in
-                                        switch shippingEligibility {
-                                            case .eligible:
-                                                // the buyer's address is within the seller's shipping limitation
-                                                self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmPurchase.rawValue, tag: 2)
-                                            case .notEligible:
-                                                // the buyer's address is outside the seller's shipping limitation
-                                                self?.configureStatusButton(buttonTitle: "Shipping Unavailbable", tag: 201)
-                                            case .requiresBuyersShippingInfo:
-                                                self?.configureStatusButton(buttonTitle: "Requires Shipping Info", tag: 200)
-                                            case .unableToProcessAddress:
-                                                self?.alert.showDetail("Error in Buyer's Address", with: "There was an error processing your shipping address.", for: self)
-                                                self?.configureStatusButton(buttonTitle: "Error", tag: 202)
-                                        }
-                                    }
-                                    .store(in: &storage)
-                            } else {
-                                // The seller hasn't specified the shipping address. This should never reach.
-                                self?.configureStatusButton(buttonTitle: "Unspecified Shipping Information", tag: 50000)
+                            switch post.type {
+                                case "tangible":
+                                    self?.configureTangibleAndReadyStatus(post)
+                                case "digital":
+                                    // requires a contract that automatically transfers the token as soon as the buyer purchases which bypasses the step of 1. the ownership transfer by the seller and 2. the confirmation of the receipt.
+                                    self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmPurchase.rawValue, tag: 2)
+                                default:
+                                    break
                             }
                         }
                         break
@@ -216,6 +197,36 @@ extension ListDetailViewController: ParseAddressDelegate {
                         self?.configureStatusButton(buttonTitle: "Error", tag: 50)
                 }
             }
+        }
+    }
+    
+    private func configureTangibleAndReadyStatus(_ post: Post) {
+        // The purchase button should only be available to the potential buyer that meets the shipping criteria.
+        guard let shippingInfo = post.shippingInfo else { return }
+        if post.shippingInfo?.scope != .none {
+            
+            let shippingAddressChecker = ShippingAddressChecker(shippingInfo: shippingInfo)
+            shippingAddressChecker.checkAddress()
+                .sink { (_) in
+                } receiveValue: { [weak self](shippingEligibility) in
+                    switch shippingEligibility {
+                        case .eligible:
+                            // the buyer's address is within the seller's shipping limitation
+                            self?.configureStatusButton(buttonTitle: PurchaseMethods.confirmPurchase.rawValue, tag: 2)
+                        case .notEligible:
+                            // the buyer's address is outside the seller's shipping limitation
+                            self?.configureStatusButton(buttonTitle: "Shipping Unavailbable", tag: 201)
+                        case .requiresBuyersShippingInfo:
+                            self?.configureStatusButton(buttonTitle: "Requires Shipping Info", tag: 200)
+                        case .unableToProcessAddress:
+                            self?.alert.showDetail("Error in Buyer's Address", with: "There was an error processing your shipping address.", for: self)
+                            self?.configureStatusButton(buttonTitle: "Error", tag: 202)
+                    }
+                }
+                .store(in: &storage)
+        } else {
+            // The seller hasn't specified the shipping address. This should never reach.
+            self.configureStatusButton(buttonTitle: "Unspecified Shipping Information", tag: 50000)
         }
     }
 }

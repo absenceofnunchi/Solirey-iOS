@@ -215,7 +215,7 @@ class ParentListViewController<T>: UIViewController, TableViewConfigurable, UITa
         let y = offset.y + bounds.size.height - inset.bottom
         let h = size.height
         let reload_distance:CGFloat = 10.0
-        if offset.y > 0 && y > (h + reload_distance) {
+        if offset.y > 100 && y > (h + reload_distance) {
             guard self.postArr.count > 0 else { return }
             executeAfterDragging()
         }

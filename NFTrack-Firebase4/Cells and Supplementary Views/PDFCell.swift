@@ -14,13 +14,12 @@ class PDFCell: PreviewCell {
 
     override func configure() {
         pdfView.contentMode = .scaleAspectFit
-        pdfView.layer.cornerRadius = 10
+        pdfView.layer.cornerRadius = 5
         pdfView.clipsToBounds = true
         pdfView.autoScales = true
-        pdfView.dropShadow()
-        pdfView.backgroundColor = .white
+        pdfView.backgroundColor = .clear
         self.addSubview(pdfView)
-        pdfView.fill(inset: 4)
+        pdfView.fill(inset: 8)
         
         let image = UIImage(systemName: "multiply.circle.fill")!.withTintColor(.red, renderingMode: .alwaysOriginal)
         closeButton = UIButton.systemButton(with: image, target: self, action: #selector(buttonPressed))

@@ -25,12 +25,12 @@ class AccountViewController: UIViewController {
     private var tableView: UITableView!
     private var data: [AccountMenu] = [
         AccountMenu(imageTitle: "person.circle", imageColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), titleString: NSLocalizedString("Update Profile", comment: "")),
-        AccountMenu(imageTitle: "lock.circle", imageColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), titleString: NSLocalizedString("Reset Password", comment: "")),
+        AccountMenu(imageTitle: "lock.circle", imageColor: UIColor(red: 49/255, green: 11/255, blue: 11/255, alpha: 1), titleString: NSLocalizedString("Reset Password", comment: "")),
         AccountMenu(imageTitle: "purchased.circle", imageColor: UIColor(red: 255/255, green: 160/255, blue: 160/255, alpha: 1), titleString: NSLocalizedString("Purchases", comment: "")),
         AccountMenu(imageTitle: "arrowshape.turn.up.right.circle", imageColor: UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1), titleString: NSLocalizedString("Logout", comment: "")),
         AccountMenu(imageTitle: "pencil.circle", imageColor: .blue, titleString: NSLocalizedString("Pending Reviews", comment: "")),
         AccountMenu(imageTitle: "envelope.circle", imageColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), titleString: NSLocalizedString("Feedback", comment: "")),
-        AccountMenu(imageTitle: "trash.circle", imageColor: UIColor(red: 49/255, green: 11/255, blue: 11/255, alpha: 1), titleString: NSLocalizedString("Delete Account", comment: ""))
+        AccountMenu(imageTitle: "trash.circle", imageColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), titleString: NSLocalizedString("Delete Account", comment: ""))
     ]
     private var logoutButton: UIButton!
     private let CARD_HEIGHT: CGFloat = 200
@@ -379,7 +379,7 @@ extension AccountViewController: FetchUserConfigurable, UIContextMenuInteraction
                 self?.present(prVC, animated: true, completion: nil)
             }
             
-            let delete = UIAction(title: "Delete Wallet", image: UIImage(systemName: "trash.circle")) { [weak self] action in
+            let delete = UIAction(title: "Delete Wallet", image: UIImage(systemName: "trash.circle"), attributes: .destructive) { [weak self] action in
                 // delete
                 let content = [
                     StandardAlertContent(
@@ -438,19 +438,14 @@ extension AccountViewController: FetchUserConfigurable, UIContextMenuInteraction
                 }
                 self?.present(alertVC, animated: true, completion: nil)
             }
-            
-            return UIContextMenuConfiguration(identifier: "WalletPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC() }) { _ in
+
+            return UIContextMenuConfiguration(identifier: "WalletPreview" as NSCopying, previewProvider: nil) { _ in
                 UIMenu(title: "", children: [send, receive, history, resetPassword, privateKey, delete])
             }
         } else {
-            return UIContextMenuConfiguration(identifier: "WalletPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC() }) { _ in
+            return UIContextMenuConfiguration(identifier: "WalletPreview" as NSCopying, previewProvider: nil) { _ in
                 UIMenu(title: "", children: [])
             }
         }
-    }
-
-    private func getPreviewVC() -> WalletViewController {
-        let walletVC = WalletViewController()
-        return walletVC
     }
 }

@@ -34,7 +34,7 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                     } else {
                         defer {
                             DispatchQueue.main.async {
-                                self?.tableView.reloadData()
+                                self?.tableView?.reloadData()
                             }
                         }
                         
@@ -346,6 +346,7 @@ extension MainDetailViewController: ContextAction {
         } else {
             isSaved = false
         }
+        
         let starImage = isSaved ? "star.fill" : "star"
         let posting = UIAction(title: "Save", image: UIImage(systemName: starImage)) { [weak self] action in
             self?.savePost(post)
@@ -353,14 +354,12 @@ extension MainDetailViewController: ContextAction {
         actionArray.append(posting)
         
         let profile = UIAction(title: "Profile", image: UIImage(systemName: "person.crop.circle")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToProfile(post)
         }
         actionArray.append(profile)
         
         if let files = post.files, files.count > 0 {
             let images = UIAction(title: "Images", image: UIImage(systemName: "photo")) { [weak self] action in
-                guard let post = self?.postArr[indexPath.row] else { return }
                 self?.imagePreivew(post)
             }
             
@@ -368,12 +367,29 @@ extension MainDetailViewController: ContextAction {
         }
         
         let history = UIAction(title: "Tx Detail", image: UIImage(systemName: "rectangle.stack")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToHistory(post)
         }
         actionArray.append(history)
         
-        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC(post: post) }) { _ in
+        let reviews = UIAction(title: "Reviews", image: UIImage(systemName: "square.and.pencil")) { [weak self] action in
+            self?.navToReviews(post)
+        }
+        actionArray.append(reviews)
+        
+        if userId != post.sellerUserId {
+            let chat = UIAction(title: "Chat", image: UIImage(systemName: "message")) { [weak self] action in
+                self?.navToChatVC(userId: self?.userId, post: post)
+            }
+            actionArray.append(chat)
+            
+            let report = UIAction(title: "Report", image: UIImage(systemName: "flag")) { [weak self] action in
+                guard let userId = self?.userId else { return }
+                self?.navToReport(userId: userId, post: post)
+            }
+            actionArray.append(report)
+        }
+        
+        return UIContextMenuConfiguration(identifier: "MainDetailPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC(post: post) }) { _ in
             UIMenu(title: "", children: actionArray)
         }
     }

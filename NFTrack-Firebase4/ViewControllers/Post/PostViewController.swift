@@ -63,14 +63,22 @@ class PostViewController: ParentPostViewController {
         pickerLabel.tag = 2
     }
     
-    final override func createIDField() {
+    final override func createIDField(post: Post? = nil) {
         idContainerView = UIView()
         idContainerView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(idContainerView)
         
         idTextField = createTextField(delegate: self)
         idTextField.autocapitalizationType = .none
-        idTextField.placeholder = "Case insensitive, i.e. VIN, IMEI..."
+        idTextField.autocorrectionType = .no
+        // If post is not nil, it means this is resale
+        if let post = post {
+            idTextField.text = post.id
+            idTextField.isUserInteractionEnabled = false
+        } else {
+            idTextField.placeholder = "Case insensitive, i.e. VIN, IMEI..."
+        }
+        
         idContainerView.addSubview(idTextField)
         
         guard let scanImage = UIImage(systemName: "qrcode.viewfinder") else { return }
@@ -79,11 +87,12 @@ class PostViewController: ParentPostViewController {
         scanButton.layer.borderWidth = 0.7
         scanButton.layer.borderColor =   UIColor.lightGray.cgColor
         scanButton.tag = 7
+        scanButton.isUserInteractionEnabled = post != nil ? false : true
         scanButton.translatesAutoresizingMaskIntoConstraints = false
         idContainerView.addSubview(scanButton)
     }
     
-    final override func setIDFieldConstraints() {
+    final override func setIDFieldConstraints(post: Post? = nil) {
         constraints.append(contentsOf: [
             idTitleLabel.topAnchor.constraint(equalTo: tagContainerView.bottomAnchor, constant: 20),
             idTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
@@ -95,11 +104,11 @@ class PostViewController: ParentPostViewController {
             idContainerView.heightAnchor.constraint(equalToConstant: 50),
             idContainerView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             
-            idTextField.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: 0.75),
+            idTextField.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: post != nil ? 1 : 0.75),
             idTextField.heightAnchor.constraint(equalToConstant: 50),
             idTextField.leadingAnchor.constraint(equalTo: idContainerView.leadingAnchor),
             
-            scanButton.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: 0.2),
+            scanButton.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: post != nil ? 0 : 0.2),
             scanButton.heightAnchor.constraint(equalToConstant: 50),
             scanButton.trailingAnchor.constraint(equalTo: idContainerView.trailingAnchor),
         ])

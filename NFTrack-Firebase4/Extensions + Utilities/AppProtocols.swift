@@ -12,6 +12,7 @@ import MapKit
 import CoreSpotlight
 import MobileCoreServices
 import Combine
+import CryptoKit
 
 // WalletViewController
 protocol WalletDelegate: AnyObject {
@@ -32,7 +33,7 @@ protocol PreviewDelegate: DeletePreviewDelegate {
     var SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW: CGFloat! { get set }
     var imagePreviewConstraintHeight: NSLayoutConstraint! { get set }
     var imagePreviewVC: ImagePreviewViewController! { get set }
-    var previewDataArr: [PreviewData]! { get set }
+    var previewDataArr: [PreviewData] { get set }
     func configureImagePreview(postType: PostType, superView: UIView)
     func didDeleteFileFromPreview(filePath: URL)
 }
@@ -1339,6 +1340,7 @@ extension PostParseDelegate {
 protocol ButtonPanelConfigurable where Self: UIViewController {
     var buttonPanel: UIStackView! { get set }
     var constraints: [NSLayoutConstraint]! { get set }
+    var buttonPanelHeight: NSLayoutConstraint! { get set }
     func createButtonPanel(panelButtons: [PanelButton], superView: UIView, completion: (_ buttonsArr: [UIButton]) -> Void)
     func setButtonPanelConstraints(topView: UIView)
 }
@@ -1372,11 +1374,13 @@ extension ButtonPanelConfigurable {
     }
     
     func setButtonPanelConstraints(topView: UIView) {
+        buttonPanelHeight = buttonPanel.heightAnchor.constraint(equalToConstant: 80)
+        
         constraints.append(contentsOf: [
             buttonPanel.topAnchor.constraint(equalTo: topView.bottomAnchor, constant: 40),
             buttonPanel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
-            buttonPanel.heightAnchor.constraint(equalToConstant: 80),
             buttonPanel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            buttonPanelHeight
         ])
     }
 }
@@ -1946,6 +1950,176 @@ extension ProgressPanel {
                 dateLabel.textColor = .gray
                 dateLabel.text?.removeAll()
             }
+        }
+    }
+}
+
+protocol ContextAction: FetchUserConfigurable where Self: UIViewController {
+    var storage: Set<AnyCancellable>! { get set }
+    var alert: Alerts! { get set }
+}
+
+extension ContextAction {
+    func navToProfile(_ post: Post) {
+        showSpinner { [weak self] in
+            Future<UserInfo, PostingError> { promise in
+                self?.fetchUserData(userId: post.sellerUserId, promise: promise)
+            }
+            .sink { (completion) in
+                switch completion {
+                    case .failure(.generalError(reason: let err)):
+                        self?.alert.showDetail("Error", with: err, for: self)
+                        break
+                    case .finished:
+                        break
+                    default:
+                        break
+                }
+            } receiveValue: { (userInfo) in
+                self?.hideSpinner({
+                    DispatchQueue.main.async {
+                        let profileDetailVC = ProfileDetailViewController()
+                        profileDetailVC.userInfo = userInfo
+                        self?.navigationController?.pushViewController(profileDetailVC, animated: true)
+                    }
+                })
+            }
+            .store(in: &self!.storage)
+        }
+    }
+    
+    func imagePreivew(_ post: Post) {
+        guard let galleries = post.files, galleries.count > 0 else { return }
+        let pvc = PageViewController<BigSinglePageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: galleries)
+        let singlePageVC = BigSinglePageViewController(gallery: galleries.first, galleries: galleries)
+        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+        pvc.modalPresentationStyle = .fullScreen
+        pvc.modalTransitionStyle = .crossDissolve
+        present(pvc, animated: true, completion: nil)
+    }
+    
+    func imagePreivew(_ galleries: [String]) {
+        guard galleries.count > 0 else { return }
+        let pvc = PageViewController<BigSinglePageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: galleries)
+        let singlePageVC = BigSinglePageViewController(gallery: galleries.first, galleries: galleries)
+        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+        pvc.modalPresentationStyle = .fullScreen
+        pvc.modalTransitionStyle = .crossDissolve
+        present(pvc, animated: true, completion: nil)
+    }
+    
+    func navToHistory(_ post: Post) {
+        let historyDetailVC = HistoryDetailViewController()
+        historyDetailVC.post = post
+        self.navigationController?.pushViewController(historyDetailVC, animated: true)
+    }
+    
+    func navToReviews(_ post: Post) {
+        let userInfo = UserInfo(email: nil, displayName: "NA", photoURL: nil, uid: post.sellerUserId, memberSince: nil)
+        let userDetailVC = UserDetailViewController()
+        userDetailVC.userInfo = userInfo
+        navigationController?.pushViewController(userDetailVC, animated: true)
+    }
+    
+    func navToChatVC(userId: String?, post: Post) {
+        var userInfoRetainer: UserInfo!
+        Future<UserInfo, PostingError> { [weak self] promise in
+            self?.fetchUserData(userId: post.sellerUserId, promise: promise)
+        }
+        .eraseToAnyPublisher()
+        .flatMap { (userInfo) -> AnyPublisher<String, PostingError> in
+            userInfoRetainer = userInfo
+            return Future<String, PostingError> { [weak self] promise in
+                self?.getDocId(
+                    userId: userId,
+                    userInfo: userInfo,
+                    itemDocId: post.documentId,
+                    promise: promise
+                )
+            }
+            .eraseToAnyPublisher()
+        }
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .failure(.generalError(reason: let err)):
+                    self?.alert.showDetail("Error", with: err, for: self)
+                case .finished:
+                    break
+                default:
+                    self?.alert.showDetail("Error", with: "There was an error generating a chat ID.", for: self)
+            }
+        } receiveValue: { [weak self] (docId) in
+            let chatVC = ChatViewController()
+            // the name of the item to be displayed on ChatListVC as well as be used as a search term.
+            chatVC.itemName = post.title
+            chatVC.userInfo = userInfoRetainer
+            // docId is the chat's unique ID
+            chatVC.docId = docId
+            // The unique ID of the posting so that when ChatVC is pushed from ChatListVC, the ChatListVC can push ReportVC
+            chatVC.postingId = post.documentId
+            self?.navigationController?.pushViewController(chatVC, animated: true)
+        }
+        .store(in: &storage)
+    }
+    
+    // Create the document ID for the chat
+    private func getDocId(
+        userId: String?,
+        userInfo: UserInfo,
+        itemDocId: String,
+        promise: @escaping (Result<String, PostingError>) -> Void
+    ) {
+        guard let sellerUid = userInfo.uid,
+              let buyerUid = userId else {
+            promise(.failure(.generalError(reason: "You're currently not logged in. Please log in and try again.")))
+            return
+        }
+        
+        let combinedString = sellerUid + buyerUid + itemDocId
+        let inputData = Data(combinedString.utf8)
+        let hashedId = SHA256.hash(data: inputData)
+        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+        promise(.success(hashString))
+    }
+    
+    func navToReport(userId: String, post: Post) {
+        let reportVC = ReportViewController()
+        reportVC.post = post
+        reportVC.userId = userId
+        self.navigationController?.pushViewController(reportVC, animated: true)
+    }
+    
+    func getPreviewVC(post: Post) -> ListDetailViewController {
+        let listDetailVC = ListDetailViewController()
+        listDetailVC.post = post
+        return listDetailVC
+    }
+    
+    func navToProfileContextualAction(_ post: Post) -> UIContextualAction {
+        return UIContextualAction(style: .normal, title: "Profile") { [weak self] (action, swipeButtonView, completion) in
+            self?.navToProfile(post)
+            completion(true)
+        }
+    }
+    
+    func imagePreviewContextualAction(_ post: Post) -> UIContextualAction {
+        return UIContextualAction(style: .normal, title: "Images") { [weak self] (action, swipeButtonView, completion) in
+            self?.imagePreivew(post)
+            completion(true)
+        }
+    }
+    
+    func navToHistoryContextualAction(_ post: Post) -> UIContextualAction {
+        return UIContextualAction(style: .normal, title: "Tx Detail") { [weak self] (action, swipeButtonView, completion) in
+            self?.navToHistory(post)
+            completion(true)
+        }
+    }
+    
+    func navToReviewsContextualAction(_ post: Post) -> UIContextualAction {
+        return UIContextualAction(style: .normal, title: "Reviews") { [weak self] (action, swipeButtonView, completion) in
+            self?.navToReviews(post)
+            completion(true)
         }
     }
 }

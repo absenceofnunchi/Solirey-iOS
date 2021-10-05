@@ -86,6 +86,7 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
     final var addressLabel: UILabel!
     final var addressDeleteButton: UIButton!
     final var shippingInfo: ShippingInfo!
+    final var buttonPanelHeight: NSLayoutConstraint!
     
     // The tangible item needs the address modified
     final override func viewDidLayoutSubviews() {

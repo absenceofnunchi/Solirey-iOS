@@ -44,7 +44,8 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
         fetchUserInfo()
         configureCloseButton()
         setButtonConstraints()
-        configureNavigationBar(vc: self)
+        // why navigation bar style even though this is a presented modal? This is so that a new pushed view controller like MapVC can take on this style
+        applyBarTintColorToTheNavigationBar()
     }
     
     final override func viewWillAppear(_ animated: Bool) {

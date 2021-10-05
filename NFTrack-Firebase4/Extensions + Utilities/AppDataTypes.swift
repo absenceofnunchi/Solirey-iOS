@@ -553,6 +553,8 @@ struct Review: MediaConfigurable, DateConfigurable {
     let confirmReceivedHash: String
     /// receivedDate
     var date: Date!
+    let itemDocId: String
+    let uniqueIdentifier: String
 }
 
 // MARK: - ProfileDetailMenu

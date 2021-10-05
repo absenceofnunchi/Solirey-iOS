@@ -13,7 +13,8 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
     var placemark: MKPlacemark? = nil
     var shareButtonItem: UIBarButtonItem!
     let alert = Alerts()
-    
+    private var customNavView: BackgroundView5!
+
     init() {
         super.init(nibName: nil, bundle: nil)
         mapView = MKMapView()
@@ -39,6 +40,10 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         shareButtonItem = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(mapButtonPressed))
         shareButtonItem.tag = 2
         self.navigationItem.rightBarButtonItem = shareButtonItem
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        mapView.addSubview(customNavView)
     }
     
     func configureMapView() {
@@ -48,8 +53,15 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         mapView.delegate = self
     }
     
-    override func configureSearchBar() {
-        super.configureSearchBar()
+    override func configureSearchVC() {
+        locationSearchVC = LocationSearchViewController(regionRadius: regionRadius, location: location)
+        
+        resultSearchController = UISearchController(searchResultsController: locationSearchVC)
+        resultSearchController.searchResultsUpdater = locationSearchVC
+        resultSearchController?.hidesNavigationBarDuringPresentation = false
+        resultSearchController?.obscuresBackgroundDuringPresentation = true
+        
+        configureSearchBar(resultSearchController)
         
         // When the search result is tapped, the pin is dropped onto the map
         // MapVC designates itself as the delegate to do the pin dropping
@@ -116,7 +128,6 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
     override func centerMapOnLocation() {
         guard let location = location else { return }
         self.placemark = MKPlacemark(coordinate: location)
-        print("self.placemark", self.placemark as Any)
         if let pm = self.placemark {
             mapView.removeAnnotations(mapView.annotations)
             mapView.addAnnotation(pm)
@@ -147,7 +158,8 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         
         print("locationManagerDidChangeAuthorization old mapview")
         guard let coordinate = manager.location?.coordinate else { return }
-        print("coordinate", coordinate)
+        
+        
         let placemark = MKPlacemark(coordinate: coordinate)
         self.placemark = placemark
         let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
@@ -160,7 +172,7 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         
         print("didChangeAuthorization new mapview")
         guard let coordinate = manager.location?.coordinate else { return }
-        print("coordinate", coordinate)
+        
         let placemark = MKPlacemark(coordinate: coordinate)
         self.placemark = placemark
         let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)

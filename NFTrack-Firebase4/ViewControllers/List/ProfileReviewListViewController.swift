@@ -29,6 +29,13 @@ class ProfileReviewListViewController: ProfileListViewController<Review> {
     
     final override func fetchData() {
         guard let uid = userInfo.uid else { return }
+        
+        dataStore = nil
+        loadingQueue.cancelAllOperations()
+        loadingOperations.removeAll()
+        postArr.removeAll()
+        tableView.reloadData()
+        
         db?.collection("review")
             .document(uid)
             .collection("details")
@@ -56,7 +63,7 @@ class ProfileReviewListViewController: ProfileListViewController<Review> {
                 var reviewArr = [Review]()
                 documents.forEach { (querySnapshot) in
                     let data = querySnapshot.data()
-                    var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash: String!
+                    var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash, itemDocId, uniqueIdentifier: String!
                     /// finalized date, confirmRecievedDate
                     var date: Date!
                     var starRating: Int!
@@ -82,13 +89,32 @@ class ProfileReviewListViewController: ProfileListViewController<Review> {
                             case "date":
                                 let timeStamp = item.value as? Timestamp
                                 date = timeStamp?.dateValue()
+                            case "itemDocId":
+                                itemDocId = item.value as? String
+                            case "uniqueIdentifier":
+                                uniqueIdentifier = item.value as? String
                             default:
                                 break
                         }
                     })
-                    let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, files: files, confirmReceivedHash: confirmReceivedHash, date: date)
+                    let reviewModel = Review(
+                        revieweeUserId: revieweeUserId,
+                        reviewerDisplayName: reviewerDisplayName,
+                        reviewerPhotoURL: reviewerPhotoURL,
+                        reviewerUserId: reviewerUserId,
+                        starRating: starRating,
+                        review: review,
+                        files: files,
+                        confirmReceivedHash: confirmReceivedHash,
+                        date: date,
+                        itemDocId: itemDocId,
+                        uniqueIdentifier: uniqueIdentifier
+                    )
+                    
                     reviewArr.append(reviewModel)
                 }
+                
+                self?.postArr = reviewArr
             })
     }
     
@@ -123,7 +149,7 @@ class ProfileReviewListViewController: ProfileListViewController<Review> {
             var reviewArr = [Review]()
             documents.forEach { (querySnapshot) in
                 let data = querySnapshot.data()
-                var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash: String!
+                var revieweeUserId, reviewerDisplayName, reviewerPhotoURL, reviewerUserId, review, confirmReceivedHash, itemDocId, uniqueIdentifier: String!
                 var date: Date!
                 var starRating: Int!
                 var files: [String]?
@@ -148,14 +174,32 @@ class ProfileReviewListViewController: ProfileListViewController<Review> {
                         case "date":
                             let timeStamp = item.value as? Timestamp
                             date = timeStamp?.dateValue()
+                        case "itemDocId":
+                            itemDocId = item.value as? String
+                        case "uniqueIdentifier":
+                            uniqueIdentifier = item.value as? String
                         default:
                             break
                     }
                 })
                 
-                let reviewModel = Review(revieweeUserId: revieweeUserId, reviewerDisplayName: reviewerDisplayName, reviewerPhotoURL: reviewerPhotoURL, reviewerUserId: reviewerUserId, starRating: starRating, review: review, files: files, confirmReceivedHash: confirmReceivedHash, date: date)
+                let reviewModel = Review(
+                    revieweeUserId: revieweeUserId,
+                    reviewerDisplayName: reviewerDisplayName,
+                    reviewerPhotoURL: reviewerPhotoURL,
+                    reviewerUserId: reviewerUserId,
+                    starRating: starRating,
+                    review: review,
+                    files: files,
+                    confirmReceivedHash: confirmReceivedHash,
+                    date: date,
+                    itemDocId: itemDocId,
+                    uniqueIdentifier: uniqueIdentifier
+                )
                 reviewArr.append(reviewModel)
             }
+            
+            self?.postArr.append(contentsOf: reviewArr)
         })
     }
     
@@ -178,3 +222,75 @@ class ProfileReviewListViewController: ProfileListViewController<Review> {
         self.navigationController?.pushViewController(reviewDetailVC, animated: true)
     }
 }
+
+extension ProfileReviewListViewController {
+    final override func tableView(_ tableView: UITableView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
+        guard let destinationViewController = animator.previewViewController else { return }
+        animator.addAnimations { [weak self] in
+            self?.show(destinationViewController, sender: self)
+        }
+    }
+    
+    final override func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        return nil
+    }
+    
+    final override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let post = postArr[indexPath.row]
+        var actionArray = [UIAction]()
+        
+        if let files = post.files, files.count > 0 {
+            let profile = UIAction(title: "Images", image: UIImage(systemName: "photo")) { [weak self] action in
+                guard let galleries = post.files else { return }
+                self?.imagePreivew(galleries)
+            }
+            actionArray.append(profile)
+        }
+        
+        return UIContextMenuConfiguration(identifier: "DetailPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC(post: post) }) { _ in
+            UIMenu(title: "", children: actionArray)
+        }
+    }
+    
+    final override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
+    final override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        return UISwipeActionsConfiguration(actions: [])
+    }
+    
+    final override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        guard let files = postArr[indexPath.row].files else { return nil }
+        let imageAction = imagePreviewContextualAction(files)
+        imageAction.backgroundColor = UIColor(red: 167/255, green: 197/255, blue: 235/255, alpha: 1)
+        
+        let configuration = UISwipeActionsConfiguration(actions: [imageAction])
+        configuration.performsFirstActionWithFullSwipe = false
+        return configuration
+    }
+    
+    private func getPreviewVC(post: Review) -> ReviewDetailViewController {
+        let reviewDetailVC = ReviewDetailViewController()
+        reviewDetailVC.post = post
+        return reviewDetailVC
+    }
+    
+    private func imagePreviewContextualAction(_ files: [String]) -> UIContextualAction {
+        return UIContextualAction(style: .normal, title: "Images") { [weak self] (action, swipeButtonView, completion) in
+            self?.imagePreivew(files)
+            completion(true)
+        }
+    }
+    
+    private func imagePreivew(_ galleries: [String]) {
+        guard galleries.count > 0 else { return }
+        let pvc = PageViewController<BigSinglePageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: galleries)
+        let singlePageVC = BigSinglePageViewController(gallery: galleries.first, galleries: galleries)
+        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+        pvc.modalPresentationStyle = .fullScreen
+        pvc.modalTransitionStyle = .crossDissolve
+        present(pvc, animated: true, completion: nil)
+    }
+}
+

@@ -182,7 +182,7 @@
 		49DEFF6A26868065004C2DD0 /* ImagePreviewHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF6926868065004C2DD0 /* ImagePreviewHeaderView.swift */; };
 		49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759A726658DCC0064BB34 /* TransitioningDelegate.swift */; };
 		49E759AD26669ACB0064BB34 /* ParentPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */; };
-		49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759B72666BCCF0064BB34 /* ResellViewController.swift */; };
+		49E759B82666BCCF0064BB34 /* ResaleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E759B72666BCCF0064BB34 /* ResaleViewController.swift */; };
 		49E75A03266A7C680064BB34 /* HistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E75A02266A7C670064BB34 /* HistoryViewController.swift */; };
 		49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E7D64B267AA73F00E8815A /* ChatViewController1.swift */; };
 		49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E7D650267AA77000E8815A /* MeesageCells1.swift */; };
@@ -390,7 +390,7 @@
 		49DEFF6926868065004C2DD0 /* ImagePreviewHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviewHeaderView.swift; sourceTree = "<group>"; };
 		49E759A726658DCC0064BB34 /* TransitioningDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitioningDelegate.swift; sourceTree = "<group>"; };
 		49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentPostViewController.swift; sourceTree = "<group>"; };
-		49E759B72666BCCF0064BB34 /* ResellViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResellViewController.swift; sourceTree = "<group>"; };
+		49E759B72666BCCF0064BB34 /* ResaleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResaleViewController.swift; sourceTree = "<group>"; };
 		49E75A02266A7C670064BB34 /* HistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewController.swift; sourceTree = "<group>"; };
 		49E7D64B267AA73F00E8815A /* ChatViewController1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController1.swift; sourceTree = "<group>"; };
 		49E7D650267AA77000E8815A /* MeesageCells1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeesageCells1.swift; sourceTree = "<group>"; };
@@ -756,7 +756,7 @@
 				496D56BF2659E75D00C3E7FD /* ParentPostViewController + Picker.swift */,
 				4964E5092644B07D005B3268 /* PostViewController.swift */,
 				495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */,
-				49E759B72666BCCF0064BB34 /* ResellViewController.swift */,
+				49E759B72666BCCF0064BB34 /* ResaleViewController.swift */,
 				4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */,
 				496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */,
 				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
@@ -1266,7 +1266,7 @@
 				49A0AE622707FC02003A5F27 /* PDFCell.swift in Sources */,
 				49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */,
 				49D59C762663326500107F79 /* SocketDelegate.swift in Sources */,
-				49E759B82666BCCF0064BB34 /* ResellViewController.swift in Sources */,
+				49E759B82666BCCF0064BB34 /* ResaleViewController.swift in Sources */,
 				497F1F2D26DC920800E0F967 /* ShippingViewController.swift in Sources */,
 				492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */,
 				4958118A26D978EF002C8F3B /* LocationSearchViewController.swift in Sources */,

@@ -11,6 +11,7 @@ import FirebaseFirestore
 class UserDetailViewController: UIViewController {
     final var segmentedControl: UISegmentedControl!
     final var userInfo: UserInfo!
+    private var currentIndex: Int! = 0
 
     private var profilePostingsVC: ProfilePostingsViewController! {
         return ProfilePostingsViewController(userInfo: userInfo)
@@ -41,14 +42,43 @@ class UserDetailViewController: UIViewController {
 }
 
 extension UserDetailViewController {
-    func configureUI() {
+    final func configureUI() {
         view.backgroundColor = .white
         addBaseViewController(profilePostingsVC)
+        
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
+        swipeLeft.direction = .left
+        view.addGestureRecognizer(swipeLeft)
+        
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
+        swipeRight.direction = .right
+        view.addGestureRecognizer(swipeRight)
+    }
+    
+    @objc final func swiped(_ sender: UISwipeGestureRecognizer) {
+        switch sender.direction {
+            case .right:
+                if currentIndex - 1 >= 0 {
+                    currentIndex -= 1
+                } else {
+                    return
+                }
+            case .left:
+                if currentIndex + 1 < Segment.allCases.count {
+                    currentIndex += 1
+                } else {
+                    return
+                }
+            default:
+                break
+        }
+        segmentedControl.selectedSegmentIndex = currentIndex
+        segmentedControl.sendActions(for: UIControl.Event.valueChanged)
     }
 }
 
 extension UserDetailViewController: SegmentConfigurable {
-    enum Segment: Int, CaseIterable {
+    private enum Segment: Int, CaseIterable {
         case posts, reviews
         
         func asString() -> String {
@@ -88,17 +118,9 @@ extension UserDetailViewController: SegmentConfigurable {
         else { fatalError("No item at \(sender.selectedSegmentIndex)) exists.") }
         switch segment {
             case .posts:
-                if profileReviewVC != nil {
-                    profileReviewVC.loadingQueue.cancelAllOperations()
-                    profileReviewVC.loadingOperations.removeAll()
-                }
                 removeBaseViewController(profileReviewVC)
                 addBaseViewController(profilePostingsVC)
             case .reviews:
-                if profilePostingsVC != nil {
-                    profilePostingsVC.loadingQueue.cancelAllOperations()
-                    profilePostingsVC.loadingOperations.removeAll()
-                }
                 removeBaseViewController(profilePostingsVC)
                 addBaseViewController(profileReviewVC)
         }

@@ -13,6 +13,7 @@
 import UIKit
 import FirebaseFirestore
 import QuickLook
+import Combine
 
 class ReviewPostViewController: ParentProfileViewController {
     var post: Post!
@@ -58,6 +59,7 @@ class ReviewPostViewController: ParentProfileViewController {
                 DispatchQueue.main.async { [weak self] in
                     self?.imagePreviewVC.view.isHidden = false
                     self?.imagePreviewConstraintHeight.constant = 180
+                    self?.imagePreviewVC.data = self?.previewDataArr
                     UIView.animate(withDuration: 0.5) {
                         self?.view.layoutIfNeeded()
                     }
@@ -96,6 +98,8 @@ class ReviewPostViewController: ParentProfileViewController {
         PanelButton(imageName: pickerImageName, imageConfig: configuration, tintColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), tag: 9),
         PanelButton(imageName: "doc.circle", imageConfig: configuration, tintColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), tag: 10)
     ]
+    private var storage = Set<AnyCancellable>()
+    final var buttonPanelHeight: NSLayoutConstraint!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -344,14 +348,22 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
         }
     }
     
-    func batchUpdate(reviewText: String, numOfStars: Int, revieweeUserId: String, reviewerUserId: String, reviewerDisplayName: String) {
+    func batchUpdate(
+        reviewText: String,
+        numOfStars: Int,
+        revieweeUserId: String,
+        reviewerUserId: String,
+        reviewerDisplayName: String,
+        files: [String?],
+        promise: @escaping (Result<Bool, PostingError>) -> Void
+    ) {
 //        guard let db = FirebaseService.shared.db else {
 //            self.alert.showDetail("Sorry", with: "There was an error submitting your review.", for: self)
 //            return
 //        }
         
         let batch = db.batch()
-        // isReviewd in post
+        // isReviewedd in post
         let postRef = db.collection("post").document(self.post.documentId)
         batch.updateData(["isReviewed": true], forDocument: postRef)
         
@@ -367,8 +379,13 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
         guard
             let rInfo = self.reviewerInfo,
             let photoURL = rInfo.photoURL,
-            let confirmReceivedHash = self.post.confirmReceivedHash
-            else { return }
+            let confirmReceivedHash = self.post.confirmReceivedHash,
+            let itemDocId = post.documentId,
+            let uniqueIdentifier = post.id
+            else {
+            promise(.failure(.generalError(reason: "Unable to prepare the reviewer's information.")))
+            return
+        }
         
         batch.setData([
             "revieweeUserId": revieweeUserId,
@@ -380,15 +397,72 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
             "confirmReceivedHash": confirmReceivedHash,
             /// finalized date
             "date": (self.post.confirmReceivedDate ?? Date()) as Date,
+            "files": files,
+            "itemDocId": itemDocId,
+            "uniqueIdentifier": uniqueIdentifier
         ], forDocument: reviewDetailRef)
         
         batch.commit() { err in
-            if let err = err {
-                self.alert.showDetail("Sorry", with: err.localizedDescription, for: self)
+            if let _ = err {
+                promise(.failure(.generalError(reason: "There was an error completing the review.")))
                 return
+            } else {
+                promise(.success(true))
             }
         }
     }
+    
+//    func didSubmit() {
+//        guard let textView = reviewTextView, !textView.text.isEmpty, let numOfStars = numOfStars, numOfStars > 0 else {
+//            self.alert.showDetail("Sorry", with: "All fields must be filled out including the rating.", for: self)
+//            return
+//        }
+//
+//        guard let revieweeUserId = revieweeUserId,
+//              let reviewerUserId = reviewerInfo?.uid,
+//              let reviewerDisplayName = reviewerInfo?.displayName else {
+//            self.alert.showDetail("Sorry", with: "Unable to retrieve user ID.", for: self)
+//            return
+//        }
+//
+//        self.alert.showDetail(
+//            "Are you sure you want to submit this review?",
+//            with: "Your review cannot be modified or deleted once submitted.",
+//            for: self,
+//            alertStyle: .withCancelButton
+//        ) { [weak self] in
+//            self?.dismiss(animated: true, completion: {
+//                /// batch commit
+//                /// 1. update the post's isReviewed field to true
+//                /// 2. create a new review post
+//
+//                self?.showSpinner {
+//                    self?.batchUpdate(
+//                        reviewText: textView.text,
+//                        numOfStars: numOfStars,
+//                        revieweeUserId: revieweeUserId,
+//                        reviewerUserId: reviewerUserId,
+//                        reviewerDisplayName: reviewerDisplayName
+//                    )
+//
+//                    if let pdr = self?.previewDataArr, pdr.count > 0 {
+//                        self?.uploadFiles()
+//                    } else {
+//                        self?.alert.showDetail(
+//                            "Success!",
+//                            with: "Thank you for providing your review.",
+//                            for: self) {
+//                            DispatchQueue.main.async { [weak self] in
+//                                self?.imagePreviewVC.collectionView.reloadData()
+//                                self?.navigationController?.popViewController(animated: true)
+//                                self?.delegate?.didRefreshTableView(index: self?.reviewerInfo?.uid == self?.post.sellerUserId ? 1 : 0)
+//                            }
+//                        } completion: {}
+//                    }
+//                }
+//            })
+//        } completion:  {}
+//    }
     
     func didSubmit() {
         guard let textView = reviewTextView, !textView.text.isEmpty, let numOfStars = numOfStars, numOfStars > 0 else {
@@ -411,28 +485,72 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
         ) { [weak self] in
             self?.dismiss(animated: true, completion: {
                 /// batch commit
-                /// 1. update the post's isReviewed field to true
-                /// 2. create a new review post
+                /// 1. Upload the images and get the urls
+                /// 2. Update the post's isReviewed field to true
+                /// 3. Create a new review post
                 
                 self?.showSpinner {
-                    self?.batchUpdate(reviewText: textView.text, numOfStars: numOfStars, revieweeUserId: revieweeUserId, reviewerUserId: reviewerUserId, reviewerDisplayName: reviewerDisplayName)
-                    if let pdr = self?.previewDataArr, pdr.count > 0 {
-                        self?.uploadFiles()
-                    } else {
-                        self?.alert.showDetail(
-                            "Success!",
-                            with: "Thank you for providing your review.",
-                            for: self) {
-                            DispatchQueue.main.async { [weak self] in
-                                self?.imagePreviewVC.collectionView.reloadData()
-                                self?.navigationController?.popViewController(animated: true)
-                                self?.delegate?.didRefreshTableView(index: self?.reviewerInfo?.uid == self?.post.sellerUserId ? 1 : 0)
+                    self?.uploadFiles(reviewerUserId: reviewerUserId)
+                        .flatMap({ (urlStrings) -> AnyPublisher<Bool, PostingError> in
+                            Future<Bool, PostingError> { promise in
+                                self?.batchUpdate(
+                                    reviewText: textView.text,
+                                    numOfStars: numOfStars,
+                                    revieweeUserId: revieweeUserId,
+                                    reviewerUserId: reviewerUserId,
+                                    reviewerDisplayName: reviewerDisplayName,
+                                    files: urlStrings,
+                                    promise: promise
+                                )
                             }
-                        } completion: {}
-                    }
+                            .eraseToAnyPublisher()
+                        })
+                        .sink(receiveCompletion: { [weak self](completion) in
+                            switch completion {
+                                case .failure(.generalError(reason: let err)):
+                                    self?.alert.showDetail("Error", with: err, for: self)
+                                case .finished:
+                                    self?.alert.showDetail(
+                                        "Success!",
+                                        with: "Thank you for providing your review.",
+                                        for: self) {
+                                        DispatchQueue.main.async { [weak self] in
+                                            self?.imagePreviewVC.collectionView.reloadData()
+                                            self?.navigationController?.popViewController(animated: true)
+                                            self?.delegate?.didRefreshTableView(index: self?.reviewerInfo?.uid == self?.post.sellerUserId ? 1 : 0)
+                                        }
+                                    } completion: {}
+                                default:
+                                    self?.alert.showDetail("Error", with: "There was an error uploading your review.", for: self)
+                            }
+                        }, receiveValue: { (_) in
+                            
+                        })
+                        .store(in: &self!.storage)
                 }
             })
         } completion:  {}
+    }
+    
+    func uploadFiles(reviewerUserId: String) -> AnyPublisher<[String?], PostingError> {
+        // upload images/files to the Firebase Storage and get the array of URLs
+        if previewDataArr.count > 0 {
+            let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+                return Future<String?, PostingError> { promise in
+                    self.uploadFileWithPromise(
+                        fileURL: previewData.filePath,
+                        userId: reviewerUserId,
+                        promise: promise
+                    )
+                }.eraseToAnyPublisher()
+            }
+            return Publishers.MergeMany(fileURLs)
+                .collect()
+                .eraseToAnyPublisher()
+        } else {
+            // if there are none to upload, return an empty array
+            return Result.Publisher([] as [String]).eraseToAnyPublisher()
+        }
     }
     
     override func configureCustomProfileImage(from url: String) {
@@ -513,18 +631,20 @@ extension ReviewPostViewController: UIImagePickerControllerDelegate & UINavigati
     }
 }
 
-extension ReviewPostViewController: DocumentDelegate, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
-    func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
-        return 1
-    }
-    
-    func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
-        //        return self.url as QLPreviewItem
-        let  docTitle = UUID().uuidString
-        let previewItem = CustomPreviewItem(url: url, title: docTitle)
-        return previewItem as QLPreviewItem
-    }
-    
+//extension ReviewPostViewController: DocumentDelegate, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
+//    func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
+//        return 1
+//    }
+//    
+//    func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+//        //        return self.url as QLPreviewItem
+//        let  docTitle = UUID().uuidString
+//        let previewItem = CustomPreviewItem(url: url, title: docTitle)
+//        return previewItem as QLPreviewItem
+//    }
+
+extension ReviewPostViewController: DocumentDelegate {
+
     // MARK: - didPickDocument
     func didPickDocument(document: Document?) {
         if let pickedDoc = document {
@@ -537,10 +657,10 @@ extension ReviewPostViewController: DocumentDelegate, QLPreviewControllerDataSou
             let previewData = PreviewData(header: .document, filePath: fileURL)
             previewDataArr.append(previewData)
             
-            let preview = PreviewPDFViewController()
-            preview.delegate = self
-            preview.dataSource = self
-            present(preview, animated: true, completion: nil)
+//            let preview = PreviewPDFViewController()
+//            preview.delegate = self
+//            preview.dataSource = self
+//            present(preview, animated: true, completion: nil)
         }
     }
 }
@@ -554,7 +674,7 @@ extension ReviewPostViewController: DeletePreviewDelegate {
 }
 
 extension ReviewPostViewController: FileUploadable {
-    func uploadFiles() {
+    func uploadFiles1() {
         if self.previewDataArr.count > 0 {
             var fileCount: Int = 0
             for previewData in previewDataArr {

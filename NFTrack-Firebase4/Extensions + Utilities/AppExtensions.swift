@@ -34,9 +34,9 @@ extension UIViewController {
      @brief Shows the please wait spinner.
      @param completion Called after the spinner has been hidden.
      */
-    func showSpinner(_ completion: (() -> Void)?) {
+    func showSpinner(message: String? = "Please Wait...\n\n\n\n", _ completion: (() -> Void)?) {
         DispatchQueue.main.async { [weak self] in
-            let alertController = UIAlertController(title: nil, message: "Please Wait...\n\n\n\n",
+            let alertController = UIAlertController(title: nil, message: message,
                                                     preferredStyle: .alert)
             SaveAlertHandle.set(alertController)
             let spinner = UIActivityIndicatorView(style: UIActivityIndicatorView.Style.large)

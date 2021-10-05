@@ -123,12 +123,15 @@ extension ParentChatListViewController {
     }
     
     override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let postingAction = postingContextualAction(forRowAt: indexPath)
-        let profileAction = profileContextualAction(forRowAt: indexPath)
+        let post = postArr[indexPath.row]
+        let postingAction = postingContextualAction(post)
+        let profileAction = profileContextualAction(post)
+        let reviewAction = reviewContextualAction(post)
         
         postingAction.backgroundColor = UIColor(red: 112/255, green: 159/255, blue: 176/255, alpha: 1)
         profileAction.backgroundColor = UIColor(red: 167/255, green: 197/255, blue: 235/255, alpha: 1)
-        let configuration = UISwipeActionsConfiguration(actions: [postingAction, profileAction])
+        reviewAction.backgroundColor = UIColor(red: 112/255, green: 176/255, blue: 161/255, alpha: 1)
+        let configuration = UISwipeActionsConfiguration(actions: [postingAction, profileAction, reviewAction])
         configuration.performsFirstActionWithFullSwipe = false
         return configuration
     }
@@ -150,12 +153,16 @@ extension ParentChatListViewController {
             self?.navToProfile(using: post)
         }
         
+        let reviews = UIAction(title: "Review", image: UIImage(systemName: "square.and.pencil")) { [weak self] action in
+            self?.navToReviews(post)
+        }
+        
         let delete = UIAction(title: "Delete", image: UIImage(systemName: "trash.circle"), attributes: .destructive) { [weak self] action in
             self?.deleteChat(indexPath: indexPath)
         }
         
         return UIContextMenuConfiguration(identifier: "DetailPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC(post: post) }) { _ in
-            UIMenu(title: "", children: [posting, profile, delete])
+            UIMenu(title: "", children: [posting, profile, reviews, delete])
         }
     }
     
@@ -168,19 +175,23 @@ extension ParentChatListViewController {
 }
 
 extension ParentChatListViewController {
-    func postingContextualAction(forRowAt indexPath: IndexPath) -> UIContextualAction {
+    func postingContextualAction(_ post: ChatListModel) -> UIContextualAction {
         return UIContextualAction(style: .normal, title: "Item") { [weak self] (action, swipeButtonView, completion) in
-            guard let postingId = self?.postArr[indexPath.row].postingId else { return }
-            self?.navToPosting(with: postingId)
-            
+            self?.navToPosting(with: post.postingId)
             completion(true)
         }
     }
     
-    func profileContextualAction(forRowAt indexPath: IndexPath) -> UIContextualAction {
+    func profileContextualAction(_ post: ChatListModel) -> UIContextualAction {
         return UIContextualAction(style: .normal, title: "Profile") { [weak self] (action, swipeButtonView, completion) in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToProfile(using: post)
+            completion(true)
+        }
+    }
+
+    func reviewContextualAction(_ post: ChatListModel) -> UIContextualAction {
+        return UIContextualAction(style: .normal, title: "Reviews") { [weak self] (action, swipeButtonView, completion) in
+            self?.navToReviews(post)
             completion(true)
         }
     }
@@ -198,6 +209,14 @@ extension ParentChatListViewController {
         let profileDetailVC = ProfileDetailViewController()
         profileDetailVC.userInfo = userInfo
         self.navigationController?.pushViewController(profileDetailVC, animated: true)
+    }
+    
+    func navToReviews(_ post: ChatListModel) {
+        let userInfo = UserInfo(email: nil, displayName: "NA", photoURL: nil, uid: post.sellerUserId, memberSince: nil)
+        
+        let userDetailVC = UserDetailViewController()
+        userDetailVC.userInfo = userInfo
+        navigationController?.pushViewController(userDetailVC, animated: true)
     }
     
     func getPreviewVC(post: ChatListModel) -> UIViewController {

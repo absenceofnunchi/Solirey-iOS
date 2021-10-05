@@ -31,8 +31,33 @@ class DigitalAssetViewController: ParentPostViewController {
     final var getTxReceipt: AnyCancellable?
     final var storage = Set<AnyCancellable>()
     
-    final override var previewDataArr: [PreviewData]! {
+    // Set only during resale
+    // 1. Set the existing image.
+    // 2. Disable the ability to delete the image.
+    // 3. Decrease the height of the button panel to 0.
+    override var post: Post? {
         didSet {
+            print("post", post as Any)
+            guard let files = post?.files,
+                  let file = files.first,
+                  let filePath = URL(string: file) else { return }
+            
+            let retrievedPreviewData = PreviewData(
+                header: .remoteImage,
+                filePath: filePath,
+                originalImage: nil
+            )
+            
+            print("retrievedPreviewData", retrievedPreviewData as Any)
+            
+            self.previewDataArr.append(retrievedPreviewData)
+//            buttonPanelHeight = buttonPanel.heightAnchor.constraint(equalToConstant: 0)
+        }
+    }
+    
+    override var previewDataArr: [PreviewData] {
+        didSet {
+            print("previewDataArr", previewDataArr)
             if previewDataArr.count > 0 {
                 DispatchQueue.main.async { [weak self] in
                     self?.idTitleLabelHeightConstraint.constant = 50
@@ -68,7 +93,7 @@ class DigitalAssetViewController: ParentPostViewController {
     
     final var saleFormatObserver: NSKeyValueObservation?
     final var txPackageRetainer = [TxPackage]()
-    final var storageURLsRetainer: [String?]!
+//    final var storageURLsRetainer: [String?]!
     
     final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -214,20 +239,26 @@ class DigitalAssetViewController: ParentPostViewController {
     }
     
     // MARK: - createIDField
-    final override func createIDField() {
+    final override func createIDField(post: Post? = nil) {
         idContainerView = UIView()
         idContainerView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(idContainerView)
         
         idTextField = createTextField(delegate: self)
         idTextField.autocapitalizationType = .none
+        idTextField.autocorrectionType = .no
         idTextField.isUserInteractionEnabled = false
-        idTextField.placeholder = "Case insensitive, i.e. VIN, IMEI..."
+        if let post = post {
+            idTextField.text = post.id
+        } else {
+            idTextField.placeholder = "Case insensitive, i.e. VIN, IMEI..."
+        }
+        
         idContainerView.addSubview(idTextField)
     }
     
     // MARK: - setIDFieldConstraints
-    final override func setIDFieldConstraints() {
+    final override func setIDFieldConstraints(post: Post? = nil) {
         constraints.append(contentsOf: [
             idTitleLabel.topAnchor.constraint(equalTo: tagContainerView.bottomAnchor, constant: 20),
             idTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
@@ -281,6 +312,11 @@ class DigitalAssetViewController: ParentPostViewController {
     
     // MARK: - buttonPressed
     final override func buttonPressed(_ sender: UIButton) {
+        guard previewDataArr.count < 2 else {
+            alert.showDetail("Image Limit", with: "You have reached the limit of 1 image.", for: self)
+            return
+        }
+        
         super.buttonPressed(sender)
         
         switch sender.tag {
@@ -390,7 +426,12 @@ class DigitalAssetViewController: ParentPostViewController {
             return
         }
         
-        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+//        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+//            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+//            return
+//        }
+
+        guard let convertedPrice = Double(price), convertedPrice > 0.0000000000000001 else {
             self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
             return
         }
@@ -576,7 +617,7 @@ class DigitalAssetViewController: ParentPostViewController {
                                                 saleFormat: saleFormat,
                                                 paymentMethod: paymentMethod,
                                                 topics: topicsRetainer,
-                                                urlStrings: self.storageURLsRetainer,
+                                                urlStrings: urlStrings,
                                                 ipfsURLStrings: urlStrings,
                                                 promise: promise
                                             )

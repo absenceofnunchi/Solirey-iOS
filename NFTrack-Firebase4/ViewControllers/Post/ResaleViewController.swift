@@ -1,25 +1,42 @@
 //
-//  ResellViewController.swift
+//  ResaleViewController.swift
 //  NFTrack-Firebase4
 //
 //  Created by J C on 2021-06-01.
 //
 
 import UIKit
-import web3swift
 
-class ResellViewController: ParentPostViewController {
-    var post: Post!
-    private var closeButtonContainer: UIView!
-    private var closeButton: UIButton!
+class ResaleViewController: NewPostViewController {
+    override func initialConfig() {
+        if let post = post, post.type == "tangible" {
+            addBaseViewController(postVC)
+        } else {
+            addBaseViewController(digitalVC)
+        }
+    }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
+    /// Adds a child view controller to the container.
+    override func addBaseViewController<T: ParentPostViewController>(_ viewController: T) {
+        // Value to be passed from ListDetailVC during resale
+        viewController.post = post
+        addChild(viewController)
+        viewController.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(viewController.view)
+        viewController.didMove(toParent: self)
+        viewController.view.fill()
     }
 }
+
+
+
+
+
+
+
+
 //
-//extension ResellViewController {
+//extension ResaleViewController {
 //    override func configureUI() {
 //        super.configureUI()
 //        
@@ -55,7 +72,7 @@ class ResellViewController: ParentPostViewController {
 //    }
 //}
 //
-//extension ResellViewController {
+//extension ResaleViewController {
 //    override func mint() {
 //        super.mint()
 //        if let userId = self.userDefaults.string(forKey: "userId") {
@@ -232,7 +249,7 @@ class ResellViewController: ParentPostViewController {
 //    }
 //}
 //
-//extension ResellViewController {
+//extension ResaleViewController {
 //    override func didReceiveMessage(topics: [String]) {
 //        super.didReceiveMessage(topics: topics)
 //        self.socketDelegate.disconnectSocket()

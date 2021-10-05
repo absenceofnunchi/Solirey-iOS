@@ -82,7 +82,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var tagTextField: UISearchTextField!
     var addTagButton: UIButton!
     var buttonPanel: UIStackView!
-    var previewDataArr: [PreviewData]! {
+    var previewDataArr = [PreviewData]() {
         didSet {
             /// shows the image preview when an image or a doc is selected
             if previewDataArr.count > 0 {
@@ -160,6 +160,9 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var shippingInfo: ShippingInfo!
     var colorPatchView = UIView()
     lazy var colorPatchViewHeight: NSLayoutConstraint = colorPatchView.heightAnchor.constraint(equalToConstant: 0)
+    // Value to be passed from ListDetailVC -> NewPostVC -> PostParentVC only during resale
+    var post: Post?
+    var buttonPanelHeight: NSLayoutConstraint!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -200,10 +203,10 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     
     /// Tangible asset: user registers
     /// Digital asset: image is hashed
-    func createIDField() {}
+    func createIDField(post: Post? = nil) {}
     
     /// no scanner for digital asset
-    func setIDFieldConstraints() {}
+    func setIDFieldConstraints(post: Post? = nil) {}
     
     /// where the subclasses override the ImagePreview post type.
     /// This has to be done before setConstraints
@@ -216,7 +219,7 @@ extension ParentPostViewController {
     @objc func configureUI() {
         view.backgroundColor = .white
         title = "Post"
-        previewDataArr = [PreviewData]()
+//        previewDataArr = [PreviewData]()
         self.hideKeyboardWhenTappedAround()
         alert = Alerts()
         constraints = [NSLayoutConstraint]()
@@ -318,7 +321,7 @@ extension ParentPostViewController {
         idTitleLabel = createTitleLabel(text: "Unique Identifier")
         scrollView.addSubview(idTitleLabel)
         
-        createIDField()
+        createIDField(post: post)
         
         pickerTitleLabel = createTitleLabel(text: "Category")
         scrollView.addSubview(pickerTitleLabel)
@@ -507,7 +510,7 @@ extension ParentPostViewController {
         addTagButton.trailingAnchor.constraint(equalTo: tagContainerView.trailingAnchor).isActive = true
         addTagButton.topAnchor.constraint(equalTo: tagContainerView.topAnchor).isActive = true
 
-        setIDFieldConstraints()
+        setIDFieldConstraints(post: post)
         setButtonPanelConstraints(topView: idContainerView)
         
         constraints.append(contentsOf: [
@@ -737,9 +740,13 @@ extension ParentPostViewController {
                 return
             }
             
+            // process id
+            let whitespaceCharacterSet = CharacterSet.whitespaces
+            let convertedId = id.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+            
             let characterset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-            guard id.rangeOfCharacter(from: characterset.inverted) == nil else {
-                self?.alert.showDetail("Invalid Characters", with: "The unique identifier cannot contain any special characters.", for: self)
+            guard convertedId.rangeOfCharacter(from: characterset.inverted) == nil else {
+                self?.alert.showDetail("Invalid Characters", with: "The unique identifier cannot contain any space or special characters.", for: self)
                 return
             }
             
@@ -752,10 +759,6 @@ extension ParentPostViewController {
                 self?.alert.showDetail("Tag Limit", with: "You can add up to 5 tags.", for: self)
                 return
             }
-            
-            // process id
-            let whitespaceCharacterSet = CharacterSet.whitespaces
-            let convertedId = id.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
             
             self?.checkExistingId(id: convertedId) { (isDuplicate) in
                 if isDuplicate {

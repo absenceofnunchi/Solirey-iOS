@@ -13,12 +13,11 @@ class ImageCell: PreviewCell {
     
     override func configure() {
         imageView.contentMode = .scaleAspectFit
-        imageView.layer.cornerRadius = 10
+        imageView.layer.cornerRadius = 5
         imageView.clipsToBounds = true
-        imageView.dropShadow()
-        imageView.backgroundColor = .white
+        imageView.backgroundColor = .clear
         self.addSubview(imageView)
-        imageView.fill(inset: 4)
+        imageView.fill(inset: 8)
         
         let image = UIImage(systemName: "multiply.circle.fill")!.withTintColor(.red, renderingMode: .alwaysOriginal)
         closeButton = UIButton.systemButton(with: image, target: self, action: #selector(buttonPressed))

@@ -353,10 +353,10 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
                 updateState(method: PurchaseMethods.confirmReceived.methodName, status: .complete)
             case 4:
                 // sell
-                let resellVC = ResellViewController()
-                resellVC.modalPresentationStyle = .fullScreen
-                resellVC.post = post
-                self.present(resellVC, animated: true, completion: nil)
+                let resaleVC = ResaleViewController()
+                resaleVC.post = post
+                resaleVC.title = "Resale"
+                navigationController?.pushViewController(resaleVC, animated: true)
             case 5:
                 // transfer ownership
                 guard let post = post else { return }
@@ -533,7 +533,6 @@ extension ListDetailViewController {
 // After they register the shipping address and the ProfileVC model closes, getStatus() will be refetched to reflect the Buy button status.
 extension ListDetailViewController: RefetchDataDelegate {
     final func didFetchData() {
-        print("getStatus")
         getStatus()
     }
 }

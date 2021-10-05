@@ -13,7 +13,6 @@ protocol ShippingDelegate: AnyObject {
 }
 
 class ShippingViewController: MapViewController, TableViewConfigurable, UITextFieldDelegate {
-    private var filteredSearchVC: FilteredLocationSearchViewController!
     private var radiusTitleLabel: UILabel!
     private var radiusTextField: UITextField!
     lazy private var radiusTitleHeightConstraint: NSLayoutConstraint! = radiusTitleLabel.heightAnchor.constraint(equalToConstant: 0)
@@ -24,6 +23,7 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
     private var infoButtonItem: UIBarButtonItem!
     lazy private var scrollView: UIScrollView! = {
         let scrollView = UIScrollView()
+        scrollView.contentInset = UIEdgeInsets(top: 65, left: 0, bottom: 0, right: 0)
         view.addSubview(scrollView)
         scrollView.fill()
         return scrollView
@@ -40,7 +40,8 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
     private var radius: CLLocationDistance! = 1000
     private var scopeRetainer: ShippingRestriction! = .cities
     final weak var shippingDelegate: ShippingDelegate?
-    
+    private var customNavView: BackgroundView5!
+
     final override func viewDidLoad() {
         super.viewDidLoad()
         configureSelectedAddressDisplay()
@@ -77,6 +78,10 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
         
         radiusTitleLabel = createTitleLabel(text: "Radius")
         scrollView.addSubview(radiusTitleLabel)
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(customNavView)
         
         let configuration = UIImage.SymbolConfiguration(pointSize: 30, weight: .light, scale: .large)
         guard let refreshImage = UIImage(systemName: "arrow.clockwise.circle")?.withTintColor(.lightGray, renderingMode: .alwaysOriginal).withConfiguration(configuration) else { return }
@@ -138,6 +143,11 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
     
     private func setConstraints() {
         NSLayoutConstraint.activate([
+            customNavView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: -65),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
             mapView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 25),
             mapView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             mapView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -174,22 +184,22 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
         ])
     }
 
-    override func configureSearchBar() {
-        filteredSearchVC = FilteredLocationSearchViewController(regionRadius: regionRadius)
-        filteredSearchVC.handleMapSearchDelegate = self
+    override func configureSearchVC() {
+        locationSearchVC = FilteredLocationSearchViewController(regionRadius: regionRadius, location: location)
+        locationSearchVC.handleMapSearchDelegate = self
         
-        if let location = location {
-            filteredSearchVC.location = location
-        }
-        
-        resultSearchController = UISearchController(searchResultsController: filteredSearchVC)
-        resultSearchController.searchResultsUpdater = filteredSearchVC
+        resultSearchController = UISearchController(searchResultsController: locationSearchVC)
+        resultSearchController.searchResultsUpdater = locationSearchVC
         navigationItem.searchController = resultSearchController
 
+        configureSearchBar(resultSearchController)
+    }
+    
+    override func configureSearchBar(_ resultSearchController: UISearchController?) {
         guard let searchBar = resultSearchController?.searchBar else { return }
         searchBar.sizeToFit()
-        searchBar.delegate = filteredSearchVC
-        searchBar.placeholder = "Search for places"
+        searchBar.delegate = locationSearchVC
+        searchBar.placeholder = "Search For Places"
         searchBar.scopeButtonTitles = ShippingRestriction.getAll()
         resultSearchController?.hidesNavigationBarDuringPresentation = true
         resultSearchController?.obscuresBackgroundDuringPresentation = true

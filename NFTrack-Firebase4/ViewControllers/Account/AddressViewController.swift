@@ -7,13 +7,14 @@
 
 import UIKit
 import CoreLocation
+import MapKit
 
 class AddressViewController: UIViewController, CLLocationManagerDelegate {
     var resultSearchController: UISearchController!
     var locationManager: CLLocationManager!
     let regionRadius: CLLocationDistance = 10000
     var fetchPlacemarkDelegate: HandleMapSearch? = nil
-    var locationSearchVC: LocationSearchViewController!
+    var locationSearchVC: ParentLocationSearchViewController!
     var location: CLLocationCoordinate2D! {
         guard let location = locationManager.location?.coordinate else {
             checkLocationServices()
@@ -26,7 +27,7 @@ class AddressViewController: UIViewController, CLLocationManagerDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
-        configureSearchBar()
+        configureSearchVC()
     }
     
     func configureUI() {
@@ -36,24 +37,32 @@ class AddressViewController: UIViewController, CLLocationManagerDelegate {
         locationManager.delegate = self
     }
 
-    func configureSearchBar() {
-        locationSearchVC = LocationSearchViewController(regionRadius: regionRadius)
-        
-        if let location = location {
-            locationSearchVC.location = location
-        }
+    func configureSearchVC() {
+        locationSearchVC = ParentLocationSearchViewController(regionRadius: regionRadius, location: location)
         
         resultSearchController = UISearchController(searchResultsController: locationSearchVC)
         resultSearchController.searchResultsUpdater = locationSearchVC
         resultSearchController?.hidesNavigationBarDuringPresentation = false
         resultSearchController?.obscuresBackgroundDuringPresentation = true
         
+        configureSearchBar(resultSearchController)
+    }
+    
+    func configureSearchBar(_ resultSearchController: UISearchController?) {
         guard let searchBar = resultSearchController?.searchBar else { return }
         searchBar.sizeToFit()
-        searchBar.placeholder = "Search for places"
-//        navigationItem.titleView = searchBar
+        searchBar.tintColor = .black
+        searchBar.searchBarStyle = .minimal
+        //        navigationItem.titleView = searchBar
         navigationItem.searchController = resultSearchController
-
+        
+        let searchTextField = searchBar.searchTextField
+        searchTextField.borderStyle = .roundedRect
+        searchTextField.layer.cornerRadius = 8
+        searchTextField.backgroundColor = .white
+        searchTextField.textColor = .gray
+        searchTextField.attributedPlaceholder = NSAttributedString(string: "Enter Search Here", attributes: [NSAttributedString.Key.foregroundColor : UIColor.gray])
+        
         definesPresentationContext = true
     }
     

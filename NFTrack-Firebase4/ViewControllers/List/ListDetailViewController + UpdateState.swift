@@ -98,10 +98,18 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                                         print("error", error)
                                                                     }
                                                                     
-                                                                    self?.alert.showDetail("Success!", with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.", alignment: .left, for: self, completion:  {
-                                                                        self?.getStatus()
-                                                                        self?.navigationController?.popViewController(animated: true)
-                                                                    })
+                                                                    self?.alert.showDetail(
+                                                                        "Success!",
+                                                                        with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.",
+                                                                        alignment: .left,
+                                                                        for: self,
+                                                                        buttonAction: {
+                                                                            self?.navigationController?.popViewController(animated: true)
+                                                                        },
+                                                                        completion:  {
+                                                                            self?.getStatus()
+                                                                        }
+                                                                    )
                                                                 }
                                                             }
                                                         })
@@ -127,12 +135,21 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                                     if let error = error {
                                                                         print("error", error)
                                                                     }
-                                                                    self?.alert.showDetail("Success!", with: "You have confirmed that you recieved the item. Your ether will be released back to your account.", alignment: .left, for: self, completion:  {
-                                                                        DispatchQueue.main.async {
-//                                                                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
-                                                                            self?.navigationController?.popViewController(animated: true)
+                                                                    self?.alert.showDetail(
+                                                                        "Success!",
+                                                                        with: "You have confirmed that you recieved the item. Your deposit will be released back to your account.",
+                                                                        alignment: .left,
+                                                                        for: self,
+                                                                        buttonAction: {
+                                                                            DispatchQueue.main.async {
+                                                                                //                                                                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
+                                                                                self?.navigationController?.popViewController(animated: true)
+                                                                            }
+                                                                        },
+                                                                        completion: {
+                                                                            self?.getStatus()
                                                                         }
-                                                                    })
+                                                                    )
                                                                 }
                                                             }
                                                         })
@@ -146,12 +163,20 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                                     self?.deindexSpotlight(identifier: identifier)
                                                                 }
                                                                 
-                                                                self?.alert.showDetail("Success!", with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.", for: self, completion:  {
-                                                                    DispatchQueue.main.async {
-//                                                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
-                                                                        self?.navigationController?.popViewController(animated: true)
+                                                                self?.alert.showDetail(
+                                                                    "Success!",
+                                                                    with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.",
+                                                                    for: self,
+                                                                    buttonAction: {
+                                                                        DispatchQueue.main.async {
+                                                                            //                                                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
+                                                                            self?.navigationController?.popViewController(animated: true)
+                                                                        }
+                                                                    },
+                                                                    completion:  {
+                                                                        self?.getStatus()
                                                                     }
-                                                                })
+                                                                )
                                                             }
                                                         }
                                                     default:
@@ -245,7 +270,7 @@ extension ListDetailViewController {
                 }
                 
                 self?.dismiss(animated: true, completion: {
-                    self?.showSpinner({
+                    self?.showSpinner(message: "Transferring the ownership...\n\n\n\n\n\n", {
                         Future<[AnyObject], PostingError> { promise in
                             let docRef = FirebaseService.shared.db.collection("post").document(post.documentId)
                             docRef.getDocument { (document, error) in
@@ -373,16 +398,20 @@ extension ListDetailViewController {
                                             }
                                             break
                                         case .finished:
-                                            self?.hideSpinner({
-                                                
-                                            })
+                                            self?.alert.showDetail(
+                                                "Success!",
+                                                with: "You have successfully transferred the ownership.",
+                                                for: self,
+                                                buttonAction: {
+                                                    DispatchQueue.main.async {
+                                                        //                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
+                                                        self?.navigationController?.popViewController(animated: true)
+                                                    }
+                                                }
+                                            )
                                             break
                                     }
                                 } receiveValue: { (isFinished) in
-                                    DispatchQueue.main.async {
-//                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 1)
-                                        self?.navigationController?.popViewController(animated: true)
-                                    }
                                 }
                                 .store(in: &self!.storage)
                     })

@@ -9,28 +9,30 @@ import UIKit
 
 class ReviewDetailViewController: UIViewController {
     var post: Review!
-    let scrollView = UIScrollView()
-    var constraints: [NSLayoutConstraint]!
+    private let scrollView = UIScrollView()
+    final var constraints: [NSLayoutConstraint]!
     var userInfo: UserInfo! {
         didSet {
             processProfileImage()
         }
     }
-    var usernameContainer: UIView!
-    var dateLabel: UILabel!
-    var displayNameLabel: UILabel!
-    var underLineView: UnderlineView!
-    var alert: Alerts!
-    var fetchedImage: UIImage!
-    var profileImageView: UIImageView!
-    var reviewTitleLabel: UILabel!
-    var reviewLabel: UILabelPadding!
-    var starRatingView: StarRatingView!
-    var pvc: PageViewController<SmallSinglePageViewController<String>>!
-    var singlePageVC: SmallSinglePageViewController<String>!
-    var imageHeightConstraint: NSLayoutConstraint!
+    final var usernameContainer: UIView!
+    final var dateLabel: UILabel!
+    final var displayNameLabel: UILabel!
+    final var underLineView: UnderlineView!
+    final var alert: Alerts!
+    final var fetchedImage: UIImage!
+    final var profileImageView: UIImageView!
+    private var reviewTitleLabel: UILabel!
+//    private var reviewLabel: UILabelPadding!
+    private var reviewLabel: UITextView!
+    private var starRatingView: StarRatingView!
+    private var pvc: PageViewController<SmallSinglePageViewController<String>>!
+    private var singlePageVC: SmallSinglePageViewController<String>!
+    private var imageHeightConstraint: NSLayoutConstraint!
+    private var customNavView: BackgroundView5!
 
-    override func viewDidLoad() {   
+    final override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
         configureNameDisplay(post: post, v: scrollView) { (profileImageView, displayNameLabel) in
@@ -43,25 +45,32 @@ class ReviewDetailViewController: UIViewController {
         setConstraints()
     }
     
-    override func viewDidLayoutSubviews() {
+    final override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         if let files = post.files, files.count > 0 {
-            scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: pvc.view.bounds.height + reviewLabel.bounds.size.height + 300)
+            scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: pvc.view.bounds.height + reviewLabel.bounds.size.height + 400)
         } else {
             scrollView.contentSize = CGSize(width: self.view.bounds.size.width, height: reviewLabel.bounds.size.height + 300)
         }
+        
+        
     }
 }
 
 extension ReviewDetailViewController: UsernameBannerConfigurable {
     // MARK: - configureUI()
-    func configureUI() {
+    final func configureUI() {
         title = "Review"
         view.backgroundColor = .white
+        scrollView.contentInset = UIEdgeInsets(top: 65, left: 0, bottom: 0, right: 0)
         view.addSubview(scrollView)
         scrollView.fill()
         constraints = [NSLayoutConstraint]()
         alert = Alerts()
+        
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(customNavView)
         
         starRatingView = StarRatingView()
         starRatingView.rating = post.starRating
@@ -72,17 +81,59 @@ extension ReviewDetailViewController: UsernameBannerConfigurable {
         reviewTitleLabel = createTitleLabel(text: "Review")
         scrollView.addSubview(reviewTitleLabel)
 
-        reviewLabel = createLabel(text: post.review)
-        reviewLabel.lineBreakMode = .byCharWrapping
-        reviewLabel.numberOfLines = 0
+//        reviewLabel = createLabel(text: post.review)
+//        reviewLabel.lineBreakMode = .byCharWrapping
+//        reviewLabel.numberOfLines = 0
+//        reviewLabel.sizeToFit()
+//        reviewLabel.extraInternalHeight = 80
+//        reviewLabel.baselineAdjustment = .none
+//        scrollView.addSubview(reviewLabel)
+        
+        reviewLabel = UITextView()
+        reviewLabel.text = post.review
+        reviewLabel.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 245/255)
+        reviewLabel.layer.cornerRadius = 10
+        reviewLabel.contentInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
+        reviewLabel.clipsToBounds = true
+        reviewLabel.isScrollEnabled = true
         reviewLabel.sizeToFit()
-        reviewLabel.extraInternalHeight = 80
-        reviewLabel.baselineAdjustment = .none
+        reviewLabel.font = UIFont.preferredFont(forTextStyle: .body)
+        reviewLabel.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(reviewLabel)
     }
     
+    final func configureImageDisplay(post: MediaConfigurable) {
+        pvc = PageViewController<SmallSinglePageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: post.files)
+        if let files = post.files, files.count > 0 {
+            singlePageVC = SmallSinglePageViewController(gallery: files[0], galleries: files)
+        } else {
+            singlePageVC = SmallSinglePageViewController(gallery: nil, galleries: nil)
+        }
+        
+        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+
+        pvc.view.translatesAutoresizingMaskIntoConstraints = false
+        addChild(pvc)
+        scrollView.addSubview(pvc.view)
+        pvc.didMove(toParent: self)
+        
+        let pageControl = UIPageControl.appearance()
+        pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
+        pageControl.currentPageIndicatorTintColor = .gray
+        pageControl.backgroundColor = .clear
+    }
+    
+    final func setImageDisplayConstraints<T: UIView>(v: T, topConstant: CGFloat = 20) {
+        constraints.append(contentsOf: [
+            imageHeightConstraint,
+            pvc.view.topAnchor.constraint(equalTo: v.topAnchor, constant: topConstant),
+            pvc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
+            pvc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
+        ])
+    }
+    
     // MARK: - setConstraints
-    func setConstraints() {
+    final func setConstraints() {
         guard let pv = pvc.view else { return }
         
         if let files = post.files, files.count > 0 {
@@ -95,6 +146,11 @@ extension ReviewDetailViewController: UsernameBannerConfigurable {
         setNameDisplayConstraints(topView: pv)
         
         constraints.append(contentsOf: [
+            customNavView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: -65),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
             starRatingView.topAnchor.constraint(equalTo: usernameContainer.bottomAnchor, constant: 40),
             starRatingView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.7),
             starRatingView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -108,38 +164,13 @@ extension ReviewDetailViewController: UsernameBannerConfigurable {
             reviewLabel.topAnchor.constraint(equalTo: reviewTitleLabel.bottomAnchor),
             reviewLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             reviewLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            reviewLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 80),
+            reviewLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 200),
         ])
         
         NSLayoutConstraint.activate(constraints)
     }
     
-    func configureImageDisplay(post: MediaConfigurable) {
-        guard let files = post.files, files.count > 0 else { return }
-        pvc = PageViewController<SmallSinglePageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: files)
-        singlePageVC = SmallSinglePageViewController(gallery: files[0])
-        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
-        pvc.view.translatesAutoresizingMaskIntoConstraints = false
-        addChild(pvc)
-        scrollView.addSubview(pvc.view)
-        pvc.didMove(toParent: self)
-        
-        let pageControl = UIPageControl.appearance()
-        pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
-        pageControl.currentPageIndicatorTintColor = .gray
-        pageControl.backgroundColor = .clear
-    }
-    
-    func setImageDisplayConstraints<T: UIView>(v: T, topConstant: CGFloat = 20) {
-        constraints.append(contentsOf: [
-            imageHeightConstraint,
-            pvc.view.topAnchor.constraint(equalTo: v.topAnchor, constant: topConstant),
-            pvc.view.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
-            pvc.view.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
-        ])
-    }
-    
-    @objc func tapped(_ sender: UITapGestureRecognizer!) {
+    @objc final func tapped(_ sender: UITapGestureRecognizer!) {
         let tag = sender.view?.tag
 
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
