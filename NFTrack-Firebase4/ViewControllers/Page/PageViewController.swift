@@ -23,6 +23,7 @@ import UIKit
 class PageViewController<T: PageDataType>: UIPageViewController, UIPageViewControllerDelegate, UIPageViewControllerDataSource {
     typealias Assoc = T.Assoc
     var galleries: [Assoc]?
+    weak var generalPurposeDelegate: GeneralPurposePageViewDelegate?
     override func viewDidLoad() {
         super.viewDidLoad()
         configure()
@@ -40,6 +41,11 @@ class PageViewController<T: PageDataType>: UIPageViewController, UIPageViewContr
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        UIApplication.shared.windows.first?.endEditing(true)
     }
     
     func configure() {
@@ -67,7 +73,9 @@ class PageViewController<T: PageDataType>: UIPageViewController, UIPageViewContr
             return nil
         }
         
-        return T(gallery: galleries[index], galleries: galleries)
+        let vcBefore = T(gallery: galleries[index], galleries: galleries)
+        generalPurposeDelegate?.didSet(vcBefore)
+        return vcBefore
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
@@ -80,8 +88,10 @@ class PageViewController<T: PageDataType>: UIPageViewController, UIPageViewContr
         if index >= galleries.count {
             return nil
         }
-        
-        return T(gallery: galleries[index], galleries: galleries)
+
+        let vcAfter = T(gallery: galleries[index], galleries: galleries)
+        generalPurposeDelegate?.didSet(vcAfter)
+        return vcAfter
     }
     
     func presentationCount(for pageViewController: UIPageViewController) -> Int {
@@ -97,4 +107,11 @@ class PageViewController<T: PageDataType>: UIPageViewController, UIPageViewContr
         
         return index
     }
+}
+
+// Since the page view controller delegate methods like viewControllerBefore and viewControllerAfter are within PageViewController that are used in a general purpose way
+// instead of the parent view controller of the page view controller having them
+// there needs to be a way to pass values to the child view controllers of the page view controller from the parent view controller
+protocol GeneralPurposePageViewDelegate: AnyObject {
+    func didSet(_ vc: UIViewController)
 }

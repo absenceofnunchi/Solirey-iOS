@@ -149,7 +149,6 @@ extension ParentChatListViewController {
         }
         
         let profile = UIAction(title: "Profile", image: UIImage(systemName: "person.crop.circle")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToProfile(using: post)
         }
         

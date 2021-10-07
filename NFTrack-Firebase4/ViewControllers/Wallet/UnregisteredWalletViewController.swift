@@ -11,20 +11,19 @@ class UnregisteredWalletViewController: UIViewController, ModalConfigurable {
     var closeButton: UIButton!
     private var backgroundAnimator: UIViewPropertyAnimator!
     final let galleries: [String] = ["1", "2"]
-    private var pvc: UIPageViewController!
-    lazy private var centerConstraint: NSLayoutConstraint = pvc.view.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-    lazy private var topConstraint: NSLayoutConstraint = pvc.view.topAnchor.constraint(equalTo: view.topAnchor, constant: 100)
+    private var pvc: PageViewController<SingleWalletPageViewController<String>>!
+    var containerViewConstraints = [NSLayoutConstraint]()
+    var isFirstTimeLaunched: Bool = true
     
     // MARK: - viewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
         
         view.backgroundColor = .white
-        self.hideKeyboardWhenTappedAround()
+        hideKeyboardWhenTappedAround()
         configureCloseButton()
         setButtonConstraints()
         configurePageVC()
-        setConstraints()
         
         let swipeDown = UISwipeGestureRecognizer(target: self, action: #selector(swiped(_:)))
         swipeDown.direction = .down
@@ -48,14 +47,15 @@ extension UnregisteredWalletViewController {
     func configurePageVC() {
         let singlePageVC = SingleWalletPageViewController<String>(gallery: "1")
         guard let walletVC = self.parent as? WalletViewController else { return }
-        singlePageVC.delegate =  walletVC // wallet view controller for a protocol
+        singlePageVC.delegate = walletVC // wallet view controller for a protocol
         
-        pvc = PageViewController<SingleWalletPageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: ["sting"])
+        pvc = PageViewController<SingleWalletPageViewController<String>>(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil, galleries: galleries)
         pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
         addChild(pvc)
         pvc.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(pvc.view)
         pvc.didMove(toParent: self)
+        pvc.generalPurposeDelegate = self
         
         let pageControl = UIPageControl.appearance()
         pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
@@ -63,73 +63,42 @@ extension UnregisteredWalletViewController {
         pageControl.backgroundColor = .clear
     }
     
-    // MARK: - setSinglePageConstraints
-    func setConstraints() {
-        topConstraint.isActive = false
-        centerConstraint.isActive = true
-        
-        guard let pv = pvc.view else { return }
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            NSLayoutConstraint.activate([
-                // container view
-                topConstraint,
-                centerConstraint,
-                pv.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                pv.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 1),
-                pv.heightAnchor.constraint(equalToConstant: 350),
-            ])
-        }else{
-            NSLayoutConstraint.activate([
-                // container view
-                centerConstraint,
-                pv.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                pv.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 1),
-                pv.heightAnchor.constraint(equalToConstant: 400),
-            ])
-        }
+    func setBaseContainerViewConstraints(heightConstant: CGFloat) -> [NSLayoutConstraint] {
+        return [
+            pvc.view.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            pvc.view.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 1),
+            pvc.view.heightAnchor.constraint(equalToConstant: heightConstant),
+        ]
     }
     
+    enum ContainerViewOrientation {
+        case top, center
+    }
+    
+    func orientContainerView(_ orientation: ContainerViewOrientation) {
+        NSLayoutConstraint.deactivate(containerViewConstraints)
+        containerViewConstraints.removeAll()
+        
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            containerViewConstraints = setBaseContainerViewConstraints(heightConstant: 350)
+        } else {
+            containerViewConstraints = setBaseContainerViewConstraints(heightConstant: 400)
+        }
+        
+        switch orientation {
+            case .top:
+                containerViewConstraints.append(pvc.view.topAnchor.constraint(equalTo: view.topAnchor, constant: 100))
+            case .center:
+                containerViewConstraints.append(pvc.view.centerYAnchor.constraint(equalTo: view.centerYAnchor))
+        }
+        
+        NSLayoutConstraint.activate(containerViewConstraints)
+    }
+        
     @objc func swiped(_ sender: UISwipeGestureRecognizer) {
         view.endEditing(true)
     }
 }
-
-//extension UnregisteredWalletViewController: UIPageViewControllerDataSource {
-//    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-//        guard let gallery = (viewController as! SinglePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
-//        index -= 1
-//        if index < 0 {
-//            return nil
-//        }
-//        let spv = SinglePageViewController(gallery: galleries[index])
-//        guard let walletVC = self.parent as? WalletViewController else { return nil }
-//        spv.delegate = walletVC
-//        return spv
-//    }
-//
-//    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-//        guard let gallery = (viewController as! SinglePageViewController).gallery, var index = galleries.firstIndex(of: gallery) else { return nil }
-//        index += 1
-//        if index >= galleries.count {
-//            return nil
-//        }
-//        let spv = SinglePageViewController(gallery: galleries[index])
-//        guard let walletVC = self.parent as? WalletViewController else { return nil }
-//        spv.delegate = walletVC
-//        return spv
-////        return SinglePageViewController(gallery: galleries[index])
-//    }
-//
-//    func presentationCount(for pageViewController: UIPageViewController) -> Int {
-//        return self.galleries.count
-//    }
-//
-//    func presentationIndex(for pageViewController: UIPageViewController) -> Int {
-//        let page = pageViewController.viewControllers![0] as! SinglePageViewController
-//        let gallery = page.gallery!
-//        return self.galleries.firstIndex(of: gallery)!
-//    }
-//}
 
 extension UnregisteredWalletViewController {
     // MARK: - addKeyboardObserver
@@ -154,21 +123,37 @@ extension UnregisteredWalletViewController {
             
             //Check keyboards Y position and according to that move view up and down
             if keyBoardFrameY >= UIScreen.main.bounds.size.height {
-                NSLayoutConstraint.deactivate([topConstraint])
-                NSLayoutConstraint.activate([centerConstraint])
+                orientContainerView(.center)
                 
-                UIView.animate(withDuration: 2, delay: 0, options: .curveEaseInOut) { [weak self] in
-                    self?.view.layoutIfNeeded()
-                } completion: { (_) in }
+                if isFirstTimeLaunched == false {
+                    UIView.animate(withDuration: 1, delay: 0, options: .curveEaseInOut) { [weak self] in
+                        self?.view.layoutIfNeeded()
+                    } completion: { (_) in }
+                }
             } else {
-                NSLayoutConstraint.deactivate([centerConstraint])
-                NSLayoutConstraint.activate([topConstraint])
+                orientContainerView(.top)
                 
-                UIView.animate(withDuration: 2, delay: 0, options: .curveEaseInOut) { [weak self] in
-                    self?.view.layoutIfNeeded()
-                } completion: { (_) in }
+                if isFirstTimeLaunched == false {
+                    UIView.animate(withDuration: 1, delay: 0, options: .curveEaseInOut) { [weak self] in
+                        self?.view.layoutIfNeeded()
+                    } completion: { (_) in }
+                }
             }
+            
+            // prevent the unintended animation in the beginning
+            isFirstTimeLaunched = false
         }
     }
 }
 
+// Since the page view controller delegate methods like viewControllerBefore and viewControllerAfter are within PageViewController that are used in a general purpose way, which would've been here otherwise
+// there needs to be a way to pass values to the child view controllers of the page view controller from the parent view controller
+// For the new view controllers that are instantiated as swiped, they are set as delegates of WalletViewController from here to transition between registered and unregistered vcs
+extension UnregisteredWalletViewController: GeneralPurposePageViewDelegate {
+    func didSet(_ vc: UIViewController) {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+
+        guard let walletVC = self.parent as? WalletViewController else { return }
+        (vc as? SingleWalletPageViewController<String>)?.delegate = walletVC
+    }
+}

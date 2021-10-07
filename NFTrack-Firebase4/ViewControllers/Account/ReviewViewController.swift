@@ -299,20 +299,17 @@ extension ReviewViewController: ContextAction {
         
         if let files = post.files, files.count > 0 {
             let profile = UIAction(title: "Images", image: UIImage(systemName: "photo")) { [weak self] action in
-                guard let post = self?.postArr[indexPath.row] else { return }
                 self?.imagePreivew(post)
             }
             actionArray.append(profile)
         }
         
         let history = UIAction(title: "Tx Detail", image: UIImage(systemName: "rectangle.stack")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToHistory(post)
         }
         actionArray.append(history)
         
         let reviews = UIAction(title: "Reviews", image: UIImage(systemName: "square.and.pencil")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToReviews(post)
         }
         actionArray.append(reviews)

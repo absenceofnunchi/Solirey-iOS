@@ -49,6 +49,8 @@ class ImagePreviewViewController: UIViewController {
     var loadingIndicator: UIActivityIndicatorView!
     // to be used for BigPreviewVC after fetching the image data from Firebase Storage
     var remoteImageData: Data!
+    var closeButtonEnabled: Bool = true
+    
     init(postType: PostType) {
         super.init(nibName: nil, bundle: nil)
         self.postType = postType
@@ -77,8 +79,8 @@ extension ImagePreviewViewController {
         let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
                                               heightDimension: .fractionalHeight(1.0))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
-        
         var group: NSCollectionLayoutGroup!
+        
         switch postType {
             case .tangible:
                 let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.9),
@@ -185,6 +187,10 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
                     loadingIndicator.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
                     loadingIndicator.centerXAnchor.constraint(equalTo: cell.centerXAnchor)
                 ])
+                
+                // disable the ability to delete the image during the resale
+                cell.closeButton.isEnabled = closeButtonEnabled
+                cell.closeButton.alpha = closeButtonEnabled ? 1 : 0
                 
                 loadingIndicator.startAnimating()
                 cell.imageView.setImage(from: filePath) { [weak self] imageData in
@@ -349,6 +355,8 @@ extension ImagePreviewViewController: UIContextMenuInteractionDelegate {
             return bigVC
         }
         
+        var actionArray = [UIAction]()
+        
         let previewAction = UIAction(title: "Preview", image: UIImage(systemName: "magnifyingglass")) { [weak self] action in
             guard let datum = self?.data[indexPath.row] else { return }
             let filePath = datum.filePath
@@ -357,13 +365,18 @@ extension ImagePreviewViewController: UIContextMenuInteractionDelegate {
             bigVC.modalTransitionStyle = .crossDissolve
             self?.present(bigVC, animated: true, completion: nil)
         }
+        actionArray.append(previewAction)
         
-        let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] action in
-            self?.deletePreviewImage(indexPath: indexPath)
+        if closeButtonEnabled == true {
+            let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { [weak self] action in
+                self?.deletePreviewImage(indexPath: indexPath)
+            }
+            actionArray.append(deleteAction)
         }
+
         
         return UIContextMenuConfiguration(identifier: "DetailPreview" as NSString, previewProvider: { getPreviewVC(indexPath: indexPath) }) { _ in
-            UIMenu(title: "", children: [previewAction, deleteAction])
+            UIMenu(title: "", children: actionArray)
         }
     }
 }

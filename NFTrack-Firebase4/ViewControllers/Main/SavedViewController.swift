@@ -193,14 +193,12 @@ extension SavedViewController: ContextAction {
         actionArray.append(posting)
         
         let profile = UIAction(title: "Profile", image: UIImage(systemName: "person.crop.circle")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToProfile(post)
         }
         actionArray.append(profile)
         
         if let files = post.files, files.count > 0 {
             let images = UIAction(title: "Images", image: UIImage(systemName: "photo")) { [weak self] action in
-                guard let post = self?.postArr[indexPath.row] else { return }
                 self?.imagePreivew(post)
             }
             

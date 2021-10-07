@@ -798,10 +798,8 @@ extension TransactionService {
                     promise(.success(txResult))
                 } catch {
                     if let err = error as? Web3Error {
-                        print("execute error", err)
                         promise(.failure(.generalError(reason: err.errorDescription)))
                     } else {
-                        print("execute error2", error)
                         promise(.failure(.generalError(reason: error.localizedDescription)))
                     }
                 }

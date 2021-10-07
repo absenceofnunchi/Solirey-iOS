@@ -1,154 +1,18 @@
 //
-//  PostViewController.swift
+//  DigitalAssetViewController + OnlineDirect.swift
 //  NFTrack-Firebase4
 //
-//  Created by J C on 2021-05-06.
+//  Created by J C on 2021-10-05.
 //
 
 import UIKit
-import web3swift
-import FirebaseFirestore
-import BigInt
 import Combine
+import BigInt
 
-class PostViewController: ParentPostViewController {
-    final override var panelButtons: [PanelButton] {
-        let buttonPanels = [
-            PanelButton(imageName: "camera.circle", imageConfig: configuration, tintColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), tag: 8),
-            PanelButton(imageName: pickerImageName, imageConfig: configuration, tintColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), tag: 9),
-            PanelButton(imageName: "doc.circle", imageConfig: configuration, tintColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), tag: 10)
-        ]
-        return buttonPanels
-    }
-    
-    var deliveryMethodObserver: NSKeyValueObservation?
-    final override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        deliveryMethodObserver = deliveryMethodLabel.observe(\.text) { [weak self] (label, observedChange) in
-            guard let text = label.text, let deliveryMethod = DeliveryMethod(rawValue: text) else { return }
-            switch deliveryMethod {
-                case .inPerson:
-                    self?.paymentMethodLabel.text = PaymentMethod.directTransfer.rawValue
-                    self?.isShipping = false
-                case .shipping:
-                    self?.paymentMethodLabel.text = PaymentMethod.escrow.rawValue
-                    self?.isShipping = true
-            }
-        }
-    }
-    
-    final override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        if deliveryMethodObserver != nil {
-            deliveryMethodObserver?.invalidate()
-        }
-    }
-    
-    var storage = Set<AnyCancellable>()
-    
-    final override func viewDidLoad() {
-        super.viewDidLoad()
-  
-        deliveryInfoButton.tag = 20
-        deliveryMethodLabel.isUserInteractionEnabled = true
-        deliveryMethodLabel.tag = 1
-        
-        paymentInfoButton.tag = 21
-        
-        saleMethodInfoButton.tag = 22
-        saleMethodLabel.text = "Online Direct"
-        
-        pickerLabel.isUserInteractionEnabled = true
-        pickerLabel.tag = 2
-    }
-    
-    final override func createIDField(post: Post? = nil) {
-        idContainerView = UIView()
-        idContainerView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(idContainerView)
-        
-        idTextField = createTextField(delegate: self)
-        idTextField.autocapitalizationType = .none
-        idTextField.autocorrectionType = .no
-        // If post is not nil, it means this is resale
-        if let post = post {
-            idTextField.text = post.id
-            idTextField.isUserInteractionEnabled = false
-        } else {
-            idTextField.placeholder = "Case insensitive, i.e. VIN, IMEI..."
-        }
-        
-        idContainerView.addSubview(idTextField)
-        
-        guard let scanImage = UIImage(systemName: "qrcode.viewfinder") else { return }
-        scanButton = UIButton.systemButton(with: scanImage.withTintColor(.black, renderingMode: .alwaysOriginal), target: self, action: #selector(buttonPressed))
-        scanButton.layer.cornerRadius = 5
-        scanButton.layer.borderWidth = 0.7
-        scanButton.layer.borderColor =   UIColor.lightGray.cgColor
-        scanButton.tag = 7
-        scanButton.isUserInteractionEnabled = post != nil ? false : true
-        scanButton.translatesAutoresizingMaskIntoConstraints = false
-        idContainerView.addSubview(scanButton)
-    }
-    
-    final override func setIDFieldConstraints(post: Post? = nil) {
-        constraints.append(contentsOf: [
-            idTitleLabel.topAnchor.constraint(equalTo: tagContainerView.bottomAnchor, constant: 20),
-            idTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            idTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            idTitleLabel.heightAnchor.constraint(equalToConstant: 50),
-            
-            idContainerView.topAnchor.constraint(equalTo: idTitleLabel.bottomAnchor, constant: 0),
-            idContainerView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9),
-            idContainerView.heightAnchor.constraint(equalToConstant: 50),
-            idContainerView.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
-            
-            idTextField.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: post != nil ? 1 : 0.75),
-            idTextField.heightAnchor.constraint(equalToConstant: 50),
-            idTextField.leadingAnchor.constraint(equalTo: idContainerView.leadingAnchor),
-            
-            scanButton.widthAnchor.constraint(equalTo: idContainerView.widthAnchor, multiplier: post != nil ? 0 : 0.2),
-            scanButton.heightAnchor.constraint(equalToConstant: 50),
-            scanButton.trailingAnchor.constraint(equalTo: idContainerView.trailingAnchor),
-        ])
-    }
-    
-    final override func configureImagePreview() {
-        configureImagePreview(postType: .tangible, superView: scrollView)
-    }
-    
-    final override func buttonPressed(_ sender: UIButton) {
-        super.buttonPressed(sender)
-        
-        switch sender.tag {
-            case 20:
-                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Delivery Method", detail: InfoText.deliveryMethod)])
-                self.present(infoVC, animated: true, completion: nil)
-            case 21:
-                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Escrow", detail: InfoText.escrow), InfoModel(title: "Direct Transfer", detail: InfoText.directTransfer)])
-                self.present(infoVC, animated: true, completion: nil)
-            case 22:
-                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Sale Format", detail: InfoText.onlineDirect)])
-                self.present(infoVC, animated: true, completion: nil)
-            default:
-                break
-        }
-    }
-    
-    // MARK: - mint
-    /// 1. check for existing ID
-    /// 2. deploy the escrow contract
-    /// 3. mint
-    /// 4. upload to the firestore
-    /// 5. get the token ID through the subscription to the google functions
-    /// 6. update the token ID on firestore
-    /// 7. store the photos in the local storage and upload the images to the firebase storage
-    /// 8. update the firestore with the urls of the photos
-    /// 9. delete the photos from the local storage
-    
-    final override func processMint(
-        price: String?,
+extension DigitalAssetViewController {
+    // MARK: - onlineDirect
+    final func onlineDirect(
+        price: String,
         itemTitle: String,
         desc: String,
         category: String,
@@ -159,18 +23,24 @@ class PostViewController: ParentPostViewController {
         saleFormat: String,
         paymentMethod: String
     ) {
-        guard let price = price, !price.isEmpty else {
+        //        guard let contractAddress = NFTrackAddress?.address else {
+        //            self.alert.showDetail("Sorry", with: "There was an error loading the contract address.", for: self)
+        //            return
+        //        }
+        //        self.socketDelegate = SocketDelegate(contractAddress: contractAddress)
+        
+        guard !price.isEmpty else {
             self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
             return
         }
         
-//        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
-//            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
-//            return
-//        }
+        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+        //            return
+        //        }
         
-        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
-            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+        guard let convertedPrice = Double(price), convertedPrice > 0.0000000000000001 else {
+            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
             return
         }
         
@@ -179,12 +49,14 @@ class PostViewController: ParentPostViewController {
             return
         }
         
+        self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress)
+        
         let content = [
             StandardAlertContent(
                 titleString: "",
                 body: [AlertModalDictionary.passwordSubtitle: ""],
                 isEditable: true,
-                fieldViewHeight: 40,
+                fieldViewHeight: 50,
                 messageTextAlignment: .left,
                 alertStyle: .withCancelButton
             ),
@@ -192,15 +64,15 @@ class PostViewController: ParentPostViewController {
                 titleString: "Transaction Options",
                 body: [AlertModalDictionary.gasLimit: "", AlertModalDictionary.gasPrice: "", AlertModalDictionary.nonce: ""],
                 isEditable: true,
-                fieldViewHeight: 40,
+                fieldViewHeight: 50,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
-            )
-        ]
+            )]
+        
         
         self.hideSpinner {
             DispatchQueue.main.async {
-                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+                let alertVC = AlertViewController(height: 400, standardAlertContent: content)
                 alertVC.action = { [weak self] (modal, mainVC) in
                     mainVC.buttonAction = { _ in
                         guard let self = self else { return }
@@ -211,23 +83,19 @@ class PostViewController: ParentPostViewController {
                         }
                         
                         self.dismiss(animated: true, completion: {
-                            self.progressModal = ProgressModalViewController(postType: .tangible)
+                            self.progressModal = ProgressModalViewController(postType: .digital(.onlineDirect))
                             self.progressModal.titleString = "Posting In Progress"
                             self.present(self.progressModal, animated: true, completion: {
-                                self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress)
-                                
-                                var txPackageArr = [TxPackage]()
-                                print("STEP 1")
                                 Future<TxPackage, PostingError> { promise in
                                     self.transactionService.prepareMintTransactionWithGasEstimate(promise)
                                 }
+                                .eraseToAnyPublisher()
                                 .flatMap({ (txPackage) -> AnyPublisher<BigUInt, PostingError> in
-                                    txPackageArr.append(txPackage)
+                                    self.txPackageRetainer.append(txPackage)
                                     guard let contractAddress = Web3swiftService.currentAddress else {
                                         return Fail(error: PostingError.retrievingCurrentAddressError)
                                             .eraseToAnyPublisher()
                                     }
-
                                     return Future<BigUInt, PostingError> { promise in
                                         do {
                                             // get the current nonce so that we can increment it manually
@@ -243,7 +111,6 @@ class PostViewController: ParentPostViewController {
                                     .eraseToAnyPublisher()
                                 })
                                 .flatMap { (nonce) -> AnyPublisher<TxPackage, PostingError> in
-                                    print("STEP 3")
                                     return Future<TxPackage, PostingError> { promise in
                                         self.transactionService.prepareTransactionForNewContractWithGasEstimate(
                                             contractABI: purchaseABI2,
@@ -255,11 +122,11 @@ class PostViewController: ParentPostViewController {
                                     }
                                     .eraseToAnyPublisher()
                                 }
-                                .flatMap { (txPackage2) -> AnyPublisher<[TxPackage], PostingError> in
-                                    txPackageArr.append(txPackage2)
+                                .flatMap { (txPackage) -> AnyPublisher<[TxPackage], PostingError> in
+                                    self.txPackageRetainer.append(txPackage)
+                                    
                                     return Future<[TxPackage], PostingError> { promise in
-                                        print("STEP 4")
-                                        self.transactionService.calculateTotalGasCost(with: txPackageArr, promise: promise)
+                                        self.transactionService.calculateTotalGasCost(with: self.txPackageRetainer, promise: promise)
                                         let update: [String: PostProgress] = ["update": .estimatGas]
                                         NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                     }
@@ -267,11 +134,10 @@ class PostViewController: ParentPostViewController {
                                 }
                                 // execute the transactions and get the receipts in an array
                                 .flatMap { (txPackages) -> AnyPublisher<[TxResult], PostingError> in
-                                    let update: [String: PostProgress] = ["update": .deployingEscrow]
-                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                    
-                                    print("STEP 5")
                                     let results = txPackages.map { self.transactionService.executeTransaction(transaction: $0.transaction, password: password, type: $0.type) }
+                                    
+                                    let update: [String: PostProgress] = ["update": .images]
+                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                     return Publishers.MergeMany(results)
                                         .collect()
                                         .eraseToAnyPublisher()
@@ -281,37 +147,53 @@ class PostViewController: ParentPostViewController {
                                 .flatMap { (txResults) -> AnyPublisher<Int, PostingError> in
                                     var topicsRetainer: [String]!
                                     return Future<[String: Any], PostingError> { promise in
-                                        print("STEP 6")
                                         self.socketDelegate.promise = promise
                                     }
                                     .flatMap({ (webSocketMessage) -> AnyPublisher<[String?], PostingError> in
-                                        let update: [String: PostProgress] = ["update": .minting]
-                                        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                        
                                         if let topics = webSocketMessage["topics"] as? [String] {
                                             topicsRetainer = topics
                                         }
-                                        // upload images/files to the Firebase Storage and get the array of URLs
+                                        
                                         if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
-                                            print("STEP 7")
-                                            let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+                                            let fileURLS = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
                                                 return Future<String?, PostingError> { promise in
-                                                    self.uploadFileWithPromise(
-                                                        fileURL: previewData.filePath,
-                                                        userId: self.userId,
-                                                        promise: promise
-                                                    )
-                                                }.eraseToAnyPublisher()
+                                                    self.uploadFileWithPromise(fileURL: previewData.filePath, userId: self.userId, promise: promise)
+                                                }
+                                                .eraseToAnyPublisher()
                                             }
-                                            return Publishers.MergeMany(fileURLs)
+                                            
+                                            return Publishers.MergeMany(fileURLS)
                                                 .collect()
                                                 .eraseToAnyPublisher()
                                         } else {
-                                            // if there are none to upload, return an empty array
                                             return Result.Publisher([] as [String]).eraseToAnyPublisher()
                                         }
                                     })
-                                    // upload the details to Firestore
+                                    // upload to IPFS and get the URLs
+                                    //                                    .flatMap({ (urlStrings) -> AnyPublisher<[String?], PostingError> in
+                                    //                                        self.storageURLsRetainer = urlStrings
+                                    //                                        if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
+                                    //                                            let ipfsURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+                                    //                                                guard let image = previewData.originalImage else {
+                                    //                                                    return Fail(error: PostingError.generalError(reason: "Failed to convert data to image."))
+                                    //                                                        .eraseToAnyPublisher()
+                                    //                                                }
+                                    //
+                                    //                                                return Future<String?, PostingError> { promise in
+                                    //                                                    IPFSService.shared.uploadImage(image: image, promise: promise)
+                                    //                                                }
+                                    //                                                .eraseToAnyPublisher()
+                                    //                                            }
+                                    //
+                                    //                                            return Publishers.MergeMany(ipfsURLs)
+                                    //                                                .collect()
+                                    //                                                .eraseToAnyPublisher()
+                                    //                                        } else {
+                                    //                                            return Result.Publisher([] as [String]).eraseToAnyPublisher()
+                                    //                                        }
+                                    //                                    })
+                                    // using the urlStrings from Firebase Storage and the user input, create a Firebase entry
+                                    // A Cloud Functions method will be invoked to update the entry with the minted token's ID at the end
                                     .flatMap { (urlStrings) -> AnyPublisher<Int, PostingError> in
                                         var escrowHash: String!
                                         var mintHash: String!
@@ -324,8 +206,6 @@ class PostViewController: ParentPostViewController {
                                             }
                                             senderAddress = txResult.senderAddress
                                         }
-                                        print("STEP 8")
-                                        print("self.shippingInfo", self.shippingInfo as Any)
                                         
                                         return Future<Int, PostingError> { promise in
                                             self.transactionService.createFireStoreEntry(
@@ -340,21 +220,20 @@ class PostViewController: ParentPostViewController {
                                                 category: category,
                                                 tokensArr: tokensArr,
                                                 convertedId: convertedId,
-                                                type: "tangible",
+                                                type: "digital",
                                                 deliveryMethod: deliveryMethod,
                                                 saleFormat: saleFormat,
                                                 paymentMethod: paymentMethod,
                                                 topics: topicsRetainer,
                                                 urlStrings: urlStrings,
-                                                ipfsURLStrings: [],
-                                                shippingInfo: self.shippingInfo,
+                                                ipfsURLStrings: urlStrings,
                                                 promise: promise
                                             )
                                         }
                                         .eraseToAnyPublisher()
                                     }
                                     .eraseToAnyPublisher()
-                                } // socket delegate
+                                }
                                 .sink { (completion) in
                                     switch completion {
                                         case .failure(let error):
@@ -372,7 +251,7 @@ class PostViewController: ParentPostViewController {
                                                 case .createTransactionIssue:
                                                     self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
                                                 case .insufficientFund(let msg):
-                                                    self.alert.showDetail("Error", with: msg, height: 500, alignment: .left, for: self)
+                                                    self.alert.showDetail("Error", with: msg, height: 500, fieldViewHeight: 300, alignment: .left, for: self)
                                                 case .emptyAmount:
                                                     self.alert.showDetail("Error", with: "The ETH value cannot be blank for the transaction.", for: self)
                                                 case .invalidAmountFormat:
@@ -385,16 +264,18 @@ class PostViewController: ParentPostViewController {
                                                     self.alert.showDetail("Error", with: "There was an error creating your post.", for: self)
                                             }
                                         case .finished:
-                                            // update the progress indicator
-                                            let update: [String: PostProgress] = ["update": .images]
-                                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                            
-                                            FirebaseService.shared.sendToTopicsVoid(
-                                                title: "New item has been listed on \(category)",
-                                                content: itemTitle,
-                                                topic: category,
-                                                docId: self.documentId
-                                            )
+                                            DispatchQueue.main.async {
+                                                self.titleTextField.text?.removeAll()
+                                                self.priceTextField.text?.removeAll()
+                                                self.descTextView.text?.removeAll()
+                                                self.idTextField.text?.removeAll()
+                                                self.saleMethodLabel.text?.removeAll()
+                                                self.auctionDurationLabel.text?.removeAll()
+                                                self.auctionStartingPriceTextField.text?.removeAll()
+                                                self.pickerLabel.text?.removeAll()
+                                                self.tagTextField.tokens.removeAll()
+                                                self.paymentMethodLabel.text?.removeAll()
+                                            }
                                             
                                             // index Core Spotlight
                                             self.indexSpotlight(
@@ -404,26 +285,6 @@ class PostViewController: ParentPostViewController {
                                                 convertedId: convertedId
                                             )
                                             
-                                            // reset the fields
-                                            DispatchQueue.main.async {
-                                                self.titleTextField.text?.removeAll()
-                                                self.priceTextField.text?.removeAll()
-                                                self.descTextView.text?.removeAll()
-                                                self.idTextField.text?.removeAll()
-                                                self.deliveryMethodLabel.text?.removeAll()
-                                                self.pickerLabel.text?.removeAll()
-                                                self.tagTextField.tokens.removeAll()
-                                                self.paymentMethodLabel.text?.removeAll()
-                                                self.addressLabel.text?.removeAll()
-                                                self.addressLabelConstraintHeight.constant = 0
-                                                self.addressTitleLabel.alpha = 0
-                                                self.addressLabel.alpha = 0
-                                                self.addressLabel.isUserInteractionEnabled = false
-                                                self.addressTitleLabelConstraintHeight.constant = 0
-                                                self.addressLabelConstraintHeight.constant = 0
-                                            }
-                                            
-                                            // remove the image and file previews
                                             if self.previewDataArr.count > 0 {
                                                 self.previewDataArr.removeAll()
                                                 self.imagePreviewVC.data.removeAll()
@@ -431,48 +292,26 @@ class PostViewController: ParentPostViewController {
                                                     self.imagePreviewVC.collectionView.reloadData()
                                                 }
                                             }
+                                            
+                                            self.socketDelegate.disconnectSocket()
+                                            let update: [String: PostProgress] = ["update": .deployingEscrow]
+                                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                            
+                                            let mintUpdate: [String: PostProgress] = ["update": .minting]
+                                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: mintUpdate)
                                     }
-                                } receiveValue: { (receivedValue) in
-                                    print("receivedValue", receivedValue)
-                                    self.socketDelegate.disconnectSocket()
+                                } receiveValue: { (tokenId) in
+                                    print("tokenId", tokenId)
                                 }
                                 .store(in: &self.storage)
                                 
-                            }) // progress modal
-                        }) // alert VC dismissal
-                    } // main VC button action
-                    self?.present(alertVC, animated: true, completion: nil)
-                }
-            }
-        }
-    }
-}
-
-extension PostViewController {
-    override var inputView: UIView? {
-        switch pickerTag {
-            case 1:
-                return self.deliveryMethodPicker.inputView
-            case 2:
-                return self.pvc.inputView
-            default:
-                return nil
-        }
+                            }) // present for progresModel
+                        }) // dismiss
+                    } // mainVC button action
+                } // alertVC
+                self.present(alertVC, animated: true, completion: nil)
+            } // dispatchqueue
+        } // hideSpinner
     }
     
-    @objc func doDone() { // user tapped button in accessory view
-        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
-        feedbackGenerator.impactOccurred()
-        
-        switch pickerTag {
-            case 1:
-                self.deliveryMethodLabel.text = deliveryMethodPicker.currentPep
-            case 2:
-                self.pickerLabel.text = pvc.currentPep
-            default:
-                break
-        }
-        self.resignFirstResponder()
-        self.showKeyboard = false
-    }
 }

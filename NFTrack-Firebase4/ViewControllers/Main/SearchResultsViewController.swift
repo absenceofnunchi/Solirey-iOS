@@ -138,28 +138,24 @@ extension SearchResultsController: ContextAction {
         actionArray.append(posting)
         
         let profile = UIAction(title: "Profile", image: UIImage(systemName: "person.crop.circle")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToProfile(post)
         }
         actionArray.append(profile)
         
         if let files = post.files, files.count > 0 {
             let images = UIAction(title: "Images", image: UIImage(systemName: "photo")) { [weak self] action in
-                guard let post = self?.postArr[indexPath.row] else { return }
-                self?.imagePreivew(post)
+                    self?.imagePreivew(post)
             }
             
             actionArray.append(images)
         }
         
         let history = UIAction(title: "Tx Detail", image: UIImage(systemName: "rectangle.stack")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToHistory(post)
         }
         actionArray.append(history)
         
         let reviews = UIAction(title: "Reviews", image: UIImage(systemName: "square.and.pencil")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToReviews(post)
         }
         actionArray.append(reviews)

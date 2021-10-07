@@ -82,7 +82,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var tagTextField: UISearchTextField!
     var addTagButton: UIButton!
     var buttonPanel: UIStackView!
-    var previewDataArr = [PreviewData]() {
+    var previewDataArr: [PreviewData]! {
         didSet {
             /// shows the image preview when an image or a doc is selected
             if previewDataArr.count > 0 {
@@ -163,7 +163,8 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     // Value to be passed from ListDetailVC -> NewPostVC -> PostParentVC only during resale
     var post: Post?
     var buttonPanelHeight: NSLayoutConstraint!
-
+    var BUTTON_PANEL_HEIGHT: CGFloat = 80
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         applyBarTintColorToTheNavigationBar()
@@ -211,15 +212,23 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     /// where the subclasses override the ImagePreview post type.
     /// This has to be done before setConstraints
     func configureImagePreview() {
-        configureImagePreview(postType: .tangible, superView: scrollView)
+        configureImagePreview(postType: .tangible, superView: scrollView, closeButtonEnabled: true)
     }
+    
+    // Set only during resale
+    // 1. Set the existing image.
+    // 2. Disable the ability to delete the image.
+    // 3. Decrease the height of the button panel to 0.
+    func resaleConfig() {}
 }
 
 extension ParentPostViewController {
     @objc func configureUI() {
         view.backgroundColor = .white
         title = "Post"
-//        previewDataArr = [PreviewData]()
+        
+        previewDataArr = [PreviewData]()
+        
         self.hideKeyboardWhenTappedAround()
         alert = Alerts()
         constraints = [NSLayoutConstraint]()
@@ -370,6 +379,9 @@ extension ParentPostViewController {
             }
         }
         
+        // Placed after buttonPanel is initialized because buttonPanel's height has to be modified
+        resaleConfig()
+        
         postButton = UIButton()
         postButton.setTitle("Post", for: .normal)
         postButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
@@ -511,7 +523,7 @@ extension ParentPostViewController {
         addTagButton.topAnchor.constraint(equalTo: tagContainerView.topAnchor).isActive = true
 
         setIDFieldConstraints(post: post)
-        setButtonPanelConstraints(topView: idContainerView)
+        setButtonPanelConstraints(topView: idContainerView, heightConstant: BUTTON_PANEL_HEIGHT)
         
         constraints.append(contentsOf: [
             imagePreviewVC.view.topAnchor.constraint(equalTo: buttonPanel.bottomAnchor, constant: 20),
@@ -627,7 +639,7 @@ extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigati
 }
 
 extension ParentPostViewController: PreviewDelegate {
-    // MARK: - configureImagePreview
+//    // MARK: - configureImagePreview
 //    func configureImagePreview(postType: PostType) {
 //        imagePreviewVC = ImagePreviewViewController(postType: postType)
 //        imagePreviewVC.data = previewDataArr
@@ -638,11 +650,11 @@ extension ParentPostViewController: PreviewDelegate {
 //        view.addSubview(imagePreviewVC.view)
 //        imagePreviewVC.didMove(toParent: self)
 //    }
-    
-    // MARK: - didDeleteImage
-    func didDeleteFileFromPreview(filePath: URL) {
-        previewDataArr = previewDataArr.filter { $0.filePath != filePath }
-    }
+//    
+//    // MARK: - didDeleteImage
+//    func didDeleteFileFromPreview(filePath: URL) {
+//        previewDataArr = previewDataArr.filter { $0.filePath != filePath }
+//    }
 }
 
 extension ParentPostViewController {
@@ -760,43 +772,73 @@ extension ParentPostViewController {
                 return
             }
             
-            self?.checkExistingId(id: convertedId) { (isDuplicate) in
-                if isDuplicate {
-                    self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
-                } else {
-                    // add both the tokens and the title to the tokens field
-                    var tokensArr = Set<String>()
-                    let strippedString = itemTitle.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
-                    let searchItems = strippedString.components(separatedBy: " ") as [String]
-                    searchItems.forEach { (item) in
-                        tokensArr.insert(item)
-                    }
-                    
-                    for token in self!.tagTextField.tokens {
-                        if let retrievedToken = token.representedObject as? String {
-                            tokensArr.insert(retrievedToken.lowercased())
-                        }
-                    }
-                    
-                    self?.processMint(
-                        price: self?.priceTextField.text,
-                        itemTitle: itemTitle,
-                        desc: desc,
-                        category: category,
-                        convertedId: convertedId,
-                        tokensArr: tokensArr,
-                        userId: userId,
-                        deliveryMethod: deliveryMethod,
-                        saleFormat: saleFormat,
-                        paymentMethod: paymentMethod
-                    )
-                    
-                } // not duplicate
-            } // end of checkExistingId
-        } // 
+            // add both the tokens and the title to the tokens field
+            var tokensArr = Set<String>()
+            let strippedString = itemTitle.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+            let searchItems = strippedString.components(separatedBy: " ") as [String]
+            searchItems.forEach { (item) in
+                tokensArr.insert(item)
+            }
+            
+            for token in self!.tagTextField.tokens {
+                if let retrievedToken = token.representedObject as? String {
+                    tokensArr.insert(retrievedToken.lowercased())
+                }
+            }
+            
+            if let _ = self?.post {
+                print("resale")
+                self?.processResale(
+                    price: self?.priceTextField.text,
+                    itemTitle: itemTitle,
+                    desc: desc,
+                    category: category,
+                    convertedId: convertedId,
+                    tokensArr: tokensArr,
+                    userId: userId,
+                    deliveryMethod: deliveryMethod,
+                    saleFormat: saleFormat,
+                    paymentMethod: paymentMethod
+                )
+            } else {
+                self?.checkExistingId(id: convertedId) { (isDuplicate) in
+                    if isDuplicate {
+                        self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
+                    } else {
+                        self?.processMint(
+                            price: self?.priceTextField.text,
+                            itemTitle: itemTitle,
+                            desc: desc,
+                            category: category,
+                            convertedId: convertedId,
+                            tokensArr: tokensArr,
+                            userId: userId,
+                            deliveryMethod: deliveryMethod,
+                            saleFormat: saleFormat,
+                            paymentMethod: paymentMethod
+                        )
+                    } // not duplicate
+                } // end of checkExistingId
+            }
+        }
     }
     
     @objc func processMint(
+        price: String?,
+        itemTitle: String,
+        desc: String,
+        category: String,
+        convertedId: String,
+        tokensArr: Set<String>,
+        userId: String,
+        deliveryMethod: String,
+        saleFormat: String,
+        paymentMethod: String
+    ) {
+        
+    }
+    
+    @objc func processResale(
         price: String?,
         itemTitle: String,
         desc: String,

@@ -19,6 +19,7 @@ class ResaleViewController: NewPostViewController {
     /// Adds a child view controller to the container.
     override func addBaseViewController<T: ParentPostViewController>(_ viewController: T) {
         // Value to be passed from ListDetailVC during resale
+        // The non-nil post indicates that this is a resale not a brand new sale
         viewController.post = post
         addChild(viewController)
         viewController.view.translatesAutoresizingMaskIntoConstraints = false

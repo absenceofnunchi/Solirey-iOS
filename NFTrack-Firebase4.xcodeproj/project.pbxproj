@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4900962D270E76FE00EDB593 /* PostViewController + Resale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4900962C270E76FE00EDB593 /* PostViewController + Resale.swift */; };
 		49054D0626C5B2D000ECCB58 /* BalanceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */; };
 		49054D3326C961F600ECCB58 /* ListDetailTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D3226C961F600ECCB58 /* ListDetailTest.swift */; };
 		49054D3826C9F4DE00ECCB58 /* PropertyLoader + Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49054D3726C9F4DD00ECCB58 /* PropertyLoader + Utilities.swift */; };
@@ -19,6 +20,8 @@
 		490C3FD126FFBBE00093C323 /* BackgroundView5.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490C3FD026FFBBE00093C323 /* BackgroundView5.swift */; };
 		490D275D267ECEA1003500C1 /* ProgressModalViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */; };
 		490D2762267ECF5F003500C1 /* PartialPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 490D2761267ECF5F003500C1 /* PartialPresentationController.swift */; };
+		49141498270D0A27005E93BA /* DigitalAssetViewController + Auction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49141497270D0A27005E93BA /* DigitalAssetViewController + Auction.swift */; };
+		4914149D270D0AD0005E93BA /* DigitalAssetViewController + OnlineDirect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4914149C270D0AD0005E93BA /* DigitalAssetViewController + OnlineDirect.swift */; };
 		49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B6A266ECEE70031A756 /* ProfileViewController.swift */; };
 		49221B79266FE4CB0031A756 /* ProfileDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */; };
 		49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B7D2670FA190031A756 /* ParentListViewController.swift */; };
@@ -210,6 +213,7 @@
 /* Begin PBXFileReference section */
 		185327341381F410AFB911BC /* Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; path = "Target Support Files/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests/Pods-NFTrack-Firebase4-NFTrack-Firebase4UITests.debug.xcconfig"; sourceTree = "<group>"; };
 		2C7C25BD6927706D3587D77F /* Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NFTrack_Firebase4_NFTrack_Firebase4UITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4900962C270E76FE00EDB593 /* PostViewController + Resale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + Resale.swift"; sourceTree = "<group>"; };
 		49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceCardView.swift; sourceTree = "<group>"; };
 		49054D3226C961F600ECCB58 /* ListDetailTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailTest.swift; sourceTree = "<group>"; };
 		49054D3726C9F4DD00ECCB58 /* PropertyLoader + Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PropertyLoader + Utilities.swift"; sourceTree = "<group>"; };
@@ -222,6 +226,8 @@
 		490C3FD026FFBBE00093C323 /* BackgroundView5.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView5.swift; sourceTree = "<group>"; };
 		490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressModalViewController.swift; sourceTree = "<group>"; };
 		490D2761267ECF5F003500C1 /* PartialPresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartialPresentationController.swift; sourceTree = "<group>"; };
+		49141497270D0A27005E93BA /* DigitalAssetViewController + Auction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Auction.swift"; sourceTree = "<group>"; };
+		4914149C270D0AD0005E93BA /* DigitalAssetViewController + OnlineDirect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + OnlineDirect.swift"; sourceTree = "<group>"; };
 		49221B6A266ECEE70031A756 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileDetailViewController.swift; sourceTree = "<group>"; };
 		49221B7D2670FA190031A756 /* ParentListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentListViewController.swift; sourceTree = "<group>"; };
@@ -755,6 +761,7 @@
 				49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */,
 				496D56BF2659E75D00C3E7FD /* ParentPostViewController + Picker.swift */,
 				4964E5092644B07D005B3268 /* PostViewController.swift */,
+				4900962C270E76FE00EDB593 /* PostViewController + Resale.swift */,
 				495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */,
 				49E759B72666BCCF0064BB34 /* ResaleViewController.swift */,
 				4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */,
@@ -763,6 +770,8 @@
 				490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */,
 				49DEFF642686552E004C2DD0 /* PreviewPDFViewController.swift */,
 				495FD316268AAB3100F1D81D /* DigitalAssetViewController.swift */,
+				49141497270D0A27005E93BA /* DigitalAssetViewController + Auction.swift */,
+				4914149C270D0AD0005E93BA /* DigitalAssetViewController + OnlineDirect.swift */,
 				495D5E07268FE92E00F5DF71 /* InfoViewController.swift */,
 				497F1F2C26DC920800E0F967 /* ShippingViewController.swift */,
 			);
@@ -1196,6 +1205,7 @@
 				49DEFF5B268649A3004C2DD0 /* DocumentPicker.swift in Sources */,
 				493BF9CD264C493200B9C9D2 /* WalletButtonView.swift in Sources */,
 				493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */,
+				4914149D270D0AD0005E93BA /* DigitalAssetViewController + OnlineDirect.swift in Sources */,
 				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
 				499702B5267459D8001DD80A /* ChatListViewController.swift in Sources */,
 				4983BB2026E5B3D200A45703 /* ShippingAddressChecker.swift in Sources */,
@@ -1204,6 +1214,7 @@
 				499702AB2673F75E001DD80A /* MessageCell.swift in Sources */,
 				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
 				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
+				49141498270D0A27005E93BA /* DigitalAssetViewController + Auction.swift in Sources */,
 				49D95C0727057E95004C6EEF /* BigSinglePageViewController.swift in Sources */,
 				49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */,
 				49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */,
@@ -1225,6 +1236,7 @@
 				4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */,
 				490D275D267ECEA1003500C1 /* ProgressModalViewController.swift in Sources */,
 				49E759AD26669ACB0064BB34 /* ParentPostViewController.swift in Sources */,
+				4900962D270E76FE00EDB593 /* PostViewController + Resale.swift in Sources */,
 				4969A27427036DAD0093068C /* CustomTabBarController.swift in Sources */,
 				49054D3D26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift in Sources */,
 				499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */,

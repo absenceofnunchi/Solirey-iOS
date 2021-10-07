@@ -591,7 +591,6 @@ extension ListViewController: ContextAction {
         actionArray.append(history)
         
         let reviews = UIAction(title: "Reviews", image: UIImage(systemName: "square.and.pencil")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToReviews(post)
         }
         actionArray.append(reviews)

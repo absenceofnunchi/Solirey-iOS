@@ -207,30 +207,31 @@ extension PurchasesViewController: ContextAction {
         var actionArray = [UIAction]()
         
         let profile = UIAction(title: "Profile", image: UIImage(systemName: "person.crop.circle")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToProfile(post)
         }
         actionArray.append(profile)
         
         if let files = post.files, files.count > 0 {
             let profile = UIAction(title: "Images", image: UIImage(systemName: "photo")) { [weak self] action in
-                guard let post = self?.postArr[indexPath.row] else { return }
-                self?.imagePreivew(post)
+                    self?.imagePreivew(post)
             }
             actionArray.append(profile)
         }
         
         let history = UIAction(title: "Tx Detail", image: UIImage(systemName: "rectangle.stack")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToHistory(post)
         }
         actionArray.append(history)
         
         let reviews = UIAction(title: "Reviews", image: UIImage(systemName: "square.and.pencil")) { [weak self] action in
-            guard let post = self?.postArr[indexPath.row] else { return }
             self?.navToReviews(post)
         }
         actionArray.append(reviews)
+        
+        let resale = UIAction(title: "Resale", image: UIImage(systemName: "plus")) { [weak self] action in
+            self?.resale(post)
+        }
+        actionArray.append(resale)
         
         return UIContextMenuConfiguration(identifier: "DetailPreview" as NSCopying, previewProvider: { [weak self] in self?.getPreviewVC(post: post) }) { _ in
             UIMenu(title: "", children: actionArray)
@@ -251,11 +252,15 @@ extension PurchasesViewController: ContextAction {
         let imageAction = imagePreviewContextualAction(post)
         let historyAction = navToHistoryContextualAction(post)
         let reviewAction = navToReviewsContextualAction(post)
+        let resaleAction = resaleContextualAction(post)
         
         profileAction.backgroundColor = UIColor(red: 112/255, green: 159/255, blue: 176/255, alpha: 1)
         imageAction.backgroundColor = UIColor(red: 167/255, green: 197/255, blue: 235/255, alpha: 1)
         historyAction.backgroundColor = UIColor(red: 112/255, green: 176/255, blue: 161/255, alpha: 1)
-        let configuration = UISwipeActionsConfiguration(actions: [profileAction, imageAction, historyAction, reviewAction])
+        reviewAction.backgroundColor = UIColor(red: 110/255, green: 126/255, blue: 175/255, alpha: 1)
+        resaleAction.backgroundColor = UIColor(red: 127/255, green: 110/255, blue: 175/255, alpha: 1)
+
+        let configuration = UISwipeActionsConfiguration(actions: [profileAction, imageAction, historyAction, reviewAction, resaleAction])
         configuration.performsFirstActionWithFullSwipe = false
         return configuration
     }

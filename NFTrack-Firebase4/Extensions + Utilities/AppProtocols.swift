@@ -33,17 +33,18 @@ protocol PreviewDelegate: DeletePreviewDelegate {
     var SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW: CGFloat! { get set }
     var imagePreviewConstraintHeight: NSLayoutConstraint! { get set }
     var imagePreviewVC: ImagePreviewViewController! { get set }
-    var previewDataArr: [PreviewData] { get set }
-    func configureImagePreview(postType: PostType, superView: UIView)
+    var previewDataArr: [PreviewData]! { get set }
+    func configureImagePreview(postType: PostType, superView: UIView, closeButtonEnabled: Bool)
     func didDeleteFileFromPreview(filePath: URL)
 }
 
 extension PreviewDelegate where Self: UIViewController {
     // MARK: - configureImagePreview
-    func configureImagePreview(postType: PostType, superView: UIView) {
+    func configureImagePreview(postType: PostType, superView: UIView, closeButtonEnabled: Bool = true) {
         imagePreviewVC = ImagePreviewViewController(postType: postType)
         imagePreviewVC.data = previewDataArr
         imagePreviewVC.delegate = self
+        imagePreviewVC.closeButtonEnabled = closeButtonEnabled
         imagePreviewVC.view.translatesAutoresizingMaskIntoConstraints = false
         addChild(imagePreviewVC)
         imagePreviewVC.view.frame = view.bounds
@@ -55,6 +56,17 @@ extension PreviewDelegate where Self: UIViewController {
     func didDeleteFileFromPreview(filePath: URL) {
         previewDataArr = previewDataArr.filter { $0.filePath != filePath }
     }
+}
+
+protocol ResaleDelegate: PreviewDelegate {
+    // To pass the files to display
+    var post: Post? { get set }
+    // The height of the button panel gets reduced down to 0
+    var buttonPanelHeight: NSLayoutConstraint! { get set }
+    var BUTTON_PANEL_HEIGHT: CGFloat { get set }
+    // To disable the close button feature for the image previews
+    var closeButtonEnabled: Bool! { get set }
+    func resaleConfig()
 }
 
 // MARK: - MessageDelegate
@@ -137,6 +149,8 @@ extension ModalConfigurable {
     }
     
     func closeButtonPressed() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        view.endEditing(true)
         self.dismiss(animated: true, completion: nil)
     }
 }
@@ -1340,9 +1354,8 @@ extension PostParseDelegate {
 protocol ButtonPanelConfigurable where Self: UIViewController {
     var buttonPanel: UIStackView! { get set }
     var constraints: [NSLayoutConstraint]! { get set }
-    var buttonPanelHeight: NSLayoutConstraint! { get set }
     func createButtonPanel(panelButtons: [PanelButton], superView: UIView, completion: (_ buttonsArr: [UIButton]) -> Void)
-    func setButtonPanelConstraints(topView: UIView)
+    func setButtonPanelConstraints(topView: UIView, heightConstant: CGFloat?)
 }
 
 extension ButtonPanelConfigurable {
@@ -1373,14 +1386,12 @@ extension ButtonPanelConfigurable {
         return button
     }
     
-    func setButtonPanelConstraints(topView: UIView) {
-        buttonPanelHeight = buttonPanel.heightAnchor.constraint(equalToConstant: 80)
-        
+    func setButtonPanelConstraints(topView: UIView, heightConstant: CGFloat? = nil) {
         constraints.append(contentsOf: [
             buttonPanel.topAnchor.constraint(equalTo: topView.bottomAnchor, constant: 40),
             buttonPanel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
             buttonPanel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            buttonPanelHeight
+            buttonPanel.heightAnchor.constraint(equalToConstant: heightConstant ?? 80)
         ])
     }
 }
@@ -2089,6 +2100,13 @@ extension ContextAction {
         self.navigationController?.pushViewController(reportVC, animated: true)
     }
     
+    func resale(_ post: Post) {
+        let resaleVC = ResaleViewController()
+        resaleVC.post = post
+        resaleVC.title = "Resale"
+        navigationController?.pushViewController(resaleVC, animated: true)
+    }
+    
     func getPreviewVC(post: Post) -> ListDetailViewController {
         let listDetailVC = ListDetailViewController()
         listDetailVC.post = post
@@ -2119,6 +2137,13 @@ extension ContextAction {
     func navToReviewsContextualAction(_ post: Post) -> UIContextualAction {
         return UIContextualAction(style: .normal, title: "Reviews") { [weak self] (action, swipeButtonView, completion) in
             self?.navToReviews(post)
+            completion(true)
+        }
+    }
+    
+    func resaleContextualAction(_ post: Post) -> UIContextualAction {
+        return UIContextualAction(style: .normal, title: "Resale") { [weak self] (action, swipeButtonView, completion) in
+            self?.resale(post)
             completion(true)
         }
     }

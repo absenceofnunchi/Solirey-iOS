@@ -18,8 +18,8 @@ class SingleWalletPageViewController<T: Equatable>: ParentSinglePageViewControll
     private let walletController = WalletGenerationController()
     
     // createWallet
-    var passwordTextField: UITextField!
-    var repeatPasswordTextField: UITextField!
+    var passwordTextField = UITextField()
+    var repeatPasswordTextField = UITextField()
     var createButton: UIButton!
     var passwordsDontMatch: UILabel!
     
@@ -28,14 +28,9 @@ class SingleWalletPageViewController<T: Equatable>: ParentSinglePageViewControll
     var importButton: UIButton!
     var enterPrivateKeyTextField: UITextField!
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        configureContainerView()
-    }
-    
     final override func configureString() {
         guard let gallery = gallery as? String else { return }
+        configureContainerView()
         if gallery == "1" {
             configureCreateWallet()
             setCreateWalletConstraints()
@@ -44,14 +39,46 @@ class SingleWalletPageViewController<T: Equatable>: ParentSinglePageViewControll
             setImportWalletConstraints()
         }
     }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        DispatchQueue.main.async { [weak self] in
+            self?.repeatPasswordTextField.becomeFirstResponder()
+            self?.passwordTextField.becomeFirstResponder()
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        view.endEditing(true)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        passwordTextField.resignFirstResponder()
+        repeatPasswordTextField.resignFirstResponder()
+    }
+
+    func resignKeyboard(_ v: UIView?) {
+        guard let v = v else { return }
+        print("resign",  v)
+        v.endEditing(true)
+        v.resignFirstResponder()
+        v.subviews.forEach { [weak self] (subviews) in
+            subviews.endEditing(true)
+            subviews.resignFirstResponder()
+            self?.resignKeyboard(subviews)
+        }
+    }
+    
+    func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
+        self.view.endEditing(true);
+    }
     
     func configureContainerView() {
-        self.hideKeyboardWhenTappedAround()
+        hideKeyboardWhenTappedAround()
         
         containerView = BlurEffectContainerView()
         containerView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(containerView)
-        containerView.fill(inset: 30)
+        containerView.fill(inset: 20)
     }
     
     func configureCreateWallet() {
@@ -64,7 +91,6 @@ class SingleWalletPageViewController<T: Equatable>: ParentSinglePageViewControll
         containerView.addSubview(passwordsDontMatch)
         
         // password text field
-        passwordTextField = UITextField()
         passwordTextField.isSecureTextEntry = true
         passwordTextField.layer.borderWidth = 1
         passwordTextField.layer.borderColor = UIColor.gray.cgColor
@@ -77,7 +103,6 @@ class SingleWalletPageViewController<T: Equatable>: ParentSinglePageViewControll
         containerView.addSubview(passwordTextField)
         
         // repeat password text field
-        repeatPasswordTextField = UITextField()
         repeatPasswordTextField.isSecureTextEntry = true
         repeatPasswordTextField.layer.borderWidth = 1
         repeatPasswordTextField.layer.borderColor = UIColor.gray.cgColor
@@ -405,7 +430,7 @@ extension SingleWalletPageViewController {
             return
         }
 
-        keyService.addNewWalletWithPrivateKey(key: privateKey, password: password) { [weak self](wallet, error) in
+        keyService.addNewWalletWithPrivateKey(key: privateKey, password: password) { [weak self] (wallet, error) in
             if let error = error {
                 switch error {
                     case .couldNotSaveTheWallet, .couldNotCreateTheWallet:

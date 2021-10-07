@@ -15,7 +15,7 @@ import Firebase
 import QuickLook
 import Combine
 
-class TangibleListEditViewController: ParentListEditViewController, PreviewDelegate, ButtonPanelConfigurable, FileUploadable {
+class TangibleListEditViewController: ParentListEditViewController, PreviewDelegate, ButtonPanelConfigurable, FileUploadable {    
     final var imagePreviewVC: ImagePreviewViewController!
     final var imagePreviewConstraintHeight: NSLayoutConstraint!
     // for the tangible list, the address title and the address field have to be added
@@ -97,7 +97,6 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
     
     final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
         if imagePreviewVC != nil {
             /// whenever the image picker is dismissed, the collection view has to be updated
             imagePreviewVC.data = previewDataArr
