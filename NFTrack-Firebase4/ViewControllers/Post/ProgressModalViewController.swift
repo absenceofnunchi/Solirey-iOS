@@ -128,7 +128,7 @@ class ProgressModalViewController: UIViewController {
                    let containerView = sv.viewWithTag(100) {
                     for case let imageView as UIImageView in containerView.subviews {
                         guard let checkImage = UIImage(systemName: "checkmark") else { return }
-                        let configuration = UIImage.SymbolConfiguration(pointSize: 9, weight: .bold, scale: .small)
+                        let configuration = UIImage.SymbolConfiguration(pointSize: 8, weight: .medium, scale: .small)
                         let finalImage = checkImage.withConfiguration(configuration).withTintColor(UIColor(red: 0/255, green: 128/255, blue: 0/255, alpha: 1), renderingMode: .alwaysOriginal)
                         imageView.image = finalImage
                         

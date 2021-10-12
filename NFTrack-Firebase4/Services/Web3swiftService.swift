@@ -53,20 +53,22 @@ class Web3swiftService {
     // uses the transaction hash to get the contract address
     // ex) uses the auction contract deployment transaction hash to get the contract address of the auction contract
     static func getReceipt(hash: String, promise: @escaping (Result<TransactionReceipt, PostingError>) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                let receipt = try web3instance.eth.getTransactionReceipt(hash)
-                promise(.success(receipt))
-            } catch {
-                if let err = error as? Web3Error {
-                    print("getReceipt error1", error)
-                    promise(.failure(.generalError(reason: err.errorDescription)))
-                } else {
-                    print("getReceipt error2", error)
-                    promise(.failure(.generalError(reason: error.localizedDescription)))
-                }
+        do {
+            let receipt = try web3instance.eth.getTransactionReceipt(hash)
+            promise(.success(receipt))
+        } catch {
+            if let err = error as? Web3Error {
+                print("getReceipt error1", error)
+                promise(.failure(.generalError(reason: err.errorDescription)))
+            } else {
+                print("getReceipt error2", error)
+                promise(.failure(.generalError(reason: error.localizedDescription)))
             }
         }
+        
+//        DispatchQueue.global(qos: .userInitiated).async {
+//
+//        }
     }
     
     static func getBlock(_ promise: @escaping (Result<BigUInt, PostingError>) -> Void) {

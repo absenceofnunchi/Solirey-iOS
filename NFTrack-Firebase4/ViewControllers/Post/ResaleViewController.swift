@@ -10,22 +10,27 @@ import UIKit
 class ResaleViewController: NewPostViewController {
     override func initialConfig() {
         if let post = post, post.type == "tangible" {
-            addBaseViewController(postVC)
+            addBaseViewController(postVC, postType: .tangible)
         } else {
-            addBaseViewController(digitalVC)
+            addBaseViewController(digitalVC, postType: .digital(.onlineDirect))
         }
     }
     
     /// Adds a child view controller to the container.
-    override func addBaseViewController<T: ParentPostViewController>(_ viewController: T) {
+    override func addBaseViewController<T: ParentPostViewController>(_ viewController: T, postType: PostType) {
         // Value to be passed from ListDetailVC during resale
         // The non-nil post indicates that this is a resale not a brand new sale
+        super.addBaseViewController(viewController, postType: postType)
         viewController.post = post
-        addChild(viewController)
-        viewController.view.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(viewController.view)
-        viewController.didMove(toParent: self)
-        viewController.view.fill()
+        
+        
+        
+//        viewController.postType = postType
+//        addChild(viewController)
+//        viewController.view.translatesAutoresizingMaskIntoConstraints = false
+//        view.addSubview(viewController.view)
+//        viewController.didMove(toParent: self)
+//        viewController.view.fill()
     }
 }
 

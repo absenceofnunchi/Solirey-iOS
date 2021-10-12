@@ -12,11 +12,11 @@ import web3swift
 import MapKit
 
 class ListDetailViewController: ParentDetailViewController {
-    final override var post: Post! {
-        didSet {
-            self.getStatus()
-        }
-    }
+//    final override var post: Post! {
+//        didSet {
+//            self.getStatus()
+//        }
+//    }
     private var statusTitleLabel: UILabel!
     final var statusLabel: UILabelPadding!
     final var updateStatusButton = UIButton()
@@ -31,6 +31,7 @@ class ListDetailViewController: ParentDetailViewController {
     lazy var isPending: Bool = false {
         didSet {
             guard let pendingIndicatorView = self.pendingIndicatorView else { return }
+            print("isPending", isPending)
             if isPending == true {
                 DispatchQueue.main.async {
                     pendingIndicatorView.isHidden = false
@@ -86,6 +87,10 @@ class ListDetailViewController: ParentDetailViewController {
         if observation != nil {
             observation?.invalidate()
         }
+        
+        // This function is here instead of in the property observer of post because the latter sets isPending prior to pendingActivityController
+        // which means the activity controller won't show
+        getStatus()
     }
     
     final override func viewDidDisappear(_ animated: Bool) {
@@ -427,6 +432,7 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
                     self.alert.showDetail("No Address", with: "The buyer has not specified any shipping address. Please contact the buyer.", for: self)
                     return
                 }
+                
                 getPlacemark(addressString: address) { [weak self] (placemark, error) in
                     if let _ = error {
                         self?.alert.showDetail("Error", with: "Unable to display the address on the map.", for: self)
@@ -435,9 +441,9 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
                     
                     if let placemark = placemark {
                         let mapVC = MapViewController()
-                        mapVC.title = address
+                        mapVC.title = "Shipping Address"
+                        mapVC.initialPlacemark = placemark
                         self?.navigationController?.pushViewController(mapVC, animated: true)
-                        mapVC.dropPinZoomIn(placemark: placemark)
                     }
                 }
             default:

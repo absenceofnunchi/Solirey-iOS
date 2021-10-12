@@ -18,6 +18,7 @@ class TransactionService {
     var userId: String? {
         return UserDefaults.standard.string(forKey: UserDefaultKeys.userId) 
     }
+    let localDatabase = LocalDatabase()
     
     func requestGasPrice(onComplition:@escaping (Double?) -> Void) {
         let path = "https://ethgasstation.info/json/ethgasAPI.json"
@@ -339,6 +340,7 @@ extension TransactionService {
         }
         
         let bytecodeHexData = Data(hex: bytecode)
+
         guard let transaction = contract.deploy(
                 bytecode: bytecodeHexData,
                 parameters: parameters ?? [AnyObject](),
@@ -373,7 +375,7 @@ extension TransactionService {
             options.from = address
             options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
             options.gasPrice = TransactionOptions.GasPricePolicy.automatic
-            
+                        
             let web3 = Web3swiftService.web3instance
             guard let contract = web3.contract(NFTrackABI, at: NFTrackAddress, abiVersion: 2) else {
                 completion(nil, PostingError.contractLoadingError)
@@ -384,13 +386,13 @@ extension TransactionService {
                 completion(nil, PostingError.retrievingCurrentAddressError)
                 return
             }
-            
+                        
             let parameters: [AnyObject] = [currentAddress] as [AnyObject]
             guard let transaction = contract.write("mintNft", parameters: parameters, extraData: Data(), transactionOptions: options) else {
                 completion(nil, PostingError.createTransactionIssue)
                 return
             }
-            
+                        
             completion(transaction, nil)
         }
     }
@@ -422,7 +424,7 @@ extension TransactionService {
             promise(.failure(PostingError.createTransactionIssue))
             return
         }
-        
+                
         promise(.success(transaction))
     }
     
@@ -621,16 +623,13 @@ extension TransactionService {
             if let transaction = transaction {
                 do {
                     let escrowGasEstimate = try transaction.estimateGas()
-                    print("escrowGasEstimate", escrowGasEstimate)
                     let txPackage = TxPackage(
                         transaction: transaction,
                         gasEstimate: escrowGasEstimate,
                         price: nil,
                         type: .mint
                     )
-                    
-                    print("txPackage", txPackage)
-                    
+                                        
                     promise(.success(txPackage))
                 } catch {
                     promise(.failure(.retrievingEstimatedGasError))
@@ -668,7 +667,6 @@ extension TransactionService {
         promise: @escaping (Result<Bool, PostingError>) -> Void
     ) {
         /// checks the balance of the wallet against the deposit into the escrow + gas limit for two transactions: minting and deploying the contract
-        let localDatabase = LocalDatabase()
         guard let wallet = localDatabase.getWallet(), let walletAddress = EthereumAddress(wallet.address) else {
             promise(.failure(PostingError.generalError(reason: "There was an error retrieving your wallet.")))
             return
@@ -726,9 +724,7 @@ extension TransactionService {
             BigUInt = 0,
         promise: @escaping (Result<[TxPackage], PostingError>) -> Void
     ) {
-        
         /// checks the balance of the wallet against the deposit into the escrow + gas limit for two transactions: minting and deploying the contract
-        let localDatabase = LocalDatabase()
         guard let wallet = localDatabase.getWallet(), let walletAddress = EthereumAddress(wallet.address) else {
             promise(.failure(PostingError.generalError(reason: "There was an error retrieving your wallet.")))
             return
@@ -738,7 +734,7 @@ extension TransactionService {
         do {
             balanceResult = try Web3swiftService.web3instance.eth.getBalance(address: walletAddress)
         } catch {
-            promise(.failure(PostingError.generalError(reason: "An error retrieving the balance of your wallet.")))
+            promise(.failure(PostingError.generalError(reason: "An error retrieving the balance of your wallet. Please sign/re-sign into into your wallet.")))
         }
         
         var currentGasPrice: BigUInt!
@@ -836,7 +832,6 @@ extension TransactionService {
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     let result = try transaction.send(password: password, transactionOptions: nil)
-                    print("executeTransaction", result)
                     guard let sender = result.transaction.sender?.address else {
                         promise(.failure(.generalError(reason: "Unable to parse the transaction receipt.")))
                         return
@@ -850,10 +845,8 @@ extension TransactionService {
                     promise(.success(txResult))
                 } catch {
                     if let err = error as? Web3Error {
-                        print("execute error", err)
                         promise(.failure(.generalError(reason: err.errorDescription)))
                     } else {
-                        print("execute error2", error)
                         promise(.failure(.generalError(reason: error.localizedDescription)))
                     }
                 }
@@ -878,7 +871,7 @@ extension TransactionService {
     }
     
     final func createFireStoreEntry(
-        documentId: inout String?,
+//        documentId: inout String?,
         senderAddress: String,
         escrowHash: String,
         auctionHash: String,
@@ -902,7 +895,7 @@ extension TransactionService {
         let ref = self.db.collection("post")
         let id = ref.document().documentID
         // for deleting photos afterwards
-        documentId = id
+//        documentId = id
                 
         let shippingInfoData: [String: Any] = [
             "scope": shippingInfo?.scope.stringValue ?? "NA" as String,
@@ -935,7 +928,8 @@ extension TransactionService {
             "paymentMethod": paymentMethod,
             "bidderTokens": [],
             "bidders": [],
-            "shippingInfo": shippingInfoData
+            "shippingInfo": shippingInfoData,
+            "saleType": SaleType.newSale.rawValue
         ]
         
         // txHash is either minting or transferring the ownership
@@ -944,6 +938,78 @@ extension TransactionService {
                 promise(.failure(.generalError(reason: error.localizedDescription)))
             } else {
                 return FirebaseService.shared.getTokenId1(topics: topics, documentId: id, promise: promise)
+            }
+        }
+    }
+    
+    final func createFireStoreEntryForResale(
+        documentId: inout String?,
+        senderAddress: String,
+        escrowHash: String,
+        auctionHash: String,
+        mintHash: String,
+        itemTitle: String,
+        desc: String,
+        price: String,
+        category: String,
+        tokensArr: Set<String>,
+        convertedId: String,
+        type: String,
+        deliveryMethod: String,
+        saleFormat: String,
+        paymentMethod: String,
+        tokenId: String,
+        urlStrings: [String?],
+        ipfsURLStrings: [String?],
+        shippingInfo: ShippingInfo? = nil,
+        promise: @escaping (Result<Bool, PostingError>) -> Void
+    ) {
+        let ref = self.db.collection("post")
+        let id = ref.document().documentID
+        // for deleting photos afterwards
+        documentId = id
+        
+        let shippingInfoData: [String: Any] = [
+            "scope": shippingInfo?.scope.stringValue ?? "NA" as String,
+            "addresses": shippingInfo?.addresses ?? [] as [String],
+            "radius": shippingInfo?.radius ?? 0,
+            "longitude": shippingInfo?.longitude ?? 0,
+            "latitude": shippingInfo?.latitude ?? 0
+        ]
+        
+        let postData: [String: Any] = [
+            "sellerUserId": userId as Any,
+            "senderAddress": senderAddress,
+            "escrowHash": escrowHash,
+            "auctionHash": auctionHash,
+            "mintHash": mintHash,
+            "date": Date(),
+            "title": itemTitle,
+            "description": desc,
+            "price": price,
+            "category": category,
+            "status": AuctionStatus.ready.rawValue,
+            "tags": Array(tokensArr),
+            "itemIdentifier": convertedId,
+            "isReviewed": false,
+            "type": type,
+            "deliveryMethod": deliveryMethod,
+            "saleFormat": saleFormat,
+            "files": urlStrings,
+            "IPFS": ipfsURLStrings,
+            "paymentMethod": paymentMethod,
+            "bidderTokens": [],
+            "bidders": [],
+            "shippingInfo": shippingInfoData,
+            "saleType": SaleType.newSale.rawValue
+        ]
+        
+        // txHash is either minting or transferring the ownership
+        ref.document(id).setData(postData) { (error) in
+            if let error = error {
+                promise(.failure(.generalError(reason: error.localizedDescription)))
+            } else {
+                promise(.success(true))
             }
         }
     }
@@ -1008,6 +1074,27 @@ extension TransactionService {
     // "no delay" because it doesn't debounce right away
     // the whole point of this function is to make sure that the number of confirmations for the new block is the same as what we specify
     // since no receipts
+    
+//    final func confirmEtherTransactionsNoDelay(
+//        txHash: String,
+//        confirmations: Int = 3
+//    ) -> AnyPublisher<TransactionReceipt, PostingError> {
+//        var receiptRetainer: TransactionReceipt!
+//        var cycleCount: Int = 0
+//        let hashPublisher = CurrentValueSubject<String, Never>(txHash)
+//        return hashPublisher
+//            .setFailureType(to: PostingError.self)
+//            .flatMap { (txHash) -> AnyPublisher<TransactionReceipt, PostingError> in
+//                Future<TransactionReceipt, PostingError> { promise in
+//                    Web3swiftService.getReceipt(hash: txHash, promise: promise)
+//                    //                    DispatchQueue.main.async {
+//                    //
+//                    //                    }
+//                }
+//                .eraseToAnyPublisher()
+//            }
+//
+//    }
     final func confirmEtherTransactionsNoDelay(
         txHash: String,
         confirmations: Int = 3
@@ -1032,7 +1119,6 @@ extension TransactionService {
             ) { (error) -> Bool in
                 // the tx hash returns no receipt right after the transaction
                 // retry if none returns, but with delay
-                print("error in retryIfWithDelay", error)
                 if case let PostingError.generalError(reason: msg) = error,
                    msg == "Invalid value from Ethereum node" {
                     return true
@@ -1066,6 +1152,93 @@ extension TransactionService {
             .collect()
             .eraseToAnyPublisher()
     }
+    
+    
+    final func confirmReceipt( txHash: String) -> AnyPublisher<TransactionReceipt, PostingError> {
+        Deferred {
+            Future<TransactionReceipt, PostingError> { promise in
+                do {
+                    let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(txHash)
+                    promise(.success(receipt))
+                } catch {
+                    if let err = error as? Web3Error {
+                        print("getReceipt error1", error)
+                        promise(.failure(.generalError(reason: err.errorDescription)))
+                    } else {
+                        print("getReceipt error2", error)
+                        promise(.failure(.generalError(reason: error.localizedDescription)))
+                    }
+                }
+            }
+        }
+        .retryIfWithDelay(
+            retries: 25,
+            delay: .seconds(5),
+            scheduler: DispatchQueue.global()
+        ) { (error) -> Bool in
+            // the tx hash returns no receipt right after the transaction
+            // retry if none returns, but with delay
+            print("error in retryIfWithDelay", error)
+            if case let PostingError.generalError(reason: msg) = error,
+               msg == "Invalid value from Ethereum node" {
+                return true
+            }
+            return false
+        }
+    }
+    
+    func confirmTransactions(_ receipt: TransactionReceipt, confirmations: Int = 5) -> AnyPublisher<TransactionReceipt, PostingError> {
+        Deferred {
+            Future<BigUInt, PostingError> { promise in
+                Web3swiftService.getBlock(promise)
+            }
+            .eraseToAnyPublisher()
+        }
+        .flatMap { (currentBlock) -> AnyPublisher<TransactionReceipt, PostingError> in
+            let txConfirmations = currentBlock - receipt.blockNumber
+            return Future<TransactionReceipt, PostingError> { promise in
+                if txConfirmations >= confirmations {
+                    promise(.success(receipt))
+                } else {
+                    promise(.failure(.generalError(reason: "pending")))
+                }
+            }
+            .eraseToAnyPublisher()
+        }
+        .retryIfWithDelay(
+            retries: 20,
+            delay: .seconds(5),
+            scheduler: DispatchQueue.global()
+        ) { (error) -> Bool in
+            // the tx hash returns no receipt right after the transaction
+            // retry if none returns, but with delay
+            if case let PostingError.generalError(reason: msg) = error,
+               msg == "pending" {
+                return true
+            }
+            return false
+        }
+    }
+        
+//        .handleEvents(receiveOutput: { [weak self] (currentBlock) in
+//            let txConfirmations = currentBlock - receiptRetainer.blockNumber
+//            print("txConfirmations", txConfirmations)
+//            if txConfirmations >= confirmations {
+//                print("Transaction with hash \(txHash) has been successfully confirmed.")
+//                hashPublisher.send(completion: .finished)
+//            } else {
+//                cycleCount += 1
+//                print("cycle count: ", cycleCount)
+//                self?.delay(10) {
+//                    hashPublisher.send(txHash)
+//                }
+//            }
+//        })
+//        .map { (value) -> TransactionReceipt in
+//            return receiptRetainer
+//        }
+//        .collect()
+//        .eraseToAnyPublisher()
 
     func delay(_ delay:Double, closure:@escaping ()->()) {
         let when = DispatchTime.now() + delay

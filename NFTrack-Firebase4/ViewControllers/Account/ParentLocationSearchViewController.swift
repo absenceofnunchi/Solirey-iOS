@@ -13,7 +13,6 @@ class ParentLocationSearchViewController: UITableViewController, ParseAddressDel
     var regionRadius: CLLocationDistance!
     var location: CLLocationCoordinate2D! {
         didSet {
-            print("didSet location", location as Any)
             if request != nil, location != nil {
                 request.region = MKCoordinateRegion.init(center: location, latitudinalMeters: regionRadius, longitudinalMeters: regionRadius)
             }

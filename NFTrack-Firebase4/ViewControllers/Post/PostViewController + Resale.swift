@@ -5,92 +5,40 @@
 //  Created by J C on 2021-10-06.
 //
 
+/*
+ Abstract:
+ Resale of a tangible item through shipping.
+ The difference between a new sale and a resale is that the mintHash is going to be "Resale" since no new token is being minted.
+ Therefore, only a new escrow contract is to be deployed and skips the call to the mint method.
+ Also, the unique identifier has to be reused and bypass the duplicate check.
+ 
+ For digital resale, the same image has to be reused.
+ */
+
 import UIKit
 import Combine
 import web3swift
 
 extension PostViewController {
-    override func processResale(
-        price: String?,
-        itemTitle: String,
-        desc: String,
-        category: String,
-        convertedId: String,
-        tokensArr: Set<String>,
-        userId: String,
-        deliveryMethod: String,
-        saleFormat: String,
-        paymentMethod: String
-    ) {
-        guard let price = price, !price.isEmpty else {
-            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
-            return
+    func uploadFilesResale() -> AnyPublisher<[String?], PostingError> {
+        // upload images/files to the Firebase Storage and get the array of URLs
+        if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
+            let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+                return Future<String?, PostingError> { promise in
+                    self.uploadFileWithPromise(
+                        fileURL: previewData.filePath,
+                        userId: self.userId,
+                        promise: promise
+                    )
+                }.eraseToAnyPublisher()
+            }
+            return Publishers.MergeMany(fileURLs)
+                .collect()
+                .eraseToAnyPublisher()
+        } else {
+            // if there are none to upload, return an empty array
+            return Result.Publisher([] as [String]).eraseToAnyPublisher()
         }
-        
-        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
-        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
-        //            return
-        //        }
-        
-        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
-            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
-            return
-        }
-        
-        guard let NFTrackAddress = NFTrackAddress else {
-            self.alert.showDetail("Sorry", with: "There was an error loading the minting contract address.", for: self)
-            return
-        }
-        
-        let content = [
-            StandardAlertContent(
-                titleString: "",
-                body: [AlertModalDictionary.passwordSubtitle: ""],
-                isEditable: true,
-                fieldViewHeight: 40,
-                messageTextAlignment: .left,
-                alertStyle: .withCancelButton
-            ),
-            StandardAlertContent(
-                titleString: "Transaction Options",
-                body: [AlertModalDictionary.gasLimit: "", AlertModalDictionary.gasPrice: "", AlertModalDictionary.nonce: ""],
-                isEditable: true,
-                fieldViewHeight: 40,
-                messageTextAlignment: .left,
-                alertStyle: .noButton
-            )
-        ]
-        
-        self.hideSpinner {
-            DispatchQueue.main.async {
-                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
-                alertVC.action = { [weak self] (modal, mainVC) in
-                    mainVC.buttonAction = { _ in
-                        guard let self = self else { return }
-                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-                              !password.isEmpty else {
-                            self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
-                            return
-                        } // password guard
-                        
-                        self.dismiss(animated: true, completion: {
-                            self.progressModal = ProgressModalViewController(postType: .tangible)
-                            self.progressModal.titleString = "Posting In Progress"
-                            self.present(self.progressModal, animated: true, completion: {
-                                Future<WriteTransaction, PostingError> { promise in
-                                    self.transactionService.prepareTransactionForNewContract(
-                                        contractABI: purchaseABI2,
-                                        bytecode: purchaseBytecode2,
-                                        value: price,
-                                        promise: promise
-                                    )
-                                }
-                            }) // self.present(self.progressModal
-                        }) // dismiss
-                    } // mainVC.buttonAction
-                } // alertVC.action
-            } // DispatchQueue
-        }// self.hideSpinner
-    } // processResale
+    }
 }
 

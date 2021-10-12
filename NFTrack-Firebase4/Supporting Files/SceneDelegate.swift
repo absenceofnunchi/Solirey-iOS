@@ -24,116 +24,127 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
             self.window = UIWindow(windowScene: windowScene)
             Auth.auth().addStateDidChangeListener { [weak self] (auth, user) in
                 if let user = user {
-                    UserDefaults.standard.set(user.uid, forKey: UserDefaultKeys.userId)
-                    UserDefaults.standard.set(user.displayName, forKey: UserDefaultKeys.displayName)
-                                        
-                    if let photoURL = user.photoURL {
-                        let photoURL = "\(String(describing: photoURL))"
-                        UserDefaults.standard.set(photoURL, forKey: UserDefaultKeys.photoURL)
-                    } else {
-                        UserDefaults.standard.set(nil, forKey: UserDefaultKeys.photoURL)
-                    }
-                    
-                    Future<UserInfo, PostingError> { promise in
-                        self?.fetchUserData(userId: user.uid, promise: promise)
-                    }
-                    .sink { (completion) in
-                        print(completion)
-                    } receiveValue: { (userInfo) in
-                        guard let address = userInfo.shippingAddress?.address,
-                              let memberSince = userInfo.memberSince else { return }
-                        UserDefaults.standard.set(address, forKey: UserDefaultKeys.address)
-                        UserDefaults.standard.set(memberSince, forKey: UserDefaultKeys.memberSince)
-                    }
-                    .store(in: &self!.storage)
-
-//                    var urlString: String!
-//
-//                    if user.photoURL != nil {
-//                        urlString = "\(user.photoURL!)"
-//                    } else {
-//                        urlString = "NA"
-//                    }
-//
-//                    FirebaseService.shared.db.collection("user").document(user.uid).setData([
-//                        "photoURL": urlString!,
-//                        "displayName": user.displayName ?? "No name",
-//                        "uid": user.uid
-//                    ], completion: { (error) in
-//                        if let error = error {
-//                            print("error updating profile", error.localizedDescription)
-//                        }
-//                    })
-                    
-                    let tabBarVC = CustomTabBarViewController()
-                    
-                    let mainVC = MainViewController()
-                    mainVC.title = "Main"
-                    
-                    let mainNav = UINavigationController(rootViewController: mainVC)
-
-                    let listVC = ListViewController()
-                    listVC.title = "List"
-
-                    let listNav = UINavigationController(rootViewController: listVC)
-                    
-                    let newPostVC = NewPostViewController()
-                    newPostVC.title = "Post"
-                    
-                    let postNav = UINavigationController(rootViewController: newPostVC)
-
-                    let chatListVC = ChatListViewController()
-                    chatListVC.title = "Inbox"
-
-                    let chatListNav = UINavigationController(rootViewController: chatListVC)
-
-                    let acctVC = AccountViewController()
-                    acctVC.title = "Account"
-
-                    let acctNav = UINavigationController(rootViewController: acctVC)
-                    
-                    tabBarVC.viewControllers = [mainNav, listNav, postNav, chatListNav, acctNav]
-                    
-                    guard let items = tabBarVC.tabBar.items else { return }
-                    let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold, scale: .large)
-                    let tabHome = items[0]
-                    tabHome.title = nil
-                    tabHome.image = UIImage(systemName: "house")
-                    tabHome.selectedImage = UIImage(systemName: "house.fill")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
-
-                    let tabList = items[1]
-                    tabList.title = nil
-                    tabList.image = UIImage(systemName: "list.dash")
-                    tabList.selectedImage = UIImage(systemName: "list.dash")?.withTintColor(.black, renderingMode: .alwaysOriginal).withConfiguration(config)
-
-                    let tabPost = items[2]
-                    tabPost.title = nil
-                    tabPost.image = UIImage(systemName: "plus")
-                    tabPost.selectedImage = UIImage(systemName: "plus")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
-
-                    let tabChat = items[3]
-                    tabChat.title = nil
-                    tabChat.image = UIImage(systemName: "message")
-                    tabChat.selectedImage = UIImage(systemName: "message.fill")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
-
-                    let tabAccount = items[4]
-                    tabAccount.title = nil
-                    
-                    if #available(iOS 14.0, *) {
-                        tabAccount.image = UIImage(systemName: "gearshape")
-                        tabAccount.selectedImage = UIImage(systemName: "gearshape.fill")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
-                    } else {
-                        tabAccount.image = UIImage(systemName: "gear")
-                        tabAccount.selectedImage = UIImage(systemName: "gear")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
-                    }
-
-                    self?.window?.rootViewController = tabBarVC                    
+                    self?.didSignIn(user)
                 } else {
                     self?.window?.rootViewController = SignInViewController()
                 }
                 
-                self?.window!.makeKeyAndVisible()
+                self?.window?.makeKeyAndVisible()
             }
+        }
+    }
+    
+    private func didSignIn(_ user: User) {
+        UserDefaults.standard.set(user.uid, forKey: UserDefaultKeys.userId)
+        UserDefaults.standard.set(user.displayName, forKey: UserDefaultKeys.displayName)
+        
+        if let photoURL = user.photoURL {
+            let photoURL = "\(String(describing: photoURL))"
+            UserDefaults.standard.set(photoURL, forKey: UserDefaultKeys.photoURL)
+        } else {
+            UserDefaults.standard.set(nil, forKey: UserDefaultKeys.photoURL)
+        }
+        
+        Future<UserInfo, PostingError> { [weak self] promise in
+            self?.fetchUserData(userId: user.uid, promise: promise)
+        }
+        .sink { (completion) in
+            print(completion)
+        } receiveValue: { (userInfo) in
+            guard let address = userInfo.shippingAddress?.address,
+                  let memberSince = userInfo.memberSince else { return }
+            UserDefaults.standard.set(address, forKey: UserDefaultKeys.address)
+            UserDefaults.standard.set(memberSince, forKey: UserDefaultKeys.memberSince)
+        }
+        .store(in: &storage)
+        
+        //                    var urlString: String!
+        //
+        //                    if user.photoURL != nil {
+        //                        urlString = "\(user.photoURL!)"
+        //                    } else {
+        //                        urlString = "NA"
+        //                    }
+        //
+        //                    FirebaseService.shared.db.collection("user").document(user.uid).setData([
+        //                        "photoURL": urlString!,
+        //                        "displayName": user.displayName ?? "No name",
+        //                        "uid": user.uid
+        //                    ], completion: { (error) in
+        //                        if let error = error {
+        //                            print("error updating profile", error.localizedDescription)
+        //                        }
+        //                    })
+        
+        let tabBarVC = CustomTabBarViewController()
+        
+        let mainVC = MainViewController()
+        mainVC.title = "Main"
+        
+        let mainNav = UINavigationController(rootViewController: mainVC)
+        window?.backgroundColor = .white
+        mainNav.view.alpha = 0
+        
+        let listVC = ListViewController()
+        listVC.title = "List"
+        
+        let listNav = UINavigationController(rootViewController: listVC)
+        
+        let newPostVC = NewPostViewController()
+        newPostVC.title = "Post"
+        
+        let postNav = UINavigationController(rootViewController: newPostVC)
+        
+        let chatListVC = ChatListViewController()
+        chatListVC.title = "Inbox"
+        
+        let chatListNav = UINavigationController(rootViewController: chatListVC)
+        
+        let acctVC = AccountViewController()
+        acctVC.title = "Account"
+        
+        let acctNav = UINavigationController(rootViewController: acctVC)
+        
+        tabBarVC.viewControllers = [mainNav, listNav, postNav, chatListNav, acctNav]
+        
+        guard let items = tabBarVC.tabBar.items else { return }
+        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold, scale: .large)
+        let tabHome = items[0]
+        tabHome.title = nil
+        tabHome.image = UIImage(systemName: "house")
+        tabHome.selectedImage = UIImage(systemName: "house.fill")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
+        
+        let tabList = items[1]
+        tabList.title = nil
+        tabList.image = UIImage(systemName: "list.dash")
+        tabList.selectedImage = UIImage(systemName: "list.dash")?.withTintColor(.black, renderingMode: .alwaysOriginal).withConfiguration(config)
+        
+        let tabPost = items[2]
+        tabPost.title = nil
+        tabPost.image = UIImage(systemName: "plus")
+        tabPost.selectedImage = UIImage(systemName: "plus")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
+        
+        let tabChat = items[3]
+        tabChat.title = nil
+        tabChat.image = UIImage(systemName: "message")
+        tabChat.selectedImage = UIImage(systemName: "message.fill")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
+        
+        let tabAccount = items[4]
+        tabAccount.title = nil
+        
+        if #available(iOS 14.0, *) {
+            tabAccount.image = UIImage(systemName: "gearshape")
+            tabAccount.selectedImage = UIImage(systemName: "gearshape.fill")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
+        } else {
+            tabAccount.image = UIImage(systemName: "gear")
+            tabAccount.selectedImage = UIImage(systemName: "gear")?.withTintColor(.darkGray, renderingMode: .alwaysOriginal).withConfiguration(config)
+        }
+        
+        window?.rootViewController = tabBarVC
+        
+        UIView.animate(withDuration: 1) { [weak self] in
+            mainNav.view.alpha = 1
+            self?.window?.backgroundColor = .black
         }
     }
 

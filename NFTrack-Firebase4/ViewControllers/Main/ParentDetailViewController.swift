@@ -90,6 +90,8 @@ class ParentDetailViewController: UIViewController, SharableDelegate, PostEditDe
         configureImageDisplay(post: post)
         configureUI()
         setConstraints()
+        guard post.saleType == SaleType.resale else { return }
+        configureResale()
     }
     
     // called when fetchUserData fetched data and assigns it to userInfo
@@ -475,15 +477,15 @@ extension ParentDetailViewController: UsernameBannerConfigurable {
                     }
                     
                     self.hideSpinner {
-                        let shareSheetVC = UIActivityViewController(activityItems: objectsToShare, applicationActivities: nil)
-                        self.present(shareSheetVC, animated: true, completion: nil)
-                        
-                        if let pop = shareSheetVC.popoverPresentationController {
-                            pop.sourceView = self.view
-                            pop.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.height, width: 0, height: 0)
-                            pop.permittedArrowDirections = []
-                        }
-//                        self.share(objectsToShare)
+//                        let shareSheetVC = UIActivityViewController(activityItems: objectsToShare, applicationActivities: nil)
+//                        self.present(shareSheetVC, animated: true, completion: nil)
+//                        
+//                        if let pop = shareSheetVC.popoverPresentationController {
+//                            pop.sourceView = self.view
+//                            pop.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.height, width: 0, height: 0)
+//                            pop.permittedArrowDirections = []
+//                        }
+                        self.share(objectsToShare)
                     }
                 }
                 .store(in: &self.storage)
@@ -495,6 +497,11 @@ extension ParentDetailViewController: UsernameBannerConfigurable {
         reportVC.post = post
         reportVC.userId = userId
         self.navigationController?.pushViewController(reportVC, animated: true)
+    }
+    
+    // For resale, certain motifications have to be made i.e. make mintHash untappable
+    @objc func configureResale() {
+        
     }
 }
 

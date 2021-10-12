@@ -1018,6 +1018,9 @@ extension PostParseDelegate {
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
             var files, savedBy: [String]?
             var shippingInfo: ShippingInfo!
+            var saleType: SaleType!
+            var tokenId: String?
+            
             data.forEach { (item) in
                 switch item.key {
                     case "sellerUserId":
@@ -1103,6 +1106,13 @@ extension PostParseDelegate {
                             )
                         }
                         break
+                    case "saleType":
+                        // For the resale items, some adjustments need to be made, such as diabling the tappable mintHash on HistoryDetailVC
+                        guard let saleTypeString = item.value as? String else { return }
+                        saleType = SaleType(rawValue: saleTypeString)
+                    case "tokenId":
+                        // The existing Token ID is needed for the resale since a new token is not being minted
+                        tokenId = item.value as? String
                     default:
                         break
                 }
@@ -1139,7 +1149,9 @@ extension PostParseDelegate {
                 auctionEndDate: auctionEndDate,
                 auctionTransferredDate: auctionTransferredDate,
                 address: address,
-                shippingInfo: shippingInfo
+                shippingInfo: shippingInfo,
+                saleType: saleType,
+                tokenId: tokenId
             )
             
             postArr.append(post)
@@ -1151,9 +1163,11 @@ extension PostParseDelegate {
     func parseDocument(document: DocumentSnapshot) -> Post? {
         guard let data = document.data() else { return nil }
         var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address: String!
+        var tokenId: String?
         var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
         var files, savedBy: [String]?
         var shippingInfo: ShippingInfo!
+        var saleType: SaleType!
         data.forEach { (item) in
             switch item.key {
                 case "sellerUserId":
@@ -1240,6 +1254,13 @@ extension PostParseDelegate {
                         )
                     }
                     break
+                case "saleType":
+                    // For the resale items, some adjustments need to be made, such as diabling the tappable mintHash on HistoryDetailVC
+                    guard let saleTypeString = item.value as? String else { return }
+                    saleType = SaleType(rawValue: saleTypeString)
+                case "tokenId":
+                    // The existing Token ID is needed for the resale since a new token is not being minted
+                    tokenId = item.value as? String
                 default:
                     break
             }
@@ -1276,7 +1297,9 @@ extension PostParseDelegate {
             auctionEndDate: auctionEndDate,
             auctionTransferredDate: auctionTransferredDate,
             address: address,
-            shippingInfo: shippingInfo
+            shippingInfo: shippingInfo,
+            saleType: saleType,
+            tokenId: tokenId
         )
         return post
     }
@@ -1405,14 +1428,32 @@ extension SharableDelegate {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
-        let shareSheetVC = UIActivityViewController(activityItems: objectsToShare, applicationActivities: nil)
+        let shareSheetVC = CustomActivityViewController(activityItems: objectsToShare, applicationActivities: nil)
         present(shareSheetVC, animated: true, completion: completion)
-        
+
         if let pop = shareSheetVC.popoverPresentationController {
             pop.sourceView = self.view
             pop.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.height, width: 0, height: 0)
             pop.permittedArrowDirections = []
         }
+    }
+}
+
+class CustomActivityViewController: UIActivityViewController {
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        UIButton.appearance(whenContainedInInstancesOf: [UINavigationBar.self]).tintColor = .gray
+        UIBarButtonItem.appearance(whenContainedInInstancesOf: [UINavigationBar.self]).tintColor = .gray
+        UIBarButtonItem.appearance().setTitleTextAttributes([.foregroundColor: UIColor.black], for: .normal)
+        UIButton.appearance().tintColor = .gray
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        applyBarTintColorToTheNavigationBar()
+        UIButton.appearance(whenContainedInInstancesOf: [UINavigationBar.self]).tintColor = .white
+        UIBarButtonItem.appearance(whenContainedInInstancesOf: [UINavigationBar.self]).tintColor = .white
+        UIButton.appearance().tintColor = .white
     }
 }
 

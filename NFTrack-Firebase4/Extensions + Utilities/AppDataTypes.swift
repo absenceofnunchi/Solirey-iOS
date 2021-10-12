@@ -77,6 +77,10 @@ class PostCoreModel {
     }
 }
 
+enum SaleType: String {
+    case newSale, resale
+}
+
 class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var title: String!
     var description: String!
@@ -106,6 +110,8 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var auctionTransferredDate: Date?
     var address: String?
     var shippingInfo: ShippingInfo?
+    var saleType: SaleType!
+    var tokenID: String?
     
     init(
         documentId: String,
@@ -138,7 +144,9 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         auctionEndDate: Date?,
         auctionTransferredDate: Date?,
         address: String?,
-        shippingInfo: ShippingInfo?
+        shippingInfo: ShippingInfo?,
+        saleType: SaleType,
+        tokenId: String?
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
@@ -170,6 +178,8 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.auctionTransferredDate = auctionTransferredDate
         self.address = address
         self.shippingInfo = shippingInfo
+        self.saleType = saleType
+        self.tokenID = tokenId
     }
 }
 
@@ -641,6 +651,17 @@ enum PostType {
         }
         return segmentTextArr
     }
+    
+    var paymentMethod: [PaymentMethod] {
+        switch self {
+            case .tangible:
+                return [.escrow, .directTransfer]
+            case .digital(.onlineDirect):
+                return [.escrow]
+            case .digital(.openAuction):
+                return [.auctionBeneficiary]
+        }
+    }
 }
 
 extension PostType: RawRepresentable, CaseCountable {
@@ -703,12 +724,58 @@ enum SaleFormat: String {
 enum DeliveryMethod: String {
     case shipping = "Shipping"
     case inPerson = "In Person Pickup"
+    case onlineTransfer = "Online Transfer"
 }
 
 enum PaymentMethod: String {
     case escrow = "Escrow"
     case directTransfer = "Direct Transfer"
     case auctionBeneficiary = "Auction Beneficiary"
+}
+
+// Configures how to post an item depending on the status of its delivery method, payment method, new/resale.
+enum SaleConfig {
+    case hybridMethod(postType: PostType, saleType: SaleType, delivery: DeliveryMethod, payment: PaymentMethod)
+
+    var value: DeliveryAndPaymentMethod? {
+        switch self {
+            case .hybridMethod(postType: .tangible,saleType: .newSale, delivery: .inPerson, payment: .escrow):
+                return .tangibleNewSaleInPersonEscrow
+            case .hybridMethod(postType: .tangible,saleType: .newSale, delivery: .inPerson, payment: .directTransfer):
+                return .tangibleNewSaleInPersonDirectPayment
+            case .hybridMethod(postType: .tangible,saleType: .newSale, delivery: .shipping, payment: .escrow):
+                return .tangibleNewSaleShippingEscrow
+            case .hybridMethod(postType: .tangible,saleType: .resale, delivery: .inPerson, payment: .escrow):
+                return .tangibleResaleInPersonEscrow
+            case .hybridMethod(postType: .tangible,saleType: .resale, delivery: .inPerson, payment: .directTransfer):
+                return .tangibleResaleInPersonDirectPayment
+            case .hybridMethod(postType: .tangible,saleType: .resale, delivery: .shipping, payment: .escrow):
+                return .tangibleResaleShippingEscrow
+            case .hybridMethod(postType: .digital(.onlineDirect), saleType: .newSale, delivery: .onlineTransfer, payment: .directTransfer):
+                return .digitalNewSaleOnlineDirectPayment
+            case .hybridMethod(postType: .digital(.openAuction), saleType: .newSale, delivery: .onlineTransfer, payment: .auctionBeneficiary):
+                return .digitalNewSaleAuctionBeneficiary
+            case .hybridMethod(postType: .digital(.onlineDirect), saleType: .resale, delivery: .onlineTransfer, payment: .directTransfer):
+                return .digitalResaleOnlineDirectPayment
+            case .hybridMethod(postType: .digital(.openAuction), saleType: .resale, delivery: .onlineTransfer, payment: .auctionBeneficiary):
+                return .digitalResaleAuctionBeneficiary
+            default:
+                return nil
+        }
+    }
+}
+
+enum DeliveryAndPaymentMethod {
+    case tangibleNewSaleInPersonEscrow
+    case tangibleNewSaleInPersonDirectPayment
+    case tangibleNewSaleShippingEscrow
+    case tangibleResaleInPersonEscrow
+    case tangibleResaleInPersonDirectPayment
+    case tangibleResaleShippingEscrow
+    case digitalNewSaleOnlineDirectPayment
+    case digitalNewSaleAuctionBeneficiary
+    case digitalResaleOnlineDirectPayment
+    case digitalResaleAuctionBeneficiary
 }
 
 // MARK: - FilterSettings
@@ -896,3 +963,4 @@ struct ProgressMeterNode {
     let statusLabelText: String
     var dateLabelText: String? = ""
 }
+

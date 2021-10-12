@@ -139,7 +139,7 @@ enum AuctionProperties: ContractPropertiesEnum {
     case pendingReturns(EthereumAddress)
     case beneficiary
     
-    // tuple because some properties like mapping requires a key
+    // tuple because some properties like mapping requires a key such as pendingReturns
     var value: (String, AnyObject?) {
         switch self {
             case .startingBid:

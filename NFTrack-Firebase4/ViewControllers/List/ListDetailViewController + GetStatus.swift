@@ -140,7 +140,7 @@ extension ListDetailViewController: ParseAddressDelegate {
                         }
                     }
                 }
-                                   
+                                             
                 // The status that corresponds to 0, 1, and 2 refers to the variable on the Remote Purchase smart contract Created, Locked, or Inactive
                 // They indicate the purchase status or where the transaction is at in the process of purchasing the item.
                 switch "\(status)" {
@@ -149,10 +149,12 @@ extension ListDetailViewController: ParseAddressDelegate {
                             // The post edit button should only be allowed up until a buyer purchases the item
                             // after which the ability of a seller to edit the post ceases
                             DispatchQueue.main.async {
-                                self?.postEditButtonItem = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(self?.buttonPressed(_:)))
-                                self?.postEditButtonItem.tag = 11
-                                guard let postEditButtonItem = self?.postEditButtonItem else { return }
-                                self?.navigationItem.rightBarButtonItems?.append(postEditButtonItem)
+                                if self?.navigationItem.rightBarButtonItems?.filter({ $0.tag == 11 }).count == 0 {
+                                    self?.postEditButtonItem = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(self?.buttonPressed(_:)))
+                                    self?.postEditButtonItem.tag = 11
+                                    guard let postEditButtonItem = self?.postEditButtonItem else { return }
+                                    self?.navigationItem.rightBarButtonItems?.append(postEditButtonItem)
+                                }
                             }
                             self?.configureStatusButton(buttonTitle: PurchaseMethods.abort.rawValue, tag: 1)
                         } else {
@@ -168,6 +170,9 @@ extension ListDetailViewController: ParseAddressDelegate {
                         }
                         break
                     case "1":
+                        print("post.buyerUserId", post.buyerUserId as Any)
+                        print("userId", userId as Any)
+                        
                         if post.transferHash != nil {
                             if post.sellerUserId == userId {
                                 self?.configureStatusButton(buttonTitle: "Receipt Pending", tag: 9)

@@ -134,32 +134,14 @@ extension SignInViewController {
 
         var constraints = [NSLayoutConstraint]()
         
-        constraints.append(contentsOf: [
-            // container view
-            topConstraint,
-            centerConstraint,
-            containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-            containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.2),
-        ])
-        
-//        if UIDevice.current.userInterfaceIdiom == .pad {
-//            constraints.append(contentsOf: [
-//                // container view
-//                containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-//                containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-//                containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-//                containerView.heightAnchor.constraint(equalToConstant: 350),
-//            ])
-//        }else{
-//            constraints.append(contentsOf: [
-//                // container view
-//                centerConstraint,
-//                containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-//                containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-//                containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.2),
-//            ])
-//        }
+//        constraints.append(contentsOf: [
+//            // container view
+//            topConstraint,
+//            centerConstraint,
+//            containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+//            containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+//            containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.2),
+//        ])
         
         constraints.append(contentsOf: [
             // warning label
@@ -171,6 +153,12 @@ extension SignInViewController {
             titleLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
             titleLabel.heightAnchor.constraint(equalToConstant: 80),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+//            topConstraint,
+//            centerConstraint,
+            containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            containerView.heightAnchor.constraint(equalTo: containerView.widthAnchor, multiplier: 1.2),
             
             // password text field
             emailTextField.bottomAnchor.constraint(equalTo: passwordTextField.topAnchor, constant: -50),
@@ -381,15 +369,15 @@ extension SignInViewController {
             
             //Check keyboards Y position and according to that move view up and down
             if keyBoardFrameY >= UIScreen.main.bounds.size.height {
+                centerConstraint.isActive = true
+                topConstraint.isActive = false
                 UIView.animate(withDuration: 3, delay: 0, options: .curveEaseInOut) { [weak self] in
-                    self?.centerConstraint.isActive = true
-                    self?.topConstraint.isActive = false
                     self?.view.layoutIfNeeded()
                 } completion: { (_) in }
             } else {
+                centerConstraint.isActive = false
+                topConstraint.isActive = true
                 UIView.animate(withDuration: 3, delay: 0, options: .curveEaseInOut) { [weak self] in
-                    self?.centerConstraint.isActive = false
-                    self?.topConstraint.isActive = true
                     self?.view.layoutIfNeeded()
                 } completion: { (_) in }
             }

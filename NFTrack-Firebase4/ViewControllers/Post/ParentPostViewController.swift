@@ -11,7 +11,8 @@ import FirebaseStorage
 import web3swift
 import QuickLook
 
-class ParentPostViewController: UIViewController, ButtonPanelConfigurable, TokenConfigurable, ShippingDelegate, CoreSpotlightDelegate {
+class ParentPostViewController: UIViewController, ButtonPanelConfigurable, TokenConfigurable, ShippingDelegate, CoreSpotlightDelegate, FileUploadable {
+    var postType: PostType!
     let db = FirebaseService.shared.db!
     var scrollView: UIScrollView!
     var infoImage: UIImage! {
@@ -129,11 +130,10 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         return []
     }
     
-    /// payment method
     let deliveryMethodPicker = MyPickerVC(currentPep: DeliveryMethod.shipping.rawValue, pep: [DeliveryMethod.shipping.rawValue, DeliveryMethod.inPerson.rawValue])
-    /// category picker
     let pvc = MyPickerVC(currentPep: Category.electronics.asString(), pep: Category.getAll())
-
+    let paymentMothedPicker = MyPickerVC(currentPep: PaymentMethod.escrow.rawValue, pep: [PaymentMethod.escrow.rawValue, PaymentMethod.directTransfer.rawValue])
+    
     /// done button for the picker
     let mdbvc = MyDoneButtonVC()
     var showKeyboard = false
@@ -220,12 +220,216 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     // 2. Disable the ability to delete the image.
     // 3. Decrease the height of the button panel to 0.
     func resaleConfig() {}
+    
+    // MARK: - checkExistingId
+    func checkExistingId(id: String, completion: @escaping (Bool) -> Void) {
+        db.collection("post")
+            .whereField("itemIdentifier", isEqualTo: id)
+            .getDocuments() { (querySnapshot, err) in
+                if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
+                    completion(false)
+                } else {
+                    completion(true)
+                }
+            }
+    }
+    
+    // gs://nftrack-69488.appspot.com/ZT6HvzMcoRg1gOjNz6iS9uVf7Hq1/E7AAEBD5-C15B-4786-AA88-BAB40C87E3BC.png
+    // https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2F2CA3EC02-450D-4DB1-BF71-E86338CE1135.jpeg?alt=media&token=66fc9e87-09a6-4db6-813b-2a763ce1f5dd
+    
+    @objc func mint1() {
+        for i in 0...10 {
+            FirebaseService.shared.db
+                .collection("post")
+                .document("\(i)")
+                .updateData([
+                    "sellerUserId": "vcHixrcSsLMpLiafMYrAmCvnlLU2",
+                    "senderAddress": "\(i)",
+                    "escrowHash": "\(i)",
+                    "auctionHash": "\(i)",
+                    "mintHash": "\(i)",
+                    "date": Date(),
+                    "title": "\(i)",
+                    "description": "\(i)",
+                    "price": "\(i)",
+                    "category": Category.realEstate.asString(),
+                    "status": AuctionStatus.ready.rawValue,
+                    "tags": ["example"],
+                    "itemIdentifier": "\(i)",
+                    "isReviewed": false,
+                    "type": "tangible",
+                    "deliveryMethod": "Shipping",
+                    "saleFormat": "Online Direct",
+                    "files": ["https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2FE366991C-B770-4A68-9CC7-862B793455CB.jpeg?alt=media&token=bbe4a96a-c5ea-4a77-8291-4357a7fc6963"],
+                    "IPFS": "NA",
+                    "paymentMethod": "Escrow",
+                    "bidderTokens": [],
+                    "bidders": []
+                ])
+        }
+    }
+    
+    @objc func mint() {
+        self.showSpinner { [weak self] in
+            guard let userId = self?.userDefaults.string(forKey: UserDefaultKeys.userId) else {
+                self?.alert.showDetail("Sorry", with: "You need to be logged in.", for: self)
+                return
+            }
+            self?.userId = userId
+            
+            guard let itemTitle = self?.titleTextField.text, !itemTitle.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please fill in the title field.", for: self)
+                return
+            }
+            
+            guard let desc = self?.descTextView.text, !desc.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please fill in the description field.", for: self)
+                return
+            }
+            
+            guard let deliveryMethod = self?.deliveryMethodLabel.text,
+                  !deliveryMethod.isEmpty,
+                  let deliveryMethodEnum = DeliveryMethod(rawValue: deliveryMethod) else {
+                self?.alert.showDetail("Incomplete", with: "Please select the delivery method.", for: self)
+                return
+            }
+            
+            guard let saleFormat = self?.saleMethodLabel.text,
+                  !saleFormat.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please select the sale method.", for: self)
+                return
+            }
+            
+            guard let paymentMethod = self?.paymentMethodLabel.text,
+                  !paymentMethod.isEmpty,
+                  let paymentMethodEnum = PaymentMethod(rawValue: paymentMethod) else {
+                self?.alert.showDetail("Incomplete", with: "Please select the payment method.", for: self)
+                return
+            }
+            
+            guard let category = self?.pickerLabel.text, !category.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please choose the category.", for: self)
+                return
+            }
+            
+            guard let id = self?.idTextField.text,!id.isEmpty else {
+                self?.alert.showDetail("Incomplete", with: "Please select the digital asset.", for: self)
+                return
+            }
+            
+            // process id
+            let whitespaceCharacterSet = CharacterSet.whitespaces
+            let convertedId = id.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+            
+            let characterset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+            guard convertedId.rangeOfCharacter(from: characterset.inverted) == nil else {
+                self?.alert.showDetail("Invalid Characters", with: "The unique identifier cannot contain any space or special characters.", for: self)
+                return
+            }
+            
+            guard let tagTextField = self?.tagTextField, tagTextField.tokens.count > 0 else {
+                self?.alert.showDetail("Missing Tags", with: "Please add the tags using the plus sign.", for: self)
+                return
+            }
+            
+            guard tagTextField.tokens.count < 6 else {
+                self?.alert.showDetail("Tag Limit", with: "You can add up to 5 tags.", for: self)
+                return
+            }
+            
+            // add both the tokens and the title to the tokens field
+            var tokensArr = Set<String>()
+            let strippedString = itemTitle.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+            let searchItems = strippedString.components(separatedBy: " ") as [String]
+            searchItems.forEach { (item) in
+                tokensArr.insert(item)
+            }
+            
+            for token in self!.tagTextField.tokens {
+                if let retrievedToken = token.representedObject as? String {
+                    tokensArr.insert(retrievedToken.lowercased())
+                }
+            }
+            
+            let saleConfig = SaleConfig.hybridMethod(
+                postType: self?.postType ?? .tangible,
+                saleType: (self?.post != nil) ? .resale : .newSale,
+                delivery: deliveryMethodEnum,
+                payment: paymentMethodEnum
+            )
+            
+            let mintParameters = MintParameters(
+                price: self?.priceTextField.text,
+                itemTitle: itemTitle,
+                desc: desc,
+                category: category,
+                convertedId: convertedId,
+                tokensArr: tokensArr,
+                userId: userId,
+                deliveryMethod: deliveryMethod,
+                saleFormat: saleFormat,
+                paymentMethod: paymentMethod
+            )
+            
+            print("saleConfig.value", saleConfig.value as Any)
+            switch saleConfig.value {
+                case .tangibleNewSaleInPersonEscrow:
+                    self?.checkExistingId(id: convertedId) { (isDuplicate) in
+                        if isDuplicate {
+                            self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
+                        } else {
+                            self?.processMint(mintParameters)
+                        } // not duplicate
+                    } // end of checkExistingId
+                case .tangibleNewSaleInPersonDirectPayment:
+                    // The direct transfer option for in-person pickup doesn't require an escrow contract to be deployed
+                    self?.processDirectSale(mintParameters)
+                case .tangibleNewSaleShippingEscrow:
+                    self?.checkExistingId(id: convertedId) { (isDuplicate) in
+                        if isDuplicate {
+                            self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
+                        } else {
+                            self?.processMint(mintParameters)
+                        } // not duplicate
+                    } // end of checkExistingId
+                case .tangibleResaleInPersonEscrow:
+                    self?.processEscrowResale(mintParameters)
+                case .tangibleResaleInPersonDirectPayment:
+                    break
+                case .tangibleResaleShippingEscrow:
+                    self?.processEscrowResale(mintParameters)
+                default:
+                    break
+            }
+        }
+    }
+    
+    struct MintParameters {
+        let price: String?
+        let itemTitle: String
+        let desc: String
+        let category: String
+        let convertedId: String
+        let tokensArr: Set<String>
+        let userId: String
+        let deliveryMethod: String
+        let saleFormat: String
+        let paymentMethod: String
+    }
+    
+    func processMint(_ mintParameters: MintParameters) {}
+    
+    func processEscrowResale(_ mintParameters: MintParameters) {}
+    
+    // no escrow for in-person delivery method
+    func processDirectSale(_ mintParameters: MintParameters) {}
+    
+    func configureProgress() {}
 }
 
 extension ParentPostViewController {
     @objc func configureUI() {
         view.backgroundColor = .white
-        title = "Post"
         
         previewDataArr = [PreviewData]()
         
@@ -301,10 +505,6 @@ extension ParentPostViewController {
         addressLabel.addGestureRecognizer(addressTap)
         scrollView.addSubview(addressLabel)
         
-        paymentMethodTitleLabel = createTitleLabel(text: "Payment Method")
-        paymentMethodTitleLabel.isUserInteractionEnabled = true
-        scrollView.addSubview(paymentMethodTitleLabel)
-        
         saleMethodTitleLabel = createTitleLabel(text: "Sale Format")
         saleMethodTitleLabel.isUserInteractionEnabled = true
         scrollView.addSubview(saleMethodTitleLabel)
@@ -320,12 +520,19 @@ extension ParentPostViewController {
         saleMethodLabel = createLabel(text: "")
         saleMethodLabelContainer.addSubview(saleMethodLabel)
         
+        paymentMethodTitleLabel = createTitleLabel(text: "Payment Method")
+        paymentMethodTitleLabel.isUserInteractionEnabled = true
+        scrollView.addSubview(paymentMethodTitleLabel)
+        
         paymentInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
         paymentInfoButton.translatesAutoresizingMaskIntoConstraints = false
         paymentMethodTitleLabel.addSubview(paymentInfoButton)
         
         paymentMethodLabel = createLabel(text: "")
         scrollView.addSubview(paymentMethodLabel)
+        
+        let paymentLabelTap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
+        paymentMethodLabel.addGestureRecognizer(paymentLabelTap)
         
         idTitleLabel = createTitleLabel(text: "Unique Identifier")
         scrollView.addSubview(idTitleLabel)
@@ -614,7 +821,11 @@ extension ParentPostViewController {
         self.shippingInfo = shippingInfo
         
         if let address = shippingInfo.addresses.first {
-            addressLabel.text = address
+            if shippingInfo.addresses.count > 0 {
+                addressLabel.text = "\(address), etc"
+            } else {
+                addressLabel.text = address
+            }
         }
     }
 }
@@ -657,207 +868,6 @@ extension ParentPostViewController: PreviewDelegate {
 //    }
 }
 
-extension ParentPostViewController {
-    // MARK: - checkExistingId
-    func checkExistingId(id: String, completion: @escaping (Bool) -> Void) {
-        db.collection("post")
-            .whereField("itemIdentifier", isEqualTo: id)
-            .getDocuments() { (querySnapshot, err) in
-                if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
-                    completion(false)
-                } else {
-                    completion(true)
-                }
-            }
-    }
-    
-    // gs://nftrack-69488.appspot.com/ZT6HvzMcoRg1gOjNz6iS9uVf7Hq1/E7AAEBD5-C15B-4786-AA88-BAB40C87E3BC.png
-    // https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2F2CA3EC02-450D-4DB1-BF71-E86338CE1135.jpeg?alt=media&token=66fc9e87-09a6-4db6-813b-2a763ce1f5dd
-    
-    @objc func mint1() {
-        for i in 0...10 {
-            FirebaseService.shared.db
-                .collection("post")
-                .document("\(i)")
-                .updateData([
-                    "sellerUserId": "vcHixrcSsLMpLiafMYrAmCvnlLU2",
-                    "senderAddress": "\(i)",
-                    "escrowHash": "\(i)",
-                    "auctionHash": "\(i)",
-                    "mintHash": "\(i)",
-                    "date": Date(),
-                    "title": "\(i)",
-                    "description": "\(i)",
-                    "price": "\(i)",
-                    "category": Category.realEstate.asString(),
-                    "status": AuctionStatus.ready.rawValue,
-                    "tags": ["example"],
-                    "itemIdentifier": "\(i)",
-                    "isReviewed": false,
-                    "type": "tangible",
-                    "deliveryMethod": "Shipping",
-                    "saleFormat": "Online Direct",
-                    "files": ["https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2FE366991C-B770-4A68-9CC7-862B793455CB.jpeg?alt=media&token=bbe4a96a-c5ea-4a77-8291-4357a7fc6963"],
-                    "IPFS": "NA",
-                    "paymentMethod": "Escrow",
-                    "bidderTokens": [],
-                    "bidders": []
-                ])
-        }
-    }
-    
-    @objc func mint() {
-        self.showSpinner { [weak self] in
-            guard let userId = self?.userDefaults.string(forKey: UserDefaultKeys.userId) else {
-                self?.alert.showDetail("Sorry", with: "You need to be logged in.", for: self)
-                return
-            }
-            self?.userId = userId
-            
-            guard let itemTitle = self?.titleTextField.text, !itemTitle.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please fill in the title field.", for: self)
-                return
-            }
-            
-            guard let desc = self?.descTextView.text, !desc.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please fill in the description field.", for: self)
-                return
-            }
-            
-            guard let deliveryMethod = self?.deliveryMethodLabel.text,
-                  !deliveryMethod.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please select the delivery method.", for: self)
-                return
-            }
-            
-            guard let saleFormat = self?.saleMethodLabel.text,
-                  !saleFormat.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please select the sale method.", for: self)
-                return
-            }
-            
-            guard let paymentMethod = self?.paymentMethodLabel.text,
-                  !paymentMethod.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please select the payment method.", for: self)
-                return
-            }
-            
-            guard let category = self?.pickerLabel.text, !category.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please choose the category.", for: self)
-                return
-            }
-            
-            guard let id = self?.idTextField.text,!id.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please select the digital asset.", for: self)
-                return
-            }
-            
-            // process id
-            let whitespaceCharacterSet = CharacterSet.whitespaces
-            let convertedId = id.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
-            
-            let characterset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-            guard convertedId.rangeOfCharacter(from: characterset.inverted) == nil else {
-                self?.alert.showDetail("Invalid Characters", with: "The unique identifier cannot contain any space or special characters.", for: self)
-                return
-            }
-            
-            guard let tagTextField = self?.tagTextField, tagTextField.tokens.count > 0 else {
-                self?.alert.showDetail("Missing Tags", with: "Please add the tags using the plus sign.", for: self)
-                return
-            }
-            
-            guard tagTextField.tokens.count < 6 else {
-                self?.alert.showDetail("Tag Limit", with: "You can add up to 5 tags.", for: self)
-                return
-            }
-            
-            // add both the tokens and the title to the tokens field
-            var tokensArr = Set<String>()
-            let strippedString = itemTitle.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
-            let searchItems = strippedString.components(separatedBy: " ") as [String]
-            searchItems.forEach { (item) in
-                tokensArr.insert(item)
-            }
-            
-            for token in self!.tagTextField.tokens {
-                if let retrievedToken = token.representedObject as? String {
-                    tokensArr.insert(retrievedToken.lowercased())
-                }
-            }
-            
-            if let _ = self?.post {
-                print("resale")
-                self?.processResale(
-                    price: self?.priceTextField.text,
-                    itemTitle: itemTitle,
-                    desc: desc,
-                    category: category,
-                    convertedId: convertedId,
-                    tokensArr: tokensArr,
-                    userId: userId,
-                    deliveryMethod: deliveryMethod,
-                    saleFormat: saleFormat,
-                    paymentMethod: paymentMethod
-                )
-            } else {
-                self?.checkExistingId(id: convertedId) { (isDuplicate) in
-                    if isDuplicate {
-                        self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
-                    } else {
-                        self?.processMint(
-                            price: self?.priceTextField.text,
-                            itemTitle: itemTitle,
-                            desc: desc,
-                            category: category,
-                            convertedId: convertedId,
-                            tokensArr: tokensArr,
-                            userId: userId,
-                            deliveryMethod: deliveryMethod,
-                            saleFormat: saleFormat,
-                            paymentMethod: paymentMethod
-                        )
-                    } // not duplicate
-                } // end of checkExistingId
-            }
-        }
-    }
-    
-    @objc func processMint(
-        price: String?,
-        itemTitle: String,
-        desc: String,
-        category: String,
-        convertedId: String,
-        tokensArr: Set<String>,
-        userId: String,
-        deliveryMethod: String,
-        saleFormat: String,
-        paymentMethod: String
-    ) {
-        
-    }
-    
-    @objc func processResale(
-        price: String?,
-        itemTitle: String,
-        desc: String,
-        category: String,
-        convertedId: String,
-        tokensArr: Set<String>,
-        userId: String,
-        deliveryMethod: String,
-        saleFormat: String,
-        paymentMethod: String
-    ) {
-        
-    }
-    
-    @objc func configureProgress() {
-        
-    }
-}
-
 extension ParentPostViewController: UITextFieldDelegate, UITextViewDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
         showKeyboard = false
@@ -870,15 +880,15 @@ extension ParentPostViewController: UITextFieldDelegate, UITextViewDelegate {
     }
 }
 
-extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
+//extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
     // MARK: - didReceiveMessage
-    @objc func didReceiveMessage(topics: [String]) {
-
-        // get the token ID to be uploaded to Firestore
-        getTokenId(topics: topics) { [weak self](_, res) in
-            guard let res = res else { return }
-            switch res {
-                
+//    @objc func didReceiveMessage(topics: [String]) {
+//
+//        // get the token ID to be uploaded to Firestore
+//        getTokenId(topics: topics) { [weak self](_, res) in
+//            guard let res = res else { return }
+//            switch res {
+//
 //                case is HTTPStatusCode:
 //                    switch res as! HTTPStatusCode {
 //                        case .badRequest:
@@ -908,95 +918,95 @@ extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
 //                        default:
 //                            self?.alert.showDetail("Error", with: "Unknown Network Error. Please contact the admin.", for: self)
 //                    }
-                case is GeneralErrors:
-                    switch res as! GeneralErrors {
-                        case .decodingError:
-                            self?.alert.showDetail("Error", with: "There was an error decoding the token ID. Please contact the admin.", for: self)
-                        default:
-                            break
-                    }
-                default:
-                    self?.alert.showDetail("Error in Minting", with: res.localizedDescription, for: self)
-            }
-        }
-    }
+//                case is GeneralErrors:
+//                    switch res as! GeneralErrors {
+//                        case .decodingError:
+//                            self?.alert.showDetail("Error", with: "There was an error decoding the token ID. Please contact the admin.", for: self)
+//                        default:
+//                            break
+//                    }
+//                default:
+//                    self?.alert.showDetail("Error in Minting", with: res.localizedDescription, for: self)
+//            }
+//        }
+//    }
     
-    // MARK: - getTokenId
-    /// uploads the receipt to the Firebase function to get the token number, which will update the Firestore
-    func getTokenId(topics: [String], completion: @escaping (Int?, Error?) -> Void) {
-        // build request URL
-        guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/decodeLog-decodeLog") else {
-            return
-        }
-//        guard let requestURL = URL(string: "http://localhost:5001/nftrack-69488/us-central1/decodeLog") else {
+//    // MARK: - getTokenId
+//    /// uploads the receipt to the Firebase function to get the token number, which will update the Firestore
+//    func getTokenId(topics: [String], completion: @escaping (Int?, Error?) -> Void) {
+//        // build request URL
+//        guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/decodeLog-decodeLog") else {
 //            return
 //        }
-                
-        // prepare request
-        var request = URLRequest(url: requestURL)
-        request.httpMethod = "POST"
-        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        
-        let parameter: [String: Any] = [
-            "hexString": topics[0],
-            "topics": [
-                topics[1],
-                topics[2],
-                topics[3]
-            ],
-            "documentID": self.documentId!
-        ]
-        
-        let paramData = try? JSONSerialization.data(withJSONObject: parameter, options: [])
-        request.httpBody = paramData
-        
-        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
-            if let error = error {
-                completion(nil, error)
-            }
-            
-            if let response = response as? HTTPURLResponse {
-                print("response from decodeLog", response)
-                
-                let httpStatusCode = APIError.HTTPStatusCode(rawValue: response.statusCode)
-                completion(nil, httpStatusCode)
-                
-//                if !(200...299).contains(response.statusCode) {
-//                    print("start1")
-//                    // handle HTTP server-side error
+////        guard let requestURL = URL(string: "http://localhost:5001/nftrack-69488/us-central1/decodeLog") else {
+////            return
+////        }
+//
+//        // prepare request
+//        var request = URLRequest(url: requestURL)
+//        request.httpMethod = "POST"
+//        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+//
+//        let parameter: [String: Any] = [
+//            "hexString": topics[0],
+//            "topics": [
+//                topics[1],
+//                topics[2],
+//                topics[3]
+//            ],
+//            "documentID": self.documentId!
+//        ]
+//
+//        let paramData = try? JSONSerialization.data(withJSONObject: parameter, options: [])
+//        request.httpBody = paramData
+//
+//        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
+//            if let error = error {
+//                completion(nil, error)
+//            }
+//
+//            if let response = response as? HTTPURLResponse {
+//                print("response from decodeLog", response)
+//
+//                let httpStatusCode = APIError.HTTPStatusCode(rawValue: response.statusCode)
+//                completion(nil, httpStatusCode)
+//
+////                if !(200...299).contains(response.statusCode) {
+////                    print("start1")
+////                    // handle HTTP server-side error
+////                }
+//            }
+//
+//            if let data = data {
+//                do {
+//                    let json = try JSONSerialization.jsonObject(with: data, options: [.allowFragments])
+//                    guard let convertedJson = json as? NSNumber else {
+//                        // default error
+//                        completion(nil, GeneralErrors.decodingError)
+//                        return
+//                    }
+//                    completion(convertedJson.intValue, nil)
+//                } catch {
+//                    completion(nil, GeneralErrors.decodingError)
 //                }
-            }
-            
-            if let data = data {
-                do {
-                    let json = try JSONSerialization.jsonObject(with: data, options: [.allowFragments])
-                    guard let convertedJson = json as? NSNumber else {
-                        // default error
-                        completion(nil, GeneralErrors.decodingError)
-                        return
-                    }
-                    completion(convertedJson.intValue, nil)
-                } catch {
-                    completion(nil, GeneralErrors.decodingError)
-                }
-            }
-        })
-        
-        observation = task.progress.observe(\.fractionCompleted) { [weak self] (progress, _) in
-            print("decode log progress", progress)
-            DispatchQueue.main.async {
-                self?.progressModal.progressView.isHidden = false
-                self?.progressModal.progressLabel.isHidden = false
-                self?.progressModal.progressView.progress = Float(progress.fractionCompleted)
-                self?.progressModal.progressLabel.text = String(Int(progress.fractionCompleted * 100)) + "%"
-                self?.progressModal.progressView.isHidden = true
-                self?.progressModal.progressLabel.isHidden = true
-            }
-        }
-        
-        task.resume()
-    }
-}
+//            }
+//        })
+//
+//        observation = task.progress.observe(\.fractionCompleted) { [weak self] (progress, _) in
+//            print("decode log progress", progress)
+//            DispatchQueue.main.async {
+//                self?.progressModal.progressView.isHidden = false
+//                self?.progressModal.progressLabel.isHidden = false
+//                self?.progressModal.progressView.progress = Float(progress.fractionCompleted)
+//                self?.progressModal.progressLabel.text = String(Int(progress.fractionCompleted * 100)) + "%"
+//                self?.progressModal.progressView.isHidden = true
+//                self?.progressModal.progressLabel.isHidden = true
+//            }
+//        }
+//
+//        task.resume()
+//    }
+//}
 
 extension ParentPostViewController: DocumentDelegate, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
     func numberOfPreviewItems(in controller: QLPreviewController) -> Int {

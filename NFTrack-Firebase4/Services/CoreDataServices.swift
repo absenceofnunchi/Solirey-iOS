@@ -24,6 +24,7 @@ class LocalDatabase {
         let requestWallet: NSFetchRequest<KeyWallet> = KeyWallet.fetchRequest()
         
         do {
+            // fetch results in exec bad access 
             let results = try mainContext.fetch(requestWallet)
             guard let result = results.first else { return nil }
             return KeyWalletModel.fromCoreData(crModel: result)

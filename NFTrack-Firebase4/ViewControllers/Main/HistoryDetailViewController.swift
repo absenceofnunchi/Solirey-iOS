@@ -170,6 +170,10 @@ extension HistoryDetailViewController {
             ])
         }
     }
+    
+    override func configureResale() {
+        mintHashLabel.isUserInteractionEnabled = false
+    }
 }
 
 extension HistoryDetailViewController {
@@ -195,6 +199,5 @@ extension HistoryDetailViewController {
             default:
                 break
         }
-
     }
 }

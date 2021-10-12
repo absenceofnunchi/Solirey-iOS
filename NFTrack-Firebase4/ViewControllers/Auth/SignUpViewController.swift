@@ -168,14 +168,14 @@ extension SignUpViewController {
         var constraints = [NSLayoutConstraint]()
         if UIDevice.current.userInterfaceIdiom == .pad {
             constraints.append(contentsOf: [
-                centerConstraint,
+//                centerConstraint,
                 containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
                 containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
                 containerView.heightAnchor.constraint(equalToConstant: 500)
             ])
         }else{
             constraints.append(contentsOf: [
-                centerConstraint,
+//                centerConstraint,
                 containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
                 containerView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
                 containerView.heightAnchor.constraint(equalToConstant: 420)

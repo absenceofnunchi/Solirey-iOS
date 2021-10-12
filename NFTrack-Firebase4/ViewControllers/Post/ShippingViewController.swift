@@ -203,15 +203,24 @@ class ShippingViewController: MapViewController, TableViewConfigurable, UITextFi
         searchBar.scopeButtonTitles = ShippingRestriction.getAll()
         resultSearchController?.hidesNavigationBarDuringPresentation = true
         resultSearchController?.obscuresBackgroundDuringPresentation = true
+        
+        let searchTextField = searchBar.searchTextField
+        searchTextField.borderStyle = .roundedRect
+        searchTextField.layer.cornerRadius = 8
+        searchTextField.backgroundColor = .white
+        searchTextField.textColor = .gray
+        searchTextField.attributedPlaceholder = NSAttributedString(string: "Enter Search Here", attributes: [NSAttributedString.Key.foregroundColor : UIColor.gray])
+        
         definesPresentationContext = true
     }
     
     override func mapButtonPressed(_ sender: UIButton) {
-//        super.mapButtonPressed(sender)
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
         
         switch sender.tag {
             case 1:
-                self.alert.showDetail("", with: "Press Update below to finalize your shipping information.", for: self)
+                self.alert.showDetail("", with: "Press Update below to finalize your shipping information or search for more addresses.", for: self)
             case 3:
                 let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Shipping Info", detail: InfoText.shippingInfo)])
                 self.present(infoVC, animated: true, completion: nil)
@@ -349,31 +358,3 @@ extension ShippingViewController {
         return circleRenderer
     }
 }
-
-//extension ShippingViewController {
-//    override func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-//        if filteredSearchVC != nil {
-//            filteredSearchVC.location = manager.location?.coordinate
-//        }
-//
-//        print("locationManagerDidChangeAuthorization old shipping")
-//        guard let coordinate = manager.location?.coordinate else { return }
-//        let placemark = MKPlacemark(coordinate: coordinate)
-//        let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-//        let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
-//        mapView.setRegion(region, animated: true)
-//    }
-//
-//    override func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-//        if filteredSearchVC != nil {
-//            filteredSearchVC.location = manager.location?.coordinate
-//        }
-//
-//        print("didChangeAuthorization shipping")
-//        guard let coordinate = manager.location?.coordinate else { return }
-//        let placemark = MKPlacemark(coordinate: coordinate)
-//        let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-//        let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
-//        mapView.setRegion(region, animated: true)
-//    }
-//}

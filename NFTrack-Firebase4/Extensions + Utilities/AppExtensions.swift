@@ -289,9 +289,10 @@ extension UIViewController {
          That is, a smaller alpha channel intensity results in a more transparent bar and vise-versa.
          Below, a background image is dynamically generated with the desired opacity.
          */
+        guard let navController = navigationController else { return }
         UIGraphicsBeginImageContextWithOptions(CGSize(width: 1, height: 1),
                                                false,
-                                               navigationController!.navigationBar.layer.contentsScale)
+                                               navController.navigationBar.layer.contentsScale)
         let context = UIGraphicsGetCurrentContext()!
         context.setFillColor(red: 1, green: 1, blue: 1, alpha: opacity)
         UIRectFill(CGRect(x: 0, y: 0, width: 1, height: 1))
@@ -629,9 +630,7 @@ extension Publisher {
     ) -> Publishers.RetryIf<Self> {
         Publishers.RetryIf(publisher: self, times: times, condition: condition)
     }
-}
-
-extension Publisher {
+    
     func retryWithDelay<S>(
         retries: Int,
         delay: S.SchedulerTimeType.Stride,
@@ -649,8 +648,7 @@ extension Publisher {
         scheduler: S,
         if condition: @escaping (Failure) -> Bool
     ) -> AnyPublisher<Output, Failure> where S: Scheduler {
-        self
-            .delayIfFailure(for: delay, scheduler: scheduler)
+        self.delayIfFailure(for: delay, scheduler: scheduler)
             .retry(times: retries, if: condition)
             .eraseToAnyPublisher()
     }

@@ -11,6 +11,8 @@ import MapKit
 class MapViewController: AddressViewController, MKMapViewDelegate, SharableDelegate, HandleMapSearch, ParseAddressDelegate {
     var mapView: MKMapView!
     var placemark: MKPlacemark? = nil
+    // When initial placemark is provided, such as from ListDetail for the buyer's address, use the provided placemark instead of the user's own address
+    var initialPlacemark: MKPlacemark? = nil
     var shareButtonItem: UIBarButtonItem!
     let alert = Alerts()
     private var customNavView: BackgroundView5!
@@ -24,15 +26,10 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        configureNavigationBar()
-    }
-    
     override func configureUI() {
         super.configureUI()
+        configureNavigationBar()
         hideKeyboardWhenTappedAround()
-        
         configureMapView()
     }
     
@@ -92,6 +89,9 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
     }
     
     @objc func mapButtonPressed(_ sender: UIButton) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         switch sender.tag {
             case 1:
                 if let placemark = placemark {
@@ -102,18 +102,6 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
                 guard let placemark = placemark else { return }
                 let address = parseAddress(selectedItem: placemark)
                 share([address as AnyObject])
-
-//                let clLocation = CLLocation(latitude: placemark.coordinate.latitude, longitude: placemark.coordinate.longitude)
-//                let geocoder = CLGeocoder()
-//                geocoder.reverseGeocodeLocation(clLocation) { [weak self] (placemarks, error) in
-//                    if let error = error {
-//                        self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
-//                    }
-//
-//                    guard let pm = placemarks?.first else { return }
-//                    let placemark = MKPlacemark(placemark: pm)
-//                    let buyersAddress = self?.parseAddress(selectedItem: placemark)
-//                }
                 break
             default:
                 break
@@ -126,29 +114,39 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
     }
     
     override func centerMapOnLocation() {
-        guard let location = location else { return }
-        self.placemark = MKPlacemark(coordinate: location)
-        if let pm = self.placemark {
-            mapView.removeAnnotations(mapView.annotations)
-            mapView.addAnnotation(pm)
+        if let initialPlacemark = initialPlacemark {
+            dropPinZoomIn(placemark: initialPlacemark, addressString: nil, scope: nil)
+        } else {
+            guard let location = location else { return }
+            self.placemark = MKPlacemark(coordinate: location)
+            guard let pm = self.placemark else { return }
+            dropPinZoomIn(placemark: pm, addressString: nil, scope: nil)
         }
-
-        let coorindateRegion = MKCoordinateRegion.init(center: location, latitudinalMeters: regionRadius, longitudinalMeters: regionRadius)
-        mapView.setRegion(coorindateRegion, animated: true)
-        let _ = self.navigationController?.popViewController(animated: true)
     }
     
     func dropPinZoomIn(placemark: MKPlacemark, addressString: String?, scope: ShippingRestriction?) {
-        // cache the pin
-        self.placemark = placemark
-        
-        // clear the existing pins
-        mapView.removeAnnotations(mapView.annotations)
-        mapView.addAnnotation(placemark)
-        
-        let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-        let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
-        mapView.setRegion(region, animated: true)
+        let clLocation = CLLocation(latitude: placemark.coordinate.latitude, longitude: placemark.coordinate.longitude)
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(clLocation) { [weak self] (placemarks, error) in
+            if let error = error {
+                self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
+            }
+            
+            guard let pm = placemarks?.first else { return }
+            let placemark = MKPlacemark(placemark: pm)
+            
+            // cache the pin
+            self?.placemark = placemark
+            
+            // clear the existing pins
+            guard let mapView = self?.mapView else { return }
+            mapView.removeAnnotations(mapView.annotations)
+            mapView.addAnnotation(placemark)
+            
+            let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
+            mapView.setRegion(region, animated: true)
+        }
     }
     
     func resetSearchResults() {}
@@ -157,26 +155,28 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
         super.locationManagerDidChangeAuthorization(manager)
         
         print("locationManagerDidChangeAuthorization old mapview")
-        guard let coordinate = manager.location?.coordinate else { return }
-        
-        
-        let placemark = MKPlacemark(coordinate: coordinate)
-        self.placemark = placemark
-        let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-        let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
-        mapView.setRegion(region, animated: true)
+        if let initialPlacemark = initialPlacemark {
+            dropPinZoomIn(placemark: initialPlacemark, addressString: nil, scope: nil)
+        } else {
+            guard let coordinate = manager.location?.coordinate else { return }
+            let placemark = MKPlacemark(coordinate: coordinate)
+            self.placemark = placemark
+            dropPinZoomIn(placemark: placemark, addressString: nil, scope: nil)
+        }
     }
     
     override func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         super.locationManager(manager, didChangeAuthorization: status)
         
         print("didChangeAuthorization new mapview")
-        guard let coordinate = manager.location?.coordinate else { return }
         
-        let placemark = MKPlacemark(coordinate: coordinate)
-        self.placemark = placemark
-        let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-        let region = MKCoordinateRegion(center: placemark.coordinate, span: span)
-        mapView.setRegion(region, animated: true)
+        if let initialPlacemark = initialPlacemark {
+            dropPinZoomIn(placemark: initialPlacemark, addressString: nil, scope: nil)
+        } else {
+            guard let coordinate = manager.location?.coordinate else { return }
+            let placemark = MKPlacemark(coordinate: coordinate)
+            self.placemark = placemark
+            dropPinZoomIn(placemark: placemark, addressString: nil, scope: nil)
+        }
     }
 }

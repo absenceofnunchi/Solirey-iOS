@@ -53,15 +53,13 @@ extension WalletViewController {
             self.oldPageVC.view.translatesAutoresizingMaskIntoConstraints = false
             self.oldPageVC.view.fill()
 //            self.newPageVC = nil
-            print("configureChildVC")
         }
     }
 }
 
 extension WalletViewController: WalletDelegate {
     func didProcessWallet() {
-        if let wallet = localDatabase.getWallet() {
-            print("wallet in walletVC", wallet)
+        if let _ = localDatabase.getWallet() {
             let registeredWalletVC = RegisteredWalletViewController()
             registeredWalletVC.delegate = self
             newPageVC = registeredWalletVC

@@ -134,7 +134,6 @@ extension DigitalAssetViewController {
                                     NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                     
                                     print("STEP 3")
-                                    print("txPackages", txPackages)
                                     let results = txPackages.map { self.transactionService.executeTransaction2(
                                         transaction: $0.transaction,
                                         password: password,
@@ -151,7 +150,6 @@ extension DigitalAssetViewController {
                                         return Fail(error: PostingError.generalError(reason: "Parsing the transaction result error."))
                                             .eraseToAnyPublisher()
                                     }
-                                    print(".")
                                     return self.transactionService.confirmEtherTransactionsNoDelay(txHash: txResult.txResult.hash)
                                 })
                                 .eraseToAnyPublisher()
@@ -250,7 +248,7 @@ extension DigitalAssetViewController {
                                     
                                     return Future<Int, PostingError> { promise in
                                         self.transactionService.createFireStoreEntry(
-                                            documentId: &self.documentId,
+//                                            documentId: &self.documentId,
                                             senderAddress: senderAddress,
                                             escrowHash: "N/A",
                                             auctionHash: auctionHash,

@@ -167,7 +167,7 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
                 
         deliveryInfoButton.isHidden = true
         deliveryInfoButton.isEnabled = false
-        deliveryMethodLabel.text = "Online Transfer"
+        deliveryMethodLabel.text = DeliveryMethod.onlineTransfer.rawValue
         
         paymentInfoButton.tag = 21
         paymentMethodLabel.isUserInteractionEnabled = true
@@ -342,37 +342,26 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
     }
     
     // MARK: - processMint
-    final override func processMint(
-        price: String?,
-        itemTitle: String,
-        desc: String,
-        category: String,
-        convertedId: String,
-        tokensArr: Set<String>,
-        userId: String,
-        deliveryMethod: String,
-        saleFormat: String,
-        paymentMethod: String
-    ) {
-        guard let sm = SaleFormat(rawValue: saleFormat) else { return }
+    final override func processMint(_ mintParameters: MintParameters) {
+        guard let sm = SaleFormat(rawValue: mintParameters.saleFormat) else { return }
         switch sm {
             case .onlineDirect:
-                guard let price = price, !price.isEmpty else {
+                guard let price = mintParameters.price, !price.isEmpty else {
                     self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
                     return
                 }
                 
                 onlineDirect(
                     price: price,
-                    itemTitle: itemTitle,
-                    desc: desc,
-                    category: category,
-                    convertedId: convertedId,
-                    tokensArr: tokensArr,
+                    itemTitle: mintParameters.itemTitle,
+                    desc: mintParameters.desc,
+                    category: mintParameters.category,
+                    convertedId: mintParameters.convertedId,
+                    tokensArr: mintParameters.tokensArr,
                     userId: userId,
-                    deliveryMethod: deliveryMethod,
-                    saleFormat: saleFormat,
-                    paymentMethod: paymentMethod
+                    deliveryMethod: mintParameters.deliveryMethod,
+                    saleFormat: mintParameters.saleFormat,
+                    paymentMethod: mintParameters.paymentMethod
                 )
                 
             case .openAuction:
@@ -389,15 +378,15 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
 
                 auction(
                     price: "0",
-                    itemTitle: itemTitle,
-                    desc: desc,
-                    category: category,
-                    convertedId: convertedId,
-                    tokensArr: tokensArr,
+                    itemTitle: mintParameters.itemTitle,
+                    desc: mintParameters.desc,
+                    category: mintParameters.category,
+                    convertedId: mintParameters.convertedId,
+                    tokensArr: mintParameters.tokensArr,
                     userId: userId,
-                    deliveryMethod: deliveryMethod,
-                    saleFormat: saleFormat,
-                    paymentMethod: paymentMethod,
+                    deliveryMethod: mintParameters.deliveryMethod,
+                    saleFormat: mintParameters.saleFormat,
+                    paymentMethod: mintParameters.paymentMethod,
                     auctionDuration: auctionDuration,
                     auctionStartingPrice: auctionStartingPrice
                 )

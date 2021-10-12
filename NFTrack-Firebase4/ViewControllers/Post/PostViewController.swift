@@ -12,6 +12,10 @@ import BigInt
 import Combine
 
 class PostViewController: ParentPostViewController {
+    var topicsRetainer: [String]!
+    var txResultArr = [TxResult2]()
+    var txPackageArr = [TxPackage]()
+    
     final override var panelButtons: [PanelButton] {
         let buttonPanels = [
             PanelButton(imageName: "camera.circle", imageConfig: configuration, tintColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), tag: 8),
@@ -29,11 +33,19 @@ class PostViewController: ParentPostViewController {
             guard let text = label.text, let deliveryMethod = DeliveryMethod(rawValue: text) else { return }
             switch deliveryMethod {
                 case .inPerson:
-                    self?.paymentMethodLabel.text = PaymentMethod.directTransfer.rawValue
-                    self?.isShipping = false
-                case .shipping:
-                    self?.paymentMethodLabel.text = PaymentMethod.escrow.rawValue
+//                    self?.paymentMethodLabel.text = PaymentMethod.directTransfer.rawValue
+                    self?.addressTitleLabel.text = "Pickup Location"
                     self?.isShipping = true
+                    self?.paymentMethodLabel.isUserInteractionEnabled = true
+                    self?.paymentMethodLabel.text = nil
+                case .shipping:
+//                    self?.paymentMethodLabel.text = PaymentMethod.escrow.rawValue
+                    self?.addressTitleLabel.text = "Shipping Restriction"
+                    self?.isShipping = true
+                    self?.paymentMethodLabel.text = "Escrow"
+                    self?.paymentMethodLabel.isUserInteractionEnabled = false
+                default:
+                    break
             }
         }
     }
@@ -51,6 +63,7 @@ class PostViewController: ParentPostViewController {
         super.viewDidLoad()
   
         deliveryInfoButton.tag = 20
+        // picker for the deliver method: in-person, shipping
         deliveryMethodLabel.isUserInteractionEnabled = true
         deliveryMethodLabel.tag = 1
         
@@ -61,6 +74,9 @@ class PostViewController: ParentPostViewController {
         
         pickerLabel.isUserInteractionEnabled = true
         pickerLabel.tag = 2
+        
+        // picker for the payment method: escrow, direct
+        paymentMethodLabel.tag = 3
     }
     
     final override func createIDField(post: Post? = nil) {
@@ -142,24 +158,10 @@ class PostViewController: ParentPostViewController {
     /// 3. mint
     /// 4. upload to the firestore
     /// 5. get the token ID through the subscription to the google functions
-    /// 6. update the token ID on firestore
-    /// 7. store the photos in the local storage and upload the images to the firebase storage
-    /// 8. update the firestore with the urls of the photos
-    /// 9. delete the photos from the local storage
+    /// 6. update the firestore with the urls of the photos and the token information
     
-    final override func processMint(
-        price: String?,
-        itemTitle: String,
-        desc: String,
-        category: String,
-        convertedId: String,
-        tokensArr: Set<String>,
-        userId: String,
-        deliveryMethod: String,
-        saleFormat: String,
-        paymentMethod: String
-    ) {
-        guard let price = price, !price.isEmpty else {
+    final override func processMint(_ mintParameters: MintParameters) {
+        guard let price = mintParameters.price, !price.isEmpty else {
             self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
             return
         }
@@ -325,25 +327,24 @@ class PostViewController: ParentPostViewController {
                                             senderAddress = txResult.senderAddress
                                         }
                                         print("STEP 8")
-                                        print("self.shippingInfo", self.shippingInfo as Any)
                                         
                                         return Future<Int, PostingError> { promise in
                                             self.transactionService.createFireStoreEntry(
-                                                documentId: &self.documentId,
+//                                                documentId: &self.documentId,
                                                 senderAddress: senderAddress,
                                                 escrowHash: escrowHash,
                                                 auctionHash: "N/A",
                                                 mintHash: mintHash,
-                                                itemTitle: itemTitle,
-                                                desc: desc,
+                                                itemTitle: mintParameters.itemTitle,
+                                                desc: mintParameters.desc,
                                                 price: price,
-                                                category: category,
-                                                tokensArr: tokensArr,
-                                                convertedId: convertedId,
+                                                category: mintParameters.category,
+                                                tokensArr: mintParameters.tokensArr,
+                                                convertedId: mintParameters.convertedId,
                                                 type: "tangible",
-                                                deliveryMethod: deliveryMethod,
-                                                saleFormat: saleFormat,
-                                                paymentMethod: paymentMethod,
+                                                deliveryMethod: mintParameters.deliveryMethod,
+                                                saleFormat: mintParameters.saleFormat,
+                                                paymentMethod: mintParameters.paymentMethod,
                                                 topics: topicsRetainer,
                                                 urlStrings: urlStrings,
                                                 ipfsURLStrings: [],
@@ -358,79 +359,29 @@ class PostViewController: ParentPostViewController {
                                 .sink { (completion) in
                                     switch completion {
                                         case .failure(let error):
-                                            switch error {
-                                                case .fileUploadError(.fileNotAvailable):
-                                                    self.alert.showDetail("Error", with: "No image file was found.", for: self)
-                                                case .retrievingEstimatedGasError:
-                                                    self.alert.showDetail("Error", with: "There was an error retrieving the gas estimation.", for: self)
-                                                case .retrievingGasPriceError:
-                                                    self.alert.showDetail("Error", with: "There was an error retrieving the current gas price.", for: self)
-                                                case .contractLoadingError:
-                                                    self.alert.showDetail("Error", with: "There was an error loading your contract ABI.", for: self)
-                                                case .retrievingCurrentAddressError:
-                                                    self.alert.showDetail("Error", with: "There was an error retrieving your current account address.", for: self)
-                                                case .createTransactionIssue:
-                                                    self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
-                                                case .insufficientFund(let msg):
-                                                    self.alert.showDetail("Error", with: msg, height: 500, alignment: .left, for: self)
-                                                case .emptyAmount:
-                                                    self.alert.showDetail("Error", with: "The ETH value cannot be blank for the transaction.", for: self)
-                                                case .invalidAmountFormat:
-                                                    self.alert.showDetail("Error", with: "The ETH value is in an incorrect format.", for: self)
-                                                case .generalError(reason: let msg):
-                                                    self.alert.showDetail("Error", with: msg, for: self)
-                                                case .apiError(.generalError(reason: let err)):
-                                                    self.alert.showDetail("Error", with: err, for: self)
-                                                default:
-                                                    self.alert.showDetail("Error", with: "There was an error creating your post.", for: self)
-                                            }
+                                            self.processFailure(error)
                                         case .finished:
                                             // update the progress indicator
                                             let update: [String: PostProgress] = ["update": .images]
                                             NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                             
                                             FirebaseService.shared.sendToTopicsVoid(
-                                                title: "New item has been listed on \(category)",
-                                                content: itemTitle,
-                                                topic: category,
+                                                title: "New item has been listed on \(mintParameters.category)",
+                                                content: mintParameters.itemTitle,
+                                                topic: mintParameters.category,
                                                 docId: self.documentId
                                             )
                                             
                                             // index Core Spotlight
                                             self.indexSpotlight(
-                                                itemTitle: itemTitle,
-                                                desc: desc,
-                                                tokensArr: tokensArr,
-                                                convertedId: convertedId
+                                                itemTitle: mintParameters.itemTitle,
+                                                desc: mintParameters.desc,
+                                                tokensArr: mintParameters.tokensArr,
+                                                convertedId: mintParameters.convertedId
                                             )
                                             
                                             // reset the fields
-                                            DispatchQueue.main.async {
-                                                self.titleTextField.text?.removeAll()
-                                                self.priceTextField.text?.removeAll()
-                                                self.descTextView.text?.removeAll()
-                                                self.idTextField.text?.removeAll()
-                                                self.deliveryMethodLabel.text?.removeAll()
-                                                self.pickerLabel.text?.removeAll()
-                                                self.tagTextField.tokens.removeAll()
-                                                self.paymentMethodLabel.text?.removeAll()
-                                                self.addressLabel.text?.removeAll()
-                                                self.addressLabelConstraintHeight.constant = 0
-                                                self.addressTitleLabel.alpha = 0
-                                                self.addressLabel.alpha = 0
-                                                self.addressLabel.isUserInteractionEnabled = false
-                                                self.addressTitleLabelConstraintHeight.constant = 0
-                                                self.addressLabelConstraintHeight.constant = 0
-                                            }
-                                            
-                                            // remove the image and file previews
-                                            if self.previewDataArr.count > 0 {
-                                                self.previewDataArr.removeAll()
-                                                self.imagePreviewVC.data.removeAll()
-                                                DispatchQueue.main.async {
-                                                    self.imagePreviewVC.collectionView.reloadData()
-                                                }
-                                            }
+                                            self.afterPostReset()
                                     }
                                 } receiveValue: { (receivedValue) in
                                     print("receivedValue", receivedValue)
@@ -446,6 +397,349 @@ class PostViewController: ParentPostViewController {
             }
         }
     }
+    
+    
+    // MARK: - Direct Sale
+//    override func mint() {
+//        print("let's mint")
+//        let mintParameters = MintParameters(
+//            price: "0.00000000000002",
+//            itemTitle: "Pogo stick",
+//            desc: "Very springy",
+//            category: "Electronics",
+//            convertedId: "lsdjfkldjldi2",
+//            tokensArr: ["hello"] as Set<String>,
+//            userId: userDefaults.string(forKey: "userId")!,
+//            deliveryMethod: DeliveryMethod.inPerson.rawValue,
+//            saleFormat: SaleFormat.onlineDirect.rawValue,
+//            paymentMethod: PaymentMethod.directTransfer.rawValue
+//        )
+//
+//
+//
+//        deploySimplePaymentContract(password: "111111", mintParamters: mintParameters) { [weak self] (txResult) in
+//            guard let tx = txResult.first else { return }
+//            Future<TransactionReceipt, PostingError> { promise in
+//                Web3swiftService.getReceipt(hash: tx.txResult.hash, promise: promise)
+//            }
+//            .eraseToAnyPublisher()
+//            .retryIfWithDelay(
+//                retries: 5,
+//                delay: .seconds(5),
+//                scheduler: RunLoop.main
+//            ) { (error) -> Bool in
+//                // the tx hash returns no receipt right after the transaction
+//                // retry if none returns, but with delay
+//                print("error in retryIfWithDelay", error)
+//                if case let PostingError.generalError(reason: msg) = error,
+//                   msg == "Invalid value from Ethereum node" {
+//                    return true
+//                }
+//                return false
+//            }
+//            .sink { (completion) in
+//                print(completion)
+//            } receiveValue: { (bool) in
+//                print(bool)
+//            }
+//            .store(in: &self!.storage)
+//        }
+//    }
+    
+    // MARK: - processDirectSale
+    final override func processDirectSale(_ mintParameters: MintParameters) {
+        guard let price = mintParameters.price, !price.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+            return
+        }
+        
+        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+        //            return
+        //        }
+        
+        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+            return
+        }
+        
+        guard let NFTrackAddress = NFTrackAddress else {
+            self.alert.showDetail("Sorry", with: "There was an error loading the minting contract address.", for: self)
+            return
+        }
+        
+        let content = [
+            StandardAlertContent(
+                titleString: "",
+                body: [AlertModalDictionary.passwordSubtitle: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            ),
+            StandardAlertContent(
+                titleString: "Transaction Options",
+                body: [AlertModalDictionary.gasLimit: "", AlertModalDictionary.gasPrice: "", AlertModalDictionary.nonce: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            )
+        ]
+        
+        self.hideSpinner {
+            DispatchQueue.main.async {
+                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+                alertVC.action = { [weak self] (modal, mainVC) in
+                    mainVC.buttonAction = { _ in
+                        guard let self = self else { return }
+                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                              !password.isEmpty else {
+                            self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                            return
+                        }
+                        
+                        self.dismiss(animated: true, completion: {
+                            self.progressModal = ProgressModalViewController(postType: .tangible)
+                            self.progressModal.titleString = "Posting In Progress"
+                            self.present(self.progressModal, animated: true, completion: {
+                                self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress)
+                                // Deploy a simple payment contract, mint a token, and transfer it into the contract.
+                                self.deploySimplePaymentContract(password: password, mintParamters: mintParameters) { (txResults) in
+                                    guard let txResult = txResults.first else { return }
+                                    // confirm that the receipt of the transaction is obtained
+                                    self.transactionService.confirmReceipt(txHash: txResult.txResult.hash)
+                                        .sink { (completion) in
+                                            print(completion)
+                                        } receiveValue: { (receipt) in
+                                            print(receipt)
+                                            // confirm that the block is added to the chain
+                                            self.transactionService.confirmTransactions(receipt)
+                                                .sink(receiveCompletion: { (completion) in
+                                                    print(completion)
+                                                }, receiveValue: { (receipt) in
+                                                    // mint a new token and transfer it to the payment contract
+                                                    self.mintAndTransfer(receipt, password: password, mintParameters: mintParameters)
+                                                })
+                                                .store(in: &self.storage)
+                                        }
+                                        .store(in: &self.storage)
+                                } // deploySimplePaymentcontract
+                            }) // self.present for ProgressModalVC
+                        }) // self.dismiss
+                    } //buttonAction
+                } // alertVC.Action
+                self.present(alertVC, animated: true, completion: nil)
+            } // DispatchQueue
+        } // hideSpinner
+    } // processDirectSale
+    
+    // MARK: - processEscrowResale
+    override func processEscrowResale(_ mintParameters: MintParameters) {
+        guard let price = mintParameters.price, !price.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+            return
+        }
+        
+        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+        //            return
+        //        }
+        
+        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+            return
+        }
+        
+        // Since no new token is being minted, an existing token is used from the original post.
+        guard let tokenId = post?.tokenID else {
+            self.alert.showDetail("Sorry", with: "Failed to load the Token ID for the current item.", for: self)
+            return
+        }
+        
+        let content = [
+            StandardAlertContent(
+                titleString: "",
+                body: [AlertModalDictionary.passwordSubtitle: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            ),
+            StandardAlertContent(
+                titleString: "Transaction Options",
+                body: [AlertModalDictionary.gasLimit: "", AlertModalDictionary.gasPrice: "", AlertModalDictionary.nonce: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            )
+        ]
+        
+        self.hideSpinner {
+            DispatchQueue.main.async { [weak self] in
+                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+                alertVC.action = { (modal, mainVC) in
+                    mainVC.buttonAction = { _ in
+                        guard let self = self else { return }
+                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                              !password.isEmpty else {
+                            self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                            return
+                        } // password guard
+                        
+                        self.dismiss(animated: true, completion: {
+                            self.progressModal = ProgressModalViewController(postType: .tangible)
+                            self.progressModal.titleString = "Posting In Progress"
+                            self.present(self.progressModal, animated: true, completion: {
+                                // Prepare a transaction to deploy the escrow contract
+                                Future<WriteTransaction, PostingError> { promise in
+                                    self.transactionService.prepareTransactionForNewContract(
+                                        contractABI: purchaseABI2,
+                                        bytecode: purchaseBytecode2,
+                                        value: price,
+                                        promise: promise
+                                    )
+                                }
+                                .eraseToAnyPublisher()
+                                .flatMap { (transaction) -> AnyPublisher<TxResult, PostingError> in
+                                    // deploy the escrow contract
+                                    return self.transactionService.executeTransaction(transaction: transaction, password: password, type: .deploy)
+                                        .eraseToAnyPublisher()
+                                }
+                                .flatMap { (txResult) -> AnyPublisher<Bool, PostingError> in
+                                    return self.uploadFilesResale()
+                                        // upload the details to Firestore
+                                        .flatMap { (urlStrings) -> AnyPublisher<Bool, PostingError> in
+                                            return Future<Bool, PostingError> { promise in
+                                                self.transactionService.createFireStoreEntryForResale(
+                                                    documentId: &self.documentId,
+                                                    senderAddress: txResult.senderAddress,
+                                                    escrowHash: txResult.txHash,
+                                                    auctionHash: "N/A",
+                                                    mintHash: "Resale",
+                                                    itemTitle: mintParameters.itemTitle,
+                                                    desc: mintParameters.desc,
+                                                    price: price,
+                                                    category: mintParameters.category,
+                                                    tokensArr: mintParameters.tokensArr,
+                                                    convertedId: mintParameters.convertedId,
+                                                    type: "tangible",
+                                                    deliveryMethod: mintParameters.deliveryMethod,
+                                                    saleFormat: mintParameters.saleFormat,
+                                                    paymentMethod: mintParameters.paymentMethod,
+                                                    tokenId: tokenId,
+                                                    urlStrings: urlStrings,
+                                                    ipfsURLStrings: [],
+                                                    shippingInfo: self.shippingInfo,
+                                                    promise: promise
+                                                )
+                                            }
+                                            .eraseToAnyPublisher()
+                                        }
+                                        .eraseToAnyPublisher()
+                                }
+                                .sink { (completion) in
+                                    switch completion {
+                                        case .failure(let error):
+                                            self.processFailure(error)
+                                        case .finished:
+                                            // update the progress indicator
+                                            let update: [String: PostProgress] = ["update": .images]
+                                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                            
+                                            FirebaseService.shared.sendToTopicsVoid(
+                                                title: "New item has been listed on \(mintParameters.category)",
+                                                content: mintParameters.itemTitle,
+                                                topic: mintParameters.category,
+                                                docId: self.documentId
+                                            )
+                                            
+                                            // index Core Spotlight
+                                            //                                            self.indexSpotlight(
+                                            //                                                itemTitle: itemTitle,
+                                            //                                                desc: desc,
+                                            //                                                tokensArr: tokensArr,
+                                            //                                                convertedId: convertedId
+                                            //                                            )
+                                            
+                                            self.afterPostReset()
+
+                                    }
+                                } receiveValue: { (_) in
+                                    
+                                }
+                                .store(in: &self.storage)
+                                
+                            }) // self.present(self.progressModal
+                        }) // dismiss
+                    } // mainVC.buttonAction
+                } // alertVC.action
+                self?.present(alertVC, animated: true, completion: nil)
+            } // DispatchQueue
+        }// self.hideSpinner
+    } // processEscrowResale
+}
+
+extension PostViewController {
+    // MARK: - afterPostReset
+    func afterPostReset() {
+        // reset the fields
+        DispatchQueue.main.async {
+            self.titleTextField.text?.removeAll()
+            self.priceTextField.text?.removeAll()
+            self.descTextView.text?.removeAll()
+            self.idTextField.text?.removeAll()
+            self.deliveryMethodLabel.text?.removeAll()
+            self.pickerLabel.text?.removeAll()
+            self.tagTextField.tokens.removeAll()
+            self.paymentMethodLabel.text?.removeAll()
+            self.addressLabel.text?.removeAll()
+            self.addressLabelConstraintHeight.constant = 0
+            self.addressTitleLabel.alpha = 0
+            self.addressLabel.alpha = 0
+            self.addressLabel.isUserInteractionEnabled = false
+            self.addressTitleLabelConstraintHeight.constant = 0
+            self.addressLabelConstraintHeight.constant = 0
+        }
+        
+        // remove the image and file previews
+        if self.previewDataArr.count > 0 {
+            self.previewDataArr.removeAll()
+            self.imagePreviewVC.data.removeAll()
+            DispatchQueue.main.async {
+                self.imagePreviewVC.collectionView.reloadData()
+            }
+        }
+    }
+    
+    // MARK: - processFailure
+    func processFailure(_ error: PostingError) {
+        switch error {
+            case .fileUploadError(.fileNotAvailable):
+                self.alert.showDetail("Error", with: "No image file was found.", for: self)
+            case .retrievingEstimatedGasError:
+                self.alert.showDetail("Error", with: "There was an error retrieving the gas estimation.", for: self)
+            case .retrievingGasPriceError:
+                self.alert.showDetail("Error", with: "There was an error retrieving the current gas price.", for: self)
+            case .contractLoadingError:
+                self.alert.showDetail("Error", with: "There was an error loading your contract ABI.", for: self)
+            case .retrievingCurrentAddressError:
+                self.alert.showDetail("Account Retrieval Error", with: "Error retrieving your account address. Please ensure that you're logged into your wallet.", for: self)
+            case .createTransactionIssue:
+                self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
+            case .insufficientFund(let msg):
+                self.alert.showDetail("Error", with: msg, height: 500, fieldViewHeight: 300, alignment: .left, for: self)
+            case .emptyAmount:
+                self.alert.showDetail("Error", with: "The ETH value cannot be blank for the transaction.", for: self)
+            case .invalidAmountFormat:
+                self.alert.showDetail("Error", with: "The ETH value is in an incorrect format.", for: self)
+            case .generalError(reason: let msg):
+                self.alert.showDetail("Error", with: msg, for: self)
+            default:
+                self.alert.showDetail("Error", with: "There was an error creating your post.", for: self)
+        }
+    }
 }
 
 extension PostViewController {
@@ -455,6 +749,8 @@ extension PostViewController {
                 return self.deliveryMethodPicker.inputView
             case 2:
                 return self.pvc.inputView
+            case 3:
+                return self.paymentMothedPicker.inputView
             default:
                 return nil
         }
@@ -469,6 +765,8 @@ extension PostViewController {
                 self.deliveryMethodLabel.text = deliveryMethodPicker.currentPep
             case 2:
                 self.pickerLabel.text = pvc.currentPep
+            case 3:
+                self.paymentMethodLabel.text = paymentMothedPicker.currentPep
             default:
                 break
         }

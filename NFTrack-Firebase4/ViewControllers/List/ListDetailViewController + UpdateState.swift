@@ -100,11 +100,13 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                                     
                                                                     self?.alert.showDetail(
                                                                         "Success!",
-                                                                        with: "You have confirmed the purchase as buyer. Your ether will be locked until you confirm receiving the item.",
+                                                                        with: "You have confirmed the purchase as buyer. Your deposit will be locked until you confirm receiving the item.",
                                                                         alignment: .left,
                                                                         for: self,
                                                                         buttonAction: {
-                                                                            self?.navigationController?.popViewController(animated: true)
+                                                                            self?.dismiss(animated: true) {
+                                                                                self?.navigationController?.popViewController(animated: true)
+                                                                            }
                                                                         },
                                                                         completion:  {
                                                                             self?.getStatus()
@@ -121,8 +123,8 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                             "\(method)Hash": result.hash,
                                                             "\(method)Date": Date()
                                                         ], completion: { (error) in
-                                                            if let error = error {
-                                                                self?.alert.showDetail("Error", with: error.localizedDescription, for: self)
+                                                            if let _ = error {
+                                                                self?.alert.showDetail("Error", with: "Unable to update the purchase status.", for: self)
                                                             } else {
                                                                 /// send the push notification to the seller
                                                                 guard let `self` = self else { return }
@@ -135,15 +137,17 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                                     if let error = error {
                                                                         print("error", error)
                                                                     }
+                                                                    
                                                                     self?.alert.showDetail(
                                                                         "Success!",
                                                                         with: "You have confirmed that you recieved the item. Your deposit will be released back to your account.",
                                                                         alignment: .left,
                                                                         for: self,
                                                                         buttonAction: {
+                                                                            self?.dismiss(animated: true)
+
                                                                             DispatchQueue.main.async {
-                                                                                //                                                                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
-                                                                                self?.navigationController?.popViewController(animated: true)
+//                                                                                self?.tableViewRefreshDelegate?.didRefreshTableView(index: 2)
                                                                             }
                                                                         },
                                                                         completion: {
@@ -168,10 +172,11 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                                                                     with: "You have aborted the escrow. The deployed contract is now locked and your ether will be sent back to your account.",
                                                                     for: self,
                                                                     buttonAction: {
-                                                                        DispatchQueue.main.async {
-                                                                            //                                                                        self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
-                                                                            self?.navigationController?.popViewController(animated: true)
-                                                                        }
+                                                                        self?.dismiss(animated: true, completion: nil)
+//                                                                        DispatchQueue.main.async {
+//                                                                            self?.tableViewRefreshDelegate?.didRefreshTableView(index: 3)
+//                                                                            self?.navigationController?.popViewController(animated: true)
+//                                                                        }
                                                                     },
                                                                     completion:  {
                                                                         self?.getStatus()
