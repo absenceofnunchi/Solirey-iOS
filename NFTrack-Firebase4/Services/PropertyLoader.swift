@@ -29,6 +29,7 @@ class PropertyLoader<T: PropertyLoadable> {
     private var executeReadTransaction: (_ propertyFetchModel: inout SmartContractProperty, _ promise: (Result<SmartContractProperty, PostingError>) -> Void) -> Void
     var contractAddress: EthereumAddress!
     var contractABI: String!
+    private var storage = Set<AnyCancellable>()
     
     // 2 ways to use the property loader
     // 1. when you're deploying a contract for the first time. You only need the deployment hash because the receipt will contain the address of the newly deployed contract.
@@ -71,7 +72,7 @@ class PropertyLoader<T: PropertyLoadable> {
                         return nil
                     }
                 }
-                
+
                 if unretrievedProperties.count == 0 {
                     propertyArrayPublisher.send(completion: .finished)
                 } else {
@@ -84,11 +85,109 @@ class PropertyLoader<T: PropertyLoadable> {
             .eraseToAnyPublisher()
     }
     
+    // Attempt to subdivide the Combine sequence so that retries don't restart the sequence from the very beginning of the sequence, but only from its own subdivision
+    func initiateLoadSequence1(completion: @escaping ([SmartContractProperty]?, PostingError?) -> Void) {
+        self.transactionService.confirmReceipt(txHash: transactionHash)
+            .sink { (completion) in
+                print(completion)
+            } receiveValue: { [weak self] (receipt) in
+                print(receipt)
+                // confirm that the block is added to the chain
+                self?.transactionService.confirmTransactions(receipt)
+                    .sink(receiveCompletion: { (completion) in
+                        print(completion)
+                    }, receiveValue: { (receipt) in
+                        guard let propertiesToLoad = self?.propertiesToLoad else {
+                            completion(nil, PostingError.generalError(reason: "Unable to fetch the properties from the smart contract."))
+                            return
+                        }
+                        // Now that we know the transaction has been added to the blockchain for certain, fetch the properties from the smart contract
+                        self?.fetchPropertiesFromSmartContract(
+                            propertiesToLoad: propertiesToLoad,
+                            receipt: receipt,
+                            existingDeploymentAddress: self?.contractAddress
+                        )
+                        .sink { (completion) in
+                            print(completion)
+                        } receiveValue: { (properties) in
+                            completion(properties, nil)
+                        }
+                        .store(in: &self!.storage)
+                    })
+                    .store(in: &self!.storage)
+            }
+            .store(in: &self.storage)
+    }
+    
+    func fetchPropertiesFromSmartContract(
+        propertiesToLoad: [T.ContractProperties],
+        receipt: TransactionReceipt,
+        existingDeploymentAddress: EthereumAddress? = nil
+    ) -> AnyPublisher<[SmartContractProperty], PostingError> {
+        // if the existing contract address is provided, it means the transaction hash isn't a deployment hash and therefore, the receipt would not have contained the address of the deployed contract
+        // simply assign the address to contractAddress and bypass the process of getting it from the receipt
+        if existingDeploymentAddress != nil {
+            guard let existingDeploymentAddress = existingDeploymentAddress else {
+                return Fail(error: PostingError.generalError(reason: "Could not obtain the auction contract."))
+                    .eraseToAnyPublisher()
+            }
+            
+            self.contractAddress = existingDeploymentAddress
+        } else {
+            // since the contract address has not been provided, it means that the transaction hash is a deployment hash which contains the address of the newly deployed contract.
+            guard let contractAddress = receipt.contractAddress else {
+                return Fail(error: PostingError.generalError(reason: "Could not obtain the auction contract."))
+                    .eraseToAnyPublisher()
+            }
+            
+            self.contractAddress = contractAddress
+        }
+        
+        guard let address = self.contractAddress else {
+            return Fail(error: PostingError.retrievingCurrentAddressError)
+                .eraseToAnyPublisher()
+        }
+        
+        let listOfPrepPublishers = propertiesToLoad.map { (propertyToRead) in
+            return Future<SmartContractProperty, PostingError> { [weak self] promise in
+                let parameters: [AnyObject]? = (propertyToRead.value.1 != nil) ? [propertyToRead.value.1] as [AnyObject] : nil
+                
+                guard let contractABI = self?.contractABI else {
+                    promise(.failure(.generalError(reason: "Failed to fetch the contract ABI")))
+                    return
+                }
+                
+                self?.transactionService.prepareTransactionForReading(
+                    method: propertyToRead.value.0,
+                    parameters: parameters,
+                    abi: contractABI,
+                    contractAddress: address,
+                    promise: promise
+                )
+            }
+        }
+        
+        return Publishers.MergeMany(listOfPrepPublishers)
+            .collect()
+            .eraseToAnyPublisher()
+            .flatMap { [weak self] (propertyFetchModels) -> AnyPublisher<[SmartContractProperty], PostingError> in
+                let listOfReadPublishers = propertyFetchModels.map { (propertyFetchModel) in
+                    return Future<SmartContractProperty, PostingError> { promise in
+                        var mutableModel = propertyFetchModel
+                        self?.executeReadTransaction(&mutableModel, promise)
+                    }
+                }
+                return Publishers.MergeMany(listOfReadPublishers)
+                    .collect()
+                    .eraseToAnyPublisher()
+            }
+            .eraseToAnyPublisher()
+    }
+    
     // 1. confirms whether the current block is more than the specified number of blocks away from the block in question. If not, repeat the query
     // 2. prepares the read transaction
     // 3. execute the read transaction
     // 4. return the fetched values
-    
     private func loadInfoWithConfirmation(
         propertiesToLoad: [T.ContractProperties],
         transactionHash: String,

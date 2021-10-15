@@ -174,6 +174,7 @@
 		49A0AE622707FC02003A5F27 /* PDFCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A0AE612707FC02003A5F27 /* PDFCell.swift */; };
 		49A0AE672708013E003A5F27 /* PreviewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A0AE662708013E003A5F27 /* PreviewCell.swift */; };
 		49A52E6726FAB1F600D1A0D2 /* CustomTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A52E6626FAB1F600D1A0D2 /* CustomTitleView.swift */; };
+		49B4329F27193995000A3F13 /* CollectFundsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B4329E27193995000A3F13 /* CollectFundsViewController.swift */; };
 		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
 		49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */; };
 		49BF2CE327083BD4009CA5F2 /* ImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */; };
@@ -391,6 +392,7 @@
 		49A0AE612707FC02003A5F27 /* PDFCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFCell.swift; sourceTree = "<group>"; };
 		49A0AE662708013E003A5F27 /* PreviewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewCell.swift; sourceTree = "<group>"; };
 		49A52E6626FAB1F600D1A0D2 /* CustomTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTitleView.swift; sourceTree = "<group>"; };
+		49B4329E27193995000A3F13 /* CollectFundsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectFundsViewController.swift; sourceTree = "<group>"; };
 		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
 		49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + ContextMenu.swift"; sourceTree = "<group>"; };
 		49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCardCell.swift; sourceTree = "<group>"; };
@@ -863,6 +865,7 @@
 				497CF7A626F82818003EF69E /* ParentLocationSearchViewController.swift */,
 				4958118926D978EF002C8F3B /* LocationSearchViewController.swift */,
 				497F1F3126DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift */,
+				49B4329E27193995000A3F13 /* CollectFundsViewController.swift */,
 			);
 			path = Account;
 			sourceTree = "<group>";
@@ -1272,6 +1275,7 @@
 				496D56C52659FF2100C3E7FD /* MainDetailViewController.swift in Sources */,
 				4964E57726499D74005B3268 /* RegisteredWalletViewController.swift in Sources */,
 				4933335C26825D6700B8BFC2 /* CustomSegmentedControl.swift in Sources */,
+				49B4329F27193995000A3F13 /* CollectFundsViewController.swift in Sources */,
 				4969A26C2702C8810093068C /* BackgroundView7.swift in Sources */,
 				493BF9E4264C549D00B9C9D2 /* ScannerViewController.swift in Sources */,
 				4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */,

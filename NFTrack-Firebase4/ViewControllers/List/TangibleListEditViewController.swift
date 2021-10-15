@@ -11,7 +11,7 @@
  */
 
 import UIKit
-import Firebase
+import FirebaseStorage
 import QuickLook
 import Combine
 
@@ -141,7 +141,7 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
         
         // the digital type should never run
         if post.type == "digital" {
-            configureImagePreview(postType: .digital(.onlineDirect), superView: scrollView)
+            configureImagePreview(postType: .digital, superView: scrollView)
         } else {
             configureImagePreview(postType: .tangible, superView: scrollView)
         }

@@ -248,7 +248,7 @@ extension DigitalAssetViewController {
                                     
                                     return Future<Int, PostingError> { promise in
                                         self.transactionService.createFireStoreEntry(
-//                                            documentId: &self.documentId,
+                                            documentId: &self.documentId,
                                             senderAddress: senderAddress,
                                             escrowHash: "N/A",
                                             auctionHash: auctionHash,

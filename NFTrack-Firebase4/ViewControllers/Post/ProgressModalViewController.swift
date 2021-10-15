@@ -52,24 +52,24 @@ struct PostProgressData {
     }
 }
 
-struct PostProgressData1 {
-    var phases: [PostProgress]
-    
-    init(postType: PostType) {
-        switch postType {
-            case .tangible:
-                phases = [.estimatGas, .deployingEscrow, .minting, .images]
-            case .digital(.onlineDirect):
-                phases = [.estimatGas, .images, .deployingEscrow, .minting]
-            case .digital(.openAuction):
-                phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
-        }
-    }
-    
-    func asString(i: Int) -> String {
-        return phases[i].asString()
-    }
-}
+//struct PostProgressData1 {
+//    var phases: [PostProgress]
+//    
+//    init(postType: PostType) {
+//        switch postType {
+//            case .tangible:
+//                phases = [.estimatGas, .deployingEscrow, .minting, .images]
+//            case .digital(.onlineDirect):
+//                phases = [.estimatGas, .images, .deployingEscrow, .minting]
+//            case .digital(.openAuction):
+//                phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
+//        }
+//    }
+//    
+//    func asString(i: Int) -> String {
+//        return phases[i].asString()
+//    }
+//}
 
 class ProgressModalViewController: UIViewController {
     private var titleLabel: UILabel!

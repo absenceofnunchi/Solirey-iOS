@@ -112,6 +112,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var shippingInfo: ShippingInfo?
     var saleType: SaleType!
     var tokenID: String?
+    var category: String!
     
     init(
         documentId: String,
@@ -146,7 +147,8 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         address: String?,
         shippingInfo: ShippingInfo?,
         saleType: SaleType,
-        tokenId: String?
+        tokenId: String?,
+        category: String
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
@@ -180,6 +182,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.shippingInfo = shippingInfo
         self.saleType = saleType
         self.tokenID = tokenId
+        self.category = category
     }
 }
 
@@ -335,6 +338,59 @@ enum Category: Int, CaseIterable {
     
     static func getAll() -> [String] {
         return Category.allCases.map { $0.asString() }
+    }
+}
+
+extension Category: RawRepresentable {
+    typealias RawValue = Int
+    
+    var rawValue: RawValue {
+        switch self {
+            case .electronics:
+                return 0
+            case .vehicle:
+                return 1
+            case .realEstate:
+                return 2
+            case .digital:
+                return 3
+            case .other:
+                return 4
+        }
+    }
+    
+    init?(rawValue: String) {
+        switch rawValue {
+            case "Electronics":
+                self = .electronics
+            case "Vehicle":
+                self = .vehicle
+            case "Real Estate":
+                self = .realEstate
+            case "Digital":
+                self = .digital
+            case "Other":
+                self = .other
+            default:
+                return nil
+        }
+    }
+    
+    init?(rawValue: Int) {
+        switch rawValue {
+            case 0:
+                self = .electronics
+            case 1:
+                self = .vehicle
+            case 2:
+                self = .realEstate
+            case 3:
+                self = .digital
+            case 4:
+                self = .other
+            default:
+                return nil
+        }
     }
 }
 
@@ -598,7 +654,7 @@ struct PanelButton {
 
 enum PostType {
     case tangible
-    case digital(_ saleFormat: SaleFormat)
+    case digital
     
     func asString() -> String {
         switch self {
@@ -618,29 +674,27 @@ enum PostType {
         return segmentTextArr
     }
     
-    var paymentMethod: [PaymentMethod] {
-        switch self {
-            case .tangible:
-                return [.escrow, .directTransfer]
-            case .digital(.onlineDirect):
-                return [.escrow]
-            case .digital(.openAuction):
-                return [.auctionBeneficiary]
-        }
-    }
+//    var paymentMethod: [PaymentMethod] {
+//        switch self {
+//            case .tangible:
+//                return [.escrow, .directTransfer]
+//            case .digital(.onlineDirect):
+//                return [.escrow]
+//            case .digital(.openAuction):
+//                return [.auctionBeneficiary]
+//        }
+//    }
 }
 
 extension PostType: RawRepresentable, CaseCountable {
     typealias RawValue = Int
-
+    
     var rawValue: RawValue {
         switch self {
             case .tangible:
                 return 0
-            case .digital(.onlineDirect):
+            case .digital:
                 return 1
-            case .digital(.openAuction):
-                return 2
         }
     }
     
@@ -649,12 +703,74 @@ extension PostType: RawRepresentable, CaseCountable {
             case 0:
                 self = .tangible
             case 1:
-                self = .digital(.onlineDirect)
+                self = .digital
             default:
                 return nil
         }
     }
 }
+
+// No need to distinguish different payment methods within digital on PostType because PaymentMethod does it separately.
+// The initial need for the subdivision was for the Progress view controller, which have switched over to using PaymentMethod
+//enum PostType {
+//    case tangible
+//    case digital(_ saleFormat: SaleFormat)
+//
+//    func asString() -> String {
+//        switch self {
+//            case .tangible:
+//                return NSLocalizedString("Tangible", comment: "")
+//            case .digital:
+//                return NSLocalizedString("Digital", comment: "")
+//        }
+//    }
+//
+//    static func getSegmentText() -> [String] {
+//        let segmentArr = PostType.allValues
+//        var segmentTextArr = [String]()
+//        for segment in segmentArr {
+//            segmentTextArr.append(NSLocalizedString(segment.asString(), comment: ""))
+//        }
+//        return segmentTextArr
+//    }
+//
+//    var paymentMethod: [PaymentMethod] {
+//        switch self {
+//            case .tangible:
+//                return [.escrow, .directTransfer]
+//            case .digital(.onlineDirect):
+//                return [.escrow]
+//            case .digital(.openAuction):
+//                return [.auctionBeneficiary]
+//        }
+//    }
+//}
+//
+//extension PostType: RawRepresentable, CaseCountable {
+//    typealias RawValue = Int
+//
+//    var rawValue: RawValue {
+//        switch self {
+//            case .tangible:
+//                return 0
+//            case .digital(.onlineDirect):
+//                return 1
+//            case .digital(.openAuction):
+//                return 2
+//        }
+//    }
+//
+//    init?(rawValue: Int) {
+//        switch rawValue {
+//            case 0:
+//                self = .tangible
+//            case 1:
+//                self = .digital(.onlineDirect)
+//            default:
+//                return nil
+//        }
+//    }
+//}
 
 protocol CaseCountable {
     static var caseCount: Int { get }
@@ -705,25 +821,25 @@ enum SaleConfig {
 
     var value: DeliveryAndPaymentMethod? {
         switch self {
-            case .hybridMethod(postType: .tangible,saleType: .newSale, delivery: .inPerson, payment: .escrow):
+            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .inPerson, payment: .escrow):
                 return .tangibleNewSaleInPersonEscrow
-            case .hybridMethod(postType: .tangible,saleType: .newSale, delivery: .inPerson, payment: .directTransfer):
+            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .inPerson, payment: .directTransfer):
                 return .tangibleNewSaleInPersonDirectPayment
-            case .hybridMethod(postType: .tangible,saleType: .newSale, delivery: .shipping, payment: .escrow):
+            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .shipping, payment: .escrow):
                 return .tangibleNewSaleShippingEscrow
-            case .hybridMethod(postType: .tangible,saleType: .resale, delivery: .inPerson, payment: .escrow):
+            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .inPerson, payment: .escrow):
                 return .tangibleResaleInPersonEscrow
-            case .hybridMethod(postType: .tangible,saleType: .resale, delivery: .inPerson, payment: .directTransfer):
+            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .inPerson, payment: .directTransfer):
                 return .tangibleResaleInPersonDirectPayment
-            case .hybridMethod(postType: .tangible,saleType: .resale, delivery: .shipping, payment: .escrow):
+            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .shipping, payment: .escrow):
                 return .tangibleResaleShippingEscrow
-            case .hybridMethod(postType: .digital(.onlineDirect), saleType: .newSale, delivery: .onlineTransfer, payment: .directTransfer):
+            case .hybridMethod(postType: .digital, saleType: .newSale, delivery: .onlineTransfer, payment: .directTransfer):
                 return .digitalNewSaleOnlineDirectPayment
-            case .hybridMethod(postType: .digital(.openAuction), saleType: .newSale, delivery: .onlineTransfer, payment: .auctionBeneficiary):
+            case .hybridMethod(postType: .digital, saleType: .newSale, delivery: .onlineTransfer, payment: .auctionBeneficiary):
                 return .digitalNewSaleAuctionBeneficiary
-            case .hybridMethod(postType: .digital(.onlineDirect), saleType: .resale, delivery: .onlineTransfer, payment: .directTransfer):
+            case .hybridMethod(postType: .digital, saleType: .resale, delivery: .onlineTransfer, payment: .directTransfer):
                 return .digitalResaleOnlineDirectPayment
-            case .hybridMethod(postType: .digital(.openAuction), saleType: .resale, delivery: .onlineTransfer, payment: .auctionBeneficiary):
+            case .hybridMethod(postType: .digital, saleType: .resale, delivery: .onlineTransfer, payment: .auctionBeneficiary):
                 return .digitalResaleAuctionBeneficiary
             default:
                 return nil
@@ -850,6 +966,14 @@ struct InfoText {
     
     static let quickUICheck = """
     The Unique Identifier (UI) is given to each registered item to fasciliate the tracking of the resale history.  If an item with the same UI already exists, it cannot be posted as a new item, but has to be resold from the section of your purchased items called Purchases.  If an item was not initially purchased from the app, but is already listed (i.e. a gift), please contact the support.
+    """
+    
+    static let simplePaymentComplete = """
+    You have successfully purchased the item. Check the "Purchases" menu in the "Accounts" tab to see your item.
+    """
+    
+    static let fundsToCollect = """
+    Certain smart contracts such as "Direct Transfer" requires the seller to withdraw the fund paid by the buyer, instead of the fund automatically being transferred into the seller's account.  This is the safest way to move the fund into the seller's account. The fund will safely reside in the smart contract used in the transaction indefinitely and only the seller is authorized to withdraw the it into his or her account at their convenience.
     """
 }
 

@@ -276,7 +276,7 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
     // MARK: - configureImagePreview
     final override func configureImagePreview() {
         configureImagePreview(
-            postType: .digital(.onlineDirect),
+            postType: .digital,
             superView: scrollView,
             closeButtonEnabled: closeButtonEnabled
         )

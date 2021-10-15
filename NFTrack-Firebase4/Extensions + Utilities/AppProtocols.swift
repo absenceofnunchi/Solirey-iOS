@@ -13,6 +13,7 @@ import CoreSpotlight
 import MobileCoreServices
 import Combine
 import CryptoKit
+import web3swift
 
 // WalletViewController
 protocol WalletDelegate: AnyObject {
@@ -1014,7 +1015,7 @@ extension PostParseDelegate {
         guard let querySnapshot = querySnapshot else { return nil }
         for document in querySnapshot.documents {
             let data = document.data()
-            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address: String!
+            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
             var files, savedBy: [String]?
             var shippingInfo: ShippingInfo!
@@ -1113,6 +1114,8 @@ extension PostParseDelegate {
                     case "tokenId":
                         // The existing Token ID is needed for the resale since a new token is not being minted
                         tokenId = item.value as? String
+                    case "category":
+                        category = item.value as? String
                     default:
                         break
                 }
@@ -1151,7 +1154,8 @@ extension PostParseDelegate {
                 address: address,
                 shippingInfo: shippingInfo,
                 saleType: saleType,
-                tokenId: tokenId
+                tokenId: tokenId,
+                category: category
             )
             
             postArr.append(post)
@@ -1162,7 +1166,7 @@ extension PostParseDelegate {
     // Parse single document query
     func parseDocument(document: DocumentSnapshot) -> Post? {
         guard let data = document.data() else { return nil }
-        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address: String!
+        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category: String!
         var tokenId: String?
         var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
         var files, savedBy: [String]?
@@ -1261,6 +1265,8 @@ extension PostParseDelegate {
                 case "tokenId":
                     // The existing Token ID is needed for the resale since a new token is not being minted
                     tokenId = item.value as? String
+                case "category":
+                    category = item.value as? String
                 default:
                     break
             }
@@ -1299,7 +1305,8 @@ extension PostParseDelegate {
             address: address,
             shippingInfo: shippingInfo,
             saleType: saleType,
-            tokenId: tokenId
+            tokenId: tokenId,
+            category: category
         )
         return post
     }
@@ -2204,5 +2211,41 @@ extension ContextAction {
             self?.resale(post)
             completion(true)
         }
+    }
+}
+
+protocol FetchContractAddress where Self: UIViewController {
+    var storage: Set<AnyCancellable>! { get set }
+    var alert: Alerts! { get set }
+}
+
+extension FetchContractAddress {
+    func getContractAddress(with hash: String, completion: @escaping (EthereumAddress) -> Void) {
+        Deferred {
+            Future<TransactionReceipt, PostingError> { promise in
+                DispatchQueue.global().async {
+                    Web3swiftService.getReceipt(hash: hash, promise: promise)
+                }
+            }
+        }
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .failure(let error):
+                    self?.alert.showDetail("Contract Address Loading Error", with: error.localizedDescription, for: self)
+                case .finished:
+                    break
+            }
+        } receiveValue: { [weak self] (receipt) in
+            guard let contractAddress = receipt.contractAddress else {
+                self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
+                return
+            }
+            
+            DispatchQueue.main.async {
+                completion(contractAddress)
+            }
+            
+        }
+        .store(in: &storage)
     }
 }

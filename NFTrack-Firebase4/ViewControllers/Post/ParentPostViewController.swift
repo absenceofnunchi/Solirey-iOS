@@ -351,8 +351,10 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
                 }
             }
             
+            guard let postType = self?.postType else { return }
+            
             let saleConfig = SaleConfig.hybridMethod(
-                postType: self?.postType ?? .tangible,
+                postType: postType,
                 saleType: (self?.post != nil) ? .resale : .newSale,
                 delivery: deliveryMethodEnum,
                 payment: paymentMethodEnum
@@ -850,18 +852,6 @@ extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigati
 }
 
 extension ParentPostViewController: PreviewDelegate {
-//    // MARK: - configureImagePreview
-//    func configureImagePreview(postType: PostType) {
-//        imagePreviewVC = ImagePreviewViewController(postType: postType)
-//        imagePreviewVC.data = previewDataArr
-//        imagePreviewVC.delegate = self
-//        imagePreviewVC.view.translatesAutoresizingMaskIntoConstraints = false
-//        addChild(imagePreviewVC)
-//        imagePreviewVC.view.frame = view.bounds
-//        view.addSubview(imagePreviewVC.view)
-//        imagePreviewVC.didMove(toParent: self)
-//    }
-//    
 //    // MARK: - didDeleteImage
 //    func didDeleteFileFromPreview(filePath: URL) {
 //        previewDataArr = previewDataArr.filter { $0.filePath != filePath }

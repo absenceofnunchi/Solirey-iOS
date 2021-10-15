@@ -21,7 +21,7 @@
  Note:
  1. The SimplePaymentABI has to be changed to the SimplePaymentWithRoyaltyABI for resale in order for the original artists to be attributed.
  2. In order to promote the uniformity among the payment methods, the progress steps are a bit contrived. For example, the escrow progress include three steps: 1) purchase 2) transfer 3) receive.
-    The simple payment technically only has 2 steps 1) purchase 2) withdraw. However, in order to show the uniform design in ListVC as well to repurpose the data fetch request to Firestore for escrow, I decided to include the transfer status for SimplePayment (as in PostStatus.transfer.rawValue used for escrow). The steps are 1) purchase 2) transfer 3) complete. Since the purchase and the transfer are done in 1 step, both progress nodes are going to be fulfilled at the same time.  The final step "complete" is for the seller to withdraw their fund.
+    The simple payment technically only has 2 steps 1) purchase 2) withdraw. However, in order to show the uniform design in ListVC as well to repurpose the data fetch request to Firestore for escrow, I decided to include the transfer status for SimplePayment (as in PostStatus.transfer.rawValue used for escrow). The steps are 1) purchase 2) transfer 3) complete. Since the purchase and the transfer are done in 1 step, all of the progress nodes are going to be fulfilled at the same time. The progress bar will be shown in either the PurchasesVC or CollectFundsVC.
  3. The SimplePayment contract address hash is saved under escrowHash
  */
 
@@ -219,13 +219,31 @@ extension SimplePaymentDetailViewController {
             case 3:
                 callContractMethod(for: .abort)
                 break
+            case 4:
+//                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Transaction Complete!", detail: InfoText.simplePaymentComplete)])
+//                self.present(infoVC, animated: true, completion: nil)
+                
+                // sell
+                let resaleVC = ResaleViewController()
+                resaleVC.post = post
+                resaleVC.title = "Resale"
+                navigationController?.pushViewController(resaleVC, animated: true)
+                break
             case 11:
-                // Needs to be for both tangible and digital depending on the category
-//                let listEditVC = TangibleListEditViewController()
-//                listEditVC.delegate = self
-//                listEditVC.post = post
-//                listEditVC.userId = userId
-//                self.navigationController?.pushViewController(listEditVC, animated: true)
+                let category = Category(rawValue: post.category)
+                switch category {
+                    case .digital:
+                        let listEditVC = DigitalListEditViewController()
+                        listEditVC.post = post
+                        self.navigationController?.pushViewController(listEditVC, animated: true)
+                        break
+                    default:
+                        let listEditVC = TangibleListEditViewController()
+                        listEditVC.delegate = self
+                        listEditVC.post = post
+                        listEditVC.userId = userId
+                        self.navigationController?.pushViewController(listEditVC, animated: true)
+                }
                 break
             default:
                 break
@@ -249,7 +267,7 @@ extension SimplePaymentDetailViewController {
         )
         
         isPending = true
-        simplePaymentInfoLoader.initiateLoadSequence()
+            simplePaymentInfoLoader.initiateLoadSequence()
             .sink { [weak self] (completion) in
                 self?.isPending = false
                 switch completion {
@@ -272,18 +290,17 @@ extension SimplePaymentDetailViewController {
             } receiveValue: { [weak self] (propertyFetchModels: [SmartContractProperty]) in
                 self?.parseFetchResultToDisplay(propertyFetchModels)
                 self?.isPending = false
-                
+
                 // SimplePaymentButtonController configures the button and posts the resulting data here
                 guard let tokenAdded = self?.simplePaymentButtonController.tokenAdded, tokenAdded == true else { return }
-                
+
                 if let status = self?.simplePaymentButtonController.configure() {
                     // abort, pay, withdraw, withdraw fee methods, all of which are the methods on the smart contract
                     self?.configureStatusButton(buttonTitle: status.methodName.0, tag: status.methodName.1)
                 } else {
                     // If the status doesn't exist, it means the status isn't going to be any of the methods on the smart contract
-                    // This is specifically for the buyer. It's a waiting period for the seller to withdraw the fund, even though the buyer no longer has any obligations after the purchase is done.
-                    // This state exists only to maintain the uniformity of ListVC along with the tangible and digital escrow payment items, which are fetched by the state "pending" or "transferred".
-//                    self?.configureStatusButton(buttonTitle: status.methodName.0, tag: status.methodName.1)
+                    // This is specifically for the buyer.
+                    self?.configureStatusButton(buttonTitle: "Sell", tag: 4)
                 }
             }
             .store(in: &self.storage)
@@ -435,11 +452,11 @@ extension SimplePaymentDetailViewController {
                                     return
                                 }
     
-                                //                            // if the socket timed out, reconnect
-                                //                            if let isSocketConnected = self.socketDelegate.socketProvider?.socket.isConnected,
-                                //                               isSocketConnected == false {
-                                //                                self.createSocket()
-                                //                            }
+                                // if the socket timed out, reconnect
+                                if let isSocketConnected = self.socketDelegate.socketProvider?.socket.isConnected,
+                                   isSocketConnected == false {
+                                    self.createSocket()
+                                }
                                 
                                 self.transactionService.prepareTransactionForWriting(
                                     method: method.rawValue,
@@ -492,8 +509,7 @@ extension SimplePaymentDetailViewController {
                                     )
                                 case .withdraw:
                                     self.db.collection("post").document(self.post.documentId).updateData([
-                                        "status": SimplePaymentStatus.complete.rawValue,
-                                        "confirmReceivedDate": Date()
+                                        "isWithdrawn": true
                                     ], completion: { (error) in
                                         if let error = error {
                                             print("firebase error", error)
@@ -526,6 +542,10 @@ extension SimplePaymentDetailViewController {
                                             self.alert.showDetail("Success!", with: "You have successfully purchased the item.", for: self)
                                         case .withdraw:
                                             self.alert.showDetail("Success!", with: "You have successfully withdrawn the fund.", for: self)
+                                            self.configureStatusButton(buttonTitle: "Success!", tag: 100)
+                                            DispatchQueue.main.async {
+                                                self.navigationController?.popViewController(animated: true)
+                                            }
                                         case .withdrawFee:
                                             self.alert.showDetail("Success!", with: "You have successfully collected the fee.", for: self)
                                     }

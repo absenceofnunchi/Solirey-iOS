@@ -507,7 +507,7 @@ extension ListDetailViewController {
 //                            executeReadTransaction: executeReadTransaction,
 //                            contractAddress: contractAddress
 //                        )
-                        print("trasnfer event")
+                        print("transfer event")
                         break
                     case _ where topics.contains(Topics.PurchaseConfirmed):
                         self?.getStatus()

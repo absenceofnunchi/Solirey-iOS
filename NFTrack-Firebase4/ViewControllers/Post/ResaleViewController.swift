@@ -12,7 +12,7 @@ class ResaleViewController: NewPostViewController {
         if let post = post, post.type == "tangible" {
             addBaseViewController(postVC, postType: .tangible)
         } else {
-            addBaseViewController(digitalVC, postType: .digital(.onlineDirect))
+            addBaseViewController(digitalVC, postType: .digital)
         }
     }
     
@@ -21,16 +21,6 @@ class ResaleViewController: NewPostViewController {
         // Value to be passed from ListDetailVC during resale
         // The non-nil post indicates that this is a resale not a brand new sale
         super.addBaseViewController(viewController, postType: postType)
-        viewController.post = post
-        
-        
-        
-//        viewController.postType = postType
-//        addChild(viewController)
-//        viewController.view.translatesAutoresizingMaskIntoConstraints = false
-//        view.addSubview(viewController.view)
-//        viewController.didMove(toParent: self)
-//        viewController.view.fill()
     }
 }
 

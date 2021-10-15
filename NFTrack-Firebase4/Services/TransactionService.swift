@@ -873,7 +873,7 @@ extension TransactionService {
     }
     
     final func createFireStoreEntry(
-//        documentId: inout String?,
+        documentId: inout String?,
         senderAddress: String,
         escrowHash: String,
         auctionHash: String,
@@ -899,7 +899,7 @@ extension TransactionService {
         let ref = self.db.collection("post")
         let id = ref.document().documentID
         // for deleting photos afterwards
-//        documentId = id
+        documentId = id
                 
         let shippingInfoData: [String: Any] = [
             "scope": shippingInfo?.scope.stringValue ?? "NA" as String,

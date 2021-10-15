@@ -27,9 +27,10 @@ class AccountViewController: UIViewController {
         AccountMenu(imageTitle: "person.circle", imageColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), titleString: NSLocalizedString("Update Profile", comment: "")),
         AccountMenu(imageTitle: "lock.circle", imageColor: UIColor(red: 49/255, green: 11/255, blue: 11/255, alpha: 1), titleString: NSLocalizedString("Reset Password", comment: "")),
         AccountMenu(imageTitle: "purchased.circle", imageColor: UIColor(red: 255/255, green: 160/255, blue: 160/255, alpha: 1), titleString: NSLocalizedString("Purchases", comment: "")),
-        AccountMenu(imageTitle: "arrowshape.turn.up.right.circle", imageColor: UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1), titleString: NSLocalizedString("Logout", comment: "")),
+        AccountMenu(imageTitle: "checkmark.circle", imageColor: UIColor(red: 148/255, green: 181/255, blue: 192/255, alpha: 1), titleString: NSLocalizedString("Collect Funds", comment: "")),
         AccountMenu(imageTitle: "pencil.circle", imageColor: .blue, titleString: NSLocalizedString("Pending Reviews", comment: "")),
         AccountMenu(imageTitle: "envelope.circle", imageColor: UIColor(red: 61/255, green: 156/255, blue: 133/255, alpha: 1), titleString: NSLocalizedString("Feedback", comment: "")),
+        AccountMenu(imageTitle: "arrowshape.turn.up.right.circle", imageColor: UIColor(red: 156/255, green: 61/255, blue: 84/255, alpha: 1), titleString: NSLocalizedString("Logout", comment: "")),
         AccountMenu(imageTitle: "trash.circle", imageColor: UIColor(red: 226/255, green: 112/255, blue: 58/255, alpha: 1), titleString: NSLocalizedString("Delete Account", comment: ""))
     ]
     private var logoutButton: UIButton!
@@ -102,7 +103,7 @@ extension AccountViewController: TableViewConfigurable {
         scrollView.addSubview(customNavView)
         
         balanceCardView.subtitleLabel?.text = "WALLET BALANCE"
-        balanceCardView.tag = 7
+        balanceCardView.tag = 50
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
         balanceCardView.addGestureRecognizer(tap)
         balanceCardView.translatesAutoresizingMaskIntoConstraints = false
@@ -174,12 +175,15 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
                 let purchasesVC = PurchasesViewController()
                 self.navigationController?.pushViewController(purchasesVC, animated: true)
             case 3:
-                didLogout()
+                let collectFundsVC = CollectFundsViewController()
+                self.navigationController?.pushViewController(collectFundsVC, animated: true)
             case 4:
                 review()
             case 5:
                 print("feedback")
             case 6:
+                didLogout()
+            case 7:
                 didDeleteUser()
             default:
                 break
@@ -192,7 +196,7 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
         feedbackGenerator.impactOccurred()
         
         switch v.tag {
-            case 7:
+            case 50:
                 let walletVC = WalletViewController()
                 walletVC.modalPresentationStyle = .fullScreen
                 self.present(walletVC, animated: true)

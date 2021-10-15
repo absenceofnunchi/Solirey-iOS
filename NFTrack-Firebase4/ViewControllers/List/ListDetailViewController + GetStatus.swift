@@ -170,9 +170,6 @@ extension ListDetailViewController: ParseAddressDelegate {
                         }
                         break
                     case "1":
-                        print("post.buyerUserId", post.buyerUserId as Any)
-                        print("userId", userId as Any)
-                        
                         if post.transferHash != nil {
                             if post.sellerUserId == userId {
                                 self?.configureStatusButton(buttonTitle: "Receipt Pending", tag: 9)

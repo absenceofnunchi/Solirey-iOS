@@ -9,7 +9,7 @@ import UIKit
 import FirebaseFirestore
 import Combine
 
-class ProfilePostingsViewController: ProfileListViewController<Post>, PostParseDelegate {
+class ProfilePostingsViewController: ProfileListViewController<Post>, PostParseDelegate, FetchContractAddress {
     private var isSaved: Bool!
     final var storage: Set<AnyCancellable>! = {
         return Set<AnyCancellable>()
@@ -46,9 +46,43 @@ class ProfilePostingsViewController: ProfileListViewController<Post>, PostParseD
     
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = post
-        self.navigationController?.pushViewController(listDetailVC, animated: true)
+        
+        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod) else {
+            self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
+            return
+        }
+        
+        switch paymentMethod {
+            case .escrow:
+                let listDetailVC = ListDetailViewController()
+                listDetailVC.post = post
+                // refreshes the MainDetailVC table when the user updates the status
+                self.navigationController?.pushViewController(listDetailVC, animated: true)
+                break
+            case .auctionBeneficiary:
+                guard let auctionHash = post.auctionHash else { return }
+                getContractAddress(with: auctionHash) { [weak self] (contractAddress) in
+                    guard let currentAddress = Web3swiftService.currentAddress else {
+                        self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
+                        return
+                    }
+                    
+                    DispatchQueue.main.async {
+                        let auctionDetailVC = AuctionDetailViewController(auctionContractAddress: contractAddress, myContractAddress: currentAddress)
+                        auctionDetailVC.post = post
+                        self?.navigationController?.pushViewController(auctionDetailVC, animated: true)
+                    }
+                }
+                break
+            case .directTransfer:
+                guard let escrowHash = post.escrowHash else { return }
+                getContractAddress(with: escrowHash) { [weak self] (contractAddress) in
+                    let simplePaymentDetailVC = SimplePaymentDetailViewController(deployedContractAddress: contractAddress)
+                    simplePaymentDetailVC.post = post
+                    self?.navigationController?.pushViewController(simplePaymentDetailVC, animated: true)
+                }
+                break
+        }
     }
     
     final override func fetchData() {

@@ -10,7 +10,7 @@ import FirebaseFirestore
 import Combine
 import web3swift
 
-class ListViewController: ParentListViewController<Post> {
+class ListViewController: ParentListViewController<Post>, FetchContractAddress {
     private let userDefaults = UserDefaults.standard
     final var segmentedControl: UISegmentedControl!
     private var currentIndex: Int! = 0
@@ -187,35 +187,6 @@ class ListViewController: ParentListViewController<Post> {
                 }
                 break
         }
-    }
-    
-    func getContractAddress(with hash: String, completion: @escaping (EthereumAddress) -> Void) {
-        Deferred {
-            Future<TransactionReceipt, PostingError> { promise in
-                DispatchQueue.global().async {
-                    Web3swiftService.getReceipt(hash: hash, promise: promise)
-                }
-            }
-        }
-        .sink { [weak self] (completion) in
-            switch completion {
-                case .failure(let error):
-                    self?.alert.showDetail("Contract Address Loading Error", with: error.localizedDescription, for: self)
-                case .finished:
-                    break
-            }
-        } receiveValue: { [weak self] (receipt) in
-            guard let contractAddress = receipt.contractAddress else {
-                self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
-                return
-            }
-            
-            DispatchQueue.main.async {
-                completion(contractAddress)
-            }
-            
-        }
-        .store(in: &storage)
     }
     
     // MARK: - didRefreshTableView

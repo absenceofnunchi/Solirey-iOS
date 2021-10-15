@@ -17,7 +17,7 @@ import UIKit
 import FirebaseFirestore
 import Combine
 
-class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate {
+class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate, FetchContractAddress {
     private let CELL_HEIGHT: CGFloat = 450
     private var customNavView: BackgroundView5!
     final var storage: Set<AnyCancellable>! = {
@@ -35,7 +35,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
         dataStore = PostImageDataStore(posts: postArr)
     }
     
-    final override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         fetchData()
         setConstraints()
@@ -71,7 +71,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
         ])
     }
     
-    private func fetchData() {
+    func fetchData() {
         guard let userId = userId else { return }
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
@@ -113,7 +113,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
             }
     }
     
-    private func refetchData(lastSnapshot: QueryDocumentSnapshot) {
+    func refetchData(lastSnapshot: QueryDocumentSnapshot) {
         guard let userId = userId else { return }
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
@@ -179,13 +179,47 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
     
     
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = postArr[indexPath.row]
-        self.navigationController?.pushViewController(listDetailVC, animated: true)
+        let post = postArr[indexPath.row]
+        
+        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod) else {
+            self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
+            return
+        }
+        
+        switch paymentMethod {
+            case .escrow:
+                let listDetailVC = ListDetailViewController()
+                listDetailVC.post = post
+                // refreshes the MainDetailVC table when the user updates the status
+                self.navigationController?.pushViewController(listDetailVC, animated: true)
+                break
+            case .auctionBeneficiary:
+                guard let auctionHash = post.auctionHash else { return }
+                getContractAddress(with: auctionHash) { [weak self] (contractAddress) in
+                    guard let currentAddress = Web3swiftService.currentAddress else {
+                        self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
+                        return
+                    }
+                    
+                    DispatchQueue.main.async {
+                        let auctionDetailVC = AuctionDetailViewController(auctionContractAddress: contractAddress, myContractAddress: currentAddress)
+                        auctionDetailVC.post = post
+                        self?.navigationController?.pushViewController(auctionDetailVC, animated: true)
+                    }
+                }
+                break
+            case .directTransfer:
+                guard let escrowHash = post.escrowHash else { return }
+                getContractAddress(with: escrowHash) { [weak self] (contractAddress) in
+                    let simplePaymentDetailVC = SimplePaymentDetailViewController(deployedContractAddress: contractAddress)
+                    simplePaymentDetailVC.post = post
+                    self?.navigationController?.pushViewController(simplePaymentDetailVC, animated: true)
+                }
+                break
+        }
     }
     
     final override func executeAfterDragging() {
-        guard postArr.count > 0 else { return }
         refetchData(lastSnapshot: lastSnapshot)
     }
 }
@@ -202,7 +236,7 @@ extension PurchasesViewController: ContextAction {
         return nil
     }
     
-    final override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+    override func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let post = postArr[indexPath.row]
         var actionArray = [UIAction]()
         
@@ -246,7 +280,7 @@ extension PurchasesViewController: ContextAction {
         return UISwipeActionsConfiguration(actions: [])
     }
     
-    final override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+    override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let post = postArr[indexPath.row]
         let profileAction = navToProfileContextualAction(post)
         let imageAction = imagePreviewContextualAction(post)

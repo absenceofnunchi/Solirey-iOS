@@ -326,11 +326,10 @@ class PostViewController: ParentPostViewController {
                                             }
                                             senderAddress = txResult.senderAddress
                                         }
-                                        print("STEP 8")
                                         
                                         return Future<Int, PostingError> { promise in
                                             self.transactionService.createFireStoreEntry(
-//                                                documentId: &self.documentId,
+                                                documentId: &self.documentId,
                                                 senderAddress: senderAddress,
                                                 escrowHash: escrowHash,
                                                 auctionHash: "N/A",
@@ -510,13 +509,23 @@ class PostViewController: ParentPostViewController {
                                     // confirm that the receipt of the transaction is obtained
                                     self.transactionService.confirmReceipt(txHash: txResult.txResult.hash)
                                         .sink { (completion) in
-                                            print(completion)
+                                            switch completion {
+                                                case .failure(let error):
+                                                    self.processFailure(error)
+                                                default:
+                                                    break
+                                            }
                                         } receiveValue: { (receipt) in
                                             print(receipt)
                                             // confirm that the block is added to the chain
                                             self.transactionService.confirmTransactions(receipt)
                                                 .sink(receiveCompletion: { (completion) in
-                                                    print(completion)
+                                                    switch completion {
+                                                        case .failure(let error):
+                                                            self.processFailure(error)
+                                                        default:
+                                                            break
+                                                    }
                                                 }, receiveValue: { (receipt) in
                                                     // mint a new token and transfer it to the payment contract
                                                     self.mintAndTransfer(receipt, password: password, mintParameters: mintParameters)

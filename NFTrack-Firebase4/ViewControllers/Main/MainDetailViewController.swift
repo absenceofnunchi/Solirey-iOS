@@ -11,7 +11,7 @@ import web3swift
 import Combine
 import FirebaseMessaging
 
-class MainDetailViewController: ParentListViewController<Post>, PostParseDelegate {
+class MainDetailViewController: ParentListViewController<Post>, PostParseDelegate, FetchContractAddress {
     var storage: Set<AnyCancellable>! = {
         return Set<AnyCancellable>()
     }()
@@ -267,35 +267,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 }
                 break
         }
-    }
-    
-    func getContractAddress(with hash: String, completion: @escaping (EthereumAddress) -> Void) {
-        Deferred {
-            Future<TransactionReceipt, PostingError> { promise in
-                DispatchQueue.global().async {
-                    Web3swiftService.getReceipt(hash: hash, promise: promise)
-                }
-            }
-        }
-        .sink { [weak self] (completion) in
-            switch completion {
-                case .failure(let error):
-                    self?.alert.showDetail("Contract Address Loading Error", with: error.localizedDescription, for: self)
-                case .finished:
-                    break
-            }
-        } receiveValue: { [weak self] (receipt) in
-            guard let contractAddress = receipt.contractAddress else {
-                self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
-                return
-            }
-            
-            DispatchQueue.main.async {
-                completion(contractAddress)
-            }
-            
-        }
-        .store(in: &storage)
     }
 }
 

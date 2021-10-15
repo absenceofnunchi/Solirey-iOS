@@ -180,11 +180,14 @@ extension PostViewController {
                 }
                 senderAddress = txResult.senderAddress
             }
-            print("STEP 8")
             
+            guard let self = self else {
+                return Fail(error: PostingError.generalError(reason: "Unable to prepare data for the database update."))
+                    .eraseToAnyPublisher()
+            }
             return Future<Int, PostingError> { promise in
-                self?.transactionService.createFireStoreEntry(
-                    //                    documentId: &self?.documentId,
+                self.transactionService.createFireStoreEntry(
+                    documentId: &self.documentId,
                     senderAddress: senderAddress,
                     escrowHash: escrowHash,
                     auctionHash: "N/A",
@@ -202,6 +205,8 @@ extension PostViewController {
                     topics: topics,
                     urlStrings: urlStrings,
                     ipfsURLStrings: [],
+                    isWithdrawn: false,
+                    isAdminWithdrawn: false,
                     promise: promise
                 )
             }
@@ -212,8 +217,6 @@ extension PostViewController {
                 case .failure(let error):
                     self?.processFailure(error)
                 case .finished:
-                    print("finished")
-                    
                     // index Core Spotlight
                     self?.indexSpotlight(
                         itemTitle: mintParameters.itemTitle,
