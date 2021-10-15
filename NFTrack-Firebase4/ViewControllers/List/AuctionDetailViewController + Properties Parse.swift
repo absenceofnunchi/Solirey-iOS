@@ -10,6 +10,7 @@ import Combine
 import web3swift
 import BigInt
 
+// Fetch the following properties:
 // starting bid
 // current highest bid
 // current highest bidder
@@ -95,7 +96,7 @@ extension AuctionDetailViewController {
             switch propertyFetchModel.propertyName {
                 case AuctionContract.ContractProperties.startingBid.value.0:
                     if let startingBid = result["0"] as? BigUInt,
-                       let bidInEth = Web3.Utils.formatToEthereumUnits(startingBid, toUnits: .eth, decimals: 9) {
+                       let bidInEth = Web3.Utils.formatToEthereumUnits(startingBid, toUnits: .eth, decimals: 17) {
                         // remove the unnecessary zeros in the decimal
                         let trimmed = self.transactionService.stripZeros(bidInEth)
                         propertyFetchModel.propertyDesc = "\(trimmed) ETH"
@@ -107,7 +108,7 @@ extension AuctionDetailViewController {
                     }
                 case AuctionContract.ContractProperties.highestBid.value.0:
                     if let highestBid = result["0"] as? BigUInt {
-                        if let converted = Web3.Utils.formatToEthereumUnits(highestBid, toUnits: .eth, decimals: 9) {
+                        if let converted = Web3.Utils.formatToEthereumUnits(highestBid, toUnits: .eth, decimals: 17) {
                             let trimmed = transactionService.stripZeros(converted)
                             propertyFetchModel.propertyDesc = "\(trimmed) ETH"
                         }
@@ -126,7 +127,7 @@ extension AuctionDetailViewController {
                     }
                 case AuctionContract.ContractProperties.pendingReturns(self.contractAddress).value.0:
                     if let pendingReturns = result["0"] as? BigUInt,
-                       let converted = Web3.Utils.formatToEthereumUnits(pendingReturns, toUnits: .eth, decimals: 9) {
+                       let converted = Web3.Utils.formatToEthereumUnits(pendingReturns, toUnits: .eth, decimals: 17) {
                         let trimmed = self.transactionService.stripZeros(converted.description)
                         propertyFetchModel.propertyDesc = trimmed
                     }
@@ -197,7 +198,6 @@ extension AuctionDetailViewController {
                             self?.pendingReturnButton.alpha = 1
                         }
                         
-                        print("1")
                         break
                     // show the pending return button when there is a non-zero value to be returned
                     case AuctionContract.ContractProperties.pendingReturns(self.contractAddress).value.0 where specDetail.propertyDesc as? String != "0":
@@ -226,7 +226,6 @@ extension AuctionDetailViewController {
                             self?.pendingReturnButton.alpha = 1
                         }
                         
-                        print("2")
                         NotificationCenter.default.publisher(for: .auctionDidWithdraw)
                             .compactMap { $0.object as? Bool }
                             .sink { [weak self] (isWithdrawPending) in

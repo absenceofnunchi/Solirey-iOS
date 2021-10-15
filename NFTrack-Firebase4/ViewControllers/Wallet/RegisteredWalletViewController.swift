@@ -363,7 +363,7 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
             guard let `self` = self else { return }
             do {
                 let balance = try Web3swiftService.web3instance.eth.getBalance(address: address)
-                if let balanceString = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth, decimals: 4) {
+                if let balanceString = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth, decimals: 5) {
                     DispatchQueue.main.async {
                         self.balanceLabel.text = "\(self.transactionService.stripZeros(balanceString)) ETH"
                     }

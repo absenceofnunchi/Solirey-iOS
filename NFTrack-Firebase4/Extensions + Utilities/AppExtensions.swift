@@ -612,7 +612,6 @@ extension Publishers {
             guard times > 0 else { return publisher.receive(subscriber: subscriber) }
 
             publisher.catch { (error: P.Failure) -> AnyPublisher<Output, Failure> in
-                Swift.print("error in RetryIf", error)
                 if condition(error)  {
                     return RetryIf(publisher: publisher, times: times - 1, condition: condition).eraseToAnyPublisher()
                 } else {

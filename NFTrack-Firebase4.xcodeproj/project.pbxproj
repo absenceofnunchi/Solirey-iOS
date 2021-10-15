@@ -30,6 +30,9 @@
 		492556A227104DB30073188F /* PostViewController + DirectSale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556A127104DB30073188F /* PostViewController + DirectSale.swift */; };
 		492556AA271186320073188F /* SimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556A9271186320073188F /* SimplePaymentABI.swift */; };
 		492556AF27122F9D0073188F /* MintABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556AE27122F9D0073188F /* MintABI.swift */; };
+		492556B4271643990073188F /* SimplePaymentDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556B3271643970073188F /* SimplePaymentDetailViewController.swift */; };
+		492556B9271696EC0073188F /* SimplePaymentWithRoyalty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556B8271696EB0073188F /* SimplePaymentWithRoyalty.swift */; };
+		492556BE27169F9F0073188F /* SimplePaymentButtonController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556BD27169F9F0073188F /* SimplePaymentButtonController.swift */; };
 		492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */; };
 		492A00B326A4AA7B008B9B34 /* AlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A00B226A4AA7B008B9B34 /* AlertViewController.swift */; };
 		492C81E526F2312F0083C3B5 /* ChatInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81E426F2312F0083C3B5 /* ChatInitializer.swift */; };
@@ -239,6 +242,9 @@
 		492556A127104DB30073188F /* PostViewController + DirectSale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + DirectSale.swift"; sourceTree = "<group>"; };
 		492556A9271186320073188F /* SimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimplePaymentABI.swift; sourceTree = "<group>"; };
 		492556AE27122F9D0073188F /* MintABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintABI.swift; sourceTree = "<group>"; };
+		492556B3271643970073188F /* SimplePaymentDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimplePaymentDetailViewController.swift; sourceTree = "<group>"; };
+		492556B8271696EB0073188F /* SimplePaymentWithRoyalty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimplePaymentWithRoyalty.swift; sourceTree = "<group>"; };
+		492556BD27169F9F0073188F /* SimplePaymentButtonController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimplePaymentButtonController.swift; sourceTree = "<group>"; };
 		492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardAlertViewController.swift; sourceTree = "<group>"; };
 		492A00B226A4AA7B008B9B34 /* AlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertViewController.swift; sourceTree = "<group>"; };
 		492C81E426F2312F0083C3B5 /* ChatInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInitializer.swift; sourceTree = "<group>"; };
@@ -486,6 +492,7 @@
 			children = (
 				493BF9B4264AC18700B9C9D2 /* WalletGenerationController.swift */,
 				495FB37426BB496D0047E91D /* AuctionButtonController.swift */,
+				492556BD27169F9F0073188F /* SimplePaymentButtonController.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -514,6 +521,7 @@
 				492556AE27122F9D0073188F /* MintABI.swift */,
 				49B47E9B26953B05003D6F7A /* AuctionABI.swift */,
 				492556A9271186320073188F /* SimplePaymentABI.swift */,
+				492556B8271696EB0073188F /* SimplePaymentWithRoyalty.swift */,
 			);
 			path = Contracts;
 			sourceTree = "<group>";
@@ -800,6 +808,7 @@
 				49054D4E26CB66A300ECCB58 /* TangibleListEditViewController.swift */,
 				4984292126CDBD9A0062CD43 /* DigitalListEditViewController.swift */,
 				49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */,
+				492556B3271643970073188F /* SimplePaymentDetailViewController.swift */,
 				495FB37926BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift */,
 				496F700B265421E200E4056B /* TxDetailViewController.swift */,
 				49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */,
@@ -1203,6 +1212,7 @@
 				49BF2CE327083BD4009CA5F2 /* ImageCardCell.swift in Sources */,
 				4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */,
 				495FD329268D284E00F1D81D /* MainViewController + SearchBar.swift in Sources */,
+				492556BE27169F9F0073188F /* SimplePaymentButtonController.swift in Sources */,
 				492C820026F52DA60083C3B5 /* ChatViewController + SendMessage.swift in Sources */,
 				499F9958266B2ADB00FC6CDE /* WebViewController.swift in Sources */,
 				496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */,
@@ -1231,6 +1241,7 @@
 				497CF7A726F82818003EF69E /* ParentLocationSearchViewController.swift in Sources */,
 				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
 				496F6FFD2651F15200E4056B /* ListCell.swift in Sources */,
+				492556B9271696EC0073188F /* SimplePaymentWithRoyalty.swift in Sources */,
 				4958117526D6DAF1002C8F3B /* IPFSService.swift in Sources */,
 				4998E856270255A900B1F5F0 /* SpectrumView.swift in Sources */,
 				496F70022652029F00E4056B /* ListDetailViewController.swift in Sources */,
@@ -1277,6 +1288,7 @@
 				497F1F3226DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift in Sources */,
 				4958118426D898C1002C8F3B /* AddressViewController.swift in Sources */,
 				493BF9E9264C657200B9C9D2 /* ReceiveViewController.swift in Sources */,
+				492556B4271643990073188F /* SimplePaymentDetailViewController.swift in Sources */,
 				496D56CA265A0BD700C3E7FD /* ChatListCell.swift in Sources */,
 				496D56B62659E6F900C3E7FD /* MyDoneButtonVC.swift in Sources */,
 				4964E56226496852005B3268 /* KeysService.swift in Sources */,

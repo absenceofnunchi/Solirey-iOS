@@ -231,32 +231,22 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
         
-        guard let saleFormat = SaleFormat(rawValue: post.saleFormat) else {
+        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod) else {
             self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
             return
         }
         
-        switch saleFormat {
-            case .onlineDirect:
+        switch paymentMethod {
+            case .escrow:
                 let listDetailVC = ListDetailViewController()
                 listDetailVC.post = post
                 // refreshes the MainDetailVC table when the user updates the status
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
-            case .openAuction:
+                break
+            case .auctionBeneficiary:
                 guard let auctionHash = post.auctionHash else { return }
-                Future<TransactionReceipt, PostingError> { promise in
-                    Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
-                }
-                .sink { [weak self] (completion) in
-                    switch completion {
-                        case .failure(let error):
-                            self?.alert.showDetail("Contract Address Loading Error", with: error.localizedDescription, for: self)
-                        case .finished:
-                            break
-                    }
-                } receiveValue: { [weak self] (receipt) in
-                    guard let contractAddress = receipt.contractAddress,
-                          let currentAddress = Web3swiftService.currentAddress else {
+                getContractAddress(with: auctionHash) { [weak self] (contractAddress) in
+                    guard let currentAddress = Web3swiftService.currentAddress else {
                         self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
                         return
                     }
@@ -267,8 +257,45 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                         self?.navigationController?.pushViewController(auctionDetailVC, animated: true)
                     }
                 }
-                .store(in: &storage)
+                break
+            case .directTransfer:
+                guard let escrowHash = post.escrowHash else { return }
+                getContractAddress(with: escrowHash) { [weak self] (contractAddress) in
+                    let simplePaymentDetailVC = SimplePaymentDetailViewController(deployedContractAddress: contractAddress)
+                    simplePaymentDetailVC.post = post
+                    self?.navigationController?.pushViewController(simplePaymentDetailVC, animated: true)
+                }
+                break
         }
+    }
+    
+    func getContractAddress(with hash: String, completion: @escaping (EthereumAddress) -> Void) {
+        Deferred {
+            Future<TransactionReceipt, PostingError> { promise in
+                DispatchQueue.global().async {
+                    Web3swiftService.getReceipt(hash: hash, promise: promise)
+                }
+            }
+        }
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .failure(let error):
+                    self?.alert.showDetail("Contract Address Loading Error", with: error.localizedDescription, for: self)
+                case .finished:
+                    break
+            }
+        } receiveValue: { [weak self] (receipt) in
+            guard let contractAddress = receipt.contractAddress else {
+                self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
+                return
+            }
+            
+            DispatchQueue.main.async {
+                completion(contractAddress)
+            }
+            
+        }
+        .store(in: &storage)
     }
 }
 

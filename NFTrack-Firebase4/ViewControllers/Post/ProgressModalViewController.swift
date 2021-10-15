@@ -36,6 +36,25 @@ enum PostProgress: Int, CaseIterable {
 struct PostProgressData {
     var phases: [PostProgress]
     
+    init(paymentMethod: PaymentMethod) {
+        switch paymentMethod {
+            case .escrow:
+                phases = [.estimatGas, .deployingEscrow, .minting, .images]
+            case .directTransfer:
+                phases = [.estimatGas, .deployingEscrow, .minting, .images]
+            case .auctionBeneficiary:
+                phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
+        }
+    }
+    
+    func asString(i: Int) -> String {
+        return phases[i].asString()
+    }
+}
+
+struct PostProgressData1 {
+    var phases: [PostProgress]
+    
     init(postType: PostType) {
         switch postType {
             case .tangible:
@@ -66,10 +85,10 @@ class ProgressModalViewController: UIViewController {
     var progressLabel: UILabel!
     var postProgressData: PostProgressData!
     
-    init(height: CGFloat = 350, postType: PostType) {
+    init(height: CGFloat = 350, paymentMethod: PaymentMethod) {
         super.init(nibName: nil, bundle: nil)
         self.height = height
-        self.postProgressData = PostProgressData(postType: postType)
+        self.postProgressData = PostProgressData(paymentMethod: paymentMethod)
         self.modalPresentationStyle = .custom
         self.transitioningDelegate = customTransitioningDelegate
         self.modalTransitionStyle = .crossDissolve
@@ -128,8 +147,8 @@ class ProgressModalViewController: UIViewController {
                    let containerView = sv.viewWithTag(100) {
                     for case let imageView as UIImageView in containerView.subviews {
                         guard let checkImage = UIImage(systemName: "checkmark") else { return }
-                        let configuration = UIImage.SymbolConfiguration(pointSize: 8, weight: .medium, scale: .small)
-                        let finalImage = checkImage.withConfiguration(configuration).withTintColor(UIColor(red: 0/255, green: 128/255, blue: 0/255, alpha: 1), renderingMode: .alwaysOriginal)
+                        let configuration = UIImage.SymbolConfiguration(pointSize: 8, weight: .light, scale: .small)
+                        let finalImage = checkImage.withConfiguration(configuration).withTintColor(UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1), renderingMode: .alwaysOriginal)
                         imageView.image = finalImage
                         
                         self?.completionCount += 1

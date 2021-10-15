@@ -213,7 +213,7 @@ class PostViewController: ParentPostViewController {
                         }
                         
                         self.dismiss(animated: true, completion: {
-                            self.progressModal = ProgressModalViewController(postType: .tangible)
+                            self.progressModal = ProgressModalViewController(paymentMethod: .escrow)
                             self.progressModal.titleString = "Posting In Progress"
                             self.present(self.progressModal, animated: true, completion: {
                                 self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress)
@@ -500,7 +500,7 @@ class PostViewController: ParentPostViewController {
                         }
                         
                         self.dismiss(animated: true, completion: {
-                            self.progressModal = ProgressModalViewController(postType: .tangible)
+                            self.progressModal = ProgressModalViewController(paymentMethod: .directTransfer)
                             self.progressModal.titleString = "Posting In Progress"
                             self.present(self.progressModal, animated: true, completion: {
                                 self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress)
@@ -589,7 +589,7 @@ class PostViewController: ParentPostViewController {
                         } // password guard
                         
                         self.dismiss(animated: true, completion: {
-                            self.progressModal = ProgressModalViewController(postType: .tangible)
+                            self.progressModal = ProgressModalViewController(paymentMethod: .escrow)
                             self.progressModal.titleString = "Posting In Progress"
                             self.present(self.progressModal, animated: true, completion: {
                                 // Prepare a transaction to deploy the escrow contract

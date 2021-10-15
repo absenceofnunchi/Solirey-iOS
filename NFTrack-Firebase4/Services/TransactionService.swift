@@ -485,19 +485,21 @@ extension TransactionService {
             return
         }
         
-        guard let transaction = contract.read(
+        DispatchQueue.global(qos: .background).async {
+            guard let transaction = contract.read(
                 method,
                 parameters: parameters ?? [AnyObject](),
                 extraData: Data(),
                 transactionOptions: options
-        ) else {
-            promise(.failure(PostingError.createTransactionIssue))
-            return
+            ) else {
+                promise(.failure(PostingError.createTransactionIssue))
+                return
+            }
+            
+            
+            let propertyFetchModel = SmartContractProperty(propertyName: method, transaction: transaction)
+            promise(.success(propertyFetchModel))
         }
-                
-        
-        let propertyFetchModel = SmartContractProperty(propertyName: method, transaction: transaction)
-        promise(.success(propertyFetchModel))
     }
     
     func prepareTransactionForWriting(
@@ -890,6 +892,8 @@ extension TransactionService {
         urlStrings: [String?],
         ipfsURLStrings: [String?],
         shippingInfo: ShippingInfo? = nil,
+        isWithdrawn: Bool = true,
+        isAdminWithdrawn: Bool = true,
         promise: @escaping (Result<Int, PostingError>) -> Void
     ) {
         let ref = self.db.collection("post")
@@ -916,7 +920,7 @@ extension TransactionService {
             "description": desc,
             "price": price,
             "category": category,
-            "status": AuctionStatus.ready.rawValue,
+            "status": "ready",
             "tags": Array(tokensArr),
             "itemIdentifier": convertedId,
             "isReviewed": false,
@@ -929,7 +933,9 @@ extension TransactionService {
             "bidderTokens": [],
             "bidders": [],
             "shippingInfo": shippingInfoData,
-            "saleType": SaleType.newSale.rawValue
+            "saleType": SaleType.newSale.rawValue,
+            "isWithdrawn": isWithdrawn, // There are contracts like Auction or SimplePayment that requires the bidders that have been outbid or the seller whose item has been purchased, respectively, that require the user to withdraw their funds manually
+            "isAdminWithdrawn": isAdminWithdrawn // The fee collected by the admin
         ]
         
         // txHash is either minting or transferring the ownership
@@ -988,7 +994,7 @@ extension TransactionService {
             "description": desc,
             "price": price,
             "category": category,
-            "status": AuctionStatus.ready.rawValue,
+            "status": "ready",
             "tags": Array(tokensArr),
             "itemIdentifier": convertedId,
             "isReviewed": false,
@@ -1106,7 +1112,7 @@ extension TransactionService {
             .setFailureType(to: PostingError.self)
             .flatMap { (txHash) -> AnyPublisher<TransactionReceipt, PostingError> in
                 return Future<TransactionReceipt, PostingError> { promise in
-                    DispatchQueue.main.async {
+                    DispatchQueue.global().async {
                         Web3swiftService.getReceipt(hash: txHash, promise: promise)
                     }
                 }
@@ -1115,7 +1121,7 @@ extension TransactionService {
             .retryIfWithDelay(
                 retries: 5,
                 delay: .seconds(10),
-                scheduler: RunLoop.main
+                scheduler: DispatchQueue.global()
             ) { (error) -> Bool in
                 // the tx hash returns no receipt right after the transaction
                 // retry if none returns, but with delay
@@ -1162,10 +1168,8 @@ extension TransactionService {
                     promise(.success(receipt))
                 } catch {
                     if let err = error as? Web3Error {
-                        print("getReceipt error1", error)
                         promise(.failure(.generalError(reason: err.errorDescription)))
                     } else {
-                        print("getReceipt error2", error)
                         promise(.failure(.generalError(reason: error.localizedDescription)))
                     }
                 }
@@ -1178,7 +1182,6 @@ extension TransactionService {
         ) { (error) -> Bool in
             // the tx hash returns no receipt right after the transaction
             // retry if none returns, but with delay
-            print("error in retryIfWithDelay", error)
             if case let PostingError.generalError(reason: msg) = error,
                msg == "Invalid value from Ethereum node" {
                 return true
@@ -1197,6 +1200,7 @@ extension TransactionService {
         .flatMap { (currentBlock) -> AnyPublisher<TransactionReceipt, PostingError> in
             let txConfirmations = currentBlock - receipt.blockNumber
             return Future<TransactionReceipt, PostingError> { promise in
+                print("txConfirmations", txConfirmations)
                 if txConfirmations >= confirmations {
                     promise(.success(receipt))
                 } else {

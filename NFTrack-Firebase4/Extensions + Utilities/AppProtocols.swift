@@ -1846,34 +1846,51 @@ extension ProgressPanel {
         
         progressMeterNodeArr = [ProgressMeterNode]()
         // parse Post so that the node title like "Bid" or "Purchase" is paired up with its own dates accordingly
-        if post.saleFormat == SaleFormat.openAuction.rawValue {
-            // auction
-            
-            // auction first node
-            let bidNode = ProgressMeterNode(statusLabelText: AuctionStatus.bid.toDisplay, dateLabelText: processDate(date: post.bidDate))
-            progressMeterNodeArr.append(bidNode)
-            
-            // auction second node
-            let endedNode = ProgressMeterNode(statusLabelText: AuctionStatus.ended.toDisplay, dateLabelText: processDate(date: post.auctionEndDate))
-            progressMeterNodeArr.append(endedNode)
-            
-            // auction third node
-            let auctionTransferNode = ProgressMeterNode(statusLabelText: AuctionStatus.transferred.toDisplay, dateLabelText: processDate(date: post.auctionTransferredDate))
-            progressMeterNodeArr.append(auctionTransferNode)
-        } else {
-            // tangible and digital escrow
-            
-            // first node
-            let purchaseDateNode = ProgressMeterNode(statusLabelText: "Purchased", dateLabelText: processDate(date: post.confirmPurchaseDate))
-            progressMeterNodeArr.append(purchaseDateNode)
-            
-            // second node
-            let transferNode = ProgressMeterNode(statusLabelText: "Transferred", dateLabelText: processDate(date: post.transferDate))
-            progressMeterNodeArr.append(transferNode)
-            
-            // third node
-            let receivedNode = ProgressMeterNode(statusLabelText: "Received", dateLabelText: processDate(date: post.confirmReceivedDate))
-            progressMeterNodeArr.append(receivedNode)
+        
+        switch post.paymentMethod {
+            case PaymentMethod.auctionBeneficiary.rawValue:
+                // auction
+                
+                // auction first node
+                let bidNode = ProgressMeterNode(statusLabelText: AuctionStatus.bid.toDisplay, dateLabelText: processDate(date: post.bidDate))
+                progressMeterNodeArr.append(bidNode)
+                
+                // auction second node
+                let endedNode = ProgressMeterNode(statusLabelText: AuctionStatus.ended.toDisplay, dateLabelText: processDate(date: post.auctionEndDate))
+                progressMeterNodeArr.append(endedNode)
+                
+                // auction third node
+                let auctionTransferNode = ProgressMeterNode(statusLabelText: AuctionStatus.transferred.toDisplay, dateLabelText: processDate(date: post.auctionTransferredDate))
+                progressMeterNodeArr.append(auctionTransferNode)
+            case PaymentMethod.escrow.rawValue:
+                // tangible and digital escrow
+                
+                // first node
+                let purchaseDateNode = ProgressMeterNode(statusLabelText: "Purchased", dateLabelText: processDate(date: post.confirmPurchaseDate))
+                progressMeterNodeArr.append(purchaseDateNode)
+                
+                // second node
+                let transferNode = ProgressMeterNode(statusLabelText: "Transferred", dateLabelText: processDate(date: post.transferDate))
+                progressMeterNodeArr.append(transferNode)
+                
+                // third node
+                let receivedNode = ProgressMeterNode(statusLabelText: "Received", dateLabelText: processDate(date: post.confirmReceivedDate))
+                progressMeterNodeArr.append(receivedNode)
+            case PaymentMethod.directTransfer.rawValue:
+                // first node
+                let purchaseDateNode = ProgressMeterNode(statusLabelText: SimplePaymentStatus.purchased.toDisplay, dateLabelText: processDate(date: post.confirmPurchaseDate))
+                progressMeterNodeArr.append(purchaseDateNode)
+                
+                // second node
+                let transferNode = ProgressMeterNode(statusLabelText: SimplePaymentStatus.transferred.toDisplay, dateLabelText: processDate(date: post.transferDate))
+                progressMeterNodeArr.append(transferNode)
+                
+                // third node. confirmReceivedDate is a misnomer since it's a date that the seller withdraws the funds. But, it is being repurposed from escrow to fit the direct transfer.
+                let receivedNode = ProgressMeterNode(statusLabelText: SimplePaymentStatus.complete.toDisplay, dateLabelText: processDate(date: post.confirmReceivedDate))
+                progressMeterNodeArr.append(receivedNode)
+                break
+            default:
+                break
         }
         
         configureProgressMeter(nodeArray: progressMeterNodeArr)

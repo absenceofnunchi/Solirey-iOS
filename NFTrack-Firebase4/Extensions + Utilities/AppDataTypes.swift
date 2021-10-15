@@ -290,17 +290,6 @@ class UnderlineView: UIView {
     }
 }
 
-// MARK: - PostStatus
-/// determines whether to show the post or not
-/// when the seller first posts: ready
-/// when the seller aborts: ready
-/// when the buyer buys: pending
-/// when the seller transfers the token: transferred
-/// when the transaction is complete: complete
-enum PostStatus: String {
-    case ready, pending, aborted, complete, resold, transferred 
-}
-
 // MARK:- PositionStatus
 /// when a seller posts an item, it registers its own hash under userId
 enum PositionStatus: String {
@@ -607,29 +596,6 @@ struct PanelButton {
     let tag: Int
 }
 
-//enum PostType: Int, CaseIterable {
-//    case tangible
-//    case digital
-//
-//    func asString() -> String {
-//        switch self {
-//            case .tangible:
-//                return NSLocalizedString("Tangible", comment: "")
-//            case .digital:
-//                return NSLocalizedString("Digital", comment: "")
-//        }
-//    }
-//
-//    static func getSegmentText() -> [String] {
-//        let segmentArr = PostType.allCases
-//        var segmentTextArr = [String]()
-//        for segment in segmentArr {
-//            segmentTextArr.append(NSLocalizedString(segment.asString(), comment: ""))
-//        }
-//        return segmentTextArr
-//    }
-//}
-
 enum PostType {
     case tangible
     case digital(_ saleFormat: SaleFormat)
@@ -729,7 +695,7 @@ enum DeliveryMethod: String {
 
 enum PaymentMethod: String {
     case escrow = "Escrow"
-    case directTransfer = "Direct Transfer"
+    case directTransfer = "Direct Transfer" // Simple Payment smart contract
     case auctionBeneficiary = "Auction Beneficiary"
 }
 
@@ -766,7 +732,7 @@ enum SaleConfig {
 }
 
 enum DeliveryAndPaymentMethod {
-    case tangibleNewSaleInPersonEscrow
+    case tangibleNewSaleInPersonEscrow // 
     case tangibleNewSaleInPersonDirectPayment
     case tangibleNewSaleShippingEscrow
     case tangibleResaleInPersonEscrow
@@ -911,7 +877,8 @@ enum TxType {
     case transferToken
     case bid
     case endAuction
-    case AuctionContract
+    case auctionContract
+    case simplePayment
 }
 
 struct TxResult {
@@ -942,6 +909,7 @@ struct Topics {
     static let PurchaseConfirmed = "0xd5d55c8a68912e9a110618df8d5e2e83b8d83211c57a8ddd1203df92885dc881"
     static let ItemReceived = "0xe89152acd703c9d8c7d28829d443260b411454d45394e7995815140c8cbcbcf7"
     static let Aborted = ""
+    static let SimplePaymentPurchased = "0x3a2d0e41c506b136330c6e5e0295ccbf0966daece99bfe7c89020cc01dbfb8d6"
 }
 
 struct ShippingInfo {

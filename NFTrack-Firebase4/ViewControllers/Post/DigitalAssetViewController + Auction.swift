@@ -87,7 +87,7 @@ extension DigitalAssetViewController {
                         }
                         
                         self.dismiss(animated: true, completion: {
-                            self.progressModal = ProgressModalViewController(postType: .digital(.openAuction))
+                            self.progressModal = ProgressModalViewController(paymentMethod: .auctionBeneficiary)
                             self.progressModal.titleString = "Posting In Progress"
                             self.present(self.progressModal, animated: true, completion: {
                                 

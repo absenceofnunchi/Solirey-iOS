@@ -416,11 +416,7 @@ extension FirebaseService {
         var request = URLRequest(url: requestURL)
         request.httpMethod = "POST"
         request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        
-        print("sender", sender)
-        print("recipient", recipient)
-        print("content", content)
-        print("docID", docID)
+
         let parameter: [String: Any] = [
             "sender": sender,
             "recipient": recipient,
@@ -450,5 +446,51 @@ extension FirebaseService {
         })
         
         task.resume()
+    }
+    
+    final func sendNotification(
+        sender: String,
+        recipient: String,
+        content: String,
+        docID: String
+    ) -> AnyPublisher<Data, PostingError> {
+        guard let url = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/sendStatusNotification-sendStatusNotification") else {
+            return Fail(error: PostingError.generalError(reason: "There was an error sending a notification to the other party."))
+                .eraseToAnyPublisher()
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        
+        let parameters: [String: Any] = [
+            "sender": sender,
+            "recipient": recipient,
+            "content": content,
+            "docID": docID
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: parameters, options: [])
+        } catch {
+            return Fail(error: PostingError.generalError(reason: "There was an error serializing parameters to the server."))
+                .eraseToAnyPublisher()
+        }
+        
+        let session = URLSession.shared
+        return session.dataTaskPublisher(for: request)
+            .tryMap() { element -> Data in
+                if let httpResponse = element.response as? HTTPURLResponse,
+                   let httpStatusCode = APIError.HTTPStatusCode(rawValue: httpResponse.statusCode) {
+                    if !(200...299).contains(httpResponse.statusCode) {
+                        throw PostingError.apiError(APIError.generalError(reason: httpStatusCode.description))
+                    }
+                }
+                
+                return element.data
+            }
+            .mapError { $0 as? PostingError ?? PostingError.generalError(reason: "Unknown Error") }
+            .eraseToAnyPublisher()
     }
 }

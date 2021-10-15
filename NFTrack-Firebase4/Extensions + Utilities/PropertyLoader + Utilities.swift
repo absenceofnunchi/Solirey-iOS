@@ -116,6 +116,30 @@ extension PurchaseStatus: RawRepresentable {
     }
 }
 
+// MARK: - PostStatus
+/// determines whether to show the post or not
+/// when the seller first posts: ready
+/// when the seller aborts: ready
+/// when the buyer buys: pending
+/// when the seller transfers the token: transferred
+/// when the transaction is complete: complete
+enum PostStatus: String {
+    case ready, pending, aborted, complete, resold, transferred
+    
+    var toDisplay: String! {
+        switch self {
+            case .pending:
+                return "Purchased"
+            case .transferred:
+                return "Transferred"
+            case .complete:
+                return "Received"
+            default:
+                return "Ready"
+        }
+    }
+}
+
 struct PurchaseContract: PropertyLoadable {
     typealias ContractMethods = PurchaseMethods
     typealias ContractProperties = PurchaseProperties
@@ -201,6 +225,82 @@ enum AuctionStatus: String {
                 return "Transferred"
             default:
                 return "ready"
+        }
+    }
+}
+
+// MARK: - Simpley Payment Contract
+enum SimplePaymentMethods: String, ContractMethodsEnum {
+    case pay
+    case withdraw
+    case withdrawFee
+    case abort
+    
+    // display name and the tag for the button in SimplePaymentDetailVC
+    var methodName: (String, Int) {
+        switch self {
+            case .pay:
+                return ("Buy Now", 0)
+            case .withdraw:
+                return ("Withdraw", 1)
+            case .withdrawFee:
+                return ("Withdraw Fee", 2)
+            case .abort:
+                return ("Abort", 3)
+        }
+    }
+}
+
+enum SimplePaymentProperties: ContractPropertiesEnum {
+    case tokenAdded, paid, price
+    // Tuple since the property could be mapping that requires a key
+    var value: (String, AnyObject?) {
+        switch self {
+            case .tokenAdded:
+                return ("tokenAdded", nil)
+            case .paid:
+                return ("paid", nil)
+            case .price:
+                return ("price", nil)
+        }
+    }
+    
+    func toDisplay() -> String {
+        switch self {
+            case .tokenAdded:
+                return "Token Added"
+            case .paid:
+                return "Paid"
+            case .price:
+                return "Price"
+        }
+    }
+}
+
+struct SimplePaymentContract: PropertyLoadable {
+    typealias ContractMethods = SimplePaymentMethods
+    typealias ContractProperties = SimplePaymentProperties
+}
+
+// Ready: the item has been posted.
+// Purchased: a buyer has purchased the item by transferring the fund into the smart contract.
+// Transferred: transfer happens at the same time as Purchased because the token transfer is within the same method as Buy().
+// Complete: the transaction is complete when the seller withdraws the fund in the smart contract.
+enum SimplePaymentStatus: String {
+    case ready, purchased, transferred, complete, aborted
+    
+    var toDisplay: String! {
+        switch self {
+            case .ready:
+                return "Ready"
+            case .purchased:
+                return "Purchased"
+            case .transferred:
+                return "Transferred"
+            case .complete:
+                return "Completed"
+            case .aborted:
+                return "Aborted"
         }
     }
 }

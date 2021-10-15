@@ -331,7 +331,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable {
     // the reason for this is because the tangible items can have their title, description, and the media files modified
     // whereas the digital item can only have their title and the description modified
     // the former will be done in TangibleListEditVC and the latter in DigitalListEditVC
-    func configureSellerNavigationBar() {
+    @objc func configureSellerNavigationBar() {
         // The post edit button should only be allowed up until a buyer purchases the item
         // after which the ability of a seller to edit the post ceases
         // For all the other cases, such as transferring or confirming the receipt of the item, there will only be the share button.

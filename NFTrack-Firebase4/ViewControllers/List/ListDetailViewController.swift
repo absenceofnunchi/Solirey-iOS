@@ -31,7 +31,6 @@ class ListDetailViewController: ParentDetailViewController {
     lazy var isPending: Bool = false {
         didSet {
             guard let pendingIndicatorView = self.pendingIndicatorView else { return }
-            print("isPending", isPending)
             if isPending == true {
                 DispatchQueue.main.async {
                     pendingIndicatorView.isHidden = false

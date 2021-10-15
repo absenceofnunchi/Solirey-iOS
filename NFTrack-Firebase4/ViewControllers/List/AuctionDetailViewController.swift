@@ -37,7 +37,7 @@ class AuctionDetailViewController: ParentDetailViewController {
     final var socketDelegate: SocketDelegate!
     // indicator to show whether the transaction is pending or not
     // it means the current highest bidder/bidding price will likely change
-    lazy var isPending: Bool = false {
+    final lazy var isPending: Bool = false {
         didSet {
             if isPending == true {
                 DispatchQueue.main.async { [weak self] in
@@ -289,7 +289,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         }
     }
     
-    // the big button
+    // the big main button
     final func setButtonStatus(as status: AuctionContract.ContractMethods) {
         DispatchQueue.main.async { [weak self] in
             guard self?.auctionButtonNarrowConstraint != nil,
@@ -363,6 +363,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
         callAuctionMethod(for: AuctionContract.ContractMethods.bid, amountString: bidAmount)
     }
     
+    // Dynamically determine what auction method to call 
     func callAuctionMethod(for method: AuctionContract.ContractMethods, amountString: String? = nil) {
         var content = [
             StandardAlertContent(
@@ -420,6 +421,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                 self.dismiss(animated: true, completion: {
                     self.showSpinner {
                         
+                        // use Deferred?
                         Future<WriteTransaction, PostingError> { promise in
                             guard let auctionContractAddress = self.auctionContractAddress else {
                                 promise(.failure(.generalError(reason: "Unable to load the address for the auction contract.")))
@@ -444,7 +446,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                             self.transactionService.executeTransaction(
                                 transaction: transaction,
                                 password: password,
-                                type: .AuctionContract
+                                type: .auctionContract
                             )
                         }
                         .flatMap({ (txResult) -> AnyPublisher<Data, PostingError> in
@@ -526,6 +528,7 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                             self.alert.showDetail("Bid Success!", with: "You have made a successful bid. It'll take a few moment to be reflected on the blockchain.", for: self, completion:  {
                                                 self.bidTextField.text?.removeAll()
                                                 
+                                                // Sub for the first time or re-sub if unsubbed to avoid texting oneself
                                                 Messaging.messaging().subscribe(toTopic: self.post.documentId) { error in
                                                     print("Subscribed to \(self.post.documentId ?? "") topic")
                                                 }

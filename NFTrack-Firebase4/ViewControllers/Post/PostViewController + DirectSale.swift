@@ -44,7 +44,6 @@ extension PostViewController {
             // The minting transaction can't be calculated because it requires the auction contract's address.
             self.txPackageArr.append(txPackage)
             return Future<[TxPackage], PostingError> { promise in
-                print("STEP 2")
                 let gasEstimateToMintAndTransferAToken: BigUInt = 80000
                 self.transactionService.calculateTotalGasCost(
                     with: self.txPackageArr,
@@ -58,11 +57,6 @@ extension PostViewController {
         }
         // execute the deployment transaction and get the receipts in an array
         .flatMap { (txPackages) -> AnyPublisher<[TxResult2], PostingError> in
-            let update: [String: PostProgress] = ["update": .images]
-            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-            
-            print("STEP 3")
-            print("txPackages", txPackages)
             let results = txPackages.map { self.transactionService.executeTransaction2(
                 transaction: $0.transaction,
                 password: password,
@@ -77,6 +71,8 @@ extension PostViewController {
                 case .failure(let error):
                     self?.processFailure(error)
                 case .finished:
+                    let update: [String: PostProgress] = ["update": .deployingEscrow]
+                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                     break
             }
         } receiveValue: { [weak self](txResults) in
@@ -105,8 +101,6 @@ extension PostViewController {
         }
         // execute the mint transaction
         .flatMap { (transaction) -> AnyPublisher<[TxResult2], PostingError> in
-            print("STEP 6")
-            
             let results = self.transactionService.executeTransaction2(
                 transaction: transaction,
                 password: password,
@@ -119,10 +113,12 @@ extension PostViewController {
         }
         // get the topics from the socket delegate
         .flatMap { [weak self] (txResult) -> AnyPublisher<[String: Any], PostingError> in
+            let update: [String: PostProgress] = ["update": .minting]
+            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+            
             // retain the mint transaction details for FireStore
             self?.txResultArr.append(contentsOf: txResult)
             return Future<[String: Any], PostingError> { promise in
-                print("STEP 7")
                 self?.socketDelegate.promise = promise
             }
             .eraseToAnyPublisher()
@@ -163,6 +159,9 @@ extension PostViewController {
         })
         // upload the details to Firestore
         .flatMap { [weak self] (urlStrings) -> AnyPublisher<Int, PostingError> in
+            let update: [String: PostProgress] = ["update": .images]
+            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+            
             guard let price = mintParameters.price,
                   let topics = self?.topicsRetainer,
                   let txResults = self?.txResultArr else {
@@ -214,8 +213,6 @@ extension PostViewController {
                     self?.processFailure(error)
                 case .finished:
                     print("finished")
-                    let update: [String: PostProgress] = ["update": .initializeAuction]
-                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                     
                     // index Core Spotlight
                     self?.indexSpotlight(

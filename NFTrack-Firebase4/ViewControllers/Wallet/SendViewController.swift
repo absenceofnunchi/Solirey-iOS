@@ -265,7 +265,7 @@ extension SendViewController: UITextFieldDelegate {
                 DispatchQueue.global().async { [weak self] in
                     do {
                         let balance = try Web3swiftService.web3instance.eth.getBalance(address: address)
-                        if let balanceString = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth, decimals: 4) {
+                        if let balanceString = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth, decimals: 17) {
                             DispatchQueue.main.async {
                                 self?.amountTextField.text = self?.transactionService.stripZeros(balanceString)
                             }

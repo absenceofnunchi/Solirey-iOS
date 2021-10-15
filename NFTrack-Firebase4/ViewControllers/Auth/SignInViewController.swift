@@ -65,6 +65,7 @@ extension SignInViewController {
         
         // container view
         containerView = BlurEffectContainerView()
+        containerView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(containerView)
         
         //  password text field

@@ -83,7 +83,7 @@ extension DigitalAssetViewController {
                         }
                         
                         self.dismiss(animated: true, completion: {
-                            self.progressModal = ProgressModalViewController(postType: .digital(.onlineDirect))
+                            self.progressModal = ProgressModalViewController(paymentMethod: .escrow)
                             self.progressModal.titleString = "Posting In Progress"
                             self.present(self.progressModal, animated: true, completion: {
                                 Future<TxPackage, PostingError> { promise in
