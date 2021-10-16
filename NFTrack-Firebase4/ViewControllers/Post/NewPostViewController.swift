@@ -32,7 +32,7 @@ class NewPostViewController: UIViewController, SegmentConfigurable {
     // To be overriden by ResaleVC
     func initialConfig() {
         configureSwitch()
-        addBaseViewController(postVC, postType: .tangible)
+        addBaseViewController(postVC)
     }
   
     // MARK: - configureSwitch
@@ -57,19 +57,20 @@ class NewPostViewController: UIViewController, SegmentConfigurable {
         switch segment {
             case .tangible:
                 removeBaseViewController(digitalVC)
-                addBaseViewController(postVC, postType: segment)
+                addBaseViewController(postVC)
             case .digital:
                 removeBaseViewController(postVC)
-                addBaseViewController(digitalVC, postType: segment)
+                addBaseViewController(digitalVC)
         }
     }
     
     // MARK: - Switching Between View Controllers
     /// Adds a child view controller to the container.
-    func addBaseViewController<T: ParentPostViewController>(_ viewController: T, postType: PostType) {
+    func addBaseViewController<T: ParentPostViewController>(_ viewController: T) {
         addChild(viewController)
-        // postType is to be used as the input for SaleConfig which determines which mint function to call in the subclass
-        viewController.postType = postType
+        // postType is to be used as the input for SaleConfig which determines which mint function to call in the subclass <- no longer applicable
+        // The non-null post indicates that this is a resale, not a new sale.
+        viewController.post = post
         viewController.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(viewController.view)
         viewController.didMove(toParent: self)

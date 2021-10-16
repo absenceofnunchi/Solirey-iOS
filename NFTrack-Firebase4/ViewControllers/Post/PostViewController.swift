@@ -397,6 +397,152 @@ class PostViewController: ParentPostViewController {
         }
     }
     
+    // MARK: - processEscrowResale
+    override func processEscrowResale(_ mintParameters: MintParameters) {
+        guard let price = mintParameters.price, !price.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+            return
+        }
+        
+        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+        //            return
+        //        }
+        
+        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+            return
+        }
+        
+        // Since no new token is being minted, an existing token is used from the original post.
+        guard let tokenId = post?.tokenID else {
+            self.alert.showDetail("Sorry", with: "Failed to load the Token ID for the current item.", for: self)
+            return
+        }
+        
+        let content = [
+            StandardAlertContent(
+                titleString: "",
+                body: [AlertModalDictionary.passwordSubtitle: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            ),
+            StandardAlertContent(
+                titleString: "Transaction Options",
+                body: [AlertModalDictionary.gasLimit: "", AlertModalDictionary.gasPrice: "", AlertModalDictionary.nonce: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            )
+        ]
+        
+        self.hideSpinner {
+            DispatchQueue.main.async { [weak self] in
+                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+                alertVC.action = { (modal, mainVC) in
+                    mainVC.buttonAction = { _ in
+                        guard let self = self else { return }
+                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                              !password.isEmpty else {
+                            self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                            return
+                        } // password guard
+                        
+                        self.dismiss(animated: true, completion: {
+                            self.progressModal = ProgressModalViewController(paymentMethod: .escrow)
+                            self.progressModal.titleString = "Posting In Progress"
+                            self.present(self.progressModal, animated: true, completion: {
+                                // Prepare a transaction to deploy the escrow contract
+                                Future<WriteTransaction, PostingError> { promise in
+                                    self.transactionService.prepareTransactionForNewContract(
+                                        contractABI: purchaseABI2,
+                                        bytecode: purchaseBytecode2,
+                                        value: price,
+                                        promise: promise
+                                    )
+                                }
+                                .eraseToAnyPublisher()
+                                .flatMap { (transaction) -> AnyPublisher<TxResult, PostingError> in
+                                    // deploy the escrow contract
+                                    return self.transactionService.executeTransaction(transaction: transaction, password: password, type: .deploy)
+                                        .eraseToAnyPublisher()
+                                }
+                                .flatMap { (txResult) -> AnyPublisher<Bool, PostingError> in
+                                    return self.uploadFilesResale()
+                                        // upload the details to Firestore
+                                        .flatMap { (urlStrings) -> AnyPublisher<Bool, PostingError> in
+                                            return Future<Bool, PostingError> { promise in
+                                                self.transactionService.createFireStoreEntryForResale(
+                                                    documentId: &self.documentId,
+                                                    senderAddress: txResult.senderAddress,
+                                                    escrowHash: txResult.txHash,
+                                                    auctionHash: "N/A",
+                                                    mintHash: "Resale",
+                                                    itemTitle: mintParameters.itemTitle,
+                                                    desc: mintParameters.desc,
+                                                    price: price,
+                                                    category: mintParameters.category,
+                                                    tokensArr: mintParameters.tokensArr,
+                                                    convertedId: mintParameters.convertedId,
+                                                    type: "tangible",
+                                                    deliveryMethod: mintParameters.deliveryMethod,
+                                                    saleFormat: mintParameters.saleFormat,
+                                                    paymentMethod: mintParameters.paymentMethod,
+                                                    tokenId: tokenId,
+                                                    urlStrings: urlStrings,
+                                                    ipfsURLStrings: [],
+                                                    shippingInfo: self.shippingInfo,
+                                                    promise: promise
+                                                )
+                                            }
+                                            .eraseToAnyPublisher()
+                                        }
+                                        .eraseToAnyPublisher()
+                                }
+                                .sink { (completion) in
+                                    switch completion {
+                                        case .failure(let error):
+                                            self.processFailure(error)
+                                        case .finished:
+                                            // update the progress indicator
+                                            let update: [String: PostProgress] = ["update": .images]
+                                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                            
+                                            FirebaseService.shared.sendToTopicsVoid(
+                                                title: "New item has been listed on \(mintParameters.category)",
+                                                content: mintParameters.itemTitle,
+                                                topic: mintParameters.category,
+                                                docId: self.documentId
+                                            )
+                                            
+                                            // index Core Spotlight
+                                            //                                            self.indexSpotlight(
+                                            //                                                itemTitle: itemTitle,
+                                            //                                                desc: desc,
+                                            //                                                tokensArr: tokensArr,
+                                            //                                                convertedId: convertedId
+                                            //                                            )
+                                            
+                                            self.afterPostReset()
+                                            
+                                    }
+                                } receiveValue: { (_) in
+                                    
+                                }
+                                .store(in: &self.storage)
+                                
+                            }) // self.present(self.progressModal
+                        }) // dismiss
+                    } // mainVC.buttonAction
+                } // alertVC.action
+                self?.present(alertVC, animated: true, completion: nil)
+            } // DispatchQueue
+        }// self.hideSpinner
+    } // processEscrowResale
+    
     
     // MARK: - Direct Sale
 //    override func mint() {
@@ -542,9 +688,9 @@ class PostViewController: ParentPostViewController {
             } // DispatchQueue
         } // hideSpinner
     } // processDirectSale
-    
-    // MARK: - processEscrowResale
-    override func processEscrowResale(_ mintParameters: MintParameters) {
+ 
+    // MARK: - processDirectResale
+    override func processDirectResale(_ mintParameters: ParentPostViewController.MintParameters) {
         guard let price = mintParameters.price, !price.isEmpty else {
             self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
             return
@@ -557,12 +703,6 @@ class PostViewController: ParentPostViewController {
         
         guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
             self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
-            return
-        }
-        
-        // Since no new token is being minted, an existing token is used from the original post.
-        guard let tokenId = post?.tokenID else {
-            self.alert.showDetail("Sorry", with: "Failed to load the Token ID for the current item.", for: self)
             return
         }
         
@@ -598,96 +738,52 @@ class PostViewController: ParentPostViewController {
                         } // password guard
                         
                         self.dismiss(animated: true, completion: {
-                            self.progressModal = ProgressModalViewController(paymentMethod: .escrow)
+                            self.progressModal = ProgressModalViewController(paymentMethod: .directTransfer)
                             self.progressModal.titleString = "Posting In Progress"
                             self.present(self.progressModal, animated: true, completion: {
-                                // Prepare a transaction to deploy the escrow contract
-                                Future<WriteTransaction, PostingError> { promise in
-                                    self.transactionService.prepareTransactionForNewContract(
-                                        contractABI: purchaseABI2,
-                                        bytecode: purchaseBytecode2,
-                                        value: price,
-                                        promise: promise
-                                    )
-                                }
-                                .eraseToAnyPublisher()
-                                .flatMap { (transaction) -> AnyPublisher<TxResult, PostingError> in
-                                    // deploy the escrow contract
-                                    return self.transactionService.executeTransaction(transaction: transaction, password: password, type: .deploy)
-                                        .eraseToAnyPublisher()
-                                }
-                                .flatMap { (txResult) -> AnyPublisher<Bool, PostingError> in
-                                    return self.uploadFilesResale()
-                                        // upload the details to Firestore
-                                        .flatMap { (urlStrings) -> AnyPublisher<Bool, PostingError> in
-                                            return Future<Bool, PostingError> { promise in
-                                                self.transactionService.createFireStoreEntryForResale(
-                                                    documentId: &self.documentId,
-                                                    senderAddress: txResult.senderAddress,
-                                                    escrowHash: txResult.txHash,
-                                                    auctionHash: "N/A",
-                                                    mintHash: "Resale",
-                                                    itemTitle: mintParameters.itemTitle,
-                                                    desc: mintParameters.desc,
-                                                    price: price,
-                                                    category: mintParameters.category,
-                                                    tokensArr: mintParameters.tokensArr,
-                                                    convertedId: mintParameters.convertedId,
-                                                    type: "tangible",
-                                                    deliveryMethod: mintParameters.deliveryMethod,
-                                                    saleFormat: mintParameters.saleFormat,
-                                                    paymentMethod: mintParameters.paymentMethod,
-                                                    tokenId: tokenId,
-                                                    urlStrings: urlStrings,
-                                                    ipfsURLStrings: [],
-                                                    shippingInfo: self.shippingInfo,
-                                                    promise: promise
-                                                )
+                                // Deploy a simple payment contract, mint a token, and transfer it into the contract.
+                                self.deploySimplePaymentContract(password: password, mintParamters: mintParameters) { (txResults) in
+                                    guard let txResult = txResults.first else { return }
+                                    // confirm that the receipt of the transaction is obtained
+                                    self.transactionService.confirmReceipt(txHash: txResult.txResult.hash)
+                                        .sink { (completion) in
+                                            switch completion {
+                                                case .failure(let error):
+                                                    self.processFailure(error)
+                                                default:
+                                                    break
                                             }
-                                            .eraseToAnyPublisher()
+                                        } receiveValue: { (receipt) in
+                                            print(receipt)
+                                            // confirm that the block is added to the chain
+                                            self.transactionService.confirmTransactions(receipt)
+                                                .sink(receiveCompletion: { (completion) in
+                                                    switch completion {
+                                                        case .failure(let error):
+                                                            self.processFailure(error)
+                                                        default:
+                                                            break
+                                                    }
+                                                }, receiveValue: { (receipt) in
+                                                    // Transfer the existing token into the payment contract
+                                                    self.transfer(
+                                                        receipt: receipt,
+                                                        password: password,
+                                                        mintParameters: mintParameters
+                                                    )
+                                                })
+                                                .store(in: &self.storage)
                                         }
-                                        .eraseToAnyPublisher()
+                                        .store(in: &self.storage)
                                 }
-                                .sink { (completion) in
-                                    switch completion {
-                                        case .failure(let error):
-                                            self.processFailure(error)
-                                        case .finished:
-                                            // update the progress indicator
-                                            let update: [String: PostProgress] = ["update": .images]
-                                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                            
-                                            FirebaseService.shared.sendToTopicsVoid(
-                                                title: "New item has been listed on \(mintParameters.category)",
-                                                content: mintParameters.itemTitle,
-                                                topic: mintParameters.category,
-                                                docId: self.documentId
-                                            )
-                                            
-                                            // index Core Spotlight
-                                            //                                            self.indexSpotlight(
-                                            //                                                itemTitle: itemTitle,
-                                            //                                                desc: desc,
-                                            //                                                tokensArr: tokensArr,
-                                            //                                                convertedId: convertedId
-                                            //                                            )
-                                            
-                                            self.afterPostReset()
-
-                                    }
-                                } receiveValue: { (_) in
-                                    
-                                }
-                                .store(in: &self.storage)
-                                
-                            }) // self.present(self.progressModal
-                        }) // dismiss
+                            }) // self.present for progressModal
+                        }) // self.dismiss
                     } // mainVC.buttonAction
                 } // alertVC.action
                 self?.present(alertVC, animated: true, completion: nil)
-            } // DispatchQueue
-        }// self.hideSpinner
-    } // processEscrowResale
+            } // Dispatchqueue
+        } // hidesSpinner
+    }
 }
 
 extension PostViewController {
@@ -759,7 +855,7 @@ extension PostViewController {
             case 2:
                 return self.pvc.inputView
             case 3:
-                return self.paymentMothedPicker.inputView
+                return self.paymentMethodPicker.inputView
             default:
                 return nil
         }
@@ -775,7 +871,7 @@ extension PostViewController {
             case 2:
                 self.pickerLabel.text = pvc.currentPep
             case 3:
-                self.paymentMethodLabel.text = paymentMothedPicker.currentPep
+                self.paymentMethodLabel.text = paymentMethodPicker.currentPep
             default:
                 break
         }

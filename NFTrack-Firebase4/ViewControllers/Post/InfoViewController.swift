@@ -38,7 +38,9 @@ class InfoViewController: UIViewController, ModalConfigurable, UIViewControllerT
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        scrollView.contentSize = stackView.bounds.size
+        let contentHeight: CGFloat = stackView.bounds.size.height + 100
+        let contentSize = CGSize(width: view.bounds.width, height: contentHeight)
+        scrollView.contentSize = contentSize
     }
     
     private func configure() {
@@ -59,19 +61,19 @@ class InfoViewController: UIViewController, ModalConfigurable, UIViewControllerT
         stackView.distribution = .fill
         stackView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(stackView)
-        
+
         for infoModel in infoModelArr {
             let infoBlockView = InfoBlockView(infoModel: infoModel)
             stackView.addArrangedSubview(infoBlockView)
         }
-        
+
         NSLayoutConstraint.activate([
             stackView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             stackView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor, constant: 18),
             stackView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
         ])
         stackView.layoutIfNeeded()
-        scrollView.contentSize = stackView.bounds.size
+//        scrollView.contentSize = stackView.bounds.size
         
         let swipe = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
         swipe.direction = .down

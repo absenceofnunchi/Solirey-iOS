@@ -5,6 +5,16 @@
 //  Created by J C on 2021-06-01.
 //
 
+/*
+ Abstract:
+ The main VC for posting new items. Used by both tangible (PostVC) and digital (DigitalAssetVC) item posting as well as a new item and a resale item.
+ The resale is determined by the non-nil post property passed by ResaleVC.
+ During resale:
+    1. The digital resale config forbids the user from altering the files.
+    2. The tangible resale omits the digital category from the picker.
+    3. The Unique Identifier cannot be altered for both digital and tangible.
+ */
+
 import UIKit
 import FirebaseFirestore
 import FirebaseStorage
@@ -12,7 +22,6 @@ import web3swift
 import QuickLook
 
 class ParentPostViewController: UIViewController, ButtonPanelConfigurable, TokenConfigurable, ShippingDelegate, CoreSpotlightDelegate, FileUploadable {
-    var postType: PostType!
     let db = FirebaseService.shared.db!
     var scrollView: UIScrollView!
     var infoImage: UIImage! {
@@ -130,9 +139,15 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         return []
     }
     
+    // All the pickers (DeliveryMethod, Category, PaymentMethod)
+    // For resale items, 2 things have to be restricted:
+    //  1. The PostType has to be the same as the original item. For example, a digital item cannot be resold as a tangible item, or vice versa. Aside from the obvious, this is forbidden because
+    //     the digital item's Unique Identifier is derived from hashing of its digital item whereas the tangible item requires the user to input it. ResaleViewController arranges this even before the user gets the
+    //     chance to choose anything.
+    //  2. The Digital option from the Category picker has to be omitted for the Tangible resale.  This has to be done after the ParentPostVC (or PostVC) is loaded.
     let deliveryMethodPicker = MyPickerVC(currentPep: DeliveryMethod.shipping.rawValue, pep: [DeliveryMethod.shipping.rawValue, DeliveryMethod.inPerson.rawValue])
-    let pvc = MyPickerVC(currentPep: Category.electronics.asString(), pep: Category.getAll())
-    let paymentMothedPicker = MyPickerVC(currentPep: PaymentMethod.escrow.rawValue, pep: [PaymentMethod.escrow.rawValue, PaymentMethod.directTransfer.rawValue])
+    lazy var pvc = MyPickerVC(currentPep: Category.electronics.asString(), pep: self.post != nil ? Category.getTangibleResaleOptions() : Category.getAll())
+    let paymentMethodPicker = MyPickerVC(currentPep: PaymentMethod.escrow.rawValue, pep: [PaymentMethod.escrow.rawValue, PaymentMethod.directTransfer.rawValue])
     
     /// done button for the picker
     let mdbvc = MyDoneButtonVC()
@@ -189,6 +204,9 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         if observation != nil {
             observation?.invalidate()
         }
+        
+        let postType: PostType = type(of: self) == PostViewController.self ? .tangible : .digital
+        print("postType", postType)
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -215,7 +233,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         configureImagePreview(postType: .tangible, superView: scrollView, closeButtonEnabled: true)
     }
     
-    // Set only during resale
+    // Set only during resale for the digital PostType
     // 1. Set the existing image.
     // 2. Disable the ability to delete the image.
     // 3. Decrease the height of the button panel to 0.
@@ -307,12 +325,14 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
                 return
             }
             
-            guard let category = self?.pickerLabel.text, !category.isEmpty else {
+            guard let category = self?.pickerLabel.text,
+                  !category.isEmpty else {
                 self?.alert.showDetail("Incomplete", with: "Please choose the category.", for: self)
                 return
             }
             
-            guard let id = self?.idTextField.text,!id.isEmpty else {
+            guard let id = self?.idTextField.text,
+                  !id.isEmpty else {
                 self?.alert.showDetail("Incomplete", with: "Please select the digital asset.", for: self)
                 return
             }
@@ -350,9 +370,15 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
                     tokensArr.insert(retrievedToken.lowercased())
                 }
             }
-            
-            guard let postType = self?.postType else { return }
-            
+                        
+            // Determine whether the current postType is tangible or digital
+            guard let type = self?.post?.type,
+                  let postType = PostType(rawValue: type) else {
+                self?.alert.showDetail("Error", with: "Unable to determine between a new sale and a resale.", for: self)
+                return
+            }
+
+            // The four configuration are the pivotal elements in determining what contract to deploy.
             let saleConfig = SaleConfig.hybridMethod(
                 postType: postType,
                 saleType: (self?.post != nil) ? .resale : .newSale,
@@ -383,9 +409,11 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
                             self?.processMint(mintParameters)
                         } // not duplicate
                     } // end of checkExistingId
+                    break
                 case .tangibleNewSaleInPersonDirectPayment:
                     // The direct transfer option for in-person pickup doesn't require an escrow contract to be deployed
                     self?.processDirectSale(mintParameters)
+                    break
                 case .tangibleNewSaleShippingEscrow:
                     self?.checkExistingId(id: convertedId) { (isDuplicate) in
                         if isDuplicate {
@@ -394,15 +422,35 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
                             self?.processMint(mintParameters)
                         } // not duplicate
                     } // end of checkExistingId
+                    break
                 case .tangibleResaleInPersonEscrow:
                     self?.processEscrowResale(mintParameters)
+                    break
                 case .tangibleResaleInPersonDirectPayment:
+                    self?.processDirectResale(mintParameters)
                     break
                 case .tangibleResaleShippingEscrow:
                     self?.processEscrowResale(mintParameters)
+                    break
+                case .digitalNewSaleOnlineDirectPayment:
+                    break
+                case .digitalNewSaleAuctionBeneficiary:
+                    break
+                case .digitalResaleOnlineDirectPayment:
+                    break
+                case .digitalResaleAuctionBeneficiary:
+                    break
                 default:
+                    print("no sale config exists")
                     break
             }
+        }
+    }
+    
+    // Check the ownership of the token that's about to be transferred for resale prior to deploying any smart contracts
+    private func ownerOf() {
+        Deferred {
+            Future<
         }
     }
     
@@ -423,8 +471,10 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     
     func processEscrowResale(_ mintParameters: MintParameters) {}
     
-    // no escrow for in-person delivery method
+    // SimplePayment contract payment method
     func processDirectSale(_ mintParameters: MintParameters) {}
+    
+    func processDirectResale(_ mintParameters: MintParameters) {}
     
     func configureProgress() {}
 }

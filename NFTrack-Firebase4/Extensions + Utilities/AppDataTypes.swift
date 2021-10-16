@@ -339,6 +339,11 @@ enum Category: Int, CaseIterable {
     static func getAll() -> [String] {
         return Category.allCases.map { $0.asString() }
     }
+    
+    static func getTangibleResaleOptions() -> [String] {
+        let filteredList = Category.allCases.filter { $0.asString() != Category.digital.asString() }
+        return filteredList.map { $0.asString() }
+    }
 }
 
 extension Category: RawRepresentable {
@@ -708,6 +713,18 @@ extension PostType: RawRepresentable, CaseCountable {
                 return nil
         }
     }
+    
+    init?(rawValue: String) {
+        let formattedValue = rawValue.lowercased()
+        switch formattedValue {
+            case "tangible":
+                self = .tangible
+            case "digital":
+                self = .digital
+            default:
+                return nil
+        }
+    }
 }
 
 // No need to distinguish different payment methods within digital on PostType because PaymentMethod does it separately.
@@ -974,6 +991,10 @@ struct InfoText {
     
     static let fundsToCollect = """
     Certain smart contracts such as "Direct Transfer" requires the seller to withdraw the fund paid by the buyer, instead of the fund automatically being transferred into the seller's account.  This is the safest way to move the fund into the seller's account. The fund will safely reside in the smart contract used in the transaction indefinitely and only the seller is authorized to withdraw the it into his or her account at their convenience.
+    """
+    
+    static let profileInfo = """
+    Your email and the address are not publicly visible. The address is used to provide optimal search results when a user is looking for a tangible item to purchase in his/her vicinity or to determine whether a buyer meets the seller's shipping condition.  \n\nWhen purchasing a tangible item that requires shipping, you will be prompted to provide a permission to disclose your shipping address to the seller.
     """
 }
 

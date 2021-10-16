@@ -100,10 +100,14 @@ class ReviewPostViewController: ParentProfileViewController {
     ]
     private var storage = Set<AnyCancellable>()
     final var buttonPanelHeight: NSLayoutConstraint!
+    private var customNavView: BackgroundView5!
+    var colorPatchView = UIView()
+    lazy var colorPatchViewHeight: NSLayoutConstraint = colorPatchView.heightAnchor.constraint(equalToConstant: 0)
     
     override func viewDidLoad() {
         super.viewDidLoad()
         fetchUserInfo()
+        setColorPatchView()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -199,6 +203,10 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
         view.backgroundColor = .white
         self.hideKeyboardWhenTappedAround()
 
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(customNavView)
+        
         guard let docImage = UIImage(systemName: "doc.plaintext") else { return }
         let rightBarButton = UIBarButtonItem(image: docImage, style: .plain, target: self, action: #selector(buttonPressed(_:)))
         rightBarButton.tag = 7
@@ -256,6 +264,11 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
         self.imagePreviewConstraintHeight = self.imagePreviewVC.view.heightAnchor.constraint(equalToConstant: 0)
         constraints = [NSLayoutConstraint]()
         self.constraints.append(contentsOf: [
+            customNavView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 0),
+            customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            customNavView.heightAnchor.constraint(equalToConstant: 50),
+            
             self.ratingTitleLabel.topAnchor.constraint(equalTo: self.displayNameTextField.bottomAnchor, constant: 40),
             self.ratingTitleLabel.leadingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
             self.ratingTitleLabel.trailingAnchor.constraint(equalTo: self.scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
@@ -292,6 +305,17 @@ extension ReviewPostViewController: ButtonPanelConfigurable {
         ])
         
         NSLayoutConstraint.activate(self.constraints)
+    }
+    
+    func setColorPatchView() {
+        colorPatchView.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        colorPatchView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(colorPatchView)
+        
+        colorPatchView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0).isActive = true
+        colorPatchView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        colorPatchView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        colorPatchViewHeight.isActive = true
     }
     
     // MARK: - configureImagePreview
@@ -708,6 +732,12 @@ extension ReviewPostViewController: FileUploadable {
             }
         }
     }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if -scrollView.contentOffset.y > 0 {
+            colorPatchViewHeight.constant = -scrollView.contentOffset.y
+        }
+    }
 }
 
 //guard let strongSelf = self else { return }
@@ -723,3 +753,4 @@ extension ReviewPostViewController: FileUploadable {
 //        strongSelf.alert.showDetail("Error", with: error.localizedDescription, for: self)
 //    }
 //})
+

@@ -58,7 +58,6 @@ class SingleWalletPageViewController<T: Equatable>: ParentSinglePageViewControll
 
     func resignKeyboard(_ v: UIView?) {
         guard let v = v else { return }
-        print("resign",  v)
         v.endEditing(true)
         v.resignFirstResponder()
         v.subviews.forEach { [weak self] (subviews) in

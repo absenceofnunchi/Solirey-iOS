@@ -41,7 +41,7 @@ extension PostViewController {
         .flatMap { (txPackage) -> AnyPublisher<[TxPackage], PostingError> in
             // TxPackage array is needed because calculateTotalGasCost can calculate multiple transactions' gas.
             // In this case, there is only one transaction to be calculated.
-            // The minting transaction can't be calculated because it requires the auction contract's address.
+            // The minting transaction can't be calculated because it requires the auction contract or the simple payment contract's address.
             self.txPackageArr.append(txPackage)
             return Future<[TxPackage], PostingError> { promise in
                 let gasEstimateToMintAndTransferAToken: BigUInt = 80000
@@ -82,6 +82,7 @@ extension PostViewController {
         .store(in: &storage)
     }
     
+    // First time sale for SimplePayment
     final func mintAndTransfer(_ txReceipt: TransactionReceipt, password: String, mintParameters: MintParameters) {
         let update: [String: PostProgress] = ["update": .deployingAuction]
         NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
@@ -233,6 +234,126 @@ extension PostViewController {
             }
         }
         .store(in: &self.storage)
+    }
+    
+    // Transfer the existing token for resale using SimplePayment
+    final func transfer(
+        receipt: TransactionReceipt,
+        password: String,
+        mintParameters: MintParameters
+    ) {
+        let update: [String: PostProgress] = ["update": .deployingEscrow]
+        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+        
+        Future<WriteTransaction, PostingError> { [weak self] promise in
+            guard let fromAddress = Web3swiftService.currentAddress else {
+                promise(.failure(.generalError(reason: "Could not get your address.")))
+                return
+            }
+            
+            guard let simplePaymentContractAddress = receipt.contractAddress else {
+                return
+            }
+            
+            guard let tokenId = self?.post?.tokenID else {
+                promise(.failure(.generalError(reason: "The item does not have a token ID registered. It may take up to 10 mins to process.")))
+                return
+            }
+            
+            let param: [AnyObject] = [fromAddress, simplePaymentContractAddress, tokenId] as [AnyObject]
+            
+            guard let NFTrackAddress = NFTrackAddress else {
+                promise(.failure(.generalError(reason: "Unable to load the contract address.")))
+                return
+            }
+            
+            self?.transactionService.prepareTransactionForWriting(
+                method: "safeTransferFrom",
+                abi: NFTrackABI,
+                param: param,
+                contractAddress: NFTrackAddress,
+                promise: promise
+            )
+        }
+        .eraseToAnyPublisher()
+        .flatMap { (transaction) -> AnyPublisher<TransactionSendingResult, PostingError> in
+            Future<TransactionSendingResult, PostingError> { promise in
+                do {
+                    let receipt = try transaction.send(password: password, transactionOptions: nil)
+                    promise(.success(receipt))
+                } catch {
+                    if let err = error as? Web3Error {
+                        promise(.failure(.generalError(reason: err.errorDescription)))
+                    } else {
+                        promise(.failure(.generalError(reason: error.localizedDescription)))
+                    }
+                }
+            }
+            .eraseToAnyPublisher()
+        }
+        .flatMap { (txResult) -> AnyPublisher<Bool, PostingError> in
+            return self.uploadFilesResale()
+                // upload the details to Firestore
+                .flatMap { [weak self] (urlStrings) -> AnyPublisher<Bool, PostingError> in
+                    guard let tokenId = self?.post?.tokenID,
+                          let senderAddress = Web3swiftService.currentAddressString,
+                          let price = mintParameters.price else {
+                        return Fail(error: PostingError.generalError(reason: "Could not prepare the information to update the database."))
+                            .eraseToAnyPublisher()
+                    }
+                    
+                    let update: [String: PostProgress] = ["update": .images]
+                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                    
+                    return Future<Bool, PostingError> { promise in
+                        self?.transactionService.createFireStoreEntryForResale(
+                            documentId: &self!.documentId,
+                            senderAddress: senderAddress,
+                            escrowHash: txResult.hash,
+                            auctionHash: "N/A",
+                            mintHash: "Resale",
+                            itemTitle: mintParameters.itemTitle,
+                            desc: mintParameters.desc,
+                            price: price,
+                            category: mintParameters.category,
+                            tokensArr: mintParameters.tokensArr,
+                            convertedId: mintParameters.convertedId,
+                            type: "tangible",
+                            deliveryMethod: mintParameters.deliveryMethod,
+                            saleFormat: mintParameters.saleFormat,
+                            paymentMethod: mintParameters.paymentMethod,
+                            tokenId: tokenId,
+                            urlStrings: urlStrings,
+                            ipfsURLStrings: [],
+                            shippingInfo: self?.shippingInfo,
+                            promise: promise
+                        )
+                    }
+                    .eraseToAnyPublisher()
+                }
+                .eraseToAnyPublisher()
+        }
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .failure(let error):
+                    self?.processFailure(error)
+                case .finished:
+                    self?.alert.showDetail("Success!", with: "You have successfully posted your item.", for: self)
+                    self?.afterPostReset()
 
+                    guard let documentId = self?.documentId else { return }
+                    FirebaseService.shared.sendToTopicsVoid(
+                        title: "New item has been listed on \(mintParameters.category)",
+                        content: mintParameters.itemTitle,
+                        topic: mintParameters.category,
+                        docId: documentId
+                    )
+
+                    //  register spotlight?
+            }
+        } receiveValue: { (_) in
+            
+        }
+        .store(in: &self.storage)
     }
 } // PostViewController

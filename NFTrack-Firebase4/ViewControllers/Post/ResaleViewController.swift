@@ -10,17 +10,17 @@ import UIKit
 class ResaleViewController: NewPostViewController {
     override func initialConfig() {
         if let post = post, post.type == "tangible" {
-            addBaseViewController(postVC, postType: .tangible)
+            addBaseViewController(postVC)
         } else {
-            addBaseViewController(digitalVC, postType: .digital)
+            addBaseViewController(digitalVC)
         }
     }
     
     /// Adds a child view controller to the container.
-    override func addBaseViewController<T: ParentPostViewController>(_ viewController: T, postType: PostType) {
+    override func addBaseViewController<T: ParentPostViewController>(_ viewController: T) {
         // Value to be passed from ListDetailVC during resale
         // The non-nil post indicates that this is a resale not a brand new sale
-        super.addBaseViewController(viewController, postType: postType)
+        super.addBaseViewController(viewController)
     }
 }
 

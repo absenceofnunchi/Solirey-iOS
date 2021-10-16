@@ -229,7 +229,7 @@ enum AuctionStatus: String {
     }
 }
 
-// MARK: - Simpley Payment Contract
+// MARK: - Simple Payment Contract
 enum SimplePaymentMethods: String, ContractMethodsEnum {
     case pay
     case withdraw
@@ -303,4 +303,35 @@ enum SimplePaymentStatus: String {
                 return "Aborted"
         }
     }
+}
+
+// MARK: - NFTrack Contract
+enum NFTrackMethods: String, ContractMethodsEnum {
+    case ownerOf
+    case name
+    case symbol
+    case safeTransferFrom
+}
+
+enum NFTrackProperties: ContractPropertiesEnum {
+    case address
+    // Tuple since the property could be mapping that requires a key
+    var value: (String, AnyObject?) {
+        switch self {
+            case .address:
+                return ("address", nil)
+        }
+    }
+    
+    func toDisplay() -> String {
+        switch self {
+            case .address:
+                return "Address"
+        }
+    }
+}
+
+struct NFTrackContract: PropertyLoadable {
+    typealias ContractMethods = NFTrackMethods
+    typealias ContractProperties = NFTrackProperties
 }

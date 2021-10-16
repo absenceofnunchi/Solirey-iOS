@@ -21,6 +21,7 @@ import Combine
 
 class ProfileViewController: ParentProfileViewController, ModalConfigurable {
     final var closeButton: UIButton!
+    private var infoButton: UIButton!
     private var deleteImageButton: UIButton!
     private var emailTitleLabel: UILabel!
     private var emailTextField: UITextField!
@@ -124,6 +125,12 @@ extension ProfileViewController {
         super.configureUI()
         self.hideKeyboardWhenTappedAround()
         
+        guard let infoImage = UIImage(systemName: "info.circle")?.withTintColor(.lightGray, renderingMode: .alwaysOriginal) else { return }
+        infoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
+        infoButton.tag = 5
+        infoButton.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(infoButton)
+        
         displayNameTitleLabel.transform = CGAffineTransform(translationX: 0, y: 40)
         displayNameTitleLabel.alpha = 0
         displayNameTextField.transform = CGAffineTransform(translationX: 0, y: 40)
@@ -178,6 +185,11 @@ extension ProfileViewController {
         scrollView.addSubview(updateButton)
         
         NSLayoutConstraint.activate([
+            infoButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            infoButton.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            infoButton.widthAnchor.constraint(equalToConstant: 60),
+            infoButton.heightAnchor.constraint(equalToConstant: 60),
+            
             emailTitleLabel.topAnchor.constraint(equalTo: displayNameTextField.bottomAnchor, constant: 40),
             emailTitleLabel.leadingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.leadingAnchor, constant: 20),
             emailTitleLabel.trailingAnchor.constraint(equalTo: scrollView.layoutMarginsGuide.trailingAnchor, constant: -20),
@@ -304,19 +316,27 @@ extension ProfileViewController {
                 imagePickerController.delegate = self
                 imagePickerController.modalPresentationStyle = .fullScreen
                 present(imagePickerController, animated: true, completion: nil)
+                break
             case 2:
                 showSpinner { [weak self] in
                     self?.updateProfile()
                 }
+                break
             case 3:
                 // delete image
                 showSpinner { [weak self] in
                     self?.deleteProfileImage()
                 }
+                break
             case 4:
                 // delete the address text field
                 addressLabel.text = ""
                 addressDeleteButton.alpha = 0
+                break
+            case 5:
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Profile Privacy", detail: InfoText.profileInfo)])
+                self.present(infoVC, animated: true, completion: nil)
+                break
             default:
                 break
         }
