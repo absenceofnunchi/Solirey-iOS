@@ -20,6 +20,7 @@ import FirebaseFirestore
 import FirebaseStorage
 import web3swift
 import QuickLook
+import Combine
 
 class ParentPostViewController: UIViewController, ButtonPanelConfigurable, TokenConfigurable, ShippingDelegate, CoreSpotlightDelegate, FileUploadable {
     let db = FirebaseService.shared.db!
@@ -145,8 +146,10 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     //     the digital item's Unique Identifier is derived from hashing of its digital item whereas the tangible item requires the user to input it. ResaleViewController arranges this even before the user gets the
     //     chance to choose anything.
     //  2. The Digital option from the Category picker has to be omitted for the Tangible resale.  This has to be done after the ParentPostVC (or PostVC) is loaded.
+    //
+    // For the In Person Pickup Delivery Method, the digital has to be eliminated
     let deliveryMethodPicker = MyPickerVC(currentPep: DeliveryMethod.shipping.rawValue, pep: [DeliveryMethod.shipping.rawValue, DeliveryMethod.inPerson.rawValue])
-    lazy var pvc = MyPickerVC(currentPep: Category.electronics.asString(), pep: self.post != nil ? Category.getTangibleResaleOptions() : Category.getAll())
+    lazy var pvc: MyPickerVC =  MyPickerVC(currentPep: Category.electronics.asString(), pep: self.post != nil ? Category.getTangibleResaleOptions() : Category.getAll())
     let paymentMethodPicker = MyPickerVC(currentPep: PaymentMethod.escrow.rawValue, pep: [PaymentMethod.escrow.rawValue, PaymentMethod.directTransfer.rawValue])
     
     /// done button for the picker
@@ -179,7 +182,9 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var post: Post?
     var buttonPanelHeight: NSLayoutConstraint!
     var BUTTON_PANEL_HEIGHT: CGFloat = 80
-    
+    var postType: PostType!
+    var storage = Set<AnyCancellable>()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         applyBarTintColorToTheNavigationBar()
@@ -187,6 +192,10 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         configureImagePreview()
         setConstraints()
         setColorPatchView()
+        
+        // Determine whether the postType is tangible or digital, which was set my the segmentedControl
+        // This is to be used for minting
+        postType = type(of: self) == PostViewController.self ? .tangible : .digital
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -205,8 +214,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
             observation?.invalidate()
         }
         
-        let postType: PostType = type(of: self) == PostViewController.self ? .tangible : .digital
-        print("postType", postType)
+        configureOwnerOf()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -287,6 +295,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         }
     }
     
+    // MARK:- Mint
     @objc func mint() {
         self.showSpinner { [weak self] in
             guard let userId = self?.userDefaults.string(forKey: UserDefaultKeys.userId) else {
@@ -372,8 +381,12 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
             }
                         
             // Determine whether the current postType is tangible or digital
-            guard let type = self?.post?.type,
-                  let postType = PostType(rawValue: type) else {
+//            guard let type = self?.post?.type,
+//                  let postType = PostType(rawValue: type) else {
+//                self?.alert.showDetail("Error", with: "Unable to determine between a new sale and a resale.", for: self)
+//                return
+//            }
+            guard let postType = self?.postType else {
                 self?.alert.showDetail("Error", with: "Unable to determine between a new sale and a resale.", for: self)
                 return
             }
@@ -446,14 +459,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
             }
         }
     }
-    
-    // Check the ownership of the token that's about to be transferred for resale prior to deploying any smart contracts
-    private func ownerOf() {
-        Deferred {
-            Future<
-        }
-    }
-    
+        
     struct MintParameters {
         let price: String?
         let itemTitle: String
@@ -491,6 +497,7 @@ extension ParentPostViewController {
         extendedLayoutIncludesOpaqueBars = true
         
         scrollView = UIScrollView()
+        scrollView.keyboardDismissMode = .onDrag
         scrollView.delegate = self
         scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT)
         view.addSubview(scrollView)
@@ -920,133 +927,194 @@ extension ParentPostViewController: UITextFieldDelegate, UITextViewDelegate {
     }
 }
 
-//extension ParentPostViewController: SocketMessageDelegate, FileUploadable {
-    // MARK: - didReceiveMessage
-//    @objc func didReceiveMessage(topics: [String]) {
+// MARK: - Check Ownership
+extension ParentPostViewController {
+    // The option to check the ownership of the token. Automatically prompted prior to the resale.
+    // Given as an option because it's recommended, but not necessary. It's also not a property, but a method on the NFTrack smart contract, which means it incurs a gas cost.
+    private func configureOwnerOf() {
+//        if post != nil {
 //
-//        // get the token ID to be uploaded to Firestore
-//        getTokenId(topics: topics) { [weak self](_, res) in
-//            guard let res = res else { return }
-//            switch res {
-//
-//                case is HTTPStatusCode:
-//                    switch res as! HTTPStatusCode {
-//                        case .badRequest:
-//                            self?.alert.showDetail("Error", with: "Bad request. Please contact the support.", for: self)
-//                        case .unauthorized:
-//                            self?.alert.showDetail("Error", with: "Unauthorized request. Please contact the support.", for: self)
-//                        case .internalServerError:
-//                            self?.alert.showDetail("Error", with: "Internal Server Error. Please contact the support.", for: self)
-//                        case .serviceUnavailable:
-//                            self?.alert.showDetail("Error", with: "Service Unavailable. Please contact the support.", for: self)
-//                        case .ok, .created, .accepted:
-//                            let update: [String: PostProgress] = ["update": .minting]
-//                            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//
-//                            self?.uploadFiles()
-//
-//                            DispatchQueue.main.async {
-//                                self?.titleTextField.text?.removeAll()
-//                                self?.priceTextField.text?.removeAll()
-//                                self?.deliveryMethodLabel.text?.removeAll()
-//                                self?.descTextView.text?.removeAll()
-//                                self?.idTextField.text?.removeAll()
-//                                self?.pickerLabel.text?.removeAll()
-//                                self?.tagTextField.tokens.removeAll()
-//                                self?.paymentMethodLabel.text?.removeAll()
-//                            }
-//                        default:
-//                            self?.alert.showDetail("Error", with: "Unknown Network Error. Please contact the admin.", for: self)
-//                    }
-//                case is GeneralErrors:
-//                    switch res as! GeneralErrors {
-//                        case .decodingError:
-//                            self?.alert.showDetail("Error", with: "There was an error decoding the token ID. Please contact the admin.", for: self)
-//                        default:
-//                            break
-//                    }
-//                default:
-//                    self?.alert.showDetail("Error in Minting", with: res.localizedDescription, for: self)
-//            }
 //        }
-//    }
+        
+        let buttonInfoArr = [
+            ButtonInfo(title: "Check", tag: 500, backgroundColor: .black)
+        ]
+        
+        let infoVC = InfoViewController(
+            infoModelArr: [InfoModel(title: "Check Ownership", detail: InfoText.ownerOf)],
+            buttonInfoArr: buttonInfoArr
+        )
+        
+        infoVC.buttonAction = { [weak self] tag in
+            switch tag {
+                case 500:
+                    self?.checkOwnership()
+                default:
+                    break
+            }
+        }
+        
+        self.present(infoVC, animated: true, completion: nil)
+    }
     
-//    // MARK: - getTokenId
-//    /// uploads the receipt to the Firebase function to get the token number, which will update the Firestore
-//    func getTokenId(topics: [String], completion: @escaping (Int?, Error?) -> Void) {
-//        // build request URL
-//        guard let requestURL = URL(string: "https://us-central1-nftrack-69488.cloudfunctions.net/decodeLog-decodeLog") else {
+    private func checkOwnership() {
+        guard let NFTrackAddress = NFTrackAddress else {
+            alert.showDetail("Error", with: "Unable to retrieve the smart contract address for checking the ownership.", for: self)
+            return
+        }
+        
+//        guard let tokenId = post?.tokenID else {
+//            self.alert.showDetail("Sorry", with: "Failed to load the Token ID for the current item.", for: self)
 //            return
 //        }
-////        guard let requestURL = URL(string: "http://localhost:5001/nftrack-69488/us-central1/decodeLog") else {
-////            return
-////        }
-//
-//        // prepare request
-//        var request = URLRequest(url: requestURL)
-//        request.httpMethod = "POST"
-//        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-//
-//        let parameter: [String: Any] = [
-//            "hexString": topics[0],
-//            "topics": [
-//                topics[1],
-//                topics[2],
-//                topics[3]
-//            ],
-//            "documentID": self.documentId!
+        
+        let tokenId = 153
+        let ownerOfParameters: [AnyObject] = [tokenId] as [AnyObject]
+        
+        let content = [
+            StandardAlertContent(
+                titleString: "",
+                body: [AlertModalDictionary.passwordSubtitle: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            )
+        ]
+        
+        self.hideSpinner {
+            self.dismiss(animated: true, completion: {
+                DispatchQueue.main.async { [weak self] in
+                    let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+                    alertVC.action = { (modal, mainVC) in
+                        mainVC.buttonAction = { _ in
+                            guard let self = self else { return }
+                            guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                                  !password.isEmpty else {
+                                self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                                return
+                            } // password guard
+                            
+                            self.dismiss(animated: true, completion: {
+                                // First ensure that the current wallet address is the owner of the item by invoking the ownerOf method on NFTrack.
+                                // This is to to be executed first to prevent the SimplePayment contract to be launched only to discover that the token cannot be transferred into it.
+                                // Since this is a "view" method that doesn't modify any states on the contract, no gas should be consumed and should be left out of the gas estimate.
+                                
+                                Deferred {
+                                    Future<SmartContractProperty, PostingError> { promise in
+                                        self.transactionService.prepareTransactionForReading(
+                                            method: NFTrackContract.ContractMethods.ownerOf.rawValue,
+                                            parameters: ownerOfParameters,
+                                            abi: NFTrackABI,
+                                            contractAddress: NFTrackAddress,
+                                            promise: promise
+                                        )
+                                    }
+                                    .eraseToAnyPublisher()
+                                }
+                                .flatMap { (propertyFetchModel) -> AnyPublisher<EthereumAddress, PostingError> in
+                                    Future<EthereumAddress, PostingError> { promise in
+                                        guard let transaction = propertyFetchModel.transaction else {
+                                            promise(.failure(.generalError(reason: "Unable to prepare the read transaction.")))
+                                            return
+                                        }
+                                        
+                                        do {
+                                            let result: [String: Any] = try transaction.call()
+                                            if let ownerAddress = result["0"] as? EthereumAddress {
+                                                promise(.success(ownerAddress))
+                                            }
+                                        }  catch {
+                                            promise(.failure(.generalError(reason: "Unable to parse data from the smart contract.")))
+                                        }
+                                    }
+                                    .eraseToAnyPublisher()
+                                }
+                                .sink { [weak self] (completion) in
+                                    switch completion {
+                                        case .failure(let error):
+                                            self?.processFailure(error)
+                                        case .finished:
+                                            break
+                                    }
+                                } receiveValue: { [weak self] (ownerAddress) in
+                                    if ownerAddress == Web3swiftService.currentAddress {
+                                        self?.ownershipCheckResultPrompt(detail: "The current wallet is the owner of the item. You may proceed with the resale.")
+                                    } else {
+                                        self?.ownershipCheckResultPrompt(detail: "The current wallet is not the owner of the item. You will not be able to proceed with the resale.")
+                                    }
+                                }
+                                .store(in: &self.storage)
+                                
+                            }) // self.dismiss
+                        } // mainVC.buttonAction
+                    } // alertVC.action
+                    self?.present(alertVC, animated: true, completion: nil)
+                } // DispatchQueue
+            }) // self.dismiss of InfoViewController
+        } // self.hideSpinner
+    }
+    
+    private func ownershipCheckResultPrompt(detail: String) {
+        DispatchQueue.main.async { [weak self] in
+            let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Item Ownership", detail: detail)])
+            self?.present(infoVC, animated: true, completion: nil)
+        }
+        
+//        let content = [
+//            StandardAlertContent(
+//                titleString: "",
+//                body: [AlertModalDictionary.passwordSubtitle: ""],
+//                isEditable: true,
+//                fieldViewHeight: 40,
+//                messageTextAlignment: .left,
+//                alertStyle: .oneButton
+//            )
 //        ]
 //
-//        let paramData = try? JSONSerialization.data(withJSONObject: parameter, options: [])
-//        request.httpBody = paramData
-//
-//        let task =  URLSession.shared.dataTask(with: request, completionHandler: { (data, response, error) -> Void in
-//            if let error = error {
-//                completion(nil, error)
-//            }
-//
-//            if let response = response as? HTTPURLResponse {
-//                print("response from decodeLog", response)
-//
-//                let httpStatusCode = APIError.HTTPStatusCode(rawValue: response.statusCode)
-//                completion(nil, httpStatusCode)
-//
-////                if !(200...299).contains(response.statusCode) {
-////                    print("start1")
-////                    // handle HTTP server-side error
-////                }
-//            }
-//
-//            if let data = data {
-//                do {
-//                    let json = try JSONSerialization.jsonObject(with: data, options: [.allowFragments])
-//                    guard let convertedJson = json as? NSNumber else {
-//                        // default error
-//                        completion(nil, GeneralErrors.decodingError)
+//        DispatchQueue.main.async { [weak self] in
+//            let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+//            alertVC.action = { (modal, mainVC) in
+//                mainVC.buttonAction = { _ in
+//                    guard let self = self else { return }
+//                    guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+//                          !password.isEmpty else {
+//                        self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
 //                        return
-//                    }
-//                    completion(convertedJson.intValue, nil)
-//                } catch {
-//                    completion(nil, GeneralErrors.decodingError)
-//                }
-//            }
-//        })
-//
-//        observation = task.progress.observe(\.fractionCompleted) { [weak self] (progress, _) in
-//            print("decode log progress", progress)
-//            DispatchQueue.main.async {
-//                self?.progressModal.progressView.isHidden = false
-//                self?.progressModal.progressLabel.isHidden = false
-//                self?.progressModal.progressView.progress = Float(progress.fractionCompleted)
-//                self?.progressModal.progressLabel.text = String(Int(progress.fractionCompleted * 100)) + "%"
-//                self?.progressModal.progressView.isHidden = true
-//                self?.progressModal.progressLabel.isHidden = true
-//            }
-//        }
-//
-//        task.resume()
-//    }
-//}
+//                    } // password guard
+//                } // mainVC.buttonAction
+//            } // alertVC.action
+//        } // DispatchQueue
+    }
+    
+    // MARK: - processFailure
+    func processFailure(_ error: PostingError) {
+        switch error {
+            case .fileUploadError(.fileNotAvailable):
+                self.alert.showDetail("Error", with: "No image file was found.", for: self)
+            case .retrievingEstimatedGasError:
+                self.alert.showDetail("Error", with: "There was an error retrieving the gas estimation.", for: self)
+            case .retrievingGasPriceError:
+                self.alert.showDetail("Error", with: "There was an error retrieving the current gas price.", for: self)
+            case .contractLoadingError:
+                self.alert.showDetail("Error", with: "There was an error loading your contract ABI.", for: self)
+            case .retrievingCurrentAddressError:
+                self.alert.showDetail("Account Retrieval Error", with: "Error retrieving your account address. Please ensure that you're logged into your wallet.", for: self)
+            case .createTransactionIssue:
+                self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
+            case .insufficientFund(let msg):
+                self.alert.showDetail("Error", with: msg, height: 500, fieldViewHeight: 300, alignment: .left, for: self)
+            case .emptyAmount:
+                self.alert.showDetail("Error", with: "The ETH value cannot be blank for the transaction.", for: self)
+            case .invalidAmountFormat:
+                self.alert.showDetail("Error", with: "The ETH value is in an incorrect format.", for: self)
+            case .generalError(reason: let msg):
+                self.alert.showDetail("Error", with: msg, for: self)
+            default:
+                self.alert.showDetail("Error", with: "There was an error creating your post.", for: self)
+        }
+    }
+}
 
 extension ParentPostViewController: DocumentDelegate, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
     func numberOfPreviewItems(in controller: QLPreviewController) -> Int {

@@ -187,9 +187,9 @@ extension ListDetailViewController {
         
         pendingIndicatorView = PendingIndicatorView()
         pendingIndicatorView.isHidden = true
-        pendingIndicatorView.buttonAction = { _ in
+        pendingIndicatorView.buttonAction = { [weak self] _ in
             let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Pending Transaction", detail: InfoText.pendingEscrow)])
-            self.present(infoVC, animated: true, completion: nil)
+            self?.present(infoVC, animated: true, completion: nil)
         }
         pendingIndicatorView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(pendingIndicatorView)

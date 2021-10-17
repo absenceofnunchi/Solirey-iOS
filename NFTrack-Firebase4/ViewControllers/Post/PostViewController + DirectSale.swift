@@ -22,31 +22,93 @@ extension PostViewController {
         mintParamters: MintParameters,
         completion: @escaping ([TxResult2]) -> Void
     ) {
-        guard let price = mintParamters.price else { return }
-        guard let amount = Web3.Utils.parseToBigUInt(price, units: .eth) else {
-            print("cannot parse")
+        guard let price = mintParamters.price,
+              let amount = Web3.Utils.parseToBigUInt(price, units: .eth) else {
+            alert.showDetail("Error", with: "Unable to parse the price into the correct format.", for: self)
             return
         }
-        let parameters: [AnyObject] = [amount, adminAddress!] as [AnyObject]
         
-        Future<TxPackage, PostingError> { promise in
-            self.transactionService.prepareTransactionForNewContractWithGasEstimate(
-                contractABI: simplePaymentABI,
-                bytecode: simplePaymentBytecode,
-                parameters: parameters,
-                promise: promise
-            )
+        guard let NFTrackAddress = NFTrackAddress else {
+            alert.showDetail("Error", with: "Unable to retrieve the smart contract address for checking the ownership.", for: self)
+            return
         }
-        .eraseToAnyPublisher()
-        .flatMap { (txPackage) -> AnyPublisher<[TxPackage], PostingError> in
+        
+        guard let tokenId = post?.tokenID else {
+            self.alert.showDetail("Sorry", with: "Failed to load the Token ID for the current item.", for: self)
+            return
+        }
+        
+        let ownerOfParameters: [AnyObject] = [tokenId] as [AnyObject]
+        let simplePaymentParameters: [AnyObject] = [amount, adminAddress!] as [AnyObject]
+        
+        // First ensure that the current wallet address is the owner of the item by invoking the ownerOf method on NFTrack.
+        // This is to to be executed first to prevent the SimplePayment contract to be launched only to discover that the token cannot be transferred into it.
+        // Since this is a "view" method that doesn't modify any states on the contract, no gas should be consumed and should be left out of the gas estimate.
+        // If the comparison proves that the current wallet is the true owner, calculate the total gas, prepare the transaction and deploy the SimplePayment contract.
+        Deferred {
+            Future<SmartContractProperty, PostingError> { promise in
+                self.transactionService.prepareTransactionForReading(
+                    method: NFTrackContract.ContractMethods.ownerOf.rawValue,
+                    parameters: ownerOfParameters,
+                    abi: NFTrackABI,
+                    contractAddress: NFTrackAddress,
+                    promise: promise
+                )
+            }
+            .eraseToAnyPublisher()
+        }
+        .flatMap { (propertyFetchModel) -> AnyPublisher<Bool, PostingError> in
+            Future<Bool, PostingError> { promise in
+                do {
+                    guard let transaction = propertyFetchModel.transaction else {
+                        promise(.failure(.generalError(reason: "Unable to prepare the read transaction.")))
+                        return
+                    }
+
+                    let result: [String: Any] = try transaction.call()
+                    guard let ownerAddress = result["0"] as? EthereumAddress else {
+                        promise(.failure(PostingError.generalError(reason: "Unable to parse the data from the smart contract.")))
+                        return
+                    }
+
+                    if ownerAddress == Web3swiftService.currentAddress {
+                        // If the owner address matches the current wallet address, then proceed with the resale process
+                        promise(.success(true))
+                    } else {
+                        // If the token doesn't belong to this wallet's address, stop the process
+                        promise(.failure(PostingError.generalError(reason: "The current wallet address is not the owner of this item.")))
+                    }
+                }  catch {
+                    promise(.failure(.generalError(reason: "Unable to parse data from the smart contract.")))
+                }
+            }
+            .eraseToAnyPublisher()
+        }
+        .flatMap({ [weak self] (_) -> AnyPublisher<TxPackage, PostingError> in
+            // Now that the ownership is proven, prepare and deploy the SimplePayment contract for resale
+            Future<TxPackage, PostingError> { [weak self] promise in
+                self?.transactionService.prepareTransactionForNewContractWithGasEstimate(
+                    contractABI: simplePaymentABI,
+                    bytecode: simplePaymentBytecode,
+                    parameters: simplePaymentParameters,
+                    promise: promise
+                )
+            }
+            .eraseToAnyPublisher()
+        })
+        .flatMap { [weak self] (txPackage) -> AnyPublisher<[TxPackage], PostingError> in
             // TxPackage array is needed because calculateTotalGasCost can calculate multiple transactions' gas.
             // In this case, there is only one transaction to be calculated.
             // The minting transaction can't be calculated because it requires the auction contract or the simple payment contract's address.
-            self.txPackageArr.append(txPackage)
+            self?.txPackageArr.append(txPackage)
+            guard let txPackageArr = self?.txPackageArr else {
+                return Fail(error: PostingError.generalError(reason: "Unable to calculate the total gas cost."))
+                    .eraseToAnyPublisher()
+            }
             return Future<[TxPackage], PostingError> { promise in
                 let gasEstimateToMintAndTransferAToken: BigUInt = 80000
-                self.transactionService.calculateTotalGasCost(
-                    with: self.txPackageArr,
+                self?.transactionService.calculateTotalGasCost(
+                    with: txPackageArr,
                     plus: gasEstimateToMintAndTransferAToken,
                     promise: promise
                 )
@@ -56,8 +118,12 @@ extension PostViewController {
             .eraseToAnyPublisher()
         }
         // execute the deployment transaction and get the receipts in an array
-        .flatMap { (txPackages) -> AnyPublisher<[TxResult2], PostingError> in
-            let results = txPackages.map { self.transactionService.executeTransaction2(
+        .flatMap { [weak self] (txPackages) -> AnyPublisher<[TxResult2], PostingError> in
+            guard let txService = self?.transactionService else {
+                return Fail(error: PostingError.generalError(reason: "Unable to execute the transaction."))
+                    .eraseToAnyPublisher()
+            }
+            let results = txPackages.map { txService.executeTransaction2(
                 transaction: $0.transaction,
                 password: password,
                 type: $0.type
@@ -92,8 +158,8 @@ extension PostViewController {
         }
         // mint a token and transfer it to the address of the newly deployed auction contract
         Deferred {
-            Future<WriteTransaction, PostingError> { promise in
-                self.transactionService.prepareTransactionForMinting(
+            Future<WriteTransaction, PostingError> { [weak self] promise in
+                self?.transactionService.prepareTransactionForMinting(
                     receiverAddress: simplePaymentContractAddress,
                     promise: promise
                 )
@@ -101,8 +167,13 @@ extension PostViewController {
             .eraseToAnyPublisher()
         }
         // execute the mint transaction
-        .flatMap { (transaction) -> AnyPublisher<[TxResult2], PostingError> in
-            let results = self.transactionService.executeTransaction2(
+        .flatMap { [weak self] (transaction) -> AnyPublisher<[TxResult2], PostingError> in
+            guard let txService = self?.transactionService else {
+                return Fail(error: PostingError.generalError(reason: "Unable to execute the transaction."))
+                    .eraseToAnyPublisher()
+            }
+            
+            let results = txService.executeTransaction2(
                 transaction: transaction,
                 password: password,
                 type: .mint
@@ -357,3 +428,4 @@ extension PostViewController {
         .store(in: &self.storage)
     }
 } // PostViewController
+

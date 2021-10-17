@@ -130,3 +130,4 @@ extension AlertViewController: UIPageViewControllerDataSource, UIPageViewControl
         return newIndex
     }
 }
+

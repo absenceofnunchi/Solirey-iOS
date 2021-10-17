@@ -996,6 +996,10 @@ struct InfoText {
     static let profileInfo = """
     Your email and the address are not publicly visible. The address is used to provide optimal search results when a user is looking for a tangible item to purchase in his/her vicinity or to determine whether a buyer meets the seller's shipping condition.  \n\nWhen purchasing a tangible item that requires shipping, you will be prompted to provide a permission to disclose your shipping address to the seller.
     """
+    
+    static let ownerOf = """
+    Prior to the resale of your item, it is recommended that you confirm the ownership of the current item on the blockchain. This is ensure that you're using the same wallet used to purchase the current item or the ownership has not been transferred to another wallet.
+    """
 }
 
 // MARK: - SmartContractProperty
@@ -1024,6 +1028,7 @@ enum TxType {
     case endAuction
     case auctionContract
     case simplePayment
+    case NFTrack
 }
 
 struct TxResult {

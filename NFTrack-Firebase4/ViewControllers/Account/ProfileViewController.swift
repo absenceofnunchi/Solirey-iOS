@@ -334,7 +334,10 @@ extension ProfileViewController {
                 addressDeleteButton.alpha = 0
                 break
             case 5:
-                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Profile Privacy", detail: InfoText.profileInfo)])
+                let infoVC = InfoViewController(
+                    infoModelArr: [InfoModel(title: "Profile Privacy", detail: InfoText.profileInfo)]
+                )
+
                 self.present(infoVC, animated: true, completion: nil)
                 break
             default:

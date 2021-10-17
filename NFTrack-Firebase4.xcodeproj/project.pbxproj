@@ -140,6 +140,7 @@
 		496F700C265421E300E4056B /* TxDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496F700B265421E200E4056B /* TxDetailViewController.swift */; };
 		49721DA226D58385009BA7E7 /* ReportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49721DA126D58384009BA7E7 /* ReportViewController.swift */; };
 		49721DAF26D5C2F3009BA7E7 /* GradientBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49721DAE26D5C2F3009BA7E7 /* GradientBackgroundView.swift */; };
+		497329AA271B92A6000EC673 /* ButtonWithShadow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497329A9271B92A6000EC673 /* ButtonWithShadow.swift */; };
 		49765A5226ADEE850094A8EC /* TestSocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49765A5126ADEE850094A8EC /* TestSocketDelegate.swift */; };
 		497A9AEC2655A60300F09CAA /* NFTrackABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497A9AEB2655A60300F09CAA /* NFTrackABI.swift */; };
 		497A9B1A2658085E00F09CAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 497A9B192658085E00F09CAA /* GoogleService-Info.plist */; };
@@ -358,6 +359,7 @@
 		496F700B265421E200E4056B /* TxDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TxDetailViewController.swift; sourceTree = "<group>"; };
 		49721DA126D58384009BA7E7 /* ReportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportViewController.swift; sourceTree = "<group>"; };
 		49721DAE26D5C2F3009BA7E7 /* GradientBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradientBackgroundView.swift; sourceTree = "<group>"; };
+		497329A9271B92A6000EC673 /* ButtonWithShadow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonWithShadow.swift; sourceTree = "<group>"; };
 		49765A5126ADEE850094A8EC /* TestSocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSocketDelegate.swift; sourceTree = "<group>"; };
 		497A9AEB2655A60300F09CAA /* NFTrackABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABI.swift; sourceTree = "<group>"; };
 		497A9B192658085E00F09CAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -641,6 +643,7 @@
 				4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */,
 				49054D0526C5B2D000ECCB58 /* BalanceCardView.swift */,
 				49054D4126CA310300ECCB58 /* PendingIndicatorView.swift */,
+				497329A9271B92A6000EC673 /* ButtonWithShadow.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -1220,6 +1223,7 @@
 				499F9958266B2ADB00FC6CDE /* WebViewController.swift in Sources */,
 				496F6FF82651AD6300E4056B /* ListViewController.swift in Sources */,
 				4964E4602641B001005B3268 /* SignInViewController.swift in Sources */,
+				497329AA271B92A6000EC673 /* ButtonWithShadow.swift in Sources */,
 				493BF9F3264C6B4B00B9C9D2 /* PasswordResetViewController.swift in Sources */,
 				49221B892670FC2F0031A756 /* TempViewController.swift in Sources */,
 				4933336B26828E4600B8BFC2 /* ProfileListViewController.swift in Sources */,

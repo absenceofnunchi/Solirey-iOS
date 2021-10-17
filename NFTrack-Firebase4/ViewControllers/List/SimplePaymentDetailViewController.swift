@@ -148,9 +148,9 @@ extension SimplePaymentDetailViewController {
         
         pendingIndicatorView = PendingIndicatorView()
         pendingIndicatorView.isHidden = true
-        pendingIndicatorView.buttonAction = { _ in
+        pendingIndicatorView.buttonAction = { [weak self] _ in
             let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Pending Transaction", detail: InfoText.pending)])
-            self.present(infoVC, animated: true, completion: nil)
+            self?.present(infoVC, animated: true, completion: nil)
         }
         pendingIndicatorView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(pendingIndicatorView)
@@ -222,6 +222,7 @@ extension SimplePaymentDetailViewController {
             case 4:
 //                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Transaction Complete!", detail: InfoText.simplePaymentComplete)])
 //                self.present(infoVC, animated: true, completion: nil)
+                
                 
                 // sell
                 let resaleVC = ResaleViewController()

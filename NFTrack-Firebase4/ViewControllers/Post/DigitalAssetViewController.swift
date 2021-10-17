@@ -27,7 +27,6 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
     final var auctionHash: String!
     final var walletAuthorizationCode: String!
     final var getTxReceipt: AnyCancellable?
-    final var storage = Set<AnyCancellable>()
     
     override var previewDataArr: [PreviewData]! {
         didSet {

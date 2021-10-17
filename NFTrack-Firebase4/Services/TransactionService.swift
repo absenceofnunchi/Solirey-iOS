@@ -496,7 +496,6 @@ extension TransactionService {
                 return
             }
             
-            
             let propertyFetchModel = SmartContractProperty(propertyName: method, transaction: transaction)
             promise(.success(propertyFetchModel))
         }
@@ -608,6 +607,9 @@ extension TransactionService {
                 promise(.failure(PostingError.createTransactionIssue))
                 return
             }
+            
+            let gasEstimate = try? transaction.estimateGas()
+            print("gas estimate", gasEstimate)
             
             promise(.success(transaction))
         }
