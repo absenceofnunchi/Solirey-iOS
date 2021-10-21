@@ -41,6 +41,7 @@ class PresentationController: UIPresentationController {
         hideKeyboardWhenTappedAround()
         
         guard let presentedView = presentedView, let containerView = containerView else { return }
+        
         presentedView.translatesAutoresizingMaskIntoConstraints = false
         constraints.append(contentsOf: [
             presentedView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
@@ -89,6 +90,7 @@ extension PresentationController {
         
         guard let superview = presentingViewController.view else { return }
         superview.addSubview(dimmingView)
+        
         NSLayoutConstraint.activate([
             dimmingView.leadingAnchor.constraint(equalTo: superview.leadingAnchor),
             dimmingView.trailingAnchor.constraint(equalTo: superview.trailingAnchor),

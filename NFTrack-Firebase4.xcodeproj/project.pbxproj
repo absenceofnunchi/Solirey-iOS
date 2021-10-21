@@ -39,6 +39,7 @@
 		492C81F226F3EB2E0083C3B5 /* ParentChatListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81F126F3EB2E0083C3B5 /* ParentChatListViewController.swift */; };
 		492C820026F52DA60083C3B5 /* ChatViewController + SendMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81FF26F52DA50083C3B5 /* ChatViewController + SendMessage.swift */; };
 		492C820526F574D30083C3B5 /* ImageMessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C820426F574D20083C3B5 /* ImageMessageCell.swift */; };
+		492E009727200B3900A7C072 /* SimpleRevisedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492E009627200B3900A7C072 /* SimpleRevisedViewController.swift */; };
 		49314F5F4CF8EC19FC270279 /* Pods_NFTrack_Firebase4Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */; };
 		4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933332C268033D900B8BFC2 /* ReviewViewController.swift */; };
 		493333322681116F00B8BFC2 /* ReviewPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493333312681116F00B8BFC2 /* ReviewPostViewController.swift */; };
@@ -87,6 +88,10 @@
 		495FD329268D284E00F1D81D /* MainViewController + SearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD328268D284E00F1D81D /* MainViewController + SearchBar.swift */; };
 		495FD32E268D292E00F1D81D /* FilterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD32D268D292E00F1D81D /* FilterViewController.swift */; };
 		495FD333268D402900F1D81D /* FilterCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD332268D402900F1D81D /* FilterCell.swift */; };
+		495FE3C8271F8D29000433AF /* NFTrackABIRevised.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3C7271F8D29000433AF /* NFTrackABIRevised.swift */; };
+		495FE3D1271F9BF5000433AF /* PostViewController + Escrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3D0271F9BF5000433AF /* PostViewController + Escrow.swift */; };
+		495FE3D6271F9E45000433AF /* ParentPostViewController + Mint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */; };
+		495FE3DE271FA19A000433AF /* PostViewController + DirectSaleRevised.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3DD271FA19A000433AF /* PostViewController + DirectSaleRevised.swift */; };
 		4962FADF26F647C6004B01A8 /* CacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962FADE26F647C6004B01A8 /* CacheService.swift */; };
 		4962FAE726F6749A004B01A8 /* CacheServiceTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962FAE626F6749A004B01A8 /* CacheServiceTest.swift */; };
 		4962FB1126F6967A004B01A8 /* ChatInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962FB1026F69679004B01A8 /* ChatInfoViewController.swift */; };
@@ -253,6 +258,7 @@
 		492C81F126F3EB2E0083C3B5 /* ParentChatListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentChatListViewController.swift; sourceTree = "<group>"; };
 		492C81FF26F52DA50083C3B5 /* ChatViewController + SendMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + SendMessage.swift"; sourceTree = "<group>"; };
 		492C820426F574D20083C3B5 /* ImageMessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMessageCell.swift; sourceTree = "<group>"; };
+		492E009627200B3900A7C072 /* SimpleRevisedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleRevisedViewController.swift; sourceTree = "<group>"; };
 		4933332C268033D900B8BFC2 /* ReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewController.swift; sourceTree = "<group>"; };
 		493333312681116F00B8BFC2 /* ReviewPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPostViewController.swift; sourceTree = "<group>"; };
 		4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSegmentedControl.swift; sourceTree = "<group>"; };
@@ -300,6 +306,10 @@
 		495FD328268D284E00F1D81D /* MainViewController + SearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + SearchBar.swift"; sourceTree = "<group>"; };
 		495FD32D268D292E00F1D81D /* FilterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterViewController.swift; sourceTree = "<group>"; };
 		495FD332268D402900F1D81D /* FilterCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterCell.swift; sourceTree = "<group>"; };
+		495FE3C7271F8D29000433AF /* NFTrackABIRevised.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABIRevised.swift; sourceTree = "<group>"; };
+		495FE3D0271F9BF5000433AF /* PostViewController + Escrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + Escrow.swift"; sourceTree = "<group>"; };
+		495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + Mint.swift"; sourceTree = "<group>"; };
+		495FE3DD271FA19A000433AF /* PostViewController + DirectSaleRevised.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + DirectSaleRevised.swift"; sourceTree = "<group>"; };
 		4962FADE26F647C6004B01A8 /* CacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheService.swift; sourceTree = "<group>"; };
 		4962FAE626F6749A004B01A8 /* CacheServiceTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheServiceTest.swift; sourceTree = "<group>"; };
 		4962FB1026F69679004B01A8 /* ChatInfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInfoViewController.swift; sourceTree = "<group>"; };
@@ -491,6 +501,20 @@
 			path = "Pop Up";
 			sourceTree = "<group>";
 		};
+		492E009527200B0400A7C072 /* ListDetail */ = {
+			isa = PBXGroup;
+			children = (
+				496F70012652029F00E4056B /* ListDetailViewController.swift */,
+				49054D3C26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift */,
+				49054D4626CAC21700ECCB58 /* ListDetailViewController + UpdateState.swift */,
+				49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */,
+				495FB37926BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift */,
+				492556B3271643970073188F /* SimplePaymentDetailViewController.swift */,
+				492E009627200B3900A7C072 /* SimpleRevisedViewController.swift */,
+			);
+			path = ListDetail;
+			sourceTree = "<group>";
+		};
 		493BF9B3264AC16F00B9C9D2 /* Controllers */ = {
 			isa = PBXGroup;
 			children = (
@@ -522,6 +546,7 @@
 			children = (
 				493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */,
 				497A9AEB2655A60300F09CAA /* NFTrackABI.swift */,
+				495FE3C7271F8D29000433AF /* NFTrackABIRevised.swift */,
 				492556AE27122F9D0073188F /* MintABI.swift */,
 				49B47E9B26953B05003D6F7A /* AuctionABI.swift */,
 				492556A9271186320073188F /* SimplePaymentABI.swift */,
@@ -543,6 +568,20 @@
 				4957CF5C2705730E004F7320 /* ParentSinglePageViewController.swift */,
 			);
 			path = Page;
+			sourceTree = "<group>";
+		};
+		495FE3CC271F9BB6000433AF /* Different Payment Formats */ = {
+			isa = PBXGroup;
+			children = (
+				495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */,
+				49E759B72666BCCF0064BB34 /* ResaleViewController.swift */,
+				4964E5092644B07D005B3268 /* PostViewController.swift */,
+				495FE3D0271F9BF5000433AF /* PostViewController + Escrow.swift */,
+				492556A127104DB30073188F /* PostViewController + DirectSale.swift */,
+				495FE3DD271FA19A000433AF /* PostViewController + DirectSaleRevised.swift */,
+				4900962C270E76FE00EDB593 /* PostViewController + Resale.swift */,
+			);
+			path = "Different Payment Formats";
 			sourceTree = "<group>";
 		};
 		4964E44F2641B001005B3268 = {
@@ -779,13 +818,10 @@
 		499F997B266C694400FC6CDE /* Post */ = {
 			isa = PBXGroup;
 			children = (
+				495FE3CC271F9BB6000433AF /* Different Payment Formats */,
 				49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */,
+				495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */,
 				496D56BF2659E75D00C3E7FD /* ParentPostViewController + Picker.swift */,
-				4964E5092644B07D005B3268 /* PostViewController.swift */,
-				492556A127104DB30073188F /* PostViewController + DirectSale.swift */,
-				4900962C270E76FE00EDB593 /* PostViewController + Resale.swift */,
-				495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */,
-				49E759B72666BCCF0064BB34 /* ResaleViewController.swift */,
 				4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */,
 				496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */,
 				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
@@ -803,18 +839,13 @@
 		499F997C266C698200FC6CDE /* List */ = {
 			isa = PBXGroup;
 			children = (
+				492E009527200B0400A7C072 /* ListDetail */,
 				49221B7D2670FA190031A756 /* ParentListViewController.swift */,
 				49221B882670FC2F0031A756 /* TempViewController.swift */,
 				496F6FF72651AD6300E4056B /* ListViewController.swift */,
-				496F70012652029F00E4056B /* ListDetailViewController.swift */,
-				49054D3C26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift */,
-				49054D4626CAC21700ECCB58 /* ListDetailViewController + UpdateState.swift */,
 				49054D5326CC785B00ECCB58 /* ParentListEditViewController.swift */,
 				49054D4E26CB66A300ECCB58 /* TangibleListEditViewController.swift */,
 				4984292126CDBD9A0062CD43 /* DigitalListEditViewController.swift */,
-				49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */,
-				492556B3271643970073188F /* SimplePaymentDetailViewController.swift */,
-				495FB37926BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift */,
 				496F700B265421E200E4056B /* TxDetailViewController.swift */,
 				49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */,
 				49333360268281B800B8BFC2 /* ProfilePostingsViewController.swift */,
@@ -1198,6 +1229,7 @@
 				49333361268281B800B8BFC2 /* ProfilePostingsViewController.swift in Sources */,
 				49409A75265946870060193C /* SearchResultsViewController.swift in Sources */,
 				4962FADF26F647C6004B01A8 /* CacheService.swift in Sources */,
+				495FE3C8271F8D29000433AF /* NFTrackABIRevised.swift in Sources */,
 				4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */,
 				4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */,
 				495FB37526BB496D0047E91D /* AuctionButtonController.swift in Sources */,
@@ -1239,12 +1271,15 @@
 				4997030A2676CC00001DD80A /* SavedViewController.swift in Sources */,
 				499702AB2673F75E001DD80A /* MessageCell.swift in Sources */,
 				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
+				492E009727200B3900A7C072 /* SimpleRevisedViewController.swift in Sources */,
 				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
 				49141498270D0A27005E93BA /* DigitalAssetViewController + Auction.swift in Sources */,
 				49D95C0727057E95004C6EEF /* BigSinglePageViewController.swift in Sources */,
+				495FE3D6271F9E45000433AF /* ParentPostViewController + Mint.swift in Sources */,
 				49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */,
 				49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */,
 				49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */,
+				495FE3DE271FA19A000433AF /* PostViewController + DirectSaleRevised.swift in Sources */,
 				497CF7A726F82818003EF69E /* ParentLocationSearchViewController.swift in Sources */,
 				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
 				496F6FFD2651F15200E4056B /* ListCell.swift in Sources */,
@@ -1336,6 +1371,7 @@
 				49BFB4BE269E4666008D908F /* AuctionDetailViewController.swift in Sources */,
 				4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */,
 				499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */,
+				495FE3D1271F9BF5000433AF /* PostViewController + Escrow.swift in Sources */,
 				49765A5226ADEE850094A8EC /* TestSocketDelegate.swift in Sources */,
 				495FD31C268B9DCA00F1D81D /* NewPostViewController.swift in Sources */,
 				49054D4226CA310300ECCB58 /* PendingIndicatorView.swift in Sources */,

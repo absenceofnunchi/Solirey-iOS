@@ -13,6 +13,21 @@
 import UIKit.UIButton
 
 class ButtonWithShadow: UIButton {
+    override var isHighlighted: Bool {
+        didSet {
+            if isHighlighted == true {
+                UIView.animate(withDuration: 0.2) { [weak self] in
+                    self?.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+                }
+                
+            } else {
+                UIView.animate(withDuration: 0.2) { [weak self] in
+                    self?.transform = .identity
+                }
+            }
+        }
+    }
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = UIColor.white
@@ -30,10 +45,14 @@ class ButtonWithShadow: UIButton {
         return super.intrinsicContentSize.withDelta(dw:25, dh: 20)
     }
     
+    override func backgroundImage(for state: UIControl.State) -> UIImage? {
+        return UIImage()
+    }
+    
     override func backgroundRect(forBounds bounds: CGRect) -> CGRect {
         var result = super.backgroundRect(forBounds:bounds)
         if self.isHighlighted {
-            result = result.insetBy(dx: 20, dy: 20)
+            result = result.insetBy(dx: 100, dy: 100)
         }
         return result
     }
@@ -45,7 +64,7 @@ class ButtonWithShadow: UIButton {
         //superview is your optional embedding UIView
         if let superview = superview {
             superview.backgroundColor = UIColor.clear
-            superview.layer.shadowColor = UIColor.darkGray.cgColor
+            superview.layer.shadowColor = UIColor.gray.cgColor
             superview.layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 12.0).cgPath
             superview.layer.shadowOffset = CGSize(width: 2.0, height: 2.0)
             superview.layer.shadowOpacity = 1.0

@@ -316,7 +316,7 @@ extension SendViewController: UITextFieldDelegate {
                         alertVC.action = { [weak self] (modal, mainVC) in
                             guard  let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
                                    !password.isEmpty else {
-                                self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                                self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
                                 return
                             }
                         }

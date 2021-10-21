@@ -179,12 +179,9 @@ class ListViewController: ParentListViewController<Post>, FetchContractAddress {
                 .store(in: &storage)
                 break
             case .directTransfer:
-                guard let escrowHash = post.escrowHash else { return }
-                getContractAddress(with: escrowHash) { [weak self] (contractAddress) in
-                    let simplePaymentDetailVC = SimplePaymentDetailViewController(deployedContractAddress: contractAddress)
-                    simplePaymentDetailVC.post = post
-                    self?.navigationController?.pushViewController(simplePaymentDetailVC, animated: true)
-                }
+                let simpleVC = SimpleRevisedViewController()
+                simpleVC.post = post
+                self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
         }
     }

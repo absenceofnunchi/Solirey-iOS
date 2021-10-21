@@ -53,7 +53,7 @@ extension ListDetailViewController: CoreSpotlightDelegate {
                         mainVC.buttonAction = { _ in
                             guard  let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
                                    !password.isEmpty else {
-                                self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                                self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
                                 return
                             }
                             
@@ -270,7 +270,7 @@ extension ListDetailViewController {
             mainVC.buttonAction = { _ in
                 guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
                       !password.isEmpty else {
-                    self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                    self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
                     return
                 }
                 
@@ -326,10 +326,11 @@ extension ListDetailViewController {
                             }
                             return Future<WriteTransaction, PostingError> { promise in
                                 self?.transactionService.prepareTransactionForWriting(
-                                    method: "transferFrom",
+                                    method: NFTrackContract.ContractMethods.transferFrom.rawValue,
                                     abi: NFTrackABI,
                                     param: param,
                                     contractAddress: NFTrackAddress,
+                                    amountString: nil,
                                     promise: promise)
                             }
                             .eraseToAnyPublisher()

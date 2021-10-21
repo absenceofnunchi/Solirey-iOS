@@ -23,6 +23,8 @@ class AlertViewController: UIPageViewController {
     private var height: CGFloat!
     private lazy var customTransitioningDelegate = TransitioningDelegate(height: height)
     var dataDict = [String: String]()
+    // AlerVC is the parent container vc for the individual page. The Standard vc is the first of the single page vc's
+    // Only the buttons in the Standard vc is currently connected with AlertVC for now.
     var action: ((AlertViewController, StandardAlertViewController)->Void)? {
         didSet {
             guard let action = action,
@@ -58,7 +60,8 @@ class AlertViewController: UIPageViewController {
 }
 
 extension AlertViewController: DataFetchDelegate {
-    private func configure() {        
+    private func configure() {
+        
         // used for indexing page vc's
         indexArray = contentArray.map { $0.index }
         
@@ -72,22 +75,25 @@ extension AlertViewController: DataFetchDelegate {
         dataSource = self
         delegate = self
         
-        if contentArray.count != 1 {
+        if contentArray.count > 1 {
             let pageControl = UIPageControl.appearance()
             pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
             pageControl.currentPageIndicatorTintColor = .gray
-            pageControl.backgroundColor = .white
+            pageControl.backgroundColor = .clear
         }
     }
     
     final func didGetData(_ data: [String : String]) {
         data.forEach { dataDict.updateValue($0.value, forKey: $0.key) }
+        print("dataDict", dataDict)
     }
 }
 
 extension AlertViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        guard let index = (viewController as! StandardAlertViewController).index, var i = indexArray.firstIndex(of: index) else { return nil }
+        guard let index = (viewController as! StandardAlertViewController).index,
+              var i = indexArray.firstIndex(of: index) else { return nil }
+        
         i -= 1
         if i < 0 {
             return nil

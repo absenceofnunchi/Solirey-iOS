@@ -311,6 +311,12 @@ enum NFTrackMethods: String, ContractMethodsEnum {
     case name
     case symbol
     case safeTransferFrom
+    case transferFrom
+    case createSimplePayment
+    case resell
+    case pay
+    case withdraw
+    case withdrawFee
 }
 
 enum NFTrackProperties: ContractPropertiesEnum {

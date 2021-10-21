@@ -12,11 +12,6 @@ import web3swift
 import MapKit
 
 class ListDetailViewController: ParentDetailViewController {
-//    final override var post: Post! {
-//        didSet {
-//            self.getStatus()
-//        }
-//    }
     private var statusTitleLabel: UILabel!
     final var statusLabel: UILabelPadding!
     final var updateStatusButton = UIButton()

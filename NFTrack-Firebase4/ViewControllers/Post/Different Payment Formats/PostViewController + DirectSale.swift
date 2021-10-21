@@ -7,9 +7,9 @@
 
 /*
  Abstract:
- A resale through in-person pickup method.
- The payment methods for an in-person pickup method are escrow and direct sale. Escrow is the same as the shipping delivery method which can also be useful in the in-person pickup option to reduce
- the counterparty risk. The second payment method is the wallet-to-wallet direct transfer. Buyer pays the money and the seller transfer the token.
+ Direct sale uses the deployment of SimplePayment contract by the seller.
+ Currently not in use since the deployment of the contract for each item is costly.
+ 
  */
 import UIKit
 import Combine
@@ -17,7 +17,285 @@ import BigInt
 import web3swift
 
 extension PostViewController {
+    // MARK: - processDirectSale
+    final override func processDirectSale(_ mintParameters: MintParameters) {
+        guard let price = mintParameters.price, !price.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+            return
+        }
+        
+        // change back to this after testing
+        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+        //            return
+        //        }
+        
+        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+            return
+        }
+        
+        guard let NFTrackAddress = NFTrackAddress else {
+            self.alert.showDetail("Sorry", with: "There was an error loading the minting contract address.", for: self)
+            return
+        }
+        
+        let content = [
+            StandardAlertContent(
+                titleString: "",
+                body: [AlertModalDictionary.passwordSubtitle: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            ),
+            StandardAlertContent(
+                titleString: "Transaction Options",
+                body: [AlertModalDictionary.gasLimit: "", AlertModalDictionary.gasPrice: "", AlertModalDictionary.nonce: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            )
+        ]
+        
+        self.hideSpinner {
+            DispatchQueue.main.async {
+                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+                alertVC.action = { [weak self] (modal, mainVC) in
+                    mainVC.buttonAction = { _ in
+                        guard let self = self else { return }
+                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                              !password.isEmpty else {
+                            self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
+                            return
+                        }
+                        
+                        self.dismiss(animated: true, completion: {
+                            self.progressModal = ProgressModalViewController(paymentMethod: .directTransfer)
+                            self.progressModal.titleString = "Posting In Progress"
+                            self.present(self.progressModal, animated: true, completion: {
+                                self.socketDelegate = SocketDelegate(contractAddress: NFTrackAddress)
+                                // Deploy a simple payment contract, mint a token, and transfer it into the contract.
+                                self.deploySimplePaymentContract(password: password, mintParamters: mintParameters) { (txResults) in
+                                    guard let txResult = txResults.first else { return }
+                                    // confirm that the receipt of the deployment transaction is obtained
+                                    self.transactionService.confirmReceipt(txHash: txResult.txResult.hash)
+                                        .sink { (completion) in
+                                            switch completion {
+                                                case .failure(let error):
+                                                    self.processFailure(error)
+                                                default:
+                                                    break
+                                            }
+                                        } receiveValue: { (receipt) in
+                                            print(receipt)
+                                            // confirm that the block is added to the chain
+                                            self.transactionService.confirmTransactions(receipt)
+                                                .sink(receiveCompletion: { (completion) in
+                                                    switch completion {
+                                                        case .failure(let error):
+                                                            self.processFailure(error)
+                                                        default:
+                                                            break
+                                                    }
+                                                }, receiveValue: { (receipt) in
+                                                    // mint a new token and transfer it to the payment contract
+                                                    self.mintAndTransfer(receipt, password: password, mintParameters: mintParameters)
+                                                })
+                                                .store(in: &self.storage)
+                                        }
+                                        .store(in: &self.storage)
+                                } // deploySimplePaymentcontract
+                            }) // self.present for ProgressModalVC
+                        }) // self.dismiss
+                    } //buttonAction
+                } // alertVC.Action
+                self.present(alertVC, animated: true, completion: nil)
+            } // DispatchQueue
+        } // hideSpinner
+    } // processDirectSale
+    
+    // MARK: - processDirectResale
+    override func processDirectResale(_ mintParameters: ParentPostViewController.MintParameters) {
+        guard let price = mintParameters.price, !price.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+            return
+        }
+        
+        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+        //            return
+        //        }
+        
+        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+            return
+        }
+        
+        let content = [
+            StandardAlertContent(
+                titleString: "",
+                body: [AlertModalDictionary.passwordSubtitle: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            ),
+            StandardAlertContent(
+                titleString: "Transaction Options",
+                body: [AlertModalDictionary.gasLimit: "", AlertModalDictionary.gasPrice: "", AlertModalDictionary.nonce: ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            )
+        ]
+        
+        self.hideSpinner {
+            DispatchQueue.main.async { [weak self] in
+                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+                alertVC.action = { (modal, mainVC) in
+                    mainVC.buttonAction = { _ in
+                        guard let self = self else { return }
+                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
+                              !password.isEmpty else {
+                            self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
+                            return
+                        } // password guard
+                        
+                        self.dismiss(animated: true, completion: {
+                            self.progressModal = ProgressModalViewController(paymentMethod: .directTransfer)
+                            self.progressModal.titleString = "Posting In Progress"
+                            self.present(self.progressModal, animated: true, completion: {
+                                // Deploy a simple payment contract, mint a token, and transfer it into the contract.
+                                self.deploySimplePaymentContractForResale(password: password, mintParamters: mintParameters) { (txResults) in
+                                    guard let txResult = txResults.first else { return }
+                                    // confirm that the receipt of the transaction is obtained
+                                    self.transactionService.confirmReceipt(txHash: txResult.txResult.hash)
+                                        .sink { (completion) in
+                                            switch completion {
+                                                case .failure(let error):
+                                                    self.processFailure(error)
+                                                default:
+                                                    break
+                                            }
+                                        } receiveValue: { (receipt) in
+                                            print(receipt)
+                                            // confirm that the block is added to the chain
+                                            self.transactionService.confirmTransactions(receipt)
+                                                .sink(receiveCompletion: { (completion) in
+                                                    switch completion {
+                                                        case .failure(let error):
+                                                            self.processFailure(error)
+                                                        default:
+                                                            break
+                                                    }
+                                                }, receiveValue: { (receipt) in
+                                                    // Transfer the existing token into the payment contract
+                                                    self.transfer(
+                                                        receipt: receipt,
+                                                        password: password,
+                                                        mintParameters: mintParameters
+                                                    )
+                                                })
+                                                .store(in: &self.storage)
+                                        }
+                                        .store(in: &self.storage)
+                                }
+                            }) // self.present for progressModal
+                        }) // self.dismiss
+                    } // mainVC.buttonAction
+                } // alertVC.action
+                self?.present(alertVC, animated: true, completion: nil)
+            } // Dispatchqueue
+        } // hidesSpinner
+    }
+}
+
+extension PostViewController {
     final func deploySimplePaymentContract(
+        password: String,
+        mintParamters: MintParameters,
+        completion: @escaping ([TxResult2]) -> Void
+    ) {
+        guard let price = mintParamters.price,
+              let amount = Web3.Utils.parseToBigUInt(price, units: .eth) else {
+            alert.showDetail("Error", with: "Unable to parse the price into the correct format.", for: self)
+            return
+        }
+
+        guard let adminAddress = adminAddress else {
+            return
+        }
+        
+        let simplePaymentParameters: [AnyObject] = [amount, adminAddress] as [AnyObject]
+        
+        Deferred {
+            Future<TxPackage, PostingError> { [weak self] promise in
+                self?.transactionService.prepareTransactionForNewContractWithGasEstimate(
+                    contractABI: simplePaymentABI,
+                    bytecode: simplePaymentBytecode,
+                    parameters: simplePaymentParameters,
+                    promise: promise
+                )
+            }
+            .eraseToAnyPublisher()
+        }
+        .flatMap { [weak self] (txPackage) -> AnyPublisher<[TxPackage], PostingError> in
+            // TxPackage array is needed because calculateTotalGasCost can calculate multiple transactions' gas.
+            // In this case, there is only one transaction to be calculated.
+            // The minting transaction can't be calculated because it requires the auction contract or the simple payment contract's address.
+            self?.txPackageArr.append(txPackage)
+            guard let txPackageArr = self?.txPackageArr else {
+                return Fail(error: PostingError.generalError(reason: "Unable to calculate the total gas cost."))
+                    .eraseToAnyPublisher()
+            }
+            return Future<[TxPackage], PostingError> { promise in
+                let gasEstimateToMintAndTransferAToken: BigUInt = 80000
+                self?.transactionService.calculateTotalGasCost(
+                    with: txPackageArr,
+                    plus: gasEstimateToMintAndTransferAToken,
+                    promise: promise
+                )
+                let update: [String: PostProgress] = ["update": .estimatGas]
+                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+            }
+            .eraseToAnyPublisher()
+        }
+        // execute the deployment transaction and get the receipts in an array
+        .flatMap { [weak self] (txPackages) -> AnyPublisher<[TxResult2], PostingError> in
+            guard let txService = self?.transactionService else {
+                return Fail(error: PostingError.generalError(reason: "Unable to execute the transaction."))
+                    .eraseToAnyPublisher()
+            }
+            let results = txPackages.map { txService.executeTransaction2(
+                transaction: $0.transaction,
+                password: password,
+                type: $0.type
+            )}
+            return Publishers.MergeMany(results)
+                .collect()
+                .eraseToAnyPublisher()
+        }
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .failure(let error):
+                    self?.processFailure(error)
+                case .finished:
+                    let update: [String: PostProgress] = ["update": .deployingEscrow]
+                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                    break
+            }
+        } receiveValue: { [weak self](txResults) in
+            self?.txResultArr = txResults
+            completion(txResults)
+        }
+        .store(in: &storage)
+    }
+    
+    // Resale checks for the ownership of the token by the current wallet first
+    final func deploySimplePaymentContractForResale(
         password: String,
         mintParamters: MintParameters,
         completion: @escaping ([TxResult2]) -> Void
@@ -38,8 +316,12 @@ extension PostViewController {
             return
         }
         
+        guard let adminAddress = adminAddress else {
+            return
+        }
+        
         let ownerOfParameters: [AnyObject] = [tokenId] as [AnyObject]
-        let simplePaymentParameters: [AnyObject] = [amount, adminAddress!] as [AnyObject]
+        let simplePaymentParameters: [AnyObject] = [amount, adminAddress] as [AnyObject]
         
         // First ensure that the current wallet address is the owner of the item by invoking the ownerOf method on NFTrack.
         // This is to to be executed first to prevent the SimplePayment contract to be launched only to discover that the token cannot be transferred into it.
@@ -142,6 +424,7 @@ extension PostViewController {
                     break
             }
         } receiveValue: { [weak self](txResults) in
+            print("txResults", txResults)
             self?.txResultArr = txResults
             completion(txResults)
         }
@@ -308,6 +591,7 @@ extension PostViewController {
     }
     
     // Transfer the existing token for resale using SimplePayment
+    // Upload the item details to Firestore
     final func transfer(
         receipt: TransactionReceipt,
         password: String,
@@ -339,10 +623,11 @@ extension PostViewController {
             }
             
             self?.transactionService.prepareTransactionForWriting(
-                method: "safeTransferFrom",
+                method: NFTrackContract.ContractMethods.safeTransferFrom.rawValue,
                 abi: NFTrackABI,
                 param: param,
                 contractAddress: NFTrackAddress,
+                amountString: nil,
                 promise: promise
             )
         }
@@ -428,4 +713,3 @@ extension PostViewController {
         .store(in: &self.storage)
     }
 } // PostViewController
-

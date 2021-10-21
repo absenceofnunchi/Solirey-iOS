@@ -223,6 +223,11 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
         pvc.modalTransitionStyle = .crossDissolve
         present(pvc, animated: true, completion: nil)
         
+        let pageControl = UIPageControl.appearance()
+        pageControl.pageIndicatorTintColor = UIColor.gray.withAlphaComponent(0.6)
+        pageControl.currentPageIndicatorTintColor = .gray
+        pageControl.backgroundColor = .clear
+        
 //        guard let datum = self?.data[indexPath.row] else { return }
 //        let filePath = datum.filePath
 //        let bigVC = BigSinglePageViewController(gallery: "\(filePath)")
@@ -230,18 +235,6 @@ extension ImagePreviewViewController: UICollectionViewDataSource {
 //        bigVC.modalTransitionStyle = .crossDissolve
 //        self?.present(bigVC, animated: true, completion: nil)
     }
-    
-//    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-//        guard let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: ImagePreviewHeaderView.identifier, for: indexPath) as? ImagePreviewHeaderView else {
-//            fatalError("Header view error")
-//        }
-//
-//        let header = Header.allCases[indexPath.section]
-//        print("header.asString()", header.asString())
-//        headerView.titleLabel.text = header.asString()
-//
-//        return headerView
-//    }
 }
 
 extension ImagePreviewViewController {

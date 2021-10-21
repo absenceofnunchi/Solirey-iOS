@@ -78,7 +78,7 @@ extension DigitalAssetViewController {
                         guard let self = self else { return }
                         guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
                               !password.isEmpty else {
-                            self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
+                            self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
                             return
                         }
                         

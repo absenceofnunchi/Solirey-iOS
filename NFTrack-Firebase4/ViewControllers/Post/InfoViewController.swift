@@ -208,4 +208,5 @@ struct ButtonInfo {
     let title: String
     let tag: Int
     let backgroundColor: UIColor
+    var titleColor: UIColor = .white
 }

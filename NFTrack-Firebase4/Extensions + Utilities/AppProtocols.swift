@@ -1015,7 +1015,7 @@ extension PostParseDelegate {
         guard let querySnapshot = querySnapshot else { return nil }
         for document in querySnapshot.documents {
             let data = document.data()
-            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category: String!
+            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, simplePaymentId, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
             var files, savedBy: [String]?
             var shippingInfo: ShippingInfo!
@@ -1045,6 +1045,8 @@ extension PostParseDelegate {
                         escrowHash = item.value as? String
                     case "auctionHash":
                         auctionHash = item.value as? String
+                    case "simplePaymentId":
+                        simplePaymentId = item.value as? String
                     case "itemIdentifier":
                         id = item.value as? String
                     case "transferHash":
@@ -1131,6 +1133,7 @@ extension PostParseDelegate {
                 mintHash: mintHash,
                 escrowHash: escrowHash,
                 auctionHash: auctionHash,
+                simplePaymentId: simplePaymentId,
                 id: id,
                 status: status,
                 sellerUserId: sellerUserId,
@@ -1166,7 +1169,7 @@ extension PostParseDelegate {
     // Parse single document query
     func parseDocument(document: DocumentSnapshot) -> Post? {
         guard let data = document.data() else { return nil }
-        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category: String!
+        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, simplePaymentId, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category: String!
         var tokenId: String?
         var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
         var files, savedBy: [String]?
@@ -1195,6 +1198,8 @@ extension PostParseDelegate {
                     escrowHash = item.value as? String
                 case "auctionHash":
                     auctionHash = item.value as? String
+                case "simplePaymentId":
+                    simplePaymentId = item.value as? String
                 case "itemIdentifier":
                     id = item.value as? String
                 case "transferHash":
@@ -1282,6 +1287,7 @@ extension PostParseDelegate {
             mintHash: mintHash,
             escrowHash: escrowHash,
             auctionHash: auctionHash,
+            simplePaymentId: simplePaymentId,
             id: id,
             status: status,
             sellerUserId: sellerUserId,

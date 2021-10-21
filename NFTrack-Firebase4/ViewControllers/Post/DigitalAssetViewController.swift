@@ -341,7 +341,7 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
     }
     
     // MARK: - processMint
-    final override func processMint(_ mintParameters: MintParameters) {
+    final override func processEscrow(_ mintParameters: MintParameters) {
         guard let sm = SaleFormat(rawValue: mintParameters.saleFormat) else { return }
         switch sm {
             case .onlineDirect:

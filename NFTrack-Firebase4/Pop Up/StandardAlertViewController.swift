@@ -31,7 +31,8 @@ enum AlertStyle {
 struct StandardAlertContent {
     var index: Int = 0
     let titleString: String
-    let body: [String: String]
+    var titleColor: UIColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+    let body: KeyValuePairs<String, String>
     var isEditable: Bool = false
     var fieldViewHeight: CGFloat = 150
     var buttonTitle: String = "OK"
@@ -44,8 +45,9 @@ struct StandardAlertContent {
 class StandardAlertViewController: UIViewController {
     var index: Int!
     private var titleString: String?
+    private var titleColor: UIColor!
     // subtitle : the actual message
-    private var body: [String: String]!
+    private var body: KeyValuePairs<String, String>!
     private var titleLabel: UILabel!
     private var titleAlignment: NSTextAlignment!
     private var messageTextAlignment: NSTextAlignment!
@@ -55,18 +57,20 @@ class StandardAlertViewController: UIViewController {
     var buttonAction: ((StandardAlertViewController)->Void)?
     private var buttonPanel: UIView!
     private var buttonTitle: String!
-    private var closeButton: UIButton!
-    private var cancelButton: UIButton!
+    private var okButton: UIView!
+    private var cancelButton: UIView!
     private var alertStyle: AlertStyle!
     private var constraints: [NSLayoutConstraint]!
     private var bodyArrangedSubviews: [UIView]!
     weak var delegate: DataFetchDelegate?
+    private var customNavView: BackgroundView5!
     
     init(content: StandardAlertContent) {
         super.init(nibName: nil, bundle: nil)
         
         self.index = content.index
         self.titleString = content.titleString
+        self.titleColor = content.titleColor
         self.body = content.body
         self.isEditable = content.isEditable
         self.fieldViewHeight = content.fieldViewHeight
@@ -81,64 +85,77 @@ class StandardAlertViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLoad() {
+    final override func viewDidLoad() {
         super.viewDidLoad()
         
         configure()
         setConstraints()
+        loadingAnimation()
+        
+        print("delegate", delegate)
     }
 }
 
 extension StandardAlertViewController: UITextFieldDelegate {
-    func configure() {
+    private func configure() {
         view.backgroundColor = .white
         
         titleLabel = UILabel()
-        titleLabel.textColor = .gray
         titleLabel.text = titleString
+        titleLabel.textColor = titleColor
         titleLabel.numberOfLines = 0
         titleLabel.font = UIFont.rounded(ofSize: 22, weight: .bold)
         titleLabel.textAlignment = titleAlignment
         titleLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 20, weight: .bold)
+        titleLabel.transform = CGAffineTransform(translationX: 0, y: 30)
+        titleLabel.alpha = 0
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(titleLabel)
         
-        bodyArrangedSubviews = body.map { (key, value) -> UIView in
+        customNavView = BackgroundView5()
+        customNavView.translatesAutoresizingMaskIntoConstraints = false
+        view.insertSubview(customNavView, belowSubview: titleLabel)
+            
+        bodyArrangedSubviews = body.map { (key, value) in
             let v = UIView()
             v.translatesAutoresizingMaskIntoConstraints = false
             
             let subtitleLabel = UILabel()
             subtitleLabel.text = key
+            subtitleLabel.textColor = .lightGray
             subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
             v.addSubview(subtitleLabel)
             
             let messageTextView = UITextView()
+
+            if isEditable {
+                messageTextView.isUserInteractionEnabled = true
+                messageTextView.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 245/255)
+                messageTextView.layer.cornerRadius = 10
+                messageTextView.font = UIFont.preferredFont(forTextStyle: .body)
+            }
+            
+            messageTextView.isEditable = isEditable
             messageTextView.delegate = self
             messageTextView.text = value
-            messageTextView.textColor = .lightGray
             messageTextView.textAlignment = messageTextAlignment
-            messageTextView.isEditable = isEditable
-            messageTextView.isUserInteractionEnabled = true
-            messageTextView.layer.borderWidth = 0.7
-            messageTextView.layer.borderColor = isEditable ? UIColor.gray.withAlphaComponent(0.5).cgColor: UIColor.white.cgColor
-            messageTextView.layer.cornerRadius = 5
             messageTextView.contentInset = UIEdgeInsets(top: 0, left: 5, bottom: 0, right: 5)
             messageTextView.clipsToBounds = true
             messageTextView.showsVerticalScrollIndicator = true
             messageTextView.isScrollEnabled = true
-            messageTextView.font = UIFont.rounded(ofSize: 20, weight: .medium)
+            messageTextView.font = UIFont.rounded(ofSize: 18, weight: .regular)
             messageTextView.translatesAutoresizingMaskIntoConstraints = false
             v.addSubview(messageTextView)
             
             NSLayoutConstraint.activate([
-                v.heightAnchor.constraint(equalToConstant: fieldViewHeight + 20 + 5),
+//                v.heightAnchor.constraint(equalToConstant: fieldViewHeight + 20 + 5),
                 
                 subtitleLabel.topAnchor.constraint(equalTo: v.topAnchor),
                 subtitleLabel.widthAnchor.constraint(equalTo: v.widthAnchor),
                 // eliminate the height of the subtitle if no subtitle exists
                 subtitleLabel.heightAnchor.constraint(equalToConstant: key == "" ? 0 : 20),
                 
-                messageTextView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 5),
+                messageTextView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 0),
                 messageTextView.widthAnchor.constraint(equalTo: v.widthAnchor),
                 messageTextView.heightAnchor.constraint(equalToConstant: fieldViewHeight)
             ])
@@ -148,86 +165,168 @@ extension StandardAlertViewController: UITextFieldDelegate {
         
         bodyStackView = UIStackView(arrangedSubviews: bodyArrangedSubviews)
         bodyStackView.axis = .vertical
-        bodyStackView.spacing = 10
+        bodyStackView.distribution = .fillEqually
+        bodyStackView.spacing = 5
+        bodyStackView.transform = CGAffineTransform(translationX: 0, y: 30)
+        bodyStackView.alpha = 0
         bodyStackView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(bodyStackView)
         
         buttonPanel = UIView()
+        buttonPanel.transform = CGAffineTransform(translationX: 0, y: 30)
+        buttonPanel.alpha = 0
         buttonPanel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(buttonPanel)
         
-        closeButton = UIButton()
-        closeButton.alpha = alertStyle == .noButton ? 0 : 1
-        closeButton.addTarget(self, action: #selector(buttonHandler(_:)), for: .touchUpInside)
-        closeButton.backgroundColor = .black
-        closeButton.layer.cornerRadius = 10
-        closeButton.tag = 1
-        closeButton.setTitle(buttonTitle ?? "OK", for: .normal)
-        closeButton.setTitleColor(.white, for: .normal)
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        buttonPanel.addSubview(closeButton)
+//        okButton = UIButton()
+//        okButton.alpha = alertStyle == .noButton ? 0 : 1
+//        okButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+//        okButton.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+//        okButton.layer.cornerRadius = 10
+//        okButton.tag = 1
+//        okButton.setTitle(buttonTitle ?? "OK", for: .normal)
+//        okButton.setTitleColor(.white, for: .normal)
+//        okButton.titleLabel?.font = UIFont.rounded(ofSize: 20, weight: .medium)
+//        okButton.translatesAutoresizingMaskIntoConstraints = false
+//        buttonPanel.addSubview(okButton)
+//
+//        cancelButton = UIButton()
+//        cancelButton.backgroundColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1)
+//        cancelButton.layer.cornerRadius = 10
+//        cancelButton.tag = 2
+//        cancelButton.setTitle("Cancel", for: .normal)
+//        cancelButton.titleLabel?.font = UIFont.rounded(ofSize: 20, weight: .medium)
+//        cancelButton.setTitleColor( UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1), for: .normal)
+//        cancelButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+//        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+//        buttonPanel.addSubview(cancelButton)
         
-        cancelButton = UIButton()
-        cancelButton.backgroundColor = .red
-        cancelButton.layer.cornerRadius = 10
-        cancelButton.tag = 2
-        cancelButton.setTitle("Cancel", for: .normal)
-        cancelButton.addTarget(self, action: #selector(buttonHandler(_:)), for: .touchUpInside)
-        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        let okButtonInfo = ButtonInfo(title: "OK", tag: 1, backgroundColor: UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1))
+        okButton = createButton(buttonInfo: okButtonInfo)
+        buttonPanel.addSubview(okButton)
+        
+        let cancelButtonInfo = ButtonInfo(
+            title: "Cancel",
+            tag: 2,
+            backgroundColor: UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1),
+            titleColor: UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        )
+        cancelButton = createButton(buttonInfo: cancelButtonInfo)
         buttonPanel.addSubview(cancelButton)
     }
     
-    func setConstraints() {
+    private func setConstraints() {
+        // Set constraints of the buttons within the button panel
         var buttonConstraints = [NSLayoutConstraint]()
-        if alertStyle == .withCancelButton {
-            buttonConstraints.append(contentsOf: [
-                closeButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
-                closeButton.heightAnchor.constraint(equalToConstant: 50),
-                closeButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
-                closeButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+        
+        switch alertStyle {
+            case .withCancelButton:
+                buttonConstraints.append(contentsOf: [
+                    okButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
+                    okButton.heightAnchor.constraint(equalToConstant: 50),
+                    okButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+                    okButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+                    
+                    cancelButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
+                    cancelButton.heightAnchor.constraint(equalToConstant: 50),
+                    cancelButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+                    cancelButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+                ])
+            case .oneButton:
+                cancelButton.alpha = 0
+                cancelButton.isUserInteractionEnabled = false
                 
-                cancelButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
-                cancelButton.heightAnchor.constraint(equalToConstant: 50),
-                cancelButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
-                cancelButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
-            ])
-        } else {
-            cancelButton.alpha = 0
-            cancelButton.isEnabled = false
-            
-            buttonConstraints.append(contentsOf: [
-                closeButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.4),
-                closeButton.heightAnchor.constraint(equalToConstant: 50),
-                closeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                closeButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0),
-            ])
+                buttonConstraints.append(contentsOf: [
+                    okButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.4),
+                    okButton.heightAnchor.constraint(equalToConstant: 50),
+                    okButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                    okButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0),
+                ])
+            case .noButton:
+                okButton.alpha = 0
+                okButton.isUserInteractionEnabled = false
+                
+                cancelButton.alpha = 0
+                cancelButton.isUserInteractionEnabled = false
+                
+                buttonConstraints.append(contentsOf: [
+                    okButton.leadingAnchor.constraint(equalTo: buttonPanel.leadingAnchor),
+                    okButton.heightAnchor.constraint(equalToConstant: 0),
+                    okButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+                    okButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+                    
+                    cancelButton.trailingAnchor.constraint(equalTo: buttonPanel.trailingAnchor),
+                    cancelButton.heightAnchor.constraint(equalToConstant: 0),
+                    cancelButton.topAnchor.constraint(equalTo: buttonPanel.topAnchor),
+                    cancelButton.widthAnchor.constraint(equalTo: buttonPanel.widthAnchor, multiplier: 0.4),
+                ])
+                break
+            default:
+                break
         }
         
-        // nested array only because the constraints that are contingent can be nested in here chronogically in one big block
-        let constraints: [[NSLayoutConstraint]] = [
-            [
-                titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
-                titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                titleLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
-                titleLabel.heightAnchor.constraint(equalToConstant: 50),
-             
-                bodyStackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-                bodyStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
-                bodyStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
-             
-                buttonPanel.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-                buttonPanel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                buttonPanel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                buttonPanel.heightAnchor.constraint(equalToConstant: 50)
-            ],
-            
-            buttonConstraints
-        ]
+        // Set the constraints of the overall StandardAlerVC
+        // Nested array only because the constraints that are contingent can be nested in here chronogically in one big block
+        var constraints: [[NSLayoutConstraint]]!
+        
+        if alertStyle == .noButton {
+            constraints = [
+                [
+                    titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
+                    titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                    titleLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+                    titleLabel.heightAnchor.constraint(equalToConstant: 50),
+                    
+                    customNavView.topAnchor.constraint(equalTo: view.topAnchor, constant: -20),
+                    customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                    customNavView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                    customNavView.bottomAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 80),
+                    
+                    bodyStackView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
+                    bodyStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
+                    bodyStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
+                    bodyStackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
+                    
+                    buttonPanel.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -5),
+                    buttonPanel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                    buttonPanel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                    buttonPanel.heightAnchor.constraint(equalToConstant: 0)
+                ],
+                
+                buttonConstraints
+            ]
+        } else {
+            constraints = [
+                [
+                    titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
+                    titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+                    titleLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
+                    titleLabel.heightAnchor.constraint(equalToConstant: 50),
+  
+                    bodyStackView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
+                    bodyStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
+                    bodyStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
+                    bodyStackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
+                    
+//                    bodyStackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+//                    bodyStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
+//                    bodyStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
+                    
+                    buttonPanel.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -5),
+                    buttonPanel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                    buttonPanel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                    buttonPanel.heightAnchor.constraint(equalToConstant: 50)
+                ],
+                
+                buttonConstraints
+            ]
+        }
+
         let flattened = constraints.reduce ([], + )
         NSLayoutConstraint.activate(flattened)
     }
     
-    @objc func buttonHandler(_ sender: UIButton) {
+    @objc private func buttonPressed(_ sender: UIButton) {
         switch sender.tag {
             case 1:
                 if let buttonAction = self.buttonAction {
@@ -240,7 +339,7 @@ extension StandardAlertViewController: UITextFieldDelegate {
         }
     }
     
-    func fetchInputFromTextFields() -> [String: String]? {
+    private func fetchInputFromTextFields() -> [String: String]? {
         var inputFromTextFields = [String: String]()
         for case let arrangedSubview in bodyArrangedSubviews {
             var key, value: String!
@@ -259,6 +358,52 @@ extension StandardAlertViewController: UITextFieldDelegate {
             inputFromTextFields.updateValue(value, forKey: key)
         }
         return inputFromTextFields
+    }
+    
+    private func createButton(buttonInfo: ButtonInfo) -> UIView? {
+        let containerView = UIView()
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let button = ButtonWithShadow()
+        button.tag = buttonInfo.tag
+        button.backgroundColor = buttonInfo.backgroundColor
+        button.setTitle(buttonInfo.title, for: .normal)
+        button.layer.cornerRadius = 10
+        button.setTitleColor(buttonInfo.titleColor, for: .normal)
+        guard let pointSize = button.titleLabel?.font.pointSize else { return nil }
+        button.titleLabel?.font = .rounded(ofSize: pointSize, weight: .medium)
+        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        containerView.addSubview(button)
+        button.fill()
+        
+        return containerView
+    }
+    
+    private func loadingAnimation() {
+        let totalCount = 3
+        let duration = 1.0 / Double(totalCount)
+        
+        let animation = UIViewPropertyAnimator(duration: 0.7, timingParameters: UICubicTimingParameters())
+        animation.addAnimations {
+            UIView.animateKeyframes(withDuration: 0, delay: 0, animations: { [weak self] in
+                UIView.addKeyframe(withRelativeStartTime: 1 / Double(totalCount), relativeDuration: duration) {
+                    self?.titleLabel.alpha = 1
+                    self?.titleLabel.transform = .identity
+                }
+                
+                UIView.addKeyframe(withRelativeStartTime: 2 / Double(totalCount), relativeDuration: duration) {
+                    self?.bodyStackView.alpha = 1
+                    self?.bodyStackView.transform = .identity
+                }
+                
+                UIView.addKeyframe(withRelativeStartTime: 3 / Double(totalCount), relativeDuration: duration) {
+                    self?.buttonPanel.alpha = 1
+                    self?.buttonPanel.transform = .identity
+                }
+            })
+        }
+        
+        animation.startAnimation()
     }
 }
 

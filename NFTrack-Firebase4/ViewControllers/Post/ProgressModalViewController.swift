@@ -41,7 +41,7 @@ struct PostProgressData {
             case .escrow:
                 phases = [.estimatGas, .deployingEscrow, .minting, .images]
             case .directTransfer:
-                phases = [.estimatGas, .deployingEscrow, .minting, .images]
+                phases = [.estimatGas, .minting, .images]
             case .auctionBeneficiary:
                 phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
         }

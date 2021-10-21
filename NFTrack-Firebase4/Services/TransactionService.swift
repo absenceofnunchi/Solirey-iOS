@@ -8,8 +8,8 @@
 import Foundation
 import web3swift
 import BigInt
-//import PromiseKit
 import Combine
+import FirebaseFirestore
 
 class TransactionService {
     let keysService = KeysService()
@@ -470,12 +470,12 @@ extension TransactionService {
         contractAddress: EthereumAddress,
         promise: @escaping (Result<SmartContractProperty, PostingError>) -> Void
     ) {
-        guard let address = Web3swiftService.currentAddress else {
+        guard let fromAddress = Web3swiftService.currentAddress else {
             promise(.failure(.retrievingCurrentAddressError))
             return
         }
         var options = TransactionOptions.defaultOptions
-        options.from = address
+        options.from = fromAddress
         options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
         options.gasPrice = TransactionOptions.GasPricePolicy.automatic
         
@@ -506,7 +506,7 @@ extension TransactionService {
         abi: String,
         param: [AnyObject] = [AnyObject](),
         contractAddress: EthereumAddress,
-        amountString: String = "0",
+        amountString: String?,
         completion: @escaping (WriteTransaction?, PostingError?) -> Void
     ) {
         DispatchQueue.global(qos: .userInitiated).async {
@@ -516,21 +516,23 @@ extension TransactionService {
                 return
             }
             
-            guard !amountString.isEmpty else {
-                completion(nil, PostingError.emptyAmount)
-                return
-            }
-            
-            guard let amount = Web3.Utils.parseToBigUInt(amountString, units: .eth) else {
-                completion(nil, PostingError.invalidAmountFormat)
-                return
-            }
-                        
             var options = TransactionOptions.defaultOptions
-//            options.callOnBlock = .pending
-//            options.nonce = .pending
+            
+            if amountString != nil {
+                guard !amountString!.isEmpty else {
+                    completion(nil, PostingError.emptyAmount)
+                    return
+                }
+                
+                guard let amount = Web3.Utils.parseToBigUInt(amountString!, units: .eth) else {
+                    completion(nil, PostingError.invalidAmountFormat)
+                    return
+                }
+                                
+                options.value = amount
+            }
+                 
             options.from = myAddress
-            options.value = amount
             options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
             options.gasPrice = TransactionOptions.GasPricePolicy.automatic
             
@@ -549,14 +551,52 @@ extension TransactionService {
                 return
             }
             
-            do {
-                let result = try transaction.call(transactionOptions: options)
-                print("result", result)
-            } catch {
-                print("errorrrr", error)
-            }
+//            do {
+//                let result = try transaction.call(transactionOptions: options)
+//                print("result", result)
+//            } catch {
+//                print("errorrrr", error)
+//            }
             
             completion(transaction, nil)
+        }
+    }
+    
+    func prepareTransactionForWritingWithGasEstimate(
+        method: String,
+        abi: String,
+        param: [AnyObject] = [AnyObject](),
+        contractAddress: EthereumAddress,
+        amountString: String?,
+        to: EthereumAddress? = nil,
+        promise: @escaping (Result<TxPackage, PostingError>) -> Void
+    ) {
+        self.prepareTransactionForWriting(
+            method: method,
+            abi: abi,
+            param: param,
+            contractAddress: contractAddress,
+            amountString: amountString
+        ) { (transaction, error) in
+            if let error = error {
+                promise(.failure(error))
+            }
+            
+            if let transaction = transaction {
+                do {
+                    let gasEstimate = try transaction.estimateGas()
+                    let txPackage = TxPackage(
+                        transaction: transaction,
+                        gasEstimate: gasEstimate,
+                        price: nil,
+                        type: .mint
+                    )
+                    
+                    promise(.success(txPackage))
+                } catch {
+                    promise(.failure(.retrievingEstimatedGasError))
+                }
+            }
         }
     }
     
@@ -565,30 +605,29 @@ extension TransactionService {
         abi: String,
         param: [AnyObject] = [AnyObject](),
         contractAddress: EthereumAddress,
-        amountString: String = "0",
+        amountString: String?,
         to: EthereumAddress? = nil,
         promise: @escaping (Result<WriteTransaction, PostingError>) -> Void
     ) {
         DispatchQueue.global(qos: .userInitiated).async {
             let web3 = Web3swiftService.web3instance
-            guard let myAddress = Web3swiftService.currentAddress else {
+            guard let fromAddress = Web3swiftService.currentAddress else {
                 promise(.failure(PostingError.generalError(reason: "Could not retrieve the wallet address.")))
-                return
-            }
-            
-            guard !amountString.isEmpty else {
-                promise(.failure(PostingError.emptyAmount))
-                return
-            }
-            
-            guard let amount = Web3.Utils.parseToBigUInt(amountString, units: .eth) else {
-                promise(.failure(PostingError.invalidAmountFormat))
                 return
             }
                         
             var options = TransactionOptions.defaultOptions
-            options.from = myAddress
-            options.value = amount
+            options.from = fromAddress
+            
+            if amountString != nil {
+                guard let amount = Web3.Utils.parseToBigUInt(amountString!, units: .eth) else {
+                    promise(.failure(PostingError.invalidAmountFormat))
+                    return
+                }
+                
+                options.value = amount
+            }
+            
 //            options.to = to
             options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
             options.gasPrice = TransactionOptions.GasPricePolicy.automatic
@@ -607,9 +646,6 @@ extension TransactionService {
                 promise(.failure(PostingError.createTransactionIssue))
                 return
             }
-            
-            let gasEstimate = try? transaction.estimateGas()
-            print("gas estimate", gasEstimate)
             
             promise(.success(transaction))
         }
@@ -1022,87 +1058,83 @@ extension TransactionService {
         }
     }
     
-//    // MARK: - confirmEtherTransactions
-//    final func confirmEtherTransactions(
-//        txHash: String,
-//        confirmations: Int = 5
-//    ) -> AnyPublisher<BigUInt, PostingError> {
-//        var blockNumber: BigUInt!
-//        var cycleCount: Int = 0
-//        let hashPublisher = CurrentValueSubject<String, Never>(txHash)
-//        return hashPublisher
-//            .setFailureType(to: PostingError.self)
-//            .debounce(for: .seconds(5), scheduler: RunLoop.main)
-//            .flatMap { (txHash) -> AnyPublisher<TransactionReceipt, PostingError> in
-//                Future<TransactionReceipt, PostingError> { promise in
-//                    Web3swiftService.getReceipt(hash: txHash, promise: promise)
-//                }
-//                .eraseToAnyPublisher()
-//            }
-//            //            .retryWithDelay(retries: 5, delay: .seconds(10), scheduler: DispatchQueue.global())
-//            .retry(times: 5, if: { (error) -> Bool in
-//                print("error", error)
-//                if case let PostingError.generalError(reason: msg) = error,
-//                   msg == "Invalid value from Ethereum node" {
-//                    print("yes")
-//                    return true
-//                }
-//                print("no")
-//                return false
-//            })
-//            .flatMap { (receipt) -> AnyPublisher<BigUInt, PostingError> in
-//                blockNumber = receipt.blockNumber
-//                return Future<BigUInt, PostingError> { promise in
-//                    Web3swiftService.getBlock(promise)
-//                }
-//                .eraseToAnyPublisher()
-//            }
-//            .debounce(for: .seconds(10), scheduler: RunLoop.main)
-//            .handleEvents(receiveOutput: { (currentBlock) in
-//                let txConfirmations = currentBlock - blockNumber
-//                print("currentBlock", currentBlock)
-//                print("blockNumber", blockNumber as Any)
-//                print("txConfirmations", txConfirmations)
-//                if txConfirmations >= confirmations {
-//                    print("Transaction with hash \(txHash) has been successfully confirmed.")
-//                    hashPublisher.send(completion: .finished)
-//                } else {
-//                    cycleCount += 1
-//                    print("cycle count", cycleCount)
-//                    hashPublisher.send(txHash)
-//                }
-//            })
-//            .reduce(BigUInt.init(), { allModels, response in
-//                return allModels + response
-//            })
-//            .eraseToAnyPublisher()
-//    }
-    
-    // only delay to fetch of the receipt if there is an error
-    // "no delay" because it doesn't debounce right away
-    // the whole point of this function is to make sure that the number of confirmations for the new block is the same as what we specify
-    // since no receipts
-    
-//    final func confirmEtherTransactionsNoDelay(
-//        txHash: String,
-//        confirmations: Int = 3
-//    ) -> AnyPublisher<TransactionReceipt, PostingError> {
-//        var receiptRetainer: TransactionReceipt!
-//        var cycleCount: Int = 0
-//        let hashPublisher = CurrentValueSubject<String, Never>(txHash)
-//        return hashPublisher
-//            .setFailureType(to: PostingError.self)
-//            .flatMap { (txHash) -> AnyPublisher<TransactionReceipt, PostingError> in
-//                Future<TransactionReceipt, PostingError> { promise in
-//                    Web3swiftService.getReceipt(hash: txHash, promise: promise)
-//                    //                    DispatchQueue.main.async {
-//                    //
-//                    //                    }
-//                }
-//                .eraseToAnyPublisher()
-//            }
-//
-//    }
+    // Instead of passing the reference of documentId to be modified,
+    // pass let ref = self.db.collection("post") since the documentId sometimes need to be used for other things than the firestore update (i.e. sending messages or calling NFTrack minting method).
+    final func createFireStoreEntry(
+        senderAddress: String,
+        escrowHash: String,
+        auctionHash: String,
+        simplePaymentId: String = "N/A",
+        mintHash: String,
+        itemTitle: String,
+        desc: String,
+        price: String,
+        category: String,
+        tokensArr: Set<String>,
+        convertedId: String,
+        type: String,
+        deliveryMethod: String,
+        saleFormat: String,
+        paymentMethod: String,
+        topics: [String],
+        urlStrings: [String?],
+        ipfsURLStrings: [String?],
+        shippingInfo: ShippingInfo? = nil,
+        isWithdrawn: Bool = true,
+        isAdminWithdrawn: Bool = true,
+        promise: @escaping (Result<Int, PostingError>) -> Void
+    ) {
+        let ref = self.db.collection("post")
+        let id = ref.document().documentID
+        
+        let shippingInfoData: [String: Any] = [
+            "scope": shippingInfo?.scope.stringValue ?? "NA" as String,
+            "addresses": shippingInfo?.addresses ?? [] as [String],
+            "radius": shippingInfo?.radius ?? 0,
+            "longitude": shippingInfo?.longitude ?? 0,
+            "latitude": shippingInfo?.latitude ?? 0
+        ]
+        
+        let postData: [String: Any] = [
+            "sellerUserId": userId as Any,
+            "senderAddress": senderAddress,
+            "escrowHash": escrowHash,
+            "auctionHash": auctionHash,
+            "simplePaymentId": simplePaymentId,
+            "mintHash": mintHash,
+            "date": Date(),
+            "title": itemTitle,
+            "description": desc,
+            "price": price,
+            "category": category,
+            "status": "ready",
+            "tags": Array(tokensArr),
+            "itemIdentifier": convertedId,
+            "isReviewed": false,
+            "type": type,
+            "deliveryMethod": deliveryMethod,
+            "saleFormat": saleFormat,
+            "files": urlStrings,
+            "IPFS": ipfsURLStrings,
+            "paymentMethod": paymentMethod,
+            "bidderTokens": [],
+            "bidders": [],
+            "shippingInfo": shippingInfoData,
+            "saleType": SaleType.newSale.rawValue,
+            "isWithdrawn": isWithdrawn, // There are contracts like Auction or SimplePayment that requires the bidders that have been outbid or the seller whose item has been purchased, respectively, that require the user to withdraw their funds manually
+            "isAdminWithdrawn": isAdminWithdrawn // The fee collected by the admin
+        ]
+        
+        // txHash is either minting or transferring the ownership
+        ref.document(id).setData(postData) { (error) in
+            if let error = error {
+                promise(.failure(.generalError(reason: error.localizedDescription)))
+            } else {
+                return FirebaseService.shared.getTokenId1(topics: topics, documentId: id, promise: promise)
+            }
+        }
+    }
+
     final func confirmEtherTransactionsNoDelay(
         txHash: String,
         confirmations: Int = 3
@@ -1161,7 +1193,9 @@ extension TransactionService {
             .eraseToAnyPublisher()
     }
     
-    
+    // Get the receipt from the hash of the transaction.
+    // The receipt doesn't appear right away after the transaction which means repeatedly query until the receipt is ready.
+    // This transaction has been included and will be reflected in a short while.
     final func confirmReceipt( txHash: String) -> AnyPublisher<TransactionReceipt, PostingError> {
         Deferred {
             Future<TransactionReceipt, PostingError> { promise in
@@ -1192,6 +1226,7 @@ extension TransactionService {
         }
     }
     
+    // Confirms that a block has been added to the blockchain by counting the number of confirmations.
     func confirmTransactions(_ receipt: TransactionReceipt, confirmations: Int = 5) -> AnyPublisher<TransactionReceipt, PostingError> {
         Deferred {
             Future<BigUInt, PostingError> { promise in
@@ -1226,25 +1261,82 @@ extension TransactionService {
         }
     }
         
-//        .handleEvents(receiveOutput: { [weak self] (currentBlock) in
-//            let txConfirmations = currentBlock - receiptRetainer.blockNumber
-//            print("txConfirmations", txConfirmations)
-//            if txConfirmations >= confirmations {
-//                print("Transaction with hash \(txHash) has been successfully confirmed.")
-//                hashPublisher.send(completion: .finished)
-//            } else {
-//                cycleCount += 1
-//                print("cycle count: ", cycleCount)
-//                self?.delay(10) {
-//                    hashPublisher.send(txHash)
-//                }
-//            }
-//        })
-//        .map { (value) -> TransactionReceipt in
-//            return receiptRetainer
-//        }
-//        .collect()
-//        .eraseToAnyPublisher()
+    func estimateGas(gasEstimate: BigUInt, completion: @escaping ((totalGasCost: String, balance: String, gasPriceInGwei: String)?, PostingError?) -> Void)  {
+        var gasPrice: BigUInt!
+        do {
+            gasPrice = try Web3swiftService.web3instance.eth.getGasPrice()
+        } catch {
+            completion(nil, .generalError(reason: "Unable to fetch the current gas price. Please try again later."))
+            return
+        }
+        
+        let totalGasCost = gasEstimate * gasPrice
+        
+        guard let convertedTotalGasCost = Web3.Utils.formatToEthereumUnits(totalGasCost, toUnits: .eth) else {
+            completion(nil, .generalError(reason: "Unable to convert the unit of the gas cost. Please try restarting the app."))
+            return
+        }
+        
+        var balance: BigUInt!
+        do {
+            balance = try Web3swiftService.web3instance.eth.getBalance(address: Web3swiftService.currentAddress!)
+        } catch {
+            completion(nil, .generalError(reason:  "Unable to retrieve the balance of your wallet. Please try restarting the app."))
+            return
+        }
+        
+        guard let convertedBalance = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth) else {
+            completion(nil, .generalError(reason:  "Unable to convert the unit of your wallet balance. Please try restarting the app."))
+            return
+        }
+        
+        guard let gasPriceInGwei = Web3.Utils.formatToEthereumUnits(gasPrice, toUnits: .Gwei) else {
+            completion(nil, .generalError(reason:  "Unable to convert the unit of the gas price. Please try restarting the app."))
+            return
+        }
+        
+        completion((convertedTotalGasCost, convertedBalance, gasPriceInGwei), nil)
+    }
+    
+    func estimateGas(
+        gasEstimate: BigUInt,
+        promise: @escaping (Result<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError>) -> Void
+    )  {
+        var gasPrice: BigUInt!
+        do {
+            gasPrice = try Web3swiftService.web3instance.eth.getGasPrice()
+        } catch {
+            promise(.failure(.generalError(reason: "Unable to fetch the current gas price. Please try again later.")))
+            return
+        }
+        
+        let totalGasCost = gasEstimate * gasPrice
+        
+        guard let convertedTotalGasCost = Web3.Utils.formatToEthereumUnits(totalGasCost, toUnits: .eth) else {
+            promise(.failure(.generalError(reason: "Unable to convert the unit of the gas cost. Please try restarting the app.")))
+            return
+        }
+        
+        var balance: BigUInt!
+        do {
+            balance = try Web3swiftService.web3instance.eth.getBalance(address: Web3swiftService.currentAddress!)
+        } catch {
+            promise(.failure(.generalError(reason:  "Unable to retrieve the balance of your wallet. Please try restarting the app.")))
+            return
+        }
+        
+        guard let convertedBalance = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth) else {
+            promise(.failure(.generalError(reason:  "Unable to convert the unit of your wallet balance. Please try restarting the app.")))
+            return
+        }
+        
+        guard let gasPriceInGwei = Web3.Utils.formatToEthereumUnits(gasPrice, toUnits: .Gwei) else {
+            promise(.failure(.generalError(reason:  "Unable to convert the unit of the gas price. Please try restarting the app.")))
+            return
+        }
+        
+        promise(.success((convertedTotalGasCost, convertedBalance, gasPriceInGwei)))
+    }
 
     func delay(_ delay:Double, closure:@escaping ()->()) {
         let when = DispatchTime.now() + delay

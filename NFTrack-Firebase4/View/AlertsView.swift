@@ -57,7 +57,7 @@ class Alerts {
                             buttonAction: { (_) in
                                 buttonAction?()
                                 controller?.dismiss(animated: true, completion: nil)
-                            }),
+                            })
                     ]
                     let alertVC = AlertViewController(height: height, standardAlertContent: content)
                     controller?.present(alertVC, animated: true, completion: {

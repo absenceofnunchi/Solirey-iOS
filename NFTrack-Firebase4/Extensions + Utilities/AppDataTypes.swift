@@ -90,6 +90,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var mintHash: String!
     var escrowHash: String?
     var auctionHash: String?
+    var simplePaymentId: String?
     var id: String!
     var status: String!
     var sellerHash: String!
@@ -124,6 +125,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         mintHash: String,
         escrowHash: String? = "N/A",
         auctionHash: String? = "N/A",
+        simplePaymentId: String? = "N/A",
         id: String,
         status: String,
         sellerUserId: String,
@@ -160,6 +162,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.mintHash = mintHash
         self.escrowHash = escrowHash
         self.auctionHash = auctionHash
+        self.simplePaymentId = simplePaymentId
         self.id = id
         self.status = status
         self.sellerHash = sellerHash

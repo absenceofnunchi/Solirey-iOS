@@ -128,8 +128,9 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var imageAddresses = [String]()
     let userDefaults = UserDefaults.standard
     var observation: NSKeyValueObservation?
-    var userId: String!
-    var documentId: String!
+    var userId: String! {
+        return UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
+    }
     var socketDelegate: SocketDelegate!
     var documentPicker: DocumentPicker!
     var url: URL!
@@ -184,6 +185,15 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var BUTTON_PANEL_HEIGHT: CGFloat = 80
     var postType: PostType!
     var storage = Set<AnyCancellable>()
+    
+    // The documentId is usually passed to the createFireStoreEntry method to be modified
+    // so that it could be used outside of createFireStoreEntry for such things as sending FCM or calling the createSimpePayment method on NFTrack
+    // This is to experiement with passing the reference instead.
+    var ref: CollectionReference {
+        return FirebaseService.shared.db.collection("post")
+    }
+    // Which means only of of these are needed: ref vs documentId
+    var documentId: String!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -192,7 +202,8 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         configureImagePreview()
         setConstraints()
         setColorPatchView()
-        
+        configureOwnerOf()
+
         // Determine whether the postType is tangible or digital, which was set my the segmentedControl
         // This is to be used for minting
         postType = type(of: self) == PostViewController.self ? .tangible : .digital
@@ -213,8 +224,6 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         if observation != nil {
             observation?.invalidate()
         }
-        
-        configureOwnerOf()
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -259,230 +268,6 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
                 }
             }
     }
-    
-    // gs://nftrack-69488.appspot.com/ZT6HvzMcoRg1gOjNz6iS9uVf7Hq1/E7AAEBD5-C15B-4786-AA88-BAB40C87E3BC.png
-    // https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2F2CA3EC02-450D-4DB1-BF71-E86338CE1135.jpeg?alt=media&token=66fc9e87-09a6-4db6-813b-2a763ce1f5dd
-    
-    @objc func mint1() {
-        for i in 0...10 {
-            FirebaseService.shared.db
-                .collection("post")
-                .document("\(i)")
-                .updateData([
-                    "sellerUserId": "vcHixrcSsLMpLiafMYrAmCvnlLU2",
-                    "senderAddress": "\(i)",
-                    "escrowHash": "\(i)",
-                    "auctionHash": "\(i)",
-                    "mintHash": "\(i)",
-                    "date": Date(),
-                    "title": "\(i)",
-                    "description": "\(i)",
-                    "price": "\(i)",
-                    "category": Category.realEstate.asString(),
-                    "status": AuctionStatus.ready.rawValue,
-                    "tags": ["example"],
-                    "itemIdentifier": "\(i)",
-                    "isReviewed": false,
-                    "type": "tangible",
-                    "deliveryMethod": "Shipping",
-                    "saleFormat": "Online Direct",
-                    "files": ["https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2FE366991C-B770-4A68-9CC7-862B793455CB.jpeg?alt=media&token=bbe4a96a-c5ea-4a77-8291-4357a7fc6963"],
-                    "IPFS": "NA",
-                    "paymentMethod": "Escrow",
-                    "bidderTokens": [],
-                    "bidders": []
-                ])
-        }
-    }
-    
-    // MARK:- Mint
-    @objc func mint() {
-        self.showSpinner { [weak self] in
-            guard let userId = self?.userDefaults.string(forKey: UserDefaultKeys.userId) else {
-                self?.alert.showDetail("Sorry", with: "You need to be logged in.", for: self)
-                return
-            }
-            self?.userId = userId
-            
-            guard let itemTitle = self?.titleTextField.text, !itemTitle.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please fill in the title field.", for: self)
-                return
-            }
-            
-            guard let desc = self?.descTextView.text, !desc.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please fill in the description field.", for: self)
-                return
-            }
-            
-            guard let deliveryMethod = self?.deliveryMethodLabel.text,
-                  !deliveryMethod.isEmpty,
-                  let deliveryMethodEnum = DeliveryMethod(rawValue: deliveryMethod) else {
-                self?.alert.showDetail("Incomplete", with: "Please select the delivery method.", for: self)
-                return
-            }
-            
-            guard let saleFormat = self?.saleMethodLabel.text,
-                  !saleFormat.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please select the sale method.", for: self)
-                return
-            }
-            
-            guard let paymentMethod = self?.paymentMethodLabel.text,
-                  !paymentMethod.isEmpty,
-                  let paymentMethodEnum = PaymentMethod(rawValue: paymentMethod) else {
-                self?.alert.showDetail("Incomplete", with: "Please select the payment method.", for: self)
-                return
-            }
-            
-            guard let category = self?.pickerLabel.text,
-                  !category.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please choose the category.", for: self)
-                return
-            }
-            
-            guard let id = self?.idTextField.text,
-                  !id.isEmpty else {
-                self?.alert.showDetail("Incomplete", with: "Please select the digital asset.", for: self)
-                return
-            }
-            
-            // process id
-            let whitespaceCharacterSet = CharacterSet.whitespaces
-            let convertedId = id.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
-            
-            let characterset = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-            guard convertedId.rangeOfCharacter(from: characterset.inverted) == nil else {
-                self?.alert.showDetail("Invalid Characters", with: "The unique identifier cannot contain any space or special characters.", for: self)
-                return
-            }
-            
-            guard let tagTextField = self?.tagTextField, tagTextField.tokens.count > 0 else {
-                self?.alert.showDetail("Missing Tags", with: "Please add the tags using the plus sign.", for: self)
-                return
-            }
-            
-            guard tagTextField.tokens.count < 6 else {
-                self?.alert.showDetail("Tag Limit", with: "You can add up to 5 tags.", for: self)
-                return
-            }
-            
-            // add both the tokens and the title to the tokens field
-            var tokensArr = Set<String>()
-            let strippedString = itemTitle.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
-            let searchItems = strippedString.components(separatedBy: " ") as [String]
-            searchItems.forEach { (item) in
-                tokensArr.insert(item)
-            }
-            
-            for token in self!.tagTextField.tokens {
-                if let retrievedToken = token.representedObject as? String {
-                    tokensArr.insert(retrievedToken.lowercased())
-                }
-            }
-                        
-            // Determine whether the current postType is tangible or digital
-//            guard let type = self?.post?.type,
-//                  let postType = PostType(rawValue: type) else {
-//                self?.alert.showDetail("Error", with: "Unable to determine between a new sale and a resale.", for: self)
-//                return
-//            }
-            guard let postType = self?.postType else {
-                self?.alert.showDetail("Error", with: "Unable to determine between a new sale and a resale.", for: self)
-                return
-            }
-
-            // The four configuration are the pivotal elements in determining what contract to deploy.
-            let saleConfig = SaleConfig.hybridMethod(
-                postType: postType,
-                saleType: (self?.post != nil) ? .resale : .newSale,
-                delivery: deliveryMethodEnum,
-                payment: paymentMethodEnum
-            )
-            
-            let mintParameters = MintParameters(
-                price: self?.priceTextField.text,
-                itemTitle: itemTitle,
-                desc: desc,
-                category: category,
-                convertedId: convertedId,
-                tokensArr: tokensArr,
-                userId: userId,
-                deliveryMethod: deliveryMethod,
-                saleFormat: saleFormat,
-                paymentMethod: paymentMethod
-            )
-            
-            print("saleConfig.value", saleConfig.value as Any)
-            switch saleConfig.value {
-                case .tangibleNewSaleInPersonEscrow:
-                    self?.checkExistingId(id: convertedId) { (isDuplicate) in
-                        if isDuplicate {
-                            self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
-                        } else {
-                            self?.processMint(mintParameters)
-                        } // not duplicate
-                    } // end of checkExistingId
-                    break
-                case .tangibleNewSaleInPersonDirectPayment:
-                    // The direct transfer option for in-person pickup doesn't require an escrow contract to be deployed
-                    self?.processDirectSale(mintParameters)
-                    break
-                case .tangibleNewSaleShippingEscrow:
-                    self?.checkExistingId(id: convertedId) { (isDuplicate) in
-                        if isDuplicate {
-                            self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
-                        } else {
-                            self?.processMint(mintParameters)
-                        } // not duplicate
-                    } // end of checkExistingId
-                    break
-                case .tangibleResaleInPersonEscrow:
-                    self?.processEscrowResale(mintParameters)
-                    break
-                case .tangibleResaleInPersonDirectPayment:
-                    self?.processDirectResale(mintParameters)
-                    break
-                case .tangibleResaleShippingEscrow:
-                    self?.processEscrowResale(mintParameters)
-                    break
-                case .digitalNewSaleOnlineDirectPayment:
-                    break
-                case .digitalNewSaleAuctionBeneficiary:
-                    break
-                case .digitalResaleOnlineDirectPayment:
-                    break
-                case .digitalResaleAuctionBeneficiary:
-                    break
-                default:
-                    print("no sale config exists")
-                    break
-            }
-        }
-    }
-        
-    struct MintParameters {
-        let price: String?
-        let itemTitle: String
-        let desc: String
-        let category: String
-        let convertedId: String
-        let tokensArr: Set<String>
-        let userId: String
-        let deliveryMethod: String
-        let saleFormat: String
-        let paymentMethod: String
-    }
-    
-    func processMint(_ mintParameters: MintParameters) {}
-    
-    func processEscrowResale(_ mintParameters: MintParameters) {}
-    
-    // SimplePayment contract payment method
-    func processDirectSale(_ mintParameters: MintParameters) {}
-    
-    func processDirectResale(_ mintParameters: MintParameters) {}
-    
-    func configureProgress() {}
 }
 
 extension ParentPostViewController {
@@ -932,9 +717,7 @@ extension ParentPostViewController {
     // The option to check the ownership of the token. Automatically prompted prior to the resale.
     // Given as an option because it's recommended, but not necessary. It's also not a property, but a method on the NFTrack smart contract, which means it incurs a gas cost.
     private func configureOwnerOf() {
-//        if post != nil {
-//
-//        }
+        guard post != nil else { return }
         
         let buttonInfoArr = [
             ButtonInfo(title: "Check", tag: 500, backgroundColor: .black)
@@ -948,7 +731,9 @@ extension ParentPostViewController {
         infoVC.buttonAction = { [weak self] tag in
             switch tag {
                 case 500:
-                    self?.checkOwnership()
+                    self?.dismiss(animated: true, completion: {
+                        self?.checkOwnership()
+                    })
                 default:
                     break
             }
@@ -963,128 +748,73 @@ extension ParentPostViewController {
             return
         }
         
-//        guard let tokenId = post?.tokenID else {
-//            self.alert.showDetail("Sorry", with: "Failed to load the Token ID for the current item.", for: self)
-//            return
-//        }
+        guard let tokenId = post?.tokenID else {
+            self.alert.showDetail("Sorry", with: "Failed to load the Token ID for the current item.", for: self)
+            return
+        }
         
-        let tokenId = 153
         let ownerOfParameters: [AnyObject] = [tokenId] as [AnyObject]
         
-        let content = [
-            StandardAlertContent(
-                titleString: "",
-                body: [AlertModalDictionary.passwordSubtitle: ""],
-                isEditable: true,
-                fieldViewHeight: 40,
-                messageTextAlignment: .left,
-                alertStyle: .withCancelButton
-            )
-        ]
+        // First ensure that the current wallet address is the owner of the item by invoking the ownerOf method on NFTrack.
+        // This is to to be executed first to prevent the SimplePayment contract to be launched only to discover that the token cannot be transferred into it.
+        // Since this is a "view" method that doesn't modify any states on the contract, no gas should be consumed and should be left out of the gas estimate.
         
-        self.hideSpinner {
-            self.dismiss(animated: true, completion: {
-                DispatchQueue.main.async { [weak self] in
-                    let alertVC = AlertViewController(height: 350, standardAlertContent: content)
-                    alertVC.action = { (modal, mainVC) in
-                        mainVC.buttonAction = { _ in
-                            guard let self = self else { return }
-                            guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-                                  !password.isEmpty else {
-                                self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
-                                return
-                            } // password guard
-                            
-                            self.dismiss(animated: true, completion: {
-                                // First ensure that the current wallet address is the owner of the item by invoking the ownerOf method on NFTrack.
-                                // This is to to be executed first to prevent the SimplePayment contract to be launched only to discover that the token cannot be transferred into it.
-                                // Since this is a "view" method that doesn't modify any states on the contract, no gas should be consumed and should be left out of the gas estimate.
-                                
-                                Deferred {
-                                    Future<SmartContractProperty, PostingError> { promise in
-                                        self.transactionService.prepareTransactionForReading(
-                                            method: NFTrackContract.ContractMethods.ownerOf.rawValue,
-                                            parameters: ownerOfParameters,
-                                            abi: NFTrackABI,
-                                            contractAddress: NFTrackAddress,
-                                            promise: promise
-                                        )
-                                    }
-                                    .eraseToAnyPublisher()
-                                }
-                                .flatMap { (propertyFetchModel) -> AnyPublisher<EthereumAddress, PostingError> in
-                                    Future<EthereumAddress, PostingError> { promise in
-                                        guard let transaction = propertyFetchModel.transaction else {
-                                            promise(.failure(.generalError(reason: "Unable to prepare the read transaction.")))
-                                            return
-                                        }
-                                        
-                                        do {
-                                            let result: [String: Any] = try transaction.call()
-                                            if let ownerAddress = result["0"] as? EthereumAddress {
-                                                promise(.success(ownerAddress))
-                                            }
-                                        }  catch {
-                                            promise(.failure(.generalError(reason: "Unable to parse data from the smart contract.")))
-                                        }
-                                    }
-                                    .eraseToAnyPublisher()
-                                }
-                                .sink { [weak self] (completion) in
-                                    switch completion {
-                                        case .failure(let error):
-                                            self?.processFailure(error)
-                                        case .finished:
-                                            break
-                                    }
-                                } receiveValue: { [weak self] (ownerAddress) in
-                                    if ownerAddress == Web3swiftService.currentAddress {
-                                        self?.ownershipCheckResultPrompt(detail: "The current wallet is the owner of the item. You may proceed with the resale.")
-                                    } else {
-                                        self?.ownershipCheckResultPrompt(detail: "The current wallet is not the owner of the item. You will not be able to proceed with the resale.")
-                                    }
-                                }
-                                .store(in: &self.storage)
-                                
-                            }) // self.dismiss
-                        } // mainVC.buttonAction
-                    } // alertVC.action
-                    self?.present(alertVC, animated: true, completion: nil)
-                } // DispatchQueue
-            }) // self.dismiss of InfoViewController
-        } // self.hideSpinner
+        self.showSpinner {
+            Deferred {
+                Future<SmartContractProperty, PostingError> { promise in
+                    self.transactionService.prepareTransactionForReading(
+                        method: NFTrackContract.ContractMethods.ownerOf.rawValue,
+                        parameters: ownerOfParameters,
+                        abi: NFTrackABI,
+                        contractAddress: NFTrackAddress,
+                        promise: promise
+                    )
+                }
+                .eraseToAnyPublisher()
+            }
+            .flatMap { (propertyFetchModel) -> AnyPublisher<EthereumAddress, PostingError> in
+                Future<EthereumAddress, PostingError> { promise in
+                    guard let transaction = propertyFetchModel.transaction else {
+                        promise(.failure(.generalError(reason: "Unable to prepare the read transaction.")))
+                        return
+                    }
+                    
+                    do {
+                        let result: [String: Any] = try transaction.call()
+                        if let ownerAddress = result["0"] as? EthereumAddress {
+                            promise(.success(ownerAddress))
+                        }
+                    }  catch {
+                        promise(.failure(.generalError(reason: "Unable to parse data from the smart contract.")))
+                    }
+                }
+                .eraseToAnyPublisher()
+            }
+            .sink { [weak self] (completion) in
+                switch completion {
+                    case .failure(let error):
+                        self?.processFailure(error)
+                    case .finished:
+                        break
+                }
+            } receiveValue: { [weak self] (ownerAddress) in
+                self?.hideSpinner({
+                    if ownerAddress == Web3swiftService.currentAddress {
+                        self?.ownershipCheckResultPrompt(detail: "The current wallet is the owner of the item. You may proceed with the resale.")
+                    } else {
+                        self?.ownershipCheckResultPrompt(detail: "The current wallet is not the owner of the item. You will not be able to proceed with the resale.")
+                    }
+                })
+            }
+            .store(in: &self.storage)
+        } // showSpinner
     }
     
     private func ownershipCheckResultPrompt(detail: String) {
         DispatchQueue.main.async { [weak self] in
-            let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Item Ownership", detail: detail)])
+            let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Ownership Status", detail: detail)])
             self?.present(infoVC, animated: true, completion: nil)
         }
-        
-//        let content = [
-//            StandardAlertContent(
-//                titleString: "",
-//                body: [AlertModalDictionary.passwordSubtitle: ""],
-//                isEditable: true,
-//                fieldViewHeight: 40,
-//                messageTextAlignment: .left,
-//                alertStyle: .oneButton
-//            )
-//        ]
-//
-//        DispatchQueue.main.async { [weak self] in
-//            let alertVC = AlertViewController(height: 350, standardAlertContent: content)
-//            alertVC.action = { (modal, mainVC) in
-//                mainVC.buttonAction = { _ in
-//                    guard let self = self else { return }
-//                    guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-//                          !password.isEmpty else {
-//                        self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 200)
-//                        return
-//                    } // password guard
-//                } // mainVC.buttonAction
-//            } // alertVC.action
-//        } // DispatchQueue
     }
     
     // MARK: - processFailure
@@ -1175,4 +905,78 @@ extension ParentPostViewController: UIScrollViewDelegate {
             colorPatchViewHeight.constant = -scrollView.contentOffset.y
         }
     }
+    
+//    func test() {
+//        let price = "0.00000000002"
+//        guard !price.isEmpty,
+//              let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth) else {
+//            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+//            return
+//        }
+//        print("priceInWei", priceInWei)
+//        print("priceInWei type", type(of: priceInWei))
+//
+//        guard let NFTrackABIRevisedAddress = NFTrackABIRevisedAddress else {
+//            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
+//            return
+//        }
+//
+//        guard let userId = userId else {
+//            return
+//        }
+//
+//        // create an ID for the new item to be saved into the _simplePayment mapping.
+//        let combinedString = self.ref.document().documentID + userId
+//        let inputData = Data(combinedString.utf8)
+//        let hashedId = SHA256.hash(data: inputData)
+//        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+//        print("hashString", hashString)
+//        print("hashString type", type(of: hashString))
+//
+//        let param: [AnyObject] = [priceInWei, hashString] as [AnyObject]
+//
+//        Deferred {
+//            Future<WriteTransaction, PostingError> { [weak self] promise in
+//                self?.transactionService.prepareTransactionForWriting(
+//                    method: NFTrackContract.ContractMethods.createSimplePayment.rawValue,
+//                    abi: NFTrackABIRevisedABI,
+//                    param: param,
+//                    contractAddress: NFTrackABIRevisedAddress,
+//                    amountString: nil,
+//                    promise: promise
+//                )
+//            }
+//        }
+//        .flatMap { (transaction) -> AnyPublisher<TransactionSendingResult, PostingError> in
+//            let update: [String: PostProgress] = ["update": .estimatGas]
+//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//
+//            return Future<TransactionSendingResult, PostingError> { promise in
+//                do {
+//                    let receipt = try transaction.send(password: "111111", transactionOptions: nil)
+//                    promise(.success(receipt))
+//                } catch {
+//                    if let err = error as? Web3Error {
+//                        promise(.failure(.generalError(reason: err.errorDescription)))
+//                    } else {
+//                        promise(.failure(.generalError(reason: error.localizedDescription)))
+//                    }
+//                }
+//            }
+//            .eraseToAnyPublisher()
+//        }
+//        .sink(receiveCompletion: { (completion) in
+//            switch completion {
+//                case .failure(let error):
+//                    self.processFailure(error)
+//                case .finished:
+//                    print("finished")
+//                default:
+//                    break
+//            }
+//        }, receiveValue: { (finalValue) in
+//            print("Final Value", finalValue)
+//        })
+//        .store(in: &self.storage)
+//    }
 }
