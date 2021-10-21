@@ -2255,3 +2255,38 @@ extension FetchContractAddress {
         .store(in: &storage)
     }
 }
+
+protocol HandleError {
+    var alert: Alerts! { get set }
+    func processFailure(_ error: PostingError)
+}
+
+extension HandleError where Self: UIViewController {
+    // MARK: - processFailure
+    func processFailure(_ error: PostingError) {
+        switch error {
+            case .fileUploadError(.fileNotAvailable):
+                self.alert.showDetail("Error", with: "No image file was found.", for: self)
+            case .retrievingEstimatedGasError:
+                self.alert.showDetail("Error", with: "There was an error retrieving the gas estimation.", for: self)
+            case .retrievingGasPriceError:
+                self.alert.showDetail("Error", with: "There was an error retrieving the current gas price.", for: self)
+            case .contractLoadingError:
+                self.alert.showDetail("Error", with: "There was an error loading your contract ABI.", for: self)
+            case .retrievingCurrentAddressError:
+                self.alert.showDetail("Account Retrieval Error", with: "Error retrieving your account address. Please ensure that you're logged into your wallet.", for: self)
+            case .createTransactionIssue:
+                self.alert.showDetail("Error", with: "There was an error creating a transaction.", for: self)
+            case .insufficientFund(let msg):
+                self.alert.showDetail("Error", with: msg, height: 500, fieldViewHeight: 300, alignment: .left, for: self)
+            case .emptyAmount:
+                self.alert.showDetail("Error", with: "The ETH value cannot be blank for the transaction.", for: self)
+            case .invalidAmountFormat:
+                self.alert.showDetail("Error", with: "The ETH value is in an incorrect format.", for: self)
+            case .generalError(reason: let msg):
+                self.alert.showDetail("Error", with: msg, for: self)
+            default:
+                self.alert.showDetail("Error", with: "There was an error creating your post.", for: self)
+        }
+    }
+}

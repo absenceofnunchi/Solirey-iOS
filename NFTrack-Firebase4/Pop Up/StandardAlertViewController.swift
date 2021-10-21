@@ -91,8 +91,6 @@ class StandardAlertViewController: UIViewController {
         configure()
         setConstraints()
         loadingAnimation()
-        
-        print("delegate", delegate)
     }
 }
 

@@ -42,7 +42,8 @@ class SimpleRevisedViewController: ParentDetailViewController {
     }
     private var socketDelegate: SocketDelegate!
     private var activityIndicatorView: UIActivityIndicatorView!
-    
+    private var txPackageRetainer: TxPackage!
+
     final override func userInfoDidSet() {
         super.userInfoDidSet()
  
@@ -199,7 +200,7 @@ extension SimpleRevisedViewController {
     }
 }
 
-extension SimpleRevisedViewController {
+extension SimpleRevisedViewController: HandleError {
     // Dynamically determine what NFTrack contract method to call
     private func callContractMethod(for method: NFTrackContract.ContractMethods, param: [AnyObject] = [AnyObject](), price: String) {
         
@@ -210,170 +211,154 @@ extension SimpleRevisedViewController {
         
         Deferred {
             Future<TxPackage, PostingError> { [weak self] promise in
-                self?.transactionService.prepareTransactionForWritingWithGasEstimate(
-                    method: NFTrackContract.ContractMethods.pay.rawValue,
-                    abi: NFTrackABIRevisedABI,
-                    param: param,
-                    contractAddress: NFTrackABIRevisedAddress,
-                    amountString: price,
-                    promise: promise
-                )
+                switch method {
+                    case .pay:
+                        self?.transactionService.prepareTransactionForWritingWithGasEstimate(
+                            method: NFTrackContract.ContractMethods.pay.rawValue,
+                            abi: NFTrackABIRevisedABI,
+                            param: param,
+                            contractAddress: NFTrackABIRevisedAddress,
+                            amountString: price,
+                            promise: promise
+                        )
+                        break
+                    default:
+                        break
+                }
             }
             .eraseToAnyPublisher()
         }
-        .flatMap({ (txPackage) -> AnyPublisher<Bool, PostingError> in
-            Future<Bool, PostingError> { promise in
-                let content = [
-                    StandardAlertContent(
-                        titleString: "Enter Your Password",
-                        body: ["": ""],
-                        isEditable: true,
-                        fieldViewHeight: 40,
-                        messageTextAlignment: .left,
-                        alertStyle: .withCancelButton
-                    ),
-                    StandardAlertContent(
-                        index: 1,
-                        titleString: "Gas Estimate",
-                        titleColor: UIColor.white,
-                        body: [
-                            "Total Gas Units": "1000",
-                            "Gas Price": "1 Gwei",
-                            "Your Current Balance": "100 Ether",
-                            "Estimated Total Gas Cost": "0.001 Ether"
-                        ],
-                        isEditable: false,
-                        fieldViewHeight: 40,
-                        messageTextAlignment: .left,
-                        alertStyle: .noButton
-                    ),
-                ]
-                
-                DispatchQueue.main.async { [weak self] in
-                    let alertVC = AlertViewController(height: 350, standardAlertContent: content)
-                    alertVC.action = { [weak self] (modal, mainVC) in
-                        mainVC.buttonAction = { _ in
-                            print("modal.dataDict", modal.dataDict)
-                            guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-                                  !password.isEmpty else {
-                                self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
-                                return
-                            }
-                            
-                            promise(.success(true))
-                        }
-                    }
-                    self?.present(alertVC, animated: true, completion: nil)
-                }
+        .flatMap({ [weak self] (txPackage) -> AnyPublisher<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> in
+            self?.txPackageRetainer = txPackage
+            return Future<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> { promise in
+                self?.transactionService.estimateGas(gasEstimate: txPackage.gasEstimate, promise: promise)
             }
             .eraseToAnyPublisher()
         })
         .sink { (completion) in
             print(completion)
-        } receiveValue: { [weak self] (txPackage) in
-            print("finalValue", txPackage)
-//            self?.executeTransaction(txPackage)
-            
+        } receiveValue: { [weak self] (estimates) in
+            self?.executeTransaction(estimates: estimates, method: method)
         }
         .store(in: &storage)
-
-        //  txPackage TxPackage(transaction: web3swift.WriteTransaction, gasEstimate: 127142, price: nil, type: NFTrack_Firebase4.TxType.mint, nonce: nil)
     }
     
-    private func executeTransaction(_ txPackage: TxPackage) {
-        self.transactionService.estimateGas(gasEstimate: txPackage.gasEstimate) { [weak self] (estimate, error) in
-            if let error = error {
-                switch error {
-                    case .generalError(reason: let error):
-                        self?.alert.showDetail("Error", with: error, for: self)
-                    default:
-                        break
-                }
-            }
-            
-            guard let estimate = estimate else {
-                return
-            }
-         
-            let content = [
-                StandardAlertContent(
-                    titleString: "Enter Your Password",
-                    body: ["": ""],
-                    isEditable: true,
-                    fieldViewHeight: 40,
-                    messageTextAlignment: .left,
-                    alertStyle: .withCancelButton
-                ),
-                StandardAlertContent(
-                    index: 1,
-                    titleString: "Gas Estimate",
-                    titleColor: UIColor.white,
-                    body: [
-                        "Total Gas Units": txPackage.gasEstimate.description,
-                        "Gas Price": "\(estimate.gasPriceInGwei) Gwei",
-                        "Total Gas Cost": "\(estimate.totalGasCost) Ether",
-                        "Your Current Balance": "\(estimate.balance) Ether"
-                    ],
-                    isEditable: false,
-                    fieldViewHeight: 40,
-                    messageTextAlignment: .left,
-                    alertStyle: .noButton
-                ),
-            ]
-            
-            DispatchQueue.main.async { [weak self] in
-                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
-                alertVC.action = { [weak self] (modal, mainVC) in
-                    mainVC.buttonAction = { _ in
-                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-                              !password.isEmpty else {
-                            self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
-                            return
-                        }
-
-                        self?.dismiss(animated: true, completion: {
+    private func executeTransaction(
+        estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
+        method: NFTrackContract.ContractMethods
+    ) {
+        guard let txPackageRetainer = self.txPackageRetainer else { return }
+        
+        let content = [
+            StandardAlertContent(
+                titleString: "Enter Your Password",
+                body: ["Required Wallet Password": ""],
+                isEditable: true,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .withCancelButton
+            ),
+            StandardAlertContent(
+                index: 1,
+                titleString: "Gas Estimate",
+                titleColor: UIColor.white,
+                body: [
+                    "Total Gas Units": txPackageRetainer.gasEstimate.description,
+                    "Gas Price": "\(estimates.gasPriceInGwei) Gwei",
+                    "Total Gas Cost": "\(estimates.totalGasCost) Ether",
+                    "Your Current Balance": "\(estimates.balance) Ether"
+                ],
+                isEditable: false,
+                fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            ),
+        ]
+        
+        DispatchQueue.main.async { [weak self] in
+            let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+            alertVC.action = { [weak self] (modal, mainVC) in
+                mainVC.buttonAction = { _ in
+                    guard let password = modal.dataDict["Required Wallet Password"],
+                          !password.isEmpty else {
+                        self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
+                        return
+                    }
+                    
+                    self?.dismiss(animated: true, completion: {
+                        Deferred {
                             Future<TransactionSendingResult, PostingError> { promise in
                                 do {
-                                    let result = try txPackage.transaction.send(password: password, transactionOptions: nil)
+                                    guard let result = try self?.txPackageRetainer.transaction.send(password: password, transactionOptions: nil) else {
+                                        promise(.failure(.generalError(reason: "Unable to execute the transaction.")))
+                                        return
+                                    }
+                                    
                                     promise(.success(result))
                                 } catch {
                                     promise(.failure(.generalError(reason: "Unable to execute the transaction.")))
                                 }
                             }
                             .eraseToAnyPublisher()
-                            .flatMap { [weak self] (txResult) -> AnyPublisher<Bool, PostingError> in
-                                Future<Bool, PostingError> { promise in
-                                    self?.updateFirestore(txResult, promise: promise)
-                                }
-                                .eraseToAnyPublisher()
+                        }
+                        .flatMap { [weak self] (txResult) -> AnyPublisher<Bool, PostingError> in
+                            Future<Bool, PostingError> { promise in
+                                self?.updateFirestore(txResult, promise: promise)
                             }
-                            .sink { (completion) in
-                                print(completion)
-                            } receiveValue: { (finalValue) in
-                                print("finalValue", finalValue)
+                            .eraseToAnyPublisher()
+                        }
+                        .sink { [weak self] (completion) in
+                            switch completion {
+                                case .failure(let error):
+                                    self?.processFailure(error)
+                                    break
+                                case .finished:
+                                    self?.alert.showDetail("Success!", with: "You have successfully purchased the item.", for: self)
+                                    break
                             }
-                            .store(in: &self!.storage)
-
-                        }) // dismiss
-                    } // mainVC
-                } // alertVC
-                self?.present(alertVC, animated: true, completion: nil)
-            } // DispathQueue
-        }
+                        } receiveValue: { (finalValue) in
+                            print("finalValue", finalValue)
+                        }
+                        .store(in: &self!.storage)
+                        
+                    }) // dismiss
+                } // mainVC
+            } // alertVC
+            self?.present(alertVC, animated: true, completion: nil)
+        } // DispathQueue
     }
     
-    private func updateFirestore(_ txResult: TransactionSendingResult, promise: @escaping (Result<Bool, PostingError>) -> Void) {
+    private func updateFirestore(
+        _ txResult: TransactionSendingResult,
+        promise: @escaping (Result<Bool, PostingError>) -> Void
+    ) {
+        
+        guard let buyerHash = Web3swiftService.currentAddressString else {
+            promise(.failure(.generalError(reason: "Unable to fetch your wallet address.")))
+            return
+        }
+        
+        guard let userId = self.userId else {
+            promise(.failure(.generalError(reason: "Unable to fetch the user information.")))
+            return
+        }
+        
         let ref = self.db.collection("post")
-        let id = ref.document().documentID
-
+        
         let postData: [String: Any] = [
-            "saleType": SaleType.newSale.rawValue
+            "confirmPurchaseHash": txResult.hash,
+            "buyerHash": buyerHash,
+            "confirmPurchaseDate": Date(),
+            "transferDate": Date(),
+            "confirmReceivedDate": Date(),
+            "buyerUserId": userId,
+            "status": SimplePaymentStatus.complete.rawValue
         ]
         
         // txHash is either minting or transferring the ownership
-        ref.document(id).setData(postData) { (error) in
-            if let error = error {
-                promise(.failure(.generalError(reason: error.localizedDescription)))
+        ref.document(post.documentId).updateData(postData) { (error) in
+            if let _ = error {
+                promise(.failure(.generalError(reason: "Error in updating the database.")))
             } else {
                 promise(.success(true))
             }

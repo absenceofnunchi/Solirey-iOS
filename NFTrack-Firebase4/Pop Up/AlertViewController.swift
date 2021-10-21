@@ -85,7 +85,6 @@ extension AlertViewController: DataFetchDelegate {
     
     final func didGetData(_ data: [String : String]) {
         data.forEach { dataDict.updateValue($0.value, forKey: $0.key) }
-        print("dataDict", dataDict)
     }
 }
 
