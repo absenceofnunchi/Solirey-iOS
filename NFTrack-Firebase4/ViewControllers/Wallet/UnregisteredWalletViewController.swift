@@ -22,7 +22,7 @@ class UnregisteredWalletViewController: UIViewController, ModalConfigurable {
         view.backgroundColor = .white
         hideKeyboardWhenTappedAround()
         configureCloseButton()
-        setButtonConstraints()
+        setCloseButtonConstraints()
         configurePageVC()
         
         let swipeDown = UISwipeGestureRecognizer(target: self, action: #selector(swiped(_:)))

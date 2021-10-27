@@ -26,7 +26,7 @@ class ReceiveViewController: UIViewController, ModalConfigurable {
         super.viewDidLoad()
         
         configureCloseButton()
-        setButtonConstraints()
+        setCloseButtonConstraints()
 //        configureWallet()
         configureUI()
         setConstraints()

@@ -1021,6 +1021,7 @@ struct AlertModalDictionary {
     static let gasLimit = "Gas Limit"
     static let gasPrice = "Gas Price"
     static let nonce = "Nonce"
+    static let walletPasswordRequired = "Wallet Password Required"
 }
 
 enum TxType {
@@ -1063,6 +1064,11 @@ struct Topics {
     static let ItemReceived = "0xe89152acd703c9d8c7d28829d443260b411454d45394e7995815140c8cbcbcf7"
     static let Aborted = ""
     static let SimplePaymentPurchased = "0x3a2d0e41c506b136330c6e5e0295ccbf0966daece99bfe7c89020cc01dbfb8d6"
+    static let SimplePaymentMint = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+}
+
+struct ContractAddresses {
+    static let NFTrackABIRevisedAddress = EthereumAddress("0xd3F95b3292Cbc7543228B6edEDFA42b474651e8D")
 }
 
 struct ShippingInfo {

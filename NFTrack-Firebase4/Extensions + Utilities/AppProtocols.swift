@@ -110,7 +110,7 @@ extension TableViewConfigurable where Self: UITableViewDataSource {
 protocol ModalConfigurable where Self: UIViewController {
     var closeButton: UIButton! { get set }
     func configureCloseButton(tintColor: UIColor)
-    func setButtonConstraints()
+    func setCloseButtonConstraints()
     func closeButtonPressed()
 }
 
@@ -139,7 +139,7 @@ extension ModalConfigurable {
     }
     
     
-    func setButtonConstraints() {
+    func setCloseButtonConstraints() {
         NSLayoutConstraint.activate([
             // close button
             closeButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),

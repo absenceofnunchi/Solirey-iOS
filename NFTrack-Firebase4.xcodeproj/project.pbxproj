@@ -64,6 +64,7 @@
 		493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */; };
 		49409A75265946870060193C /* SearchResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A74265946870060193C /* SearchResultsViewController.swift */; };
 		49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */; };
+		4952F8A2272917AC0008D237 /* ParentPostViewController + Direct Transfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4952F8A1272917AC0008D237 /* ParentPostViewController + Direct Transfer.swift */; };
 		4957CF5127054CD0004F7320 /* BigImagePreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4957CF5027054CD0004F7320 /* BigImagePreviewViewController.swift */; };
 		4957CF5D2705730E004F7320 /* ParentSinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4957CF5C2705730E004F7320 /* ParentSinglePageViewController.swift */; };
 		4958117526D6DAF1002C8F3B /* IPFSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958117426D6DAF1002C8F3B /* IPFSService.swift */; };
@@ -282,6 +283,7 @@
 		493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ERC721PresetABI.swift; sourceTree = "<group>"; };
 		49409A74265946870060193C /* SearchResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsViewController.swift; sourceTree = "<group>"; };
 		49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + ResultsUpdate.swift"; sourceTree = "<group>"; };
+		4952F8A1272917AC0008D237 /* ParentPostViewController + Direct Transfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + Direct Transfer.swift"; sourceTree = "<group>"; };
 		4957CF5027054CD0004F7320 /* BigImagePreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigImagePreviewViewController.swift; sourceTree = "<group>"; };
 		4957CF5C2705730E004F7320 /* ParentSinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSinglePageViewController.swift; sourceTree = "<group>"; };
 		4958117426D6DAF1002C8F3B /* IPFSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPFSService.swift; sourceTree = "<group>"; };
@@ -555,6 +557,17 @@
 			path = Contracts;
 			sourceTree = "<group>";
 		};
+		4952F8A0272916B80008D237 /* ParentPost */ = {
+			isa = PBXGroup;
+			children = (
+				49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */,
+				495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */,
+				496D56BF2659E75D00C3E7FD /* ParentPostViewController + Picker.swift */,
+				4952F8A1272917AC0008D237 /* ParentPostViewController + Direct Transfer.swift */,
+			);
+			path = ParentPost;
+			sourceTree = "<group>";
+		};
 		4957CF55270571EB004F7320 /* Page */ = {
 			isa = PBXGroup;
 			children = (
@@ -818,10 +831,8 @@
 		499F997B266C694400FC6CDE /* Post */ = {
 			isa = PBXGroup;
 			children = (
+				4952F8A0272916B80008D237 /* ParentPost */,
 				495FE3CC271F9BB6000433AF /* Different Payment Formats */,
-				49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */,
-				495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */,
-				496D56BF2659E75D00C3E7FD /* ParentPostViewController + Picker.swift */,
 				4964E50E264767A6005B3268 /* ImagePreviewViewController.swift */,
 				496D56B52659E6F900C3E7FD /* MyDoneButtonVC.swift */,
 				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
@@ -1216,6 +1227,7 @@
 				4964E5902649B5CF005B3268 /* SingleWalletPageViewController.swift in Sources */,
 				49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */,
 				495FD2E026895B3300F1D81D /* ProfileReviewListViewController.swift in Sources */,
+				4952F8A2272917AC0008D237 /* ParentPostViewController + Direct Transfer.swift in Sources */,
 				497CF79F26F7C050003EF69E /* ChatMapViewController.swift in Sources */,
 				496D56D0265AEDAB00C3E7FD /* ImageDataStore.swift in Sources */,
 				499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */,

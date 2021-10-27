@@ -57,7 +57,7 @@ class SimpleRevisedViewController: ParentDetailViewController {
     
     final override func viewDidLoad() {
         super.viewDidLoad()
-        createSocket()
+        createSocket()        
     }
     
     final override func viewDidAppear(_ animated: Bool) {
@@ -96,6 +96,14 @@ class SimpleRevisedViewController: ParentDetailViewController {
     
     final override func configureSellerNavigationBar() {
         super.configureSellerNavigationBar()
+        
+        // 2 conditions have to be met for the edit button to be displayed:
+        //  1. The user is the seller of this post.
+        //  2. The status of the post is "ready" since no modification is allowed after the purchase.
+        guard let status = SimplePaymentStatus(rawValue: post.status),
+              status == .ready else {
+            return
+        }
         
         if self.navigationItem.rightBarButtonItems?.filter({ $0.tag == 11 }).count == 0 {
             self.postEditButtonItem = UIBarButtonItem(barButtonSystemItem: .edit, target: self, action: #selector(self.buttonPressed(_:)))
@@ -168,21 +176,23 @@ extension SimpleRevisedViewController {
     }
     
     @objc final override func buttonPressed(_ sender: UIButton) {
-        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
-        feedbackGenerator.impactOccurred()
-        
         switch sender.tag {
             case 0:
                 print("abort")
                 break
             case 1:
-                callContractMethod(for: .pay, param: [post.simplePaymentId] as [AnyObject], price: post.price)
+                let param: [AnyObject] = [post.simplePaymentId] as [AnyObject]
+                callContractMethod(for: .pay, param: param, price: post.price)
                 break
             case 2:
-                print("withdraw")
+                callContractMethod(for: .withdraw, param: [post.simplePaymentId] as [AnyObject])
                 break
             case 3:
-                print("complete")
+                // sell
+                let resaleVC = ResaleViewController()
+                resaleVC.post = post
+                resaleVC.title = "Resale"
+                navigationController?.pushViewController(resaleVC, animated: true)
                 break
             default:
                 break
@@ -202,9 +212,9 @@ extension SimpleRevisedViewController {
 
 extension SimpleRevisedViewController: HandleError {
     // Dynamically determine what NFTrack contract method to call
-    private func callContractMethod(for method: NFTrackContract.ContractMethods, param: [AnyObject] = [AnyObject](), price: String) {
-        
-        guard let NFTrackABIRevisedAddress = NFTrackABIRevisedAddress else {
+    private func callContractMethod(for method: NFTrackContract.ContractMethods, param: [AnyObject] = [AnyObject](), price: String = "0") {
+        showSpinner()
+        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
             self.alert.showDetail("Contract Address Needed", with: "Unable to retrieve the smart contract address.", for: self)
             return
         }
@@ -215,6 +225,16 @@ extension SimpleRevisedViewController: HandleError {
                     case .pay:
                         self?.transactionService.prepareTransactionForWritingWithGasEstimate(
                             method: NFTrackContract.ContractMethods.pay.rawValue,
+                            abi: NFTrackABIRevisedABI,
+                            param: param,
+                            contractAddress: NFTrackABIRevisedAddress,
+                            amountString: price,
+                            promise: promise
+                        )
+                        break
+                    case .withdraw:
+                        self?.transactionService.prepareTransactionForWritingWithGasEstimate(
+                            method: NFTrackContract.ContractMethods.withdraw.rawValue,
                             abi: NFTrackABIRevisedABI,
                             param: param,
                             contractAddress: NFTrackABIRevisedAddress,
@@ -235,9 +255,15 @@ extension SimpleRevisedViewController: HandleError {
             }
             .eraseToAnyPublisher()
         })
-        .sink { (completion) in
-            print(completion)
+        .sink {[weak self] (completion) in
+            switch completion {
+                case .failure(let error):
+                    self?.processFailure(error)
+                default:
+                    break
+            }
         } receiveValue: { [weak self] (estimates) in
+            self?.hideSpinner()
             self?.executeTransaction(estimates: estimates, method: method)
         }
         .store(in: &storage)
@@ -252,7 +278,7 @@ extension SimpleRevisedViewController: HandleError {
         let content = [
             StandardAlertContent(
                 titleString: "Enter Your Password",
-                body: ["Required Wallet Password": ""],
+                body: [AlertModalDictionary.walletPasswordRequired: ""],
                 isEditable: true,
                 fieldViewHeight: 40,
                 messageTextAlignment: .left,
@@ -272,17 +298,24 @@ extension SimpleRevisedViewController: HandleError {
                 fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
-            ),
+            )
         ]
         
         DispatchQueue.main.async { [weak self] in
             let alertVC = AlertViewController(height: 350, standardAlertContent: content)
             alertVC.action = { [weak self] (modal, mainVC) in
                 mainVC.buttonAction = { _ in
-                    guard let password = modal.dataDict["Required Wallet Password"],
+                    guard let password = modal.dataDict[AlertModalDictionary.walletPasswordRequired],
                           !password.isEmpty else {
                         self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
                         return
+                    }
+                    self?.showSpinner()
+
+                    // if the socket timed out, reconnect
+                    if let isSocketConnected = self?.socketDelegate.socketProvider?.socket.isConnected,
+                       isSocketConnected == false {
+                        self?.createSocket()
                     }
                     
                     self?.dismiss(animated: true, completion: {
@@ -303,7 +336,11 @@ extension SimpleRevisedViewController: HandleError {
                         }
                         .flatMap { [weak self] (txResult) -> AnyPublisher<Bool, PostingError> in
                             Future<Bool, PostingError> { promise in
-                                self?.updateFirestore(txResult, promise: promise)
+                                self?.updateFirestore(
+                                    txResult: txResult,
+                                    method: method,
+                                    promise: promise
+                                )
                             }
                             .eraseToAnyPublisher()
                         }
@@ -313,10 +350,23 @@ extension SimpleRevisedViewController: HandleError {
                                     self?.processFailure(error)
                                     break
                                 case .finished:
-                                    self?.alert.showDetail("Success!", with: "You have successfully purchased the item.", for: self)
+                                    switch method {
+                                        case .pay:
+                                            self?.alert.showDetail("Success!", with: "You have successfully purchased the item.", for: self, buttonAction: {
+                                                self?.dismiss(animated: true, completion: nil)
+                                                self?.navigationController?.popViewController(animated: true)
+                                            })
+                                        case .withdraw:
+                                            self?.alert.showDetail("Success!", with: "You have successfully withdrawn the fund to your account.", for: self, buttonAction: {
+                                                self?.navigationController?.popViewController(animated: true)
+                                            })
+                                        default:
+                                            break
+                                    }
                                     break
                             }
                         } receiveValue: { (finalValue) in
+                            self?.hideSpinner()
                             print("finalValue", finalValue)
                         }
                         .store(in: &self!.storage)
@@ -329,31 +379,46 @@ extension SimpleRevisedViewController: HandleError {
     }
     
     private func updateFirestore(
-        _ txResult: TransactionSendingResult,
+        txResult: TransactionSendingResult,
+        method: NFTrackContract.ContractMethods,
         promise: @escaping (Result<Bool, PostingError>) -> Void
     ) {
         
-        guard let buyerHash = Web3swiftService.currentAddressString else {
-            promise(.failure(.generalError(reason: "Unable to fetch your wallet address.")))
-            return
-        }
-        
-        guard let userId = self.userId else {
-            promise(.failure(.generalError(reason: "Unable to fetch the user information.")))
-            return
-        }
-        
         let ref = self.db.collection("post")
+        var postData: [String: Any]!
         
-        let postData: [String: Any] = [
-            "confirmPurchaseHash": txResult.hash,
-            "buyerHash": buyerHash,
-            "confirmPurchaseDate": Date(),
-            "transferDate": Date(),
-            "confirmReceivedDate": Date(),
-            "buyerUserId": userId,
-            "status": SimplePaymentStatus.complete.rawValue
-        ]
+        switch method {
+            case .pay:
+                guard let buyerHash = Web3swiftService.currentAddressString else {
+                    promise(.failure(.generalError(reason: "Unable to fetch your wallet address.")))
+                    return
+                }
+                
+                guard let userId = self.userId else {
+                    promise(.failure(.generalError(reason: "Unable to fetch the user information.")))
+                    return
+                }
+                
+                postData = [
+                    "confirmPurchaseHash": txResult.hash,
+                    "buyerHash": buyerHash,
+                    "confirmPurchaseDate": Date(),
+                    "transferDate": Date(),
+                    "confirmReceivedDate": Date(),
+                    "buyerUserId": userId,
+                    "status": SimplePaymentStatus.complete.rawValue,
+                    "isWithdrawn": false,
+                    "isAdminWithdrawn": false
+                ]
+                break
+            case .withdraw:
+                postData = [
+                    "isWithdrawn": true
+                ]
+                break
+            default:
+                break
+        }
         
         // txHash is either minting or transferring the ownership
         ref.document(post.documentId).updateData(postData) { (error) in
@@ -368,7 +433,7 @@ extension SimpleRevisedViewController: HandleError {
 
 extension SimpleRevisedViewController {
     private func createSocket() {
-        guard let contractAddress = NFTrackABIRevisedAddress else { return }
+        guard let contractAddress = ContractAddresses.NFTrackABIRevisedAddress else { return }
         Deferred {
             Future<[String:Any], PostingError> { [weak self] promise in
                 self?.socketDelegate = SocketDelegate(contractAddress: contractAddress, promise: promise)
@@ -380,6 +445,8 @@ extension SimpleRevisedViewController {
             guard let topics = WebSocketMessage["topics"] as? [String],
                   let txHash = WebSocketMessage["transactionHash"] as? String else { return }
             
+            print("topics", topics)
+            print("txHash", txHash)
             switch topics {
                 case _ where topics.contains(Topics.SimplePaymentPurchased):
                     self?.isPending = true
@@ -415,7 +482,7 @@ extension SimpleRevisedViewController {
                 if userId == post.sellerUserId {
                     configureStatusButton(buttonTitle: "Withdraw", tag: 2)
                 } else if userId == post.buyerUserId {
-                    configureStatusButton(buttonTitle: "Completed", tag: 3)
+                    configureStatusButton(buttonTitle: "Sell", tag: 3)
                 } else {
                     configureStatusButton(buttonTitle: "Inactive", tag: 100)
                 }
@@ -428,3 +495,4 @@ extension SimpleRevisedViewController {
         activityIndicatorView.stopAnimating()
     }
 }
+

@@ -52,25 +52,6 @@ struct PostProgressData {
     }
 }
 
-//struct PostProgressData1 {
-//    var phases: [PostProgress]
-//    
-//    init(postType: PostType) {
-//        switch postType {
-//            case .tangible:
-//                phases = [.estimatGas, .deployingEscrow, .minting, .images]
-//            case .digital(.onlineDirect):
-//                phases = [.estimatGas, .images, .deployingEscrow, .minting]
-//            case .digital(.openAuction):
-//                phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
-//        }
-//    }
-//    
-//    func asString(i: Int) -> String {
-//        return phases[i].asString()
-//    }
-//}
-
 class ProgressModalViewController: UIViewController {
     private var titleLabel: UILabel!
     var titleString: String?
@@ -80,10 +61,11 @@ class ProgressModalViewController: UIViewController {
     private lazy var customTransitioningDelegate = TransitioningDelegate(height: height)
     private var stackView: UIStackView!
     private var completionCount: Int = 0
-    private var doneButton: UIButton!
+    private var doneButton: UIView!
     var progressView: UIProgressView!
     var progressLabel: UILabel!
     var postProgressData: PostProgressData!
+    private var alert = Alerts()
     
     init(height: CGFloat = 350, paymentMethod: PaymentMethod) {
         super.init(nibName: nil, bundle: nil)
@@ -106,6 +88,11 @@ class ProgressModalViewController: UIViewController {
         if let timer = timer {
             timer.invalidate()
         }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        loadingAnimation()
     }
     
     override func viewDidLoad() {
@@ -153,9 +140,39 @@ class ProgressModalViewController: UIViewController {
                         
                         self?.completionCount += 1
                         if self?.completionCount == self?.postProgressData.phases.count {
-                            self?.doneButton.isHidden = false
-                            self?.doneButton.isEnabled = true
+                            guard let doneButton = self?.doneButton,
+                                  let v = self?.view else { return }
                             
+                            // If the warning modal view on, that means the user prompted the force close modal
+                            // Remove it first
+                            for case let warningModalView as WarningModalView in v.subviews {
+                                warningModalView.removeFromSuperview()
+                            }
+                            
+                            for case let button as ButtonWithShadow in doneButton.subviews {
+                                let totalCount = 2
+                                let duration = 1.0 / Double(totalCount) + 0.2
+                                
+                                let animation = UIViewPropertyAnimator(duration: 1, timingParameters: UICubicTimingParameters())
+                                animation.addAnimations {
+                                    UIView.animateKeyframes(withDuration: 0, delay: 0, animations: {
+                                        UIView.addKeyframe(withRelativeStartTime: 0 / Double(totalCount), relativeDuration: duration) {
+                                            doneButton.alpha = 0
+                                        }
+                                        
+                                        UIView.addKeyframe(withRelativeStartTime: 0 / Double(totalCount), relativeDuration: duration + 0.2) {
+                                            doneButton.alpha = 1
+                                            button.setTitle("Success!", for: .normal)
+                                            button.setTitleColor(.white, for: .normal)
+                                            button.backgroundColor = UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+                                            button.tag = 0
+                                        }
+                                    })
+                                }
+                                
+                                animation.startAnimation()
+                            }
+
                             if let timer = self?.timer {
                                 timer.invalidate()
                             }
@@ -171,6 +188,43 @@ class ProgressModalViewController: UIViewController {
     @objc func onWillDismiss(_ notification: Notification) {
         self.dismiss(animated: true, completion: nil)
     }
+    
+    func loadingAnimation() {
+        // Stack view subviews + title label + timer label
+        let totalCount = stackView.arrangedSubviews.count + 2
+        let duration = 1.0 / Double(totalCount) + 0.2
+        
+        let animation = UIViewPropertyAnimator(duration: 0.7, timingParameters: UICubicTimingParameters())
+        animation.addAnimations {
+            UIView.animateKeyframes(withDuration: 0, delay: 0, animations: { [weak self] in
+                UIView.addKeyframe(withRelativeStartTime: 0 / Double(totalCount), relativeDuration: duration) {
+                    self?.titleLabel.transform = .identity
+                    self?.timerLabel.transform = .identity
+                }
+                
+                UIView.addKeyframe(withRelativeStartTime: 0 / Double(totalCount), relativeDuration: duration + 0.2) {
+                    self?.titleLabel.alpha = 1
+                    self?.timerLabel.alpha = 1
+                }
+                
+                self?.stackView.arrangedSubviews.enumerated().forEach({ (index, v) in
+                    UIView.addKeyframe(withRelativeStartTime: Double(index + 2) / Double(totalCount), relativeDuration: duration) {
+                        v.alpha = 1
+                        v.transform = .identity
+                    }
+                })
+                
+                guard let stackViewCount = self?.stackView.arrangedSubviews.count else { return }
+                
+                UIView.addKeyframe(withRelativeStartTime: Double(2 + stackViewCount) / Double(totalCount), relativeDuration: duration + 0.2) {
+                    self?.doneButton.alpha = 1
+                    self?.doneButton.transform = .identity
+                }
+            })
+        }
+        
+        animation.startAnimation()
+    }
 }
 
 private extension ProgressModalViewController {
@@ -184,13 +238,18 @@ private extension ProgressModalViewController {
         view.clipsToBounds = true
         
         titleLabel = UILabel()
+        titleLabel.alpha = 0
+        titleLabel.transform = CGAffineTransform(translationX: 0, y: 5)
         titleLabel.text = titleString
-        titleLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 20, weight: .bold)
+//        titleLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 20, weight: .bold)
+        titleLabel.font = UIFont.rounded(ofSize: 20, weight: .bold)
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(titleLabel)
         
         timerLabel = UILabel()
+        timerLabel.alpha = 0
+        timerLabel.transform = CGAffineTransform(translationX: 0, y: 5)
         timerLabel.textColor = .lightGray
         timerLabel.sizeToFit()
         timerLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .medium)
@@ -198,33 +257,8 @@ private extension ProgressModalViewController {
         timerLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(timerLabel)
         
-        var estimatedDuration = 120
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] (Timer) in
-            if let converted = self?.secondsToHoursMinutesSeconds(seconds: estimatedDuration) {
-                if estimatedDuration >= 0 {
-                    var min, sec: String!
-                    
-                    if converted.1 < 10 {
-                        min = "0\(converted.1)"
-                    } else {
-                        min = "\(converted.1)"
-                    }
-                    
-                    if converted.2 < 10 {
-                        sec = "0\(converted.2)"
-                    } else {
-                        sec = "\(converted.2)"
-                    }
-                    
-                    let countdown = "Estimated Duration: \(min ?? "00"):\(sec ?? "00")"
-                    self?.timerLabel.text = countdown
-                    
-                    estimatedDuration -= 1
-                } else {
-                    Timer.invalidate()
-                    self?.timerLabel.text = "Estimated Duration: 00:00"
-                }
-            }
+        delay(0.3) { [weak self] in
+            self?.setTimer()
         }
         
         let oneDotImage = createProgressImage(dotCount: .one)
@@ -239,7 +273,10 @@ private extension ProgressModalViewController {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         for i in 0..<postProgressData.phases.count {
             let containerView = UIView()
+            containerView.alpha = 0
+            containerView.transform = CGAffineTransform(translationX: 0, y: 5)
             containerView.tag = 100
+            
             let dotsImageView = UIImageView()
             dotsImageView.contentMode = .scaleAspectFit
             dotsImageView.animationRepeatCount = .max
@@ -264,15 +301,16 @@ private extension ProgressModalViewController {
             stackView.addArrangedSubview(containerView)
         }
         view.addSubview(stackView)
-        
-        doneButton = UIButton()
-        doneButton.setTitle("Success!", for: .normal)
-        doneButton.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
-        doneButton.backgroundColor = .black
-        doneButton.layer.cornerRadius = 8
-        doneButton.isHidden = true
-        doneButton.isEnabled = false
-        doneButton.translatesAutoresizingMaskIntoConstraints = false
+
+        let cancelButtonInfo = ButtonInfo(
+            title: "Cancel",
+            tag: 1,
+            backgroundColor: UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1),
+            titleColor: UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        )
+        doneButton = createButton(buttonInfo: cancelButtonInfo)
+        doneButton.alpha = 0
+        doneButton.transform = CGAffineTransform(translationX: 0, y: 5)
         view.addSubview(doneButton)
         
         progressView = UIProgressView()
@@ -285,6 +323,17 @@ private extension ProgressModalViewController {
         progressLabel.textAlignment = .right
         progressLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(progressLabel)
+        
+//        delay(5) {
+//            let update0: [String: PostProgress] = ["update": .estimatGas]
+//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update0)
+//
+//            let update1: [String: PostProgress] = ["update": .minting]
+//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update1)
+//
+//            let update2: [String: PostProgress] = ["update": .images]
+//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update2)
+//        }
     }
     
     private func setConstraints() {
@@ -318,8 +367,58 @@ private extension ProgressModalViewController {
         ])
     }
     
+    private func setTimer () {
+        var estimatedDuration = 120
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] (Timer) in
+            if let converted = self?.secondsToHoursMinutesSeconds(seconds: estimatedDuration) {
+                if estimatedDuration >= 0 {
+                    var min, sec: String!
+                    
+                    if converted.1 < 10 {
+                        min = "0\(converted.1)"
+                    } else {
+                        min = "\(converted.1)"
+                    }
+                    
+                    if converted.2 < 10 {
+                        sec = "0\(converted.2)"
+                    } else {
+                        sec = "\(converted.2)"
+                    }
+                    
+                    let countdown = "Estimated Duration: \(min ?? "00"):\(sec ?? "00")"
+                    self?.timerLabel.text = countdown
+                    
+                    estimatedDuration -= 1
+                } else {
+                    Timer.invalidate()
+                    self?.timerLabel.text = "Estimated Duration: 00:00"
+                }
+            }
+        }
+    }
+    
     enum DotCount {
         case one, two, three
+    }
+    
+    private func createButton(buttonInfo: ButtonInfo) -> UIView? {
+        let containerView = UIView()
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+
+        let button = ButtonWithShadow()
+        button.tag = buttonInfo.tag
+        button.backgroundColor = buttonInfo.backgroundColor
+        button.setTitle(buttonInfo.title, for: .normal)
+        button.layer.cornerRadius = 10
+        button.setTitleColor(buttonInfo.titleColor, for: .normal)
+        guard let pointSize = button.titleLabel?.font.pointSize else { return nil }
+        button.titleLabel?.font = .rounded(ofSize: pointSize, weight: .medium)
+        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        containerView.addSubview(button)
+        button.fill()
+
+        return containerView
     }
     
     private func createProgressImage(dotCount: DotCount) -> UIImage {
@@ -370,8 +469,146 @@ private extension ProgressModalViewController {
         return image
     }
     
-    @objc func buttonPressed(_ sender: UIButton!) {
-        dismiss(animated: true, completion: nil)
+    @objc func buttonPressed(_ sender: UIButton) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
+        switch sender.tag {
+            case 0:
+                dismiss(animated: true, completion: nil)
+            case 1:
+                let warningModalView = WarningModalView()
+                warningModalView.alpha = 0
+                warningModalView.backgroundColor = .white
+                view.addSubview(warningModalView)
+                warningModalView.fill()
+                
+                UIView.animate(withDuration: 0.2) {
+                    warningModalView.alpha = 1
+                }
+                            
+            default:
+                break
+        }
+    }
+}
+
+class WarningModalView: UIView {
+    var titleLabel: UILabel!
+    var messageLabel: UILabel!
+    var stopButton: UIView!
+    var cancelButton: UIView!
+    
+    override init(frame: CGRect) {
+        super.init(frame: .zero)
+        configure()
+        setConstraints()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+extension WarningModalView {
+    private func configure() {
+        titleLabel = UILabel()
+        titleLabel.text = "Force Close"
+        titleLabel.sizeToFit()
+        titleLabel.font = UIFont.rounded(ofSize: 22, weight: .bold)
+        titleLabel.textAlignment = .center
+        titleLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 20, weight: .bold)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(titleLabel)
+        
+        messageLabel = UILabel()
+        messageLabel.text = "Are you sure you want to stop the process? The cost that have already incurred will not be recoverable."
+        messageLabel.font = UIFont.rounded(ofSize: messageLabel.font.pointSize, weight: .light)
+        messageLabel.numberOfLines = 0
+        messageLabel.sizeToFit()
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(messageLabel)
+        
+        let stopButtonInfo = ButtonInfo(
+            title: "Stop",
+            tag: 0,
+            backgroundColor: .red,
+            titleColor: .white
+        )
+        
+        stopButton = createButton(buttonInfo: stopButtonInfo)
+        stopButton.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(stopButton)
+        
+        let cancelButtonInfo = ButtonInfo(
+            title: "Continue",
+            tag: 1,
+            backgroundColor: UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1),
+            titleColor: UIColor(red: 25/255, green: 69/255, blue: 107/255, alpha: 1)
+        )
+        
+        cancelButton = createButton(buttonInfo: cancelButtonInfo)
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(cancelButton)
+    }
+    
+    private func setConstraints() {
+        NSLayoutConstraint.activate([
+            titleLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            titleLabel.topAnchor.constraint(equalTo: self.topAnchor, constant: 20),
+            
+            messageLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            messageLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            messageLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            messageLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
+
+            stopButton.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 20),
+            stopButton.heightAnchor.constraint(equalToConstant: 40),
+            stopButton.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.4),
+            stopButton.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -20),
+            
+            cancelButton.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20),
+            cancelButton.heightAnchor.constraint(equalToConstant: 40),
+            cancelButton.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.4),
+            cancelButton.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -20),
+        ])
+    }
+    
+    private func createButton(buttonInfo: ButtonInfo) -> UIView? {
+        let containerView = UIView()
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+
+        let button = ButtonWithShadow()
+        button.tag = buttonInfo.tag
+        button.backgroundColor = buttonInfo.backgroundColor
+        button.setTitle(buttonInfo.title, for: .normal)
+        button.layer.cornerRadius = 10
+        button.setTitleColor(buttonInfo.titleColor, for: .normal)
+        guard let pointSize = button.titleLabel?.font.pointSize else { return nil }
+        button.titleLabel?.font = .rounded(ofSize: pointSize, weight: .medium)
+        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        containerView.addSubview(button)
+        button.fill()
+
+        return containerView
+    }
+    
+    @objc func buttonPressed(_ sender: UIButton) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
+        switch sender.tag {
+            case 0:
+                //  NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update0)
+                guard let vc = self.superview?.next as? ProgressModalViewController else { return }
+                vc.dismiss(animated: true, completion: nil)
+                break
+            case 1:
+                self.removeFromSuperview()
+                break
+            default:
+                break
+        }
     }
 }
 

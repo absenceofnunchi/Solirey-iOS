@@ -7,11 +7,16 @@
 
 import UIKit
 
+// for testing only
+import web3swift
+import Combine
+import CryptoKit
+import BigInt
+
 class PostViewController: ParentPostViewController {
     var topicsRetainer: [String]!
     var txResultArr = [TxResult2]()
-    var txPackageArr = [TxPackage]()
-    
+
     final override var panelButtons: [PanelButton] {
         let buttonPanels = [
             PanelButton(imageName: "camera.circle", imageConfig: configuration, tintColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), tag: 8),
@@ -24,7 +29,6 @@ class PostViewController: ParentPostViewController {
     var deliveryMethodObserver: NSKeyValueObservation?
     final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
         // When the DeliveryMethod is In Person Pickup, Category cannot be Digital
         // When the post is for resale,
         deliveryMethodObserver = deliveryMethodLabel.observe(\.text) { [weak self] (label, observedChange) in
@@ -49,12 +53,174 @@ class PostViewController: ParentPostViewController {
                     break
             }
         }
+        
+//        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
+//            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
+//            return
+//        }
+//
+//        // create an ID for the new item to be saved into the _simplePayment mapping.
+//        let combinedString = self.ref.document().documentID + mintParameters.userId
+//        let inputData = Data(combinedString.utf8)
+//        let hashedId = SHA256.hash(data: inputData)
+//        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+//        self.simplePaymentId = hashString
+//
+//        // The parameters for the createSimplePayment method
+//        let param: [AnyObject] = [priceInWei, hashString] as [AnyObject]
+//
+//        Deferred {
+//            Future<TxPackage, PostingError> { [weak self] promise in
+//                self?.transactionService.prepareTransactionForWritingWithGasEstimate(
+//                    method: NFTrackContract.ContractMethods.createSimplePayment.rawValue,
+//                    abi: NFTrackABIRevisedABI,
+//                    param: param,
+//                    contractAddress: NFTrackABIRevisedAddress,
+//                    amountString: nil,
+//                    promise: promise
+//                )
+//            }
+//            .eraseToAnyPublisher()
+//        }
+        
+//        let parameters: [AnyObject] = [2, "531d8dce9f30e1791559621c9bc164c0e526c8722677ac5edef19dc7eb2364a4"] as [AnyObject]
+//        Deferred { [weak self] in
+//            Future<SmartContractProperty, PostingError> { promise in
+//                self?.transactionService.prepareTransactionForReading(
+//                    method: NFTrackContract.ContractMethods.getInfo.rawValue,
+//                    parameters: parameters,
+//                    abi: NFTrackABIRevisedABI,
+//                    contractAddress: ContractAddresses.NFTrackABIRevisedAddress!,
+//                    promise: promise
+//                )
+//            }
+//        }
+//        .flatMap({ (properties) -> AnyPublisher<[String: Any], PostingError> in
+//            Future<[String: Any], PostingError> { promise in
+//                DispatchQueue.global(qos: .userInitiated).async {
+//                    do {
+//                        guard let result = try properties.transaction?.call() else {
+//                            promise(.failure(PostingError.generalError(reason: "No")))
+//                            return
+//                        }
+//                        
+//                        promise(.success(result))
+//                    } catch {
+//                        if let err = error as? Web3Error {
+//                            promise(.failure(.generalError(reason: err.errorDescription)))
+//                        } else {
+//                            promise(.failure(.generalError(reason: error.localizedDescription)))
+//                        }
+//                    }
+//                }
+//            }
+//            .eraseToAnyPublisher()
+//        })
+//        .sink { (completion) in
+//            print(completion)
+//        } receiveValue: { (finalValue) in
+//            if let onSale = finalValue["0"] as? Bool {
+//                print("onSale", onSale)
+//            }
+//            
+//            if let price = finalValue["1"] as? BigUInt {
+//                print("price", price)
+//            }
+//            
+//            if let tokenId = finalValue["2"] as? BigUInt {
+//                print("tokenId", tokenId)
+//            }
+//        }
+//        .store(in: &storage)
+//        
+//        let combinedString = self.ref.document().documentID
+//        let inputData = Data(combinedString.utf8)
+//        let hashedId = SHA256.hash(data: inputData)
+//        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+//        
+//        guard let priceInWei = Web3.Utils.parseToBigUInt("0.0000000001", units: .eth) else {
+//            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+//            return
+//        }
+//        
+//        guard let tokenIDNumber = NumberFormatter().number(from: "35") else {
+//            self.alert.showDetail("Error", with: "Unable to retrieve the token ID to resell. Please try restarting the app.", for: self)
+//            return
+//        }
+//        
+//        let param: [AnyObject] = [priceInWei, hashString, tokenIDNumber] as [AnyObject]
+//
+//        Deferred {
+//            Future<WriteTransaction, PostingError> { [weak self] promise in
+//                self?.transactionService.prepareTransactionForWriting(
+//                    method: NFTrackContract.ContractMethods.resell.rawValue,
+//                    abi: NFTrackABIRevisedABI,
+//                    param: param,
+//                    contractAddress: ContractAddresses.NFTrackABIRevisedAddress!,
+//                    amountString: nil,
+//                    promise: promise
+//                )
+//            }
+//        }
+//        .flatMap({ (transaction) -> AnyPublisher<TransactionSendingResult, PostingError> in
+//            Future<TransactionSendingResult, PostingError> { promise in
+//                do {
+//                    let result = try transaction.send(password: "111111", transactionOptions: nil)
+//                    promise(.success(result))
+//                } catch {
+//                    promise(.failure(.generalError(reason: "fucked")))
+//                }
+//            }
+//            .eraseToAnyPublisher()
+//        })
+//        .sink { (completion) in
+//            print(completion)
+//        } receiveValue: { (finalValue) in
+//            print("finalValue", finalValue)
+//        }
+//        .store(in: &storage)
+        
+//        Deferred { [weak self] in
+//            Future<Bool, PostingError> { promise in
+//                self?.db.collection("post")
+//                    .whereField("itemIdentifier", isEqualTo: "ddd")
+//                    .whereField("status", isNotEqualTo: "complete")
+//                    .getDocuments() { (querySnapshot, err) in
+//                        if let err = err {
+//                            print(err)
+//                            promise(.failure(PostingError.generalError(reason: "Unable to check for the Unique Identifier duplicates")))
+//                            return
+//                        }
+//
+//                        if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
+//                            promise(.success(true))
+//                        } else {
+//                            promise(.failure(PostingError.generalError(reason: "The item already exists. Please resell it instead of selling it as a new item.")))
+//                        }
+//                    }
+//            }
+//        }
+//        .sink { (completion) in
+//            switch completion {
+//                case .finished:
+//                    break
+//                case .failure(let error):
+//                    self.processFailure(error)
+//            }
+//        } receiveValue: { (isDuplicate) in
+//            print(isDuplicate)
+//        }
+//        .store(in: &storage)
     }
     
     final override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         if deliveryMethodObserver != nil {
             deliveryMethodObserver?.invalidate()
+        }
+        
+        if self.socketDelegate != nil {
+            self.socketDelegate.disconnectSocket()
         }
     }
     
@@ -76,6 +242,255 @@ class PostViewController: ParentPostViewController {
         
         // picker for the payment method: escrow, direct
         paymentMethodLabel.tag = 3
+        
+//        let combinedString = self.ref.document().documentID
+//        let inputData = Data(combinedString.utf8)
+//        let hashedId = SHA256.hash(data: inputData)
+//        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+//        
+//        guard let priceInWei = Web3.Utils.parseToBigUInt("0.0000002", units: .eth) else {
+//            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+//            return
+//        }
+//        
+//        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
+//            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
+//            return
+//        }
+//        self.socketDelegate = SocketDelegate(contractAddress: NFTrackABIRevisedAddress, topics: [Topics.SimplePaymentMint])
+//        let param: [AnyObject] = [priceInWei, hashString] as [AnyObject]
+//
+//        Deferred {
+//            Future<TxPackage, PostingError> { [weak self] promise in
+//                self?.transactionService.prepareTransactionForWritingWithGasEstimate(
+//                    method: NFTrackContract.ContractMethods.createSimplePayment.rawValue,
+//                    abi: NFTrackABIRevisedABI,
+//                    param: param,
+//                    contractAddress: NFTrackABIRevisedAddress,
+//                    amountString: nil,
+//                    promise: promise
+//                )
+//            }
+//            .eraseToAnyPublisher()
+//        }
+//        .flatMap({ [weak self] (txPackage) -> AnyPublisher<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> in
+//            self?.txPackageArr.append(txPackage)
+//            return Future<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> { promise in
+//                self?.transactionService.estimateGas(
+//                    gasEstimate: txPackage.gasEstimate,
+//                    promise: promise
+//                )
+//            }
+//            .eraseToAnyPublisher()
+//        })
+//        .flatMap({ [weak self] (tokenId) -> AnyPublisher<TransactionSendingResult, PostingError> in
+//            Future<TransactionSendingResult, PostingError> { promise in
+//                do {
+//                    guard let result = try self?.txPackageArr.first!.transaction.send(password: "111111", transactionOptions: nil) else { return }
+//                    promise(.success(result))
+//                } catch {
+//                    promise(.failure(.generalError(reason: "Unable to execute the transaction.")))
+//                }
+//            }
+//            .eraseToAnyPublisher()
+//        })
+//        // get the topics of the paymentMade event from the socket delegate
+//        .flatMap { [weak self] (txResult) -> AnyPublisher<BigUInt, PostingError> in
+//            let update: [String: PostProgress] = ["update": .estimatGas]
+//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//                        
+//            // retain the mint transaction details for FireStore
+//            return Future<BigUInt, PostingError> { promise in
+//                self?.socketDelegate.didReceiveTopics = { webSocketMessage in
+//                    
+//                    guard let topics = webSocketMessage["topics"] as? [String] else { return }
+//                    
+//                    let fromAddress = topics[2]
+//                    let paddedTokenId = topics[3]
+//                    
+//                    guard let tokenId = Web3Utils.hexToBigUInt(paddedTokenId) else {
+//                        promise(.failure(.generalError(reason: "Unable to parse the newly minted token ID.")))
+//                        return
+//                    }
+//                    
+//                    let data = Data(hex: fromAddress)
+//                    guard let decodedFromAddress = ABIDecoder.decode(types: [.address], data:data)?.first as? EthereumAddress else {
+//                        promise(.failure(.generalError(reason: "Unable to decode the contract address.")))
+//                        return
+//                    }
+//                    
+//                    if decodedFromAddress == Web3swiftService.currentAddress {
+//                        promise(.success(tokenId))
+//                    }
+//                }
+//            }
+//            .eraseToAnyPublisher()
+//        }
+//        .sink { (completion) in
+//            print(completion)
+//        } receiveValue: { [weak self] (estimates) in
+//            self?.hideSpinner()
+//            print("estimates", estimates)
+//        }
+//        .store(in: &storage)
+    }
+    
+    func test() {
+        let price = "0.000000000000002"
+        guard let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth) else {
+            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+            return
+        }
+  
+        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
+            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
+            return
+        }
+        
+        // create an ID for the new item to be saved into the _simplePayment mapping.
+        let combinedString = self.ref.document().documentID
+        let inputData = Data(combinedString.utf8)
+        let hashedId = SHA256.hash(data: inputData)
+        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+        
+        let param: [AnyObject] = [priceInWei, hashString] as [AnyObject]
+
+        self.socketDelegate = SocketDelegate(contractAddress: NFTrackABIRevisedAddress, topics: [Topics.SimplePaymentMint])
+        
+        Deferred {
+            Future<WriteTransaction, PostingError> { [weak self] promise in
+                self?.transactionService.prepareTransactionForWriting(
+                    method: NFTrackContract.ContractMethods.createSimplePayment.rawValue,
+                    abi: NFTrackABIRevisedABI,
+                    param: param,
+                    contractAddress: NFTrackABIRevisedAddress,
+                    amountString: nil,
+                    promise: promise
+                )
+            }
+        }
+        .flatMap { (transaction) -> AnyPublisher<TransactionSendingResult, PostingError> in
+            let update: [String: PostProgress] = ["update": .estimatGas]
+            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+            
+            return Future<TransactionSendingResult, PostingError> { promise in
+                do {
+                    let receipt = try transaction.send(password: "111111", transactionOptions: nil)
+                    
+                    promise(.success(receipt))
+                } catch {
+                    if let err = error as? Web3Error {
+                        promise(.failure(.generalError(reason: err.errorDescription)))
+                    } else {
+                        promise(.failure(.generalError(reason: error.localizedDescription)))
+                    }
+                }
+            }
+            .eraseToAnyPublisher()
+        }
+        // get the topics of the paymentMade event from the socket delegate
+        .flatMap { [weak self] (txResult) -> AnyPublisher<BigUInt, PostingError> in
+            // retain the mint transaction details for FireStore
+            return Future<BigUInt, PostingError> { promise in
+                self?.socketDelegate.didReceiveTopics = { webSocketMessage in
+                    
+                    guard let topics = webSocketMessage["topics"] as? [String] else { return }
+
+                    let fromAddress = topics[2]
+                    let paddedTokenId = topics[3]
+                    
+                    guard let tokenId = Web3Utils.hexToBigUInt(paddedTokenId) else {
+                        promise(.failure(.generalError(reason: "Unable to parse the newly minted token ID.")))
+                        return
+                    }
+                    
+                    let data = Data(hex: fromAddress)
+                    guard let decodedFromAddress = ABIDecoder.decode(types: [.address], data:data)?.first as? EthereumAddress else {
+                        promise(.failure(.generalError(reason: "Unable to decode the contract address.")))
+                        return
+                    }
+                    
+                    if decodedFromAddress == Web3swiftService.currentAddress {
+                        promise(.success(tokenId))
+                    }
+                }
+            }
+            .eraseToAnyPublisher()
+        }
+        .sink { (completion) in
+            print(completion)
+        } receiveValue: { (finalValue) in
+            print("finalValue", finalValue)
+        }
+        .store(in: &storage)
+    }
+        
+    func test1() {
+        let price = "0.0000000000002"
+        guard !price.isEmpty,
+              let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth) else {
+            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+            return
+        }
+
+        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
+            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
+            return
+        }
+        
+        guard let userId = userId else {
+            return
+        }
+
+        // create an ID for the new item to be saved into the _simplePayment mapping.
+        let combinedString = self.ref.document().documentID + userId
+        let inputData = Data(combinedString.utf8)
+        let hashedId = SHA256.hash(data: inputData)
+        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+
+        let param: [AnyObject] = [priceInWei, hashString] as [AnyObject]
+        
+        Deferred {
+            Future<WriteTransaction, PostingError> { [weak self] promise in
+                self?.transactionService.prepareTransactionForWriting(
+                    method: NFTrackContract.ContractMethods.createSimplePayment.rawValue,
+                    abi: NFTrackABIRevisedABI,
+                    param: param,
+                    contractAddress: NFTrackABIRevisedAddress,
+                    amountString: nil,
+                    promise: promise
+                )
+            }
+        }
+        .flatMap { (transaction) -> AnyPublisher<TransactionSendingResult, PostingError> in
+            let update: [String: PostProgress] = ["update": .estimatGas]
+            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+
+            return Future<TransactionSendingResult, PostingError> { promise in
+                do {
+                    let receipt = try transaction.send(password: "111111", transactionOptions: nil)
+                    promise(.success(receipt))
+                } catch {
+                    if let err = error as? Web3Error {
+                        promise(.failure(.generalError(reason: err.errorDescription)))
+                    } else {
+                        promise(.failure(.generalError(reason: error.localizedDescription)))
+                    }
+                }
+            }
+            .eraseToAnyPublisher()
+        }
+        .sink(receiveCompletion: { (completion) in
+            switch completion {
+                case .failure(let error):
+                    self.processFailure(error)
+                case .finished:
+                    print("finished")
+            }
+        }, receiveValue: { (finalValue) in
+            print("Final Value", finalValue)
+        })
+        .store(in: &self.storage)
     }
     
     final override func createIDField(post: Post? = nil) {
@@ -167,8 +582,6 @@ class PostViewController: ParentPostViewController {
 //            paymentMethod: PaymentMethod.directTransfer.rawValue
 //        )
 //
-//
-//
 //        deploySimplePaymentContract(password: "111111", mintParamters: mintParameters) { [weak self] (txResult) in
 //            guard let tx = txResult.first else { return }
 //            Future<TransactionReceipt, PostingError> { promise in
@@ -197,39 +610,6 @@ class PostViewController: ParentPostViewController {
 //            .store(in: &self!.storage)
 //        }
 //    }
-}
-
-extension PostViewController {
-    // MARK: - afterPostReset
-    func afterPostReset() {
-        // reset the fields
-        DispatchQueue.main.async {
-            self.titleTextField.text?.removeAll()
-            self.priceTextField.text?.removeAll()
-            self.descTextView.text?.removeAll()
-            self.idTextField.text?.removeAll()
-            self.deliveryMethodLabel.text?.removeAll()
-            self.pickerLabel.text?.removeAll()
-            self.tagTextField.tokens.removeAll()
-            self.paymentMethodLabel.text?.removeAll()
-            self.addressLabel.text?.removeAll()
-            self.addressLabelConstraintHeight.constant = 0
-            self.addressTitleLabel.alpha = 0
-            self.addressLabel.alpha = 0
-            self.addressLabel.isUserInteractionEnabled = false
-            self.addressTitleLabelConstraintHeight.constant = 0
-            self.addressLabelConstraintHeight.constant = 0
-        }
-        
-        // remove the image and file previews
-        if self.previewDataArr.count > 0 {
-            self.previewDataArr.removeAll()
-            self.imagePreviewVC.data.removeAll()
-            DispatchQueue.main.async {
-                self.imagePreviewVC.collectionView.reloadData()
-            }
-        }
-    }
 }
 
 extension PostViewController {

@@ -135,7 +135,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var documentPicker: DocumentPicker!
     var url: URL!
     var imagePreviewConstraintHeight: NSLayoutConstraint!
-    var progressModal: ProgressModalViewController!
+    var progressModal: ProgressModalViewController! // needed on a global scope?
     var constraints: [NSLayoutConstraint]!
     var panelButtons: [PanelButton] {
         return []
@@ -194,6 +194,9 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     }
     // Which means only of of these are needed: ref vs documentId
     var documentId: String!
+    // The unique ID for a post on the smart contract
+    var simplePaymentId: String!
+    var txPackageArr = [TxPackage]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -257,14 +260,18 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     func resaleConfig() {}
     
     // MARK: - checkExistingId
-    func checkExistingId(id: String, completion: @escaping (Bool) -> Void) {
+    func checkExistingId(id: String, completion: @escaping (Bool?, Error?) -> Void) {
         db.collection("post")
             .whereField("itemIdentifier", isEqualTo: id)
             .getDocuments() { (querySnapshot, err) in
+                if let err = err {
+                    completion(nil, err)
+                }
+                
                 if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
-                    completion(false)
+                    completion(false, nil)
                 } else {
-                    completion(true)
+                    completion(true, nil)
                 }
             }
     }
@@ -743,7 +750,7 @@ extension ParentPostViewController {
     }
     
     private func checkOwnership() {
-        guard let NFTrackAddress = NFTrackAddress else {
+        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
             alert.showDetail("Error", with: "Unable to retrieve the smart contract address for checking the ownership.", for: self)
             return
         }
@@ -765,8 +772,8 @@ extension ParentPostViewController {
                     self.transactionService.prepareTransactionForReading(
                         method: NFTrackContract.ContractMethods.ownerOf.rawValue,
                         parameters: ownerOfParameters,
-                        abi: NFTrackABI,
-                        contractAddress: NFTrackAddress,
+                        abi: NFTrackABIRevisedABI,
+                        contractAddress: NFTrackABIRevisedAddress,
                         promise: promise
                     )
                 }
@@ -877,78 +884,37 @@ extension ParentPostViewController: UIScrollViewDelegate {
             colorPatchViewHeight.constant = -scrollView.contentOffset.y
         }
     }
-    
-//    func test() {
-//        let price = "0.00000000002"
-//        guard !price.isEmpty,
-//              let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth) else {
-//            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
-//            return
-//        }
-//        print("priceInWei", priceInWei)
-//        print("priceInWei type", type(of: priceInWei))
-//
-//        guard let NFTrackABIRevisedAddress = NFTrackABIRevisedAddress else {
-//            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
-//            return
-//        }
-//
-//        guard let userId = userId else {
-//            return
-//        }
-//
-//        // create an ID for the new item to be saved into the _simplePayment mapping.
-//        let combinedString = self.ref.document().documentID + userId
-//        let inputData = Data(combinedString.utf8)
-//        let hashedId = SHA256.hash(data: inputData)
-//        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
-//        print("hashString", hashString)
-//        print("hashString type", type(of: hashString))
-//
-//        let param: [AnyObject] = [priceInWei, hashString] as [AnyObject]
-//
-//        Deferred {
-//            Future<WriteTransaction, PostingError> { [weak self] promise in
-//                self?.transactionService.prepareTransactionForWriting(
-//                    method: NFTrackContract.ContractMethods.createSimplePayment.rawValue,
-//                    abi: NFTrackABIRevisedABI,
-//                    param: param,
-//                    contractAddress: NFTrackABIRevisedAddress,
-//                    amountString: nil,
-//                    promise: promise
-//                )
-//            }
-//        }
-//        .flatMap { (transaction) -> AnyPublisher<TransactionSendingResult, PostingError> in
-//            let update: [String: PostProgress] = ["update": .estimatGas]
-//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//
-//            return Future<TransactionSendingResult, PostingError> { promise in
-//                do {
-//                    let receipt = try transaction.send(password: "111111", transactionOptions: nil)
-//                    promise(.success(receipt))
-//                } catch {
-//                    if let err = error as? Web3Error {
-//                        promise(.failure(.generalError(reason: err.errorDescription)))
-//                    } else {
-//                        promise(.failure(.generalError(reason: error.localizedDescription)))
-//                    }
-//                }
-//            }
-//            .eraseToAnyPublisher()
-//        }
-//        .sink(receiveCompletion: { (completion) in
-//            switch completion {
-//                case .failure(let error):
-//                    self.processFailure(error)
-//                case .finished:
-//                    print("finished")
-//                default:
-//                    break
-//            }
-//        }, receiveValue: { (finalValue) in
-//            print("Final Value", finalValue)
-//        })
-//        .store(in: &self.storage)
-//    }
+}
+
+extension ParentPostViewController {
+    // MARK: - afterPostReset
+    func afterPostReset() {
+        // reset the fields
+        DispatchQueue.main.async {
+            self.titleTextField.text?.removeAll()
+            self.priceTextField.text?.removeAll()
+            self.descTextView.text?.removeAll()
+            self.idTextField.text?.removeAll()
+            self.deliveryMethodLabel.text?.removeAll()
+            self.pickerLabel.text?.removeAll()
+            self.tagTextField.tokens.removeAll()
+            self.paymentMethodLabel.text?.removeAll()
+            self.addressLabel.text?.removeAll()
+            self.addressLabelConstraintHeight.constant = 0
+            self.addressTitleLabel.alpha = 0
+            self.addressLabel.alpha = 0
+            self.addressLabel.isUserInteractionEnabled = false
+            self.addressTitleLabelConstraintHeight.constant = 0
+            self.addressLabelConstraintHeight.constant = 0
+        }
+        
+        // remove the image and file previews
+        if self.previewDataArr.count > 0 {
+            self.previewDataArr.removeAll()
+            self.imagePreviewVC.data.removeAll()
+            DispatchQueue.main.async {
+                self.imagePreviewVC.collectionView.reloadData()
+            }
+        }
+    }
 }

@@ -317,6 +317,7 @@ enum NFTrackMethods: String, ContractMethodsEnum {
     case pay
     case withdraw
     case withdrawFee
+    case getInfo
 }
 
 enum NFTrackProperties: ContractPropertiesEnum {

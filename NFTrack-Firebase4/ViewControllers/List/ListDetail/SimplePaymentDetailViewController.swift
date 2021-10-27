@@ -220,10 +220,6 @@ extension SimplePaymentDetailViewController {
                 callContractMethod(for: .abort)
                 break
             case 4:
-//                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Transaction Complete!", detail: InfoText.simplePaymentComplete)])
-//                self.present(infoVC, animated: true, completion: nil)
-                
-                
                 // sell
                 let resaleVC = ResaleViewController()
                 resaleVC.post = post

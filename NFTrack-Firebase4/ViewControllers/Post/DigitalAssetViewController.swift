@@ -12,7 +12,6 @@ import Combine
 class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
     lazy final var idContainerViewHeightConstraint: NSLayoutConstraint = idContainerView.heightAnchor.constraint(equalToConstant: 50)
     lazy final var idTitleLabelHeightConstraint: NSLayoutConstraint = idTitleLabel.heightAnchor.constraint(equalToConstant: 50)
-    
     final var auctionDurationTitleLabel: UILabel!
     final var auctionDurationLabel: UILabel!
     final var auctionStartingPriceTitleLabel: UILabel!
@@ -80,7 +79,7 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
             guard let text = label.text, let saleFormat = SaleFormat(rawValue: text) else { return }
             switch saleFormat {
                 case .onlineDirect:
-                    self?.paymentMethodLabel.text = PaymentMethod.escrow.rawValue
+                    self?.paymentMethodLabel.text = PaymentMethod.directTransfer.rawValue
                     self?.auctionDurationLabel.isUserInteractionEnabled = false
                     
                     /// hide the auction duration and the starting price labels when the sale format is selected to open auction
@@ -337,7 +336,7 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
     // MARK: - tapped
     @objc final override func tapped(_ sender: UITapGestureRecognizer) {
         /// payment method label
-        alert.showDetail("Payment Method", with: "The payment method for digital items is determined by the sale format. Please select from the picker right below the payment method's field.", alignment: .left, for: self)
+        alert.showDetail("Payment Method", with: "The payment method for digital items is determined by the sale format.", alignment: .left, for: self)
     }
     
     // MARK: - processMint

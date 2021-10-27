@@ -52,34 +52,34 @@ class RegisteredWalletViewController: UIViewController {
     
     func loadingAnimation() {
         let totalCount = 7
-        let duration = 1.0 / Double(totalCount)
+        let duration = 1.0 / Double(totalCount) + 0.2
         
-        let animation = UIViewPropertyAnimator(duration: 1.2, timingParameters: UICubicTimingParameters())
+        let animation = UIViewPropertyAnimator(duration: 0.7, timingParameters: UICubicTimingParameters())
         animation.addAnimations {
             UIView.animateKeyframes(withDuration: 0, delay: 0, animations: { [weak self] in
-                UIView.addKeyframe(withRelativeStartTime: 1 / Double(totalCount), relativeDuration: duration) {
-                    self?.balanceLabel.alpha = 1
+                UIView.addKeyframe(withRelativeStartTime: 0 / Double(totalCount), relativeDuration: duration) {
                     self?.balanceLabel.transform = .identity
+                    self?.balanceLabel.alpha = 1
+                }
+                
+                UIView.addKeyframe(withRelativeStartTime: 1 / Double(totalCount), relativeDuration: duration) {
+                    self?.sendButton.transform = .identity
+                    self?.sendButton.alpha = 1
+                    
+                    self?.receiveButton.transform = .identity
+                    self?.receiveButton.alpha = 1
                 }
                 
                 UIView.addKeyframe(withRelativeStartTime: 2 / Double(totalCount), relativeDuration: duration) {
-                    self?.sendButton.alpha = 1
-                    self?.sendButton.transform = .identity
-                    
-                    self?.receiveButton.alpha = 1
-                    self?.receiveButton.transform = .identity
-                }
-                
-                UIView.addKeyframe(withRelativeStartTime: 3 / Double(totalCount), relativeDuration: duration) {
-                    self?.lowerContainer.alpha = 1
                     self?.lowerContainer.transform = .identity
+                    self?.lowerContainer.alpha = 1
                 }
                 
                 guard let buttonCount = self?.buttonArr.count else { return }
                 for i in 0...buttonCount - 1 {
                     UIView.addKeyframe(withRelativeStartTime: Double(i + 3) / Double(totalCount), relativeDuration: duration) {
-                        self?.stackView.arrangedSubviews[i].alpha = 1
                         self?.stackView.arrangedSubviews[i].transform = .identity
+                        self?.stackView.arrangedSubviews[i].alpha = 1
                     }
                 }
             })

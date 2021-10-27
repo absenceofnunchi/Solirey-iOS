@@ -28,7 +28,7 @@ class BigLocalSinglePageViewController<T: Equatable>: ParentSinglePageViewContro
     
     final override func configureString() {
         configureCloseButton(tintColor: .white)
-        setButtonConstraints()
+        setCloseButtonConstraints()
         
         guard let gallery = gallery as? String, let url = URL(string: gallery) else { return }
         let fileExtension = url.pathExtension
@@ -71,7 +71,7 @@ class BigLocalSinglePageViewController<T: Equatable>: ParentSinglePageViewContro
     
     override func configureImage() {
         configureCloseButton(tintColor: .white)
-        setButtonConstraints()
+        setCloseButtonConstraints()
         
         guard let gallery = gallery as? UIImage else { return }
         imageView.image = gallery

@@ -40,7 +40,7 @@ extension DigitalAssetViewController {
         //        }
         
         guard let convertedPrice = Double(price), convertedPrice > 0.0000000000000001 else {
-            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+            self.alert.showDetail("Price Limit", with: "The price has to be greater than 0.01 ETH.", for: self)
             return
         }
         

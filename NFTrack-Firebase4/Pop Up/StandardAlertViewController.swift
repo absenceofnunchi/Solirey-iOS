@@ -325,6 +325,9 @@ extension StandardAlertViewController: UITextFieldDelegate {
     }
     
     @objc private func buttonPressed(_ sender: UIButton) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         switch sender.tag {
             case 1:
                 if let buttonAction = self.buttonAction {
@@ -379,22 +382,22 @@ extension StandardAlertViewController: UITextFieldDelegate {
     
     private func loadingAnimation() {
         let totalCount = 3
-        let duration = 1.0 / Double(totalCount)
+        let duration = 1.0 / Double(totalCount) + 0.1
         
         let animation = UIViewPropertyAnimator(duration: 0.7, timingParameters: UICubicTimingParameters())
         animation.addAnimations {
             UIView.animateKeyframes(withDuration: 0, delay: 0, animations: { [weak self] in
-                UIView.addKeyframe(withRelativeStartTime: 1 / Double(totalCount), relativeDuration: duration) {
+                UIView.addKeyframe(withRelativeStartTime: 0 / Double(totalCount), relativeDuration: duration) {
                     self?.titleLabel.alpha = 1
                     self?.titleLabel.transform = .identity
                 }
                 
-                UIView.addKeyframe(withRelativeStartTime: 2 / Double(totalCount), relativeDuration: duration) {
+                UIView.addKeyframe(withRelativeStartTime: 1 / Double(totalCount), relativeDuration: duration) {
                     self?.bodyStackView.alpha = 1
                     self?.bodyStackView.transform = .identity
                 }
                 
-                UIView.addKeyframe(withRelativeStartTime: 3 / Double(totalCount), relativeDuration: duration) {
+                UIView.addKeyframe(withRelativeStartTime: 2 / Double(totalCount), relativeDuration: duration) {
                     self?.buttonPanel.alpha = 1
                     self?.buttonPanel.transform = .identity
                 }

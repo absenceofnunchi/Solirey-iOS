@@ -19,223 +19,622 @@ import UIKit
 import CryptoKit
 import Combine
 import web3swift
+import BigInt
+
+// MARK: - First Time Sale
+//extension PostViewController {
+//    // MARK: - processDirectSaleRevised
+//    final override func processDirectSaleRevised(_ mintParameters: ParentPostViewController.MintParameters, isAddressRequired: Bool) {
+//        guard let price = mintParameters.price,
+//              !price.isEmpty,
+//              let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth) else {
+//            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+//            return
+//        }
+//        
+//        // change to this after testing
+//        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+//        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+//        //            return
+//        //        }
+//        
+//        if isAddressRequired {
+//            guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
+//                self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+//                return
+//            }
+//        }
+//        
+//        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
+//            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
+//            return
+//        }
+//        
+//        // create an ID for the new item to be saved into the _simplePayment mapping.
+//        let combinedString = self.ref.document().documentID + mintParameters.userId
+//        let inputData = Data(combinedString.utf8)
+//        let hashedId = SHA256.hash(data: inputData)
+//        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+//        self.simplePaymentId = hashString
+//        
+//        // The parameters for the createSimplePayment method
+//        let param: [AnyObject] = [priceInWei, hashString] as [AnyObject]
+//        
+//        Deferred { [weak self] in
+//            Future<Bool, PostingError> { promise in
+//                self?.db.collection("post")
+//                    .whereField("itemIdentifier", isEqualTo: mintParameters.convertedId)
+//                    .whereField("status", isNotEqualTo: "complete")
+//                    .getDocuments() { (querySnapshot, err) in
+//                        if let err = err {
+//                            print(err)
+//                            promise(.failure(PostingError.generalError(reason: "Unable to check for the Unique Identifier duplicates")))
+//                            return
+//                        }
+//                        
+//                        if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
+//                            promise(.success(true))
+//                        } else {
+//                            promise(.failure(PostingError.generalError(reason: "The item already exists. Please resell it through the app instead of selling it as a new item.")))
+//                        }
+//                    }
+//            }
+//        }
+//        .flatMap { (_) -> AnyPublisher<TxPackage, PostingError> in
+//            Future<TxPackage, PostingError> { [weak self] promise in
+//                self?.transactionService.prepareTransactionForWritingWithGasEstimate(
+//                    method: NFTrackContract.ContractMethods.createSimplePayment.rawValue,
+//                    abi: NFTrackABIRevisedABI,
+//                    param: param,
+//                    contractAddress: NFTrackABIRevisedAddress,
+//                    amountString: nil,
+//                    promise: promise
+//                )
+//            }
+//            .eraseToAnyPublisher()
+//        }
+//        .flatMap({ [weak self] (txPackage) -> AnyPublisher<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> in
+//            self?.txPackageArr.append(txPackage)
+//            return Future<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> { promise in
+//                self?.transactionService.estimateGas(
+//                    gasEstimate: txPackage.gasEstimate,
+//                    promise: promise
+//                )
+//            }
+//            .eraseToAnyPublisher()
+//        })
+//        .sink { (completion) in
+//            print(completion)
+//        } receiveValue: { [weak self] (estimates) in
+//            self?.hideSpinner()
+//            self?.executeTransaction(
+//                estimates: estimates,
+//                mintParameters: mintParameters,
+//                hashString: hashString
+//            )
+//        }
+//        .store(in: &storage)
+//    }
+//    
+//    private func executeTransaction(
+//        estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
+//        mintParameters: MintParameters,
+//        hashString: String
+//    ) {
+//        var txResultRetainer: TransactionSendingResult!
+//        var tokenIdRetainer: String!
+//        
+//        guard let txPackageRetainer = self.txPackageArr.first,
+//              let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else { return }
+//        
+//        let content = [
+//            StandardAlertContent(
+//                titleString: "Enter Your Password",
+//                body: [AlertModalDictionary.walletPasswordRequired: ""],
+//                isEditable: true,
+//                fieldViewHeight: 40,
+//                messageTextAlignment: .left,
+//                alertStyle: .withCancelButton
+//            ),
+//            StandardAlertContent(
+//                index: 1,
+//                titleString: "Gas Estimate",
+//                titleColor: UIColor.white,
+//                body: [
+//                    "Total Gas Units": txPackageRetainer.gasEstimate.description,
+//                    "Gas Price": "\(estimates.gasPriceInGwei) Gwei",
+//                    "Total Gas Cost": "\(estimates.totalGasCost) Ether",
+//                    "Your Current Balance": "\(estimates.balance) Ether"
+//                ],
+//                isEditable: false,
+//                fieldViewHeight: 40,
+//                messageTextAlignment: .left,
+//                alertStyle: .noButton
+//            )
+//        ]
+//        
+//        DispatchQueue.main.async { [weak self] in
+//            let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+//            alertVC.action = { [weak self] (modal, mainVC) in
+//                mainVC.buttonAction = { _ in
+//                    guard let password = modal.dataDict[AlertModalDictionary.walletPasswordRequired],
+//                          !password.isEmpty else {
+//                        self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
+//                        return
+//                    }
+//                    
+//                    self?.showSpinner()
+//                    self?.socketDelegate = SocketDelegate(contractAddress: NFTrackABIRevisedAddress, topics: [Topics.SimplePaymentMint])
+//                    
+//                    self?.dismiss(animated: true, completion: {
+//                        let progressModal = ProgressModalViewController(paymentMethod: .directTransfer)
+//                        progressModal.titleString = "Posting In Progress"
+//                        self?.present(progressModal, animated: true, completion: {
+//                            Deferred {
+//                                Future<TransactionSendingResult, PostingError> { promise in
+//                                    DispatchQueue.global().async {
+//                                        do {
+//                                            let result = try txPackageRetainer.transaction.send(password: password, transactionOptions: nil)
+//                                            promise(.success(result))
+//                                        } catch {
+//                                            promise(.failure(.generalError(reason: "Unable to execute the transaction.")))
+//                                        }
+//                                    }
+//                                }
+//                                .eraseToAnyPublisher()
+//                            }
+//                            // get the topics of the paymentMade event from the socket delegate and parse it
+//                            .flatMap { [weak self] (txResult) -> AnyPublisher<String, PostingError> in
+//                                let update: [String: PostProgress] = ["update": .estimatGas]
+//                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//                                
+//                                txResultRetainer = txResult
+//                                
+//                                return Future<String, PostingError> { promise in
+//                                    self?.socketDelegate.didReceiveTopics = { webSocketMessage in
+//                                        guard let topics = webSocketMessage["topics"] as? [String] else { return }
+//                                        
+//                                        let fromAddress = topics[2]
+//                                        let paddedTokenId = topics[3]
+//                                        
+//                                        guard let tokenId = Web3Utils.hexToBigUInt(paddedTokenId) else {
+//                                            promise(.failure(.generalError(reason: "Unable to parse the newly minted token ID.")))
+//                                            return
+//                                        }
+//                                        
+//                                        let data = Data(hex: fromAddress)
+//                                        guard let decodedFromAddress = ABIDecoder.decode(types: [.address], data:data)?.first as? EthereumAddress else {
+//                                            promise(.failure(.generalError(reason: "Unable to decode the contract address.")))
+//                                            return
+//                                        }
+//                                        
+//                                        if decodedFromAddress == Web3swiftService.currentAddress {
+//                                            promise(.success(tokenId.description))
+//                                        }
+//                                    }
+//                                }
+//                                .eraseToAnyPublisher()
+//                            }
+//                            .flatMap({ [weak self] (tokenId) -> AnyPublisher<[String?], PostingError> in
+//                                tokenIdRetainer = tokenId
+//                                
+//                                let update: [String: PostProgress] = ["update": .minting]
+//                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//                                
+//                                // upload images/files to the Firebase Storage and get the array of URLs
+//                                if let previewDataArr = self?.previewDataArr, previewDataArr.count > 0 {
+//                                    let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+//                                        return Future<String?, PostingError> { promise in
+//                                            self?.uploadFileWithPromise(
+//                                                fileURL: previewData.filePath,
+//                                                userId: mintParameters.userId,
+//                                                promise: promise
+//                                            )
+//                                        }.eraseToAnyPublisher()
+//                                    }
+//                                    return Publishers.MergeMany(fileURLs)
+//                                        .collect()
+//                                        .eraseToAnyPublisher()
+//                                } else {
+//                                    // if there are none to upload, return an empty array
+//                                    return Result.Publisher([] as [String]).eraseToAnyPublisher()
+//                                }
+//                            })
+//                            // upload the details to Firestore
+//                            .flatMap { [weak self] (urlStrings) -> AnyPublisher<Bool, PostingError> in
+//                                let update: [String: PostProgress] = ["update": .images]
+//                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//                                
+//                                guard let self = self,
+//                                      let currentAddressString = Web3swiftService.currentAddressString,
+//                                      let simplePaymentId = self.simplePaymentId else {
+//                                    return Fail(error: PostingError.generalError(reason: "Unable to prepare data for the database update."))
+//                                        .eraseToAnyPublisher()
+//                                }
+//                                
+//                                return Future<Bool, PostingError> { promise in
+//                                    self.transactionService.createFireStoreEntryRevised(
+//                                        documentId: &self.documentId,
+//                                        senderAddress: currentAddressString,
+//                                        escrowHash: "N/A",
+//                                        auctionHash: "N/A",
+//                                        mintHash: txResultRetainer.hash,
+//                                        itemTitle: mintParameters.itemTitle,
+//                                        desc: mintParameters.desc,
+//                                        price: mintParameters.price!,
+//                                        category: mintParameters.category,
+//                                        tokensArr: mintParameters.tokensArr,
+//                                        convertedId: mintParameters.convertedId,
+//                                        type: "tangible",
+//                                        deliveryMethod: mintParameters.deliveryMethod,
+//                                        saleFormat: mintParameters.saleFormat,
+//                                        paymentMethod: mintParameters.paymentMethod,
+//                                        tokenId: tokenIdRetainer,
+//                                        urlStrings: urlStrings,
+//                                        simplePaymentId: simplePaymentId,
+//                                        ipfsURLStrings: [],
+//                                        shippingInfo: self.shippingInfo,
+//                                        promise: promise
+//                                    )
+//                                }
+//                                .eraseToAnyPublisher()
+//                            }
+//                            .sink { [weak self] (completion) in
+//                                switch completion {
+//                                    case .failure(let error):
+//                                        self?.processFailure(error)
+//                                    case .finished:
+//                                        self?.afterPostReset()
+//                                        
+//                                        guard let documentId = self?.documentId else { return }
+//                                        FirebaseService.shared.sendToTopicsVoid(
+//                                            title: "New item has been listed on \(mintParameters.category)",
+//                                            content: mintParameters.itemTitle,
+//                                            topic: mintParameters.category,
+//                                            docId: documentId
+//                                        )
+//                                        
+//                                    //  register spotlight?
+//                                }
+//                            } receiveValue: { [weak self] (_) in
+//                                if self?.socketDelegate != nil {
+//                                    self?.socketDelegate.disconnectSocket()
+//                                }
+//                            }
+//                            .store(in: &self!.storage)
+//                        }) // ProgressVC
+//                    }) // self.dismiss
+//                } // mainVC
+//            } // alertVC
+//            self?.present(alertVC, animated: true, completion: nil)
+//        } // DispatchQueue
+//    }
+//}
+//
+//// MARK: - Resale
+//extension PostViewController {
+//    final override func processDirectResaleRevised(_ mintParameters: ParentPostViewController.MintParameters, isAddressRequired: Bool = true) {
+//        // create an ID for the existing item to be saved into the _simplePayment mapping as a new posting.
+//        let combinedString = self.ref.document().documentID + mintParameters.userId
+//        let inputData = Data(combinedString.utf8)
+//        let hashedId = SHA256.hash(data: inputData)
+//        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+//        self.simplePaymentId = hashString
+//
+//        guard let tokenID = post?.tokenID,
+//              let tokenIDNumber = NumberFormatter().number(from: tokenID) else {
+//            self.alert.showDetail("Error", with: "Unable to retrieve the token ID to resell. Please try restarting the app.", for: self)
+//            return
+//        }
+//        
+//        guard let price = mintParameters.price,
+//              !price.isEmpty,
+//              let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth) else {
+//            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+//            return
+//        }
+//        
+//        // change to this after testing
+//        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+//        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+//        //            return
+//        //        }
+//        
+//        if isAddressRequired {
+//            guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
+//                self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+//                return
+//            }
+//        }
+//        
+//        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
+//            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
+//            return
+//        }
+//        
+//        let param: [AnyObject] = [priceInWei, hashString, tokenIDNumber] as [AnyObject]
+//
+//        Deferred { [weak self] in
+//            Future<Bool, PostingError> { promise in
+//                self?.db.collection("post")
+//                    .whereField("itemIdentifier", isEqualTo: mintParameters.convertedId)
+//                    .whereField("status", isNotEqualTo: "complete")
+//                    .getDocuments() { (querySnapshot, err) in
+//                        if let err = err {
+//                            print(err)
+//                            promise(.failure(PostingError.generalError(reason: "Unable to check for the Unique Identifier duplicates")))
+//                            return
+//                        }
+//                        
+//                        if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
+//                            promise(.success(true))
+//                        } else {
+//                            promise(.failure(PostingError.generalError(reason: "The item already exists. Please resell it through the app instead of selling it as a new item.")))
+//                        }
+//                    }
+//            }
+//        }
+//        .flatMap { (isDuplicate) -> AnyPublisher<TxPackage, PostingError> in
+//            Future<TxPackage, PostingError> { [weak self] promise in
+//                self?.transactionService.prepareTransactionForWritingWithGasEstimate(
+//                    method: NFTrackContract.ContractMethods.resell.rawValue,
+//                    abi: NFTrackABIRevisedABI,
+//                    param: param,
+//                    contractAddress: NFTrackABIRevisedAddress,
+//                    amountString: nil,
+//                    promise: promise
+//                )
+//            }
+//            .eraseToAnyPublisher()
+//        }
+//        .flatMap({ [weak self] (txPackage) -> AnyPublisher<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> in
+//            self?.txPackageArr.append(txPackage)
+//            return Future<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> { promise in
+//                self?.transactionService.estimateGas(
+//                    gasEstimate: txPackage.gasEstimate,
+//                    promise: promise
+//                )
+//            }
+//            .eraseToAnyPublisher()
+//        })
+//        .sink { (completion) in
+//            print(completion)
+//        } receiveValue: { [weak self] (estimates) in
+//            self?.hideSpinner()
+//            self?.executeTransactionForResale(
+//                estimates: estimates,
+//                mintParameters: mintParameters,
+//                hashString: hashString
+//            )
+//        }
+//        .store(in: &storage)
+//    }
+//        
+//    private func executeTransactionForResale(
+//        estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
+//        mintParameters: MintParameters,
+//        hashString: String
+//    ) {
+//        var txResultRetainer: TransactionSendingResult!
+//        
+//        guard let txPackageRetainer = self.txPackageArr.first,
+//              let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else { return }
+//        
+//        let content = [
+//            StandardAlertContent(
+//                titleString: "Enter Your Password",
+//                body: [AlertModalDictionary.walletPasswordRequired: ""],
+//                isEditable: true,
+//                fieldViewHeight: 40,
+//                messageTextAlignment: .left,
+//                alertStyle: .withCancelButton
+//            ),
+//            StandardAlertContent(
+//                index: 1,
+//                titleString: "Gas Estimate",
+//                titleColor: UIColor.white,
+//                body: [
+//                    "Total Gas Units": txPackageRetainer.gasEstimate.description,
+//                    "Gas Price": "\(estimates.gasPriceInGwei) Gwei",
+//                    "Total Gas Cost": "\(estimates.totalGasCost) Ether",
+//                    "Your Current Balance": "\(estimates.balance) Ether"
+//                ],
+//                isEditable: false,
+//                fieldViewHeight: 40,
+//                messageTextAlignment: .left,
+//                alertStyle: .noButton
+//            )
+//        ]
+//        
+//        DispatchQueue.main.async { [weak self] in
+//            let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+//            alertVC.action = { [weak self] (modal, mainVC) in
+//                mainVC.buttonAction = { _ in
+//                    guard let password = modal.dataDict[AlertModalDictionary.walletPasswordRequired],
+//                          !password.isEmpty else {
+//                        self?.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
+//                        return
+//                    }
+//                    
+//                    self?.showSpinner()
+//                    self?.socketDelegate = SocketDelegate(contractAddress: NFTrackABIRevisedAddress, topics: [Topics.SimplePaymentMint])
+//                    
+//                    self?.dismiss(animated: true, completion: {
+//                        Deferred {
+//                            Future<TransactionSendingResult, PostingError> { promise in
+//                                DispatchQueue.global().async {
+//                                    do {
+//                                        let result = try txPackageRetainer.transaction.send(password: password, transactionOptions: nil)
+//                                        promise(.success(result))
+//                                    } catch {
+//                                        promise(.failure(.generalError(reason: "Unable to execute the transaction.")))
+//                                    }
+//                                }
+//                            }
+//                            .eraseToAnyPublisher()
+//                        }
+//                        .flatMap({ [weak self] (txResult) -> AnyPublisher<[String?], PostingError> in
+//                            txResultRetainer = txResult
+//                            
+//                            // upload images/files to the Firebase Storage and get the array of URLs
+//                            if let previewDataArr = self?.previewDataArr, previewDataArr.count > 0 {
+//                                let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+//                                    return Future<String?, PostingError> { promise in
+//                                        self?.uploadFileWithPromise(
+//                                            fileURL: previewData.filePath,
+//                                            userId: mintParameters.userId,
+//                                            promise: promise
+//                                        )
+//                                    }.eraseToAnyPublisher()
+//                                }
+//                                return Publishers.MergeMany(fileURLs)
+//                                    .collect()
+//                                    .eraseToAnyPublisher()
+//                            } else {
+//                                // if there are none to upload, return an empty array
+//                                return Result.Publisher([] as [String]).eraseToAnyPublisher()
+//                            }
+//                        })
+//                        // upload the details to Firestore
+//                        .flatMap { [weak self] (urlStrings) -> AnyPublisher<Bool, PostingError> in
+//                            guard let self = self,
+//                                  let currentAddressString = Web3swiftService.currentAddressString,
+//                                  let simplePaymentId = self.simplePaymentId,
+//                                  let tokenId = self.post?.tokenID else {
+//                                return Fail(error: PostingError.generalError(reason: "Unable to prepare data for the database update."))
+//                                    .eraseToAnyPublisher()
+//                            }
+//                            
+//                            return Future<Bool, PostingError> { promise in
+//                                self.transactionService.createFireStoreEntryRevised(
+//                                    documentId: &self.documentId,
+//                                    senderAddress: currentAddressString,
+//                                    escrowHash: "N/A",
+//                                    auctionHash: "N/A",
+//                                    mintHash: txResultRetainer.hash,
+//                                    itemTitle: mintParameters.itemTitle,
+//                                    desc: mintParameters.desc,
+//                                    price: mintParameters.price!,
+//                                    category: mintParameters.category,
+//                                    tokensArr: mintParameters.tokensArr,
+//                                    convertedId: mintParameters.convertedId,
+//                                    type: "tangible",
+//                                    deliveryMethod: mintParameters.deliveryMethod,
+//                                    saleFormat: mintParameters.saleFormat,
+//                                    paymentMethod: mintParameters.paymentMethod,
+//                                    tokenId: tokenId,
+//                                    urlStrings: urlStrings,
+//                                    simplePaymentId: simplePaymentId,
+//                                    ipfsURLStrings: [],
+//                                    shippingInfo: self.shippingInfo,
+//                                    promise: promise
+//                                )
+//                            }
+//                            .eraseToAnyPublisher()
+//                        }
+//                        .sink { [weak self] (completion) in
+//                            switch completion {
+//                                case .failure(let error):
+//                                    self?.processFailure(error)
+//                                case .finished:
+//                                    self?.alert.showDetail(
+//                                        "Success!",
+//                                        with: "You have successfully posted your item.",
+//                                        for: self,
+//                                        buttonAction: {
+//                                            self?.dismiss(animated: true, completion: {
+//                                                self?.navigationController?.popToRootViewController(animated: true)
+//                                            })
+//                                        }
+//                                    )
+//                                    
+//                                    self?.afterPostReset()
+//                                    
+//                                    guard let documentId = self?.documentId else { return }
+//                                    FirebaseService.shared.sendToTopicsVoid(
+//                                        title: "New item has been listed on \(mintParameters.category)",
+//                                        content: mintParameters.itemTitle,
+//                                        topic: mintParameters.category,
+//                                        docId: documentId
+//                                    )
+//                                    
+//                                //  register spotlight?
+//                            }
+//                        } receiveValue: { [weak self] (_) in
+//                            if self?.socketDelegate != nil {
+//                                self?.socketDelegate.disconnectSocket()
+//                            }
+//                        }
+//                        .store(in: &self!.storage)
+//                    }) // self.dismiss
+//                } // mainVC
+//            } // alertVC
+//            self?.present(alertVC, animated: true, completion: nil)
+//        } // DispatchQueue
+//    }
+//}
 
 extension PostViewController {
-    // MARK: - processDirectSaleRevised
-    override func processDirectSaleRevised(_ mintParameters: ParentPostViewController.MintParameters) {
-        guard let price = mintParameters.price,
-              !price.isEmpty,
-              let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth) else {
-            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
-            return
+    func createSocket(contractAddress: EthereumAddress, parseTopics: @escaping ([String]) -> Void) {
+        Deferred {
+            Future<[String:Any], PostingError> { [weak self] promise in
+                self?.socketDelegate = SocketDelegate(contractAddress: contractAddress, promise: promise)
+            }
         }
-        
-        // change to this after testing
-        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
-        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
-        //            return
-        //        }
-        
-        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
-            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
-            return
-        }
-        
-        guard let NFTrackABIRevisedAddress = NFTrackABIRevisedAddress else {
-            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
-            return
-        }
-        
-        // create an ID for the new item to be saved into the _simplePayment mapping.
-        let combinedString = self.ref.document().documentID + mintParameters.userId
-        let inputData = Data(combinedString.utf8)
-        let hashedId = SHA256.hash(data: inputData)
-        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
-        
-        // The parameters for the createSimplePayment method
-        let param: [AnyObject] = [priceInWei, hashString] as [AnyObject]
-        
-        let content = [
-            StandardAlertContent(
-                titleString: "",
-                body: [AlertModalDictionary.passwordSubtitle: ""],
-                isEditable: true,
-                fieldViewHeight: 40,
-                messageTextAlignment: .left,
-                alertStyle: .withCancelButton
-            ),
-            StandardAlertContent(
-                titleString: "Transaction Options",
-                body: [AlertModalDictionary.gasLimit: "", AlertModalDictionary.gasPrice: "", AlertModalDictionary.nonce: ""],
-                isEditable: true,
-                fieldViewHeight: 40,
-                messageTextAlignment: .left,
-                alertStyle: .noButton
-            )
-        ]
-        
-        var txResultRetainer: TransactionSendingResult!
-        
-        self.hideSpinner { [weak self] in
-            DispatchQueue.main.async {
-                let alertVC = AlertViewController(height: 350, standardAlertContent: content)
-                alertVC.action = { (modal, mainVC) in
-                    mainVC.buttonAction = { _ in
-                        guard let self = self else { return }
-                        guard let password = modal.dataDict[AlertModalDictionary.passwordSubtitle],
-                              !password.isEmpty else {
-                            self.alert.fading(text: "Password cannot be empty!", controller: mainVC, toBePasted: nil, width: 250)
-                            return
-                        }
-                        
-                        self.dismiss(animated: true, completion: {
-                            self.progressModal = ProgressModalViewController(paymentMethod: .directTransfer)
-                            self.progressModal.titleString = "Posting In Progress"
-                            self.present(self.progressModal, animated: true, completion: {
-                                self.socketDelegate = SocketDelegate(contractAddress: NFTrackABIRevisedAddress)
-                                
-                                Deferred {
-                                    Future<WriteTransaction, PostingError> { [weak self] promise in
-                                        self?.transactionService.prepareTransactionForWriting(
-                                            method: NFTrackContract.ContractMethods.createSimplePayment.rawValue,
-                                            abi: NFTrackABIRevisedABI,
-                                            param: param,
-                                            contractAddress: NFTrackABIRevisedAddress,
-                                            amountString: nil,
-                                            promise: promise
-                                        )
-                                    }
-                                }
-                                .flatMap { (transaction) -> AnyPublisher<TransactionSendingResult, PostingError> in
-                                    let update: [String: PostProgress] = ["update": .estimatGas]
-                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                    
-                                    return Future<TransactionSendingResult, PostingError> { promise in
-                                        do {
-                                            let receipt = try transaction.send(password: password, transactionOptions: nil)
-                                            promise(.success(receipt))
-                                        } catch {
-                                            if let err = error as? Web3Error {
-                                                promise(.failure(.generalError(reason: err.errorDescription)))
-                                            } else {
-                                                promise(.failure(.generalError(reason: error.localizedDescription)))
-                                            }
-                                        }
-                                    }
-                                    .eraseToAnyPublisher()
-                                }
-                                // get the topics of the paymentMade event from the socket delegate
-                                .flatMap { [weak self] (txResult) -> AnyPublisher<[String: Any], PostingError> in
-                                    // retain the mint transaction details for FireStore
-                                    txResultRetainer = txResult
-                                    return Future<[String: Any], PostingError> { promise in
-                                        self?.socketDelegate.promise = promise
-                                    }
-                                    .eraseToAnyPublisher()
-                                }
-                                // parse the topics, and create the firebase entry as soon as the socket delegate receives the data
-                                // createFiresStoreEntry ends with sending a HTTP request to the Cloud Functions for the token ID
-                                .flatMap({ [weak self] (webSocketMessage) -> AnyPublisher<[String?], PostingError> in
-                                    let update: [String: PostProgress] = ["update": .minting]
-                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                    
-                                    if let topics = webSocketMessage["topics"] as? [String] {
-                                        self?.topicsRetainer = topics
-                                    }
-                                    
-                                    // upload images/files to the Firebase Storage and get the array of URLs
-                                    if let previewDataArr = self?.previewDataArr, previewDataArr.count > 0 {
-                                        let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
-                                            return Future<String?, PostingError> { promise in
-                                                self?.uploadFileWithPromise(
-                                                    fileURL: previewData.filePath,
-                                                    userId: mintParameters.userId,
-                                                    promise: promise
-                                                )
-                                            }.eraseToAnyPublisher()
-                                        }
-                                        return Publishers.MergeMany(fileURLs)
-                                            .collect()
-                                            .eraseToAnyPublisher()
-                                    } else {
-                                        // if there are none to upload, return an empty array
-                                        return Result.Publisher([] as [String]).eraseToAnyPublisher()
-                                    }
-                                })
-                                // upload the details to Firestore
-                                .flatMap { [weak self] (urlStrings) -> AnyPublisher<Int, PostingError> in
-                                    let update: [String: PostProgress] = ["update": .images]
-                                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                    
-                                    guard let topics = self?.topicsRetainer,
-                                          let currentAddressString = Web3swiftService.currentAddressString else {
-                                        return Fail(error: PostingError.generalError(reason: "Unable to prepare data for the database update."))
-                                            .eraseToAnyPublisher()
-                                    }
+        .sink { (completion) in
+            print(completion)
+        } receiveValue: { [weak self] (WebSocketMessage) in
+            print("WebSocketMessage", WebSocketMessage)
+            
+            guard let topics = WebSocketMessage["topics"] as? [String],
+                  let txHash = WebSocketMessage["transactionHash"] as? String else { return }
+            
+            print("topics", topics)
+            print("txHash", txHash)
+            self?.alert.showDetail("Alert", with: "Topic received", for: self)
+            
+            parseTopics(topics)
 
-                                    return Future<Int, PostingError> { promise in
-                                        self?.transactionService.createFireStoreEntry(
-                                            senderAddress: currentAddressString,
-                                            escrowHash: "N/A",
-                                            auctionHash: "N/A",
-                                            simplePaymentId: hashString,
-                                            mintHash: txResultRetainer.hash,
-                                            itemTitle: mintParameters.itemTitle,
-                                            desc: mintParameters.desc,
-                                            price: price,
-                                            category: mintParameters.category,
-                                            tokensArr: mintParameters.tokensArr,
-                                            convertedId: mintParameters.convertedId,
-                                            type: "tangible",
-                                            deliveryMethod: mintParameters.deliveryMethod,
-                                            saleFormat: mintParameters.saleFormat,
-                                            paymentMethod: mintParameters.paymentMethod,
-                                            topics: topics,
-                                            urlStrings: urlStrings,
-                                            ipfsURLStrings: [],
-                                            isWithdrawn: false,
-                                            isAdminWithdrawn: false,
-                                            promise: promise
-                                        )
-                                    }
-                                    .eraseToAnyPublisher()
-                                }
-                                .sink { [weak self] (completion) in
-                                    switch completion {
-                                        case .failure(let error):
-                                            self?.processFailure(error)
-                                        case .finished:
-                                            self?.afterPostReset()
-                                            
-                                            guard let documentId = self?.documentId else { return }
-                                            FirebaseService.shared.sendToTopicsVoid(
-                                                title: "New item has been listed on \(mintParameters.category)",
-                                                content: mintParameters.itemTitle,
-                                                topic: mintParameters.category,
-                                                docId: documentId
-                                            )
-                                            
-                                        //  register spotlight?
-                                    }
-                                } receiveValue: { [weak self] (_) in
-                                    if self?.socketDelegate != nil {
-                                        self?.socketDelegate.disconnectSocket()
-                                    }
-                                }
-                                .store(in: &self.storage)
-                                
-                            }) // self.present
-                        }) // self.dismiss
-                    } // mainVC.buttonAction
-                } // alertVC.action
-                self?.present(alertVC, animated: true, completion: nil)
-            } // DispatchQueue
-        } // self.hideSpinner
+        }
+        .store(in: &storage)
     }
-}
-
-extension PostViewController {
-    func createSimplePayment(price: String, uniqueIdentifier: String) {
-     
+    
+    func parseTopics(_ topics: [String]) {
+        switch topics {
+            case _ where topics.contains(Topics.SimplePaymentPurchased):
+                break
+            //                    self?.isPending = true
+            //                    self?.activityIndicatorView.startAnimating()
+            //                    self?.payButton.isEnabled = false
+            //                    self?.payButton.setTitle("", for: .normal)
+            //                    guard let executeReadTransaction = self?.executeReadTransaction else { return }
+            //                    self?.getContractInfo(transactionHash: txHash, executeReadTransaction: executeReadTransaction, contractAddress: contractAddress)
+            default:
+                print("other events")
+        }
+    }
+    
+    final func createSocketPassThrough(contractAddress: EthereumAddress, topics: [String]? = nil) {
+//        guard socketDelegate != nil else { return }
+        socketDelegate = SocketDelegate(
+            contractAddress: contractAddress,
+            topics: topics,
+            passThroughSubject: PassthroughSubject<[String: Any], PostingError>()
+        )
+        
+        socketDelegate.passThroughSubject
+            .sink(receiveCompletion: { [weak self] (completion) in
+                switch completion {
+                    case .failure(let err):
+                        self?.alert.showDetail("Auction Detail Fetch Error", with: err.localizedDescription, for: self)
+                    case .finished:
+                        print("")
+                        break
+                }
+            }, receiveValue: { [weak self] (webSocketMessage) in
+                self?.alert.showDetail("Socket", with: "Topics Received", for: self)
+                print(webSocketMessage)
+            })
+            .store(in: &storage)
     }
 }

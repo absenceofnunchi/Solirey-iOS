@@ -29,7 +29,7 @@ class SendViewController: UIViewController, ModalConfigurable {
         super.viewDidLoad()
         
         configureCloseButton()
-        setButtonConstraints()
+        setCloseButtonConstraints()
         configureUI()
         setConstraints()
         hideKeyboardWhenTappedAround()

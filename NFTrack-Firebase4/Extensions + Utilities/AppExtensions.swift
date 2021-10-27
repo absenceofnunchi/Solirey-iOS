@@ -51,6 +51,23 @@ extension UIViewController {
         }
     }
     
+    func showSpinner() {
+        DispatchQueue.main.async { [weak self] in
+            let alertController = UIAlertController(title: nil, message: "Please Wait...\n\n\n\n",
+                                                    preferredStyle: .alert)
+            SaveAlertHandle.set(alertController)
+            let spinner = UIActivityIndicatorView(style: UIActivityIndicatorView.Style.large)
+            spinner.color = UIColor(ciColor: .black)
+            spinner.center = CGPoint(x: alertController.view.frame.midX,
+                                     y: alertController.view.frame.midY)
+            spinner.autoresizingMask = [.flexibleBottomMargin, .flexibleTopMargin,
+                                        .flexibleLeftMargin, .flexibleRightMargin]
+            spinner.startAnimating()
+            alertController.view.addSubview(spinner)
+            self?.present(alertController, animated: true, completion: nil)
+        }
+    }
+    
     /*! @fn hideSpinner
      @brief Hides the please wait spinner.
      @param completion Called after the spinner has been hidden.
@@ -63,6 +80,15 @@ extension UIViewController {
             }
         } else {
             completion!()
+        }
+    }
+    
+    func hideSpinner() {
+        if let controller = SaveAlertHandle.get() {
+            SaveAlertHandle.clear()
+            DispatchQueue.main.async {
+                controller.dismiss(animated: true, completion: nil)
+            }
         }
     }
     

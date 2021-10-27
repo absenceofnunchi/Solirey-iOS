@@ -9,10 +9,14 @@ import UIKit
 
 class ResaleViewController: NewPostViewController {
     override func initialConfig() {
-        if let post = post, post.type == "tangible" {
-            addBaseViewController(postVC)
-        } else {
-            addBaseViewController(digitalVC)
+        if let post = post,
+           let postType = PostType(rawValue: post.type) {
+            switch postType {
+                case .tangible:
+                    addBaseViewController(postVC)
+                case .digital:
+                    addBaseViewController(digitalVC)
+            }
         }
     }
     
@@ -23,12 +27,6 @@ class ResaleViewController: NewPostViewController {
         super.addBaseViewController(viewController)
     }
 }
-
-
-
-
-
-
 
 
 //

@@ -16,7 +16,7 @@ class BigImagePreviewViewController: UIViewController, ModalConfigurable {
         super.viewDidLoad()
 
         configureCloseButton(tintColor: .white)
-        setButtonConstraints()
+        setCloseButtonConstraints()
 
         imageView.contentMode = .scaleAspectFit
         imageView.enableZoom()

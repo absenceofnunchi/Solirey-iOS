@@ -55,7 +55,7 @@ class FilterViewController: UIViewController, ModalConfigurable {
         super.viewDidLoad()
 
         configureCloseButton()
-        setButtonConstraints()
+        setCloseButtonConstraints()
         configureUI()
         configureHierarchy()
         setConstraints()

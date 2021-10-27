@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import Combine
 
 extension ParentPostViewController {
     // MARK:- Mint
@@ -122,14 +121,19 @@ extension ParentPostViewController {
                 userId: userId,
                 deliveryMethod: deliveryMethod,
                 saleFormat: saleFormat,
-                paymentMethod: paymentMethod
+                paymentMethod: paymentMethod,
+                postType: postType.asString()
             )
             
-            print("saleConfig.value", saleConfig.value as Any)
             switch saleConfig.value {
                 case .tangibleNewSaleInPersonEscrow:
-                    self?.checkExistingId(id: convertedId) { (isDuplicate) in
-                        if isDuplicate {
+                    self?.checkExistingId(id: convertedId) { (isDuplicate, err) in
+                        if let _ = err {
+                            self?.alert.showDetail("Error", with: "There was an error checking for the Unique Identifier duplicates.", for: self)
+                            return
+                        }
+                        
+                        if let isDuplicate = isDuplicate, isDuplicate == true {
                             self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
                         } else {
                             self?.processEscrow(mintParameters)
@@ -138,11 +142,16 @@ extension ParentPostViewController {
                     break
                 case .tangibleNewSaleInPersonDirectPayment:
                     // The direct transfer option for in-person pickup doesn't require any contracts to be deployed
-                    self?.processDirectSaleRevised(mintParameters)
+                    self?.processDirectSaleRevised(mintParameters, isAddressRequired: true, postType: .tangible)
                     break
                 case .tangibleNewSaleShippingEscrow:
-                    self?.checkExistingId(id: convertedId) { (isDuplicate) in
-                        if isDuplicate {
+                    self?.checkExistingId(id: convertedId) { (isDuplicate, err) in
+                        if let _ = err {
+                            self?.alert.showDetail("Error", with: "There was an error checking for the Unique Identifier duplicates.", for: self)
+                            return
+                        }
+                        
+                        if let isDuplicate = isDuplicate, isDuplicate == true {
                             self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
                         } else {
                             self?.processEscrow(mintParameters)
@@ -153,16 +162,18 @@ extension ParentPostViewController {
                     self?.processEscrowResale(mintParameters)
                     break
                 case .tangibleResaleInPersonDirectPayment:
-                    self?.processDirectResale(mintParameters)
+                    self?.processDirectResaleRevised(mintParameters, isAddressRequired: true, postType: .tangible)
                     break
                 case .tangibleResaleShippingEscrow:
                     self?.processEscrowResale(mintParameters)
                     break
                 case .digitalNewSaleOnlineDirectPayment:
+                    self?.processDirectSaleRevised(mintParameters, isAddressRequired: false, postType: .digital)
                     break
                 case .digitalNewSaleAuctionBeneficiary:
                     break
                 case .digitalResaleOnlineDirectPayment:
+                    self?.processDirectResaleRevised(mintParameters, isAddressRequired: false, postType: .digital)
                     break
                 case .digitalResaleAuctionBeneficiary:
                     break
@@ -184,6 +195,7 @@ extension ParentPostViewController {
         let deliveryMethod: String
         let saleFormat: String
         let paymentMethod: String
+        let postType: String
         
         init(
             price: String?,
@@ -195,7 +207,8 @@ extension ParentPostViewController {
             userId: String,
             deliveryMethod: String,
             saleFormat: String,
-            paymentMethod: String
+            paymentMethod: String,
+            postType: String
         ) {
             self.price = price
             self.itemTitle = itemTitle
@@ -207,6 +220,7 @@ extension ParentPostViewController {
             self.deliveryMethod = deliveryMethod
             self.saleFormat = saleFormat
             self.paymentMethod = paymentMethod
+            self.postType = postType
         }
     }
     
@@ -218,15 +232,11 @@ extension ParentPostViewController {
     @objc dynamic func processDirectSale(_ mintParameters: MintParameters) {}
     
     @objc dynamic func processDirectResale(_ mintParameters: MintParameters) {}
-    
-    // Revised SimplePayment embedded in NFTrack
-    @objc dynamic func processDirectSaleRevised(_ mintParameters: MintParameters) {}
-    
+     
     @objc dynamic func configureProgress() {}
 }
 
 extension ParentPostViewController {
-   
     @objc func mint1() {
         for i in 0...10 {
             FirebaseService.shared.db

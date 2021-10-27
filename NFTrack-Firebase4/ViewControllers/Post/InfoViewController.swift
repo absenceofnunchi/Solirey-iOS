@@ -27,7 +27,6 @@ class InfoViewController: UIViewController, ModalConfigurable, UIViewControllerT
             self.modalPresentationStyle = .custom
         }
     }
-
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -36,10 +35,16 @@ class InfoViewController: UIViewController, ModalConfigurable, UIViewControllerT
     final override func viewDidLoad() {
         super.viewDidLoad()
         configureCloseButton()
-        setButtonConstraints()
+        setCloseButtonConstraints()
         configure()
-        guard buttonInfoArr != nil else { return  }
-        configureButton()
+        if buttonInfoArr != nil {
+            configureButton()
+        }
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        loadAnimation()
     }
     
     final override func viewDidLayoutSubviews() {
@@ -71,6 +76,10 @@ class InfoViewController: UIViewController, ModalConfigurable, UIViewControllerT
         for infoModel in infoModelArr {
             let infoBlockView = InfoBlockView(infoModel: infoModel)
             stackView.addArrangedSubview(infoBlockView)
+            stackView.arrangedSubviews.forEach { (infoBlockView) in
+                infoBlockView.alpha = 0
+                infoBlockView.transform = CGAffineTransform(translationX: 0, y: 20)
+            }
         }
         
         NSLayoutConstraint.activate([
@@ -85,12 +94,41 @@ class InfoViewController: UIViewController, ModalConfigurable, UIViewControllerT
         view.addGestureRecognizer(swipe)
     }
     
+    private func loadAnimation() {
+        let totalCount = infoModelArr.count
+        // If there is only one item
+        let duration = infoModelArr.count == 1 ? 0.5 : 1.0 / Double(totalCount) + 0.3
+        
+        let animation = UIViewPropertyAnimator(duration: 0.9, timingParameters: UICubicTimingParameters())
+        animation.addAnimations {
+            UIView.animateKeyframes(withDuration: 0, delay: 0, animations: { [weak self] in
+                self?.stackView.arrangedSubviews.enumerated().forEach({ (index, infoBlockView) in
+                    UIView.addKeyframe(withRelativeStartTime: Double(index) / Double(totalCount), relativeDuration: duration) {
+                        infoBlockView.alpha = 1
+                        infoBlockView.transform = .identity
+                    }
+                })
+                
+                guard self?.buttonInfoArr != nil,
+                      let stackView = self?.stackView else { return }
+                UIView.addKeyframe(withRelativeStartTime: Double(stackView.arrangedSubviews.count) / Double(totalCount), relativeDuration: duration) {
+                    self?.buttonStackView.alpha = 1
+                    self?.buttonStackView.transform = .identity
+                }
+            })
+        }
+        
+        animation.startAnimation()
+    }
+    
     private func configureButton() {
         let buttonArr = buttonInfoArr.compactMap ({ createButton(buttonInfo: $0)})
         
         buttonStackView = UIStackView(arrangedSubviews: buttonArr)
         buttonStackView.axis = .horizontal
         buttonStackView.distribution = .fillEqually
+        buttonStackView.alpha = 0
+        buttonStackView.transform = CGAffineTransform(translationX: 0, y: 20)
         buttonStackView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(buttonStackView)
         
@@ -104,23 +142,18 @@ class InfoViewController: UIViewController, ModalConfigurable, UIViewControllerT
 
     private func createButton(buttonInfo: ButtonInfo) -> UIView? {
         let containerView = UIView()
-        
+        containerView.translatesAutoresizingMaskIntoConstraints = false
         let button = ButtonWithShadow()
         button.tag = buttonInfo.tag
         button.backgroundColor = buttonInfo.backgroundColor
         button.setTitle(buttonInfo.title, for: .normal)
         button.layer.cornerRadius = 10
-//        button.layer.shadowColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.25).cgColor
-//        button.layer.shadowOpacity = 1
-//        button.layer.shadowRadius = 10
-//        button.layer.shadowOffset = CGSize(width: 0, height: 3)
-//        button.layer.masksToBounds = false
         guard let pointSize = button.titleLabel?.font.pointSize else { return nil }
         button.titleLabel?.font = .rounded(ofSize: pointSize, weight: .medium)
         button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
         containerView.addSubview(button)
         button.fill()
-        
+
         return containerView
     }
     

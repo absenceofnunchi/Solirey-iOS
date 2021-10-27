@@ -16,16 +16,15 @@ class ButtonWithShadow: UIButton {
     override var isHighlighted: Bool {
         didSet {
             if isHighlighted == true {
+                guard let superview = self.superview else { return }
+                superview.layer.shadowRadius = 0
+                superview.layer.shadowOffset = .zero
+                superview.layer.shadowColor = .none
+                superview.layer.shadowOpacity = 0
+                
                 UIView.animate(withDuration: 0.2) { [weak self] in
                     self?.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-                    guard let self = self,
-                          let superview = self.superview else { return }
-                    superview.layer.shadowRadius = 0
-                    superview.layer.shadowOffset = CGSize(width: 0.0, height: 0.0)
-                    superview.layer.shadowColor = UIColor.lightGray.cgColor
-                    superview.layer.shadowOpacity = 0.4
                 }
-                
             } else {
                 UIView.animate(withDuration: 0.2) { [weak self] in
                     self?.transform = .identity

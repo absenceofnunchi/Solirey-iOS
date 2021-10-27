@@ -20,7 +20,7 @@ class TransactionService {
     }
     let localDatabase = LocalDatabase()
     
-    func requestGasPrice(onComplition:@escaping (Double?) -> Void) {
+    final func requestGasPrice(onComplition:@escaping (Double?) -> Void) {
         let path = "https://ethgasstation.info/json/ethgasAPI.json"
         guard let url = URL(string: path) else {
             DispatchQueue.main.async {
@@ -54,7 +54,7 @@ class TransactionService {
     }
     
     // MARK: - stripZeros
-    func stripZeros(_ string: String) -> String {
+    final func stripZeros(_ string: String) -> String {
         if !string.contains(".") {return string}
         var end = string.index(string.endIndex, offsetBy: -1)
         
@@ -75,7 +75,7 @@ class TransactionService {
 
 extension TransactionService {
     //MARK: - prepareTransactionForSending
-    func prepareTransactionForSending(destinationAddressString: String?,
+    final func prepareTransactionForSending(destinationAddressString: String?,
                                       amountString: String?,
                                       gasLimit: UInt = 21000,
                                       completion:  @escaping (WriteTransaction?, PostingError?) -> Void) {
@@ -134,7 +134,7 @@ extension TransactionService {
             
             var options = TransactionOptions.defaultOptions
             options.from = currentAddress
-            options.value = BigUInt(amount)
+            options.value = amount
             options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
             options.gasPrice = TransactionOptions.GasPricePolicy.automatic
             
@@ -145,6 +145,9 @@ extension TransactionService {
                 }
                 return
             }
+            
+            
+//            contract.getIndexedEvents(eventName: <#T##String?#>, filter: .init(fromBlock: <#T##EventFilter.Block?#>, toBlock: <#T##EventFilter.Block?#>, addresses: <#T##[EthereumAddress]?#>, parameterFilters: [.]))
             
             guard let transaction = contract.write("fallback", parameters: [AnyObject](), extraData: Data(), transactionOptions: options) else {
                 DispatchQueue.main.async {
@@ -160,7 +163,7 @@ extension TransactionService {
     }
     
 //    // MARK: - prepareTransactionForNewContract
-//    func prepareTransactionForNewContract(value: String, completion: @escaping (WriteTransaction?, PostingError?) -> Void) {
+//    final func prepareTransactionForNewContract(value: String, completion: @escaping (WriteTransaction?, PostingError?) -> Void) {
 //        let web3 = Web3swiftService.web3instance
 //        let localDatabase = LocalDatabase()
 //        if let wallet = localDatabase.getWallet() {
@@ -226,7 +229,7 @@ extension TransactionService {
 
     // purchaseABI2
     // MARK: - prepareTransactionForNewContract
-    func prepareTransactionForNewContract(
+    final func prepareTransactionForNewContract(
         contractABI: String,
         bytecode: String,
         value: String,
@@ -270,7 +273,7 @@ extension TransactionService {
         completion(transaction, nil)
     }
     
-    func prepareTransactionForNewContract(
+    final func prepareTransactionForNewContract(
         contractABI: String,
         bytecode: String,
         value: String,
@@ -308,7 +311,7 @@ extension TransactionService {
         promise(.success(transaction))
     }
     
-    func prepareTransactionForNewContractWithGasEstimate(
+    final func prepareTransactionForNewContractWithGasEstimate(
         contractABI: String,
         bytecode: String,
         value: String = "0",
@@ -368,7 +371,7 @@ extension TransactionService {
     }
     
     // MARK: - prepareTransactionForMinting
-    func prepareTransactionForMinting(completion: @escaping (WriteTransaction?, PostingError?) -> Void) {
+    final func prepareTransactionForMinting(completion: @escaping (WriteTransaction?, PostingError?) -> Void) {
         DispatchQueue.global(qos: .background).async {
             guard let address = Web3swiftService.currentAddress else { return }
             var options = TransactionOptions.defaultOptions
@@ -398,7 +401,7 @@ extension TransactionService {
     }
     
     // MARK: - prepareTransactionForMinting
-    func prepareTransactionForMinting(
+    final func prepareTransactionForMinting(
         receiverAddress: EthereumAddress,
         nonce: BigUInt? = nil,
         promise: @escaping (Result<WriteTransaction, PostingError>) -> Void
@@ -429,7 +432,7 @@ extension TransactionService {
     }
     
     // MARK: - prepareTransactionForReading
-    func prepareTransactionForReading(
+    final func prepareTransactionForReading(
         method: String,
         abi: String = purchaseABI2,
         contractAddress: EthereumAddress,
@@ -463,7 +466,7 @@ extension TransactionService {
         }
     }
     
-    func prepareTransactionForReading(
+    final func prepareTransactionForReading(
         method: String,
         parameters: [AnyObject]? = nil,
         abi: String,
@@ -501,7 +504,7 @@ extension TransactionService {
         }
     }
     
-    func prepareTransactionForWriting(
+    final func prepareTransactionForWriting(
         method: String,
         abi: String,
         param: [AnyObject] = [AnyObject](),
@@ -518,17 +521,17 @@ extension TransactionService {
             
             var options = TransactionOptions.defaultOptions
             
-            if amountString != nil {
-                guard !amountString!.isEmpty else {
+            if let amountString = amountString {
+                guard !amountString.isEmpty else {
                     completion(nil, PostingError.emptyAmount)
                     return
                 }
                 
-                guard let amount = Web3.Utils.parseToBigUInt(amountString!, units: .eth) else {
+                guard let amount = Web3.Utils.parseToBigUInt(amountString, units: .eth) else {
                     completion(nil, PostingError.invalidAmountFormat)
                     return
                 }
-                                
+                          
                 options.value = amount
             }
                  
@@ -562,7 +565,7 @@ extension TransactionService {
         }
     }
     
-    func prepareTransactionForWritingWithGasEstimate(
+    final func prepareTransactionForWritingWithGasEstimate(
         method: String,
         abi: String,
         param: [AnyObject] = [AnyObject](),
@@ -600,7 +603,7 @@ extension TransactionService {
         }
     }
     
-    func prepareTransactionForWriting(
+    final func prepareTransactionForWriting(
         method: String,
         abi: String,
         param: [AnyObject] = [AnyObject](),
@@ -909,7 +912,9 @@ extension TransactionService {
             }
         }
     }
-    
+   
+    // With the token ID parsing to the Google Functions
+    // This function soon to be deprecated since the token ID parsing is now done in the front end.
     final func createFireStoreEntry(
         documentId: inout String?,
         senderAddress: String,
@@ -986,7 +991,7 @@ extension TransactionService {
         }
     }
     
-    final func createFireStoreEntryForResale(
+    final func createFireStoreEntryRevised(
         documentId: inout String?,
         senderAddress: String,
         escrowHash: String,
@@ -1004,8 +1009,11 @@ extension TransactionService {
         paymentMethod: String,
         tokenId: String,
         urlStrings: [String?],
+        simplePaymentId: String,
         ipfsURLStrings: [String?],
         shippingInfo: ShippingInfo? = nil,
+        isWithdrawn: Bool = true,
+        isAdminWithdrawn: Bool = true,
         promise: @escaping (Result<Bool, PostingError>) -> Void
     ) {
         let ref = self.db.collection("post")
@@ -1045,7 +1053,89 @@ extension TransactionService {
             "bidderTokens": [],
             "bidders": [],
             "shippingInfo": shippingInfoData,
-            "saleType": SaleType.newSale.rawValue
+            "saleType": SaleType.newSale.rawValue,
+            "simplePaymentId": simplePaymentId,
+            "isWithdrawn": isWithdrawn, // There are contracts like Auction or SimplePayment that requires the bidders that have been outbid or the seller whose item has been purchased, respectively, that require the user to withdraw their funds manually
+            "isAdminWithdrawn": isAdminWithdrawn, // The fee collected by the admin
+            "tokenId": tokenId
+        ]
+        
+        // txHash is either minting or transferring the ownership
+        ref.document(id).setData(postData) { (error) in
+            if let error = error {
+                promise(.failure(.generalError(reason: error.localizedDescription)))
+            } else {
+                promise(.success(true))
+            }
+        }
+    }
+    
+    // Resale doesn't need the topics to be converted to the token ID
+    final func createFireStoreEntryForResale(
+        documentId: inout String?,
+        senderAddress: String,
+        escrowHash: String,
+        auctionHash: String,
+        mintHash: String,
+        itemTitle: String,
+        desc: String,
+        price: String,
+        category: String,
+        tokensArr: Set<String>,
+        convertedId: String,
+        type: String,
+        deliveryMethod: String,
+        saleFormat: String,
+        paymentMethod: String,
+        tokenId: String,
+        urlStrings: [String?],
+        ipfsURLStrings: [String?],
+        shippingInfo: ShippingInfo? = nil,
+        isWithdrawn: Bool = true,
+        isAdminWithdrawn: Bool = true,
+        promise: @escaping (Result<Bool, PostingError>) -> Void
+    ) {
+        let ref = self.db.collection("post")
+        let id = ref.document().documentID
+        // for deleting photos afterwards
+        documentId = id
+        
+        let shippingInfoData: [String: Any] = [
+            "scope": shippingInfo?.scope.stringValue ?? "NA" as String,
+            "addresses": shippingInfo?.addresses ?? [] as [String],
+            "radius": shippingInfo?.radius ?? 0,
+            "longitude": shippingInfo?.longitude ?? 0,
+            "latitude": shippingInfo?.latitude ?? 0
+        ]
+        
+        let postData: [String: Any] = [
+            "sellerUserId": userId as Any,
+            "senderAddress": senderAddress,
+            "escrowHash": escrowHash,
+            "auctionHash": auctionHash,
+            "mintHash": mintHash,
+            "date": Date(),
+            "title": itemTitle,
+            "description": desc,
+            "price": price,
+            "category": category,
+            "status": "ready",
+            "tags": Array(tokensArr),
+            "itemIdentifier": convertedId,
+            "isReviewed": false,
+            "type": type,
+            "deliveryMethod": deliveryMethod,
+            "saleFormat": saleFormat,
+            "files": urlStrings,
+            "IPFS": ipfsURLStrings,
+            "paymentMethod": paymentMethod,
+            "bidderTokens": [],
+            "bidders": [],
+            "shippingInfo": shippingInfoData,
+            "saleType": SaleType.newSale.rawValue,
+            "isWithdrawn": isWithdrawn, // There are contracts like Auction or SimplePayment that requires the bidders that have been outbid or the seller whose item has been purchased, respectively, that require the user to withdraw their funds manually
+            "isAdminWithdrawn": isAdminWithdrawn, // The fee collected by the admin
+            "tokenId": tokenId
         ]
         
         // txHash is either minting or transferring the ownership
@@ -1312,10 +1402,12 @@ extension TransactionService {
         
         let totalGasCost = gasEstimate * gasPrice
         
-        guard let convertedTotalGasCost = Web3.Utils.formatToEthereumUnits(totalGasCost, toUnits: .eth) else {
+        guard let convertedTotalGasCost = Web3.Utils.formatToEthereumUnits(totalGasCost, toUnits: .eth, decimals: 9) else {
             promise(.failure(.generalError(reason: "Unable to convert the unit of the gas cost. Please try restarting the app.")))
             return
         }
+        
+        let trimmedTotalGasCost = stripZeros(convertedTotalGasCost)
         
         var balance: BigUInt!
         do {
@@ -1335,7 +1427,7 @@ extension TransactionService {
             return
         }
         
-        promise(.success((convertedTotalGasCost, convertedBalance, gasPriceInGwei)))
+        promise(.success((trimmedTotalGasCost, convertedBalance, gasPriceInGwei)))
     }
 
     func delay(_ delay:Double, closure:@escaping ()->()) {

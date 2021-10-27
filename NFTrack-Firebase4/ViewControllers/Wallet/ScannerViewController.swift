@@ -56,7 +56,7 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
         captureSession.startRunning()
         
         configureCloseButton(tintColor: .white)
-        setButtonConstraints()
+        setCloseButtonConstraints()
         
         let swipe = UISwipeGestureRecognizer(target: self, action: #selector(swiped))
         swipe.direction = .down

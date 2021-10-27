@@ -44,7 +44,7 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
         super.viewDidLoad()
         fetchUserInfo()
         configureCloseButton()
-        setButtonConstraints()
+        setCloseButtonConstraints()
         // why navigation bar style even though this is a presented modal? This is so that a new pushed view controller like MapVC can take on this style
         applyBarTintColorToTheNavigationBar()
     }
@@ -70,12 +70,12 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
     
     func loadingAnimation() {
         let totalCount = 4
-        let duration = 1.0 / Double(totalCount)
+        let duration = 1.0 / Double(totalCount) + 0.2
         
         let animation = UIViewPropertyAnimator(duration: 0.7, timingParameters: UICubicTimingParameters())
         animation.addAnimations {
             UIView.animateKeyframes(withDuration: 0, delay: 0, animations: { [weak self] in
-                UIView.addKeyframe(withRelativeStartTime: 1 / Double(totalCount), relativeDuration: duration) {
+                UIView.addKeyframe(withRelativeStartTime: 0 / Double(totalCount), relativeDuration: duration) {
                     self?.displayNameTitleLabel.alpha = 1
                     self?.displayNameTitleLabel.transform = .identity
                     
@@ -83,7 +83,7 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
                     self?.displayNameTextField.transform = .identity
                 }
                 
-                UIView.addKeyframe(withRelativeStartTime: 2 / Double(totalCount), relativeDuration: duration) {
+                UIView.addKeyframe(withRelativeStartTime: 1 / Double(totalCount), relativeDuration: duration) {
                     self?.emailTitleLabel.alpha = 1
                     self?.emailTitleLabel.transform = .identity
                     
@@ -91,7 +91,7 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
                     self?.emailTextField.transform = .identity
                 }
                 
-                UIView.addKeyframe(withRelativeStartTime: 3 / Double(totalCount), relativeDuration: duration) {
+                UIView.addKeyframe(withRelativeStartTime: 2 / Double(totalCount), relativeDuration: duration) {
                     self?.addressTitleLabel.alpha = 1
                     self?.addressTitleLabel.transform = .identity
                     
@@ -109,7 +109,7 @@ class ProfileViewController: ParentProfileViewController, ModalConfigurable {
                     self?.addressDeleteButton.transform = .identity
                 }
                 
-                UIView.addKeyframe(withRelativeStartTime: 4 / Double(totalCount), relativeDuration: duration) {
+                UIView.addKeyframe(withRelativeStartTime: 3 / Double(totalCount), relativeDuration: duration) {
                     self?.updateButton.alpha = 1
                     self?.updateButton.transform = .identity
                 }
