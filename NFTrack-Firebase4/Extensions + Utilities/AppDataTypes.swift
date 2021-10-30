@@ -835,32 +835,57 @@ enum PaymentMethod: String {
     case auctionBeneficiary = "Auction Beneficiary"
 }
 
+enum ContractFormat: String {
+    case integral = "Default" // uses the contract pre-launched by me
+    case individual = "Individual" // deploys a brand new contract just for this particular transaction
+}
+
 // Configures how to post an item depending on the status of its delivery method, payment method, new/resale.
 enum SaleConfig {
-    case hybridMethod(postType: PostType, saleType: SaleType, delivery: DeliveryMethod, payment: PaymentMethod)
+    case hybridMethod(postType: PostType, saleType: SaleType, delivery: DeliveryMethod, payment: PaymentMethod, contractFormat: ContractFormat)
 
     var value: DeliveryAndPaymentMethod? {
         switch self {
-            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .inPerson, payment: .escrow):
-                return .tangibleNewSaleInPersonEscrow
-            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .inPerson, payment: .directTransfer):
-                return .tangibleNewSaleInPersonDirectPayment
-            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .shipping, payment: .escrow):
-                return .tangibleNewSaleShippingEscrow
-            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .inPerson, payment: .escrow):
-                return .tangibleResaleInPersonEscrow
-            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .inPerson, payment: .directTransfer):
-                return .tangibleResaleInPersonDirectPayment
-            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .shipping, payment: .escrow):
-                return .tangibleResaleShippingEscrow
-            case .hybridMethod(postType: .digital, saleType: .newSale, delivery: .onlineTransfer, payment: .directTransfer):
-                return .digitalNewSaleOnlineDirectPayment
-            case .hybridMethod(postType: .digital, saleType: .newSale, delivery: .onlineTransfer, payment: .auctionBeneficiary):
-                return .digitalNewSaleAuctionBeneficiary
-            case .hybridMethod(postType: .digital, saleType: .resale, delivery: .onlineTransfer, payment: .directTransfer):
-                return .digitalResaleOnlineDirectPayment
-            case .hybridMethod(postType: .digital, saleType: .resale, delivery: .onlineTransfer, payment: .auctionBeneficiary):
-                return .digitalResaleAuctionBeneficiary
+            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .inPerson, payment: .escrow, contractFormat: .integral):
+                return .tangibleNewSaleInPersonEscrowIntegral
+            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .inPerson, payment: .escrow, contractFormat: .individual):
+                return .tangibleNewSaleInPersonEscrowIndividual
+            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .inPerson, payment: .directTransfer, contractFormat: .integral):
+                return .tangibleNewSaleInPersonDirectPaymentIntegral
+            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .inPerson, payment: .directTransfer, contractFormat: .individual):
+                return .tangibleNewSaleInPersonDirectPaymentIndividual
+            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .shipping, payment: .escrow, contractFormat: .integral):
+                return .tangibleNewSaleShippingEscrowIntegral
+            case .hybridMethod(postType: .tangible, saleType: .newSale, delivery: .shipping, payment: .escrow, contractFormat: .individual):
+                return .tangibleNewSaleShippingEscrowIndividual
+            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .inPerson, payment: .escrow, contractFormat: .integral):
+                return .tangibleResaleInPersonEscrowIntegral
+            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .inPerson, payment: .escrow, contractFormat: .individual):
+                return .tangibleResaleInPersonEscrowIndividual
+            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .inPerson, payment: .directTransfer, contractFormat: .integral):
+                return .tangibleResaleInPersonDirectPaymentIntegral
+            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .inPerson, payment: .directTransfer, contractFormat: .individual):
+                return .tangibleResaleInPersonDirectPaymentIndividual
+            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .shipping, payment: .escrow, contractFormat: .integral):
+                return .tangibleResaleShippingEscrowIntegral
+            case .hybridMethod(postType: .tangible, saleType: .resale, delivery: .shipping, payment: .escrow, contractFormat: .individual):
+                return .tangibleResaleShippingEscrowIndividual
+            case .hybridMethod(postType: .digital, saleType: .newSale, delivery: .onlineTransfer, payment: .directTransfer, contractFormat: .integral):
+                return .digitalNewSaleOnlineDirectPaymentIntegral
+            case .hybridMethod(postType: .digital, saleType: .newSale, delivery: .onlineTransfer, payment: .directTransfer, contractFormat: .individual):
+                return .digitalNewSaleOnlineDirectPaymentIndividual
+            case .hybridMethod(postType: .digital, saleType: .newSale, delivery: .onlineTransfer, payment: .auctionBeneficiary, contractFormat: .integral):
+                return .digitalNewSaleAuctionBeneficiaryIntegral
+            case .hybridMethod(postType: .digital, saleType: .newSale, delivery: .onlineTransfer, payment: .auctionBeneficiary, contractFormat: .individual):
+                return .digitalNewSaleAuctionBeneficiaryIndividual
+            case .hybridMethod(postType: .digital, saleType: .resale, delivery: .onlineTransfer, payment: .directTransfer, contractFormat: .integral):
+                return .digitalResaleOnlineDirectPaymentIntegral
+            case .hybridMethod(postType: .digital, saleType: .resale, delivery: .onlineTransfer, payment: .directTransfer, contractFormat: .individual):
+                return .digitalResaleOnlineDirectPaymentIndividual
+            case .hybridMethod(postType: .digital, saleType: .resale, delivery: .onlineTransfer, payment: .auctionBeneficiary, contractFormat: .integral):
+                return .digitalResaleAuctionBeneficiaryIntegral
+            case .hybridMethod(postType: .digital, saleType: .resale, delivery: .onlineTransfer, payment: .auctionBeneficiary, contractFormat: .individual):
+                return .digitalResaleAuctionBeneficiaryIndividual
             default:
                 return nil
         }
@@ -868,16 +893,26 @@ enum SaleConfig {
 }
 
 enum DeliveryAndPaymentMethod {
-    case tangibleNewSaleInPersonEscrow // 
-    case tangibleNewSaleInPersonDirectPayment
-    case tangibleNewSaleShippingEscrow
-    case tangibleResaleInPersonEscrow
-    case tangibleResaleInPersonDirectPayment
-    case tangibleResaleShippingEscrow
-    case digitalNewSaleOnlineDirectPayment
-    case digitalNewSaleAuctionBeneficiary
-    case digitalResaleOnlineDirectPayment
-    case digitalResaleAuctionBeneficiary
+    case tangibleNewSaleInPersonEscrowIntegral // solirey escrow
+    case tangibleNewSaleInPersonEscrowIndividual // escrow
+    case tangibleNewSaleInPersonDirectPaymentIntegral // solirey simple payment
+    case tangibleNewSaleInPersonDirectPaymentIndividual // simple payment
+    case tangibleNewSaleShippingEscrowIntegral // solirey escrow
+    case tangibleNewSaleShippingEscrowIndividual // escrow
+    case tangibleResaleInPersonEscrowIntegral // solirey escrow
+    case tangibleResaleInPersonEscrowIndividual // escrow
+    case tangibleResaleInPersonDirectPaymentIntegral // solirey simple payment
+    case tangibleResaleInPersonDirectPaymentIndividual // simple payment
+    case tangibleResaleShippingEscrowIntegral // solirey escrow
+    case tangibleResaleShippingEscrowIndividual // escrow
+    case digitalNewSaleOnlineDirectPaymentIntegral // solirey simple payment
+    case digitalNewSaleOnlineDirectPaymentIndividual  // simple payment
+    case digitalNewSaleAuctionBeneficiaryIntegral // auction
+    case digitalNewSaleAuctionBeneficiaryIndividual // solirey auction
+    case digitalResaleOnlineDirectPaymentIntegral // solirey simple payment
+    case digitalResaleOnlineDirectPaymentIndividual // simple payment
+    case digitalResaleAuctionBeneficiaryIntegral // solirey auction
+    case digitalResaleAuctionBeneficiaryIndividual // auction
 }
 
 // MARK: - FilterSettings
@@ -1033,6 +1068,7 @@ enum TxType {
     case auctionContract
     case simplePayment
     case NFTrack
+    case resell
 }
 
 struct TxResult {

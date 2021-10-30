@@ -92,7 +92,7 @@
 		495FE3C8271F8D29000433AF /* NFTrackABIRevised.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3C7271F8D29000433AF /* NFTrackABIRevised.swift */; };
 		495FE3D1271F9BF5000433AF /* PostViewController + Escrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3D0271F9BF5000433AF /* PostViewController + Escrow.swift */; };
 		495FE3D6271F9E45000433AF /* ParentPostViewController + Mint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */; };
-		495FE3DE271FA19A000433AF /* PostViewController + DirectSaleRevised.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3DD271FA19A000433AF /* PostViewController + DirectSaleRevised.swift */; };
+		4962D98A272D489E005B2F0F /* SolireyAuction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962D989272D489E005B2F0F /* SolireyAuction.swift */; };
 		4962FADF26F647C6004B01A8 /* CacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962FADE26F647C6004B01A8 /* CacheService.swift */; };
 		4962FAE726F6749A004B01A8 /* CacheServiceTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962FAE626F6749A004B01A8 /* CacheServiceTest.swift */; };
 		4962FB1126F6967A004B01A8 /* ChatInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962FB1026F69679004B01A8 /* ChatInfoViewController.swift */; };
@@ -311,7 +311,7 @@
 		495FE3C7271F8D29000433AF /* NFTrackABIRevised.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABIRevised.swift; sourceTree = "<group>"; };
 		495FE3D0271F9BF5000433AF /* PostViewController + Escrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + Escrow.swift"; sourceTree = "<group>"; };
 		495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + Mint.swift"; sourceTree = "<group>"; };
-		495FE3DD271FA19A000433AF /* PostViewController + DirectSaleRevised.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + DirectSaleRevised.swift"; sourceTree = "<group>"; };
+		4962D989272D489E005B2F0F /* SolireyAuction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolireyAuction.swift; sourceTree = "<group>"; };
 		4962FADE26F647C6004B01A8 /* CacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheService.swift; sourceTree = "<group>"; };
 		4962FAE626F6749A004B01A8 /* CacheServiceTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheServiceTest.swift; sourceTree = "<group>"; };
 		4962FB1026F69679004B01A8 /* ChatInfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInfoViewController.swift; sourceTree = "<group>"; };
@@ -550,6 +550,7 @@
 				497A9AEB2655A60300F09CAA /* NFTrackABI.swift */,
 				495FE3C7271F8D29000433AF /* NFTrackABIRevised.swift */,
 				492556AE27122F9D0073188F /* MintABI.swift */,
+				4962D989272D489E005B2F0F /* SolireyAuction.swift */,
 				49B47E9B26953B05003D6F7A /* AuctionABI.swift */,
 				492556A9271186320073188F /* SimplePaymentABI.swift */,
 				492556B8271696EB0073188F /* SimplePaymentWithRoyalty.swift */,
@@ -591,8 +592,8 @@
 				4964E5092644B07D005B3268 /* PostViewController.swift */,
 				495FE3D0271F9BF5000433AF /* PostViewController + Escrow.swift */,
 				492556A127104DB30073188F /* PostViewController + DirectSale.swift */,
-				495FE3DD271FA19A000433AF /* PostViewController + DirectSaleRevised.swift */,
 				4900962C270E76FE00EDB593 /* PostViewController + Resale.swift */,
+				495FD316268AAB3100F1D81D /* DigitalAssetViewController.swift */,
 			);
 			path = "Different Payment Formats";
 			sourceTree = "<group>";
@@ -838,7 +839,6 @@
 				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
 				490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */,
 				49DEFF642686552E004C2DD0 /* PreviewPDFViewController.swift */,
-				495FD316268AAB3100F1D81D /* DigitalAssetViewController.swift */,
 				49141497270D0A27005E93BA /* DigitalAssetViewController + Auction.swift */,
 				4914149C270D0AD0005E93BA /* DigitalAssetViewController + OnlineDirect.swift */,
 				495D5E07268FE92E00F5DF71 /* InfoViewController.swift */,
@@ -1291,9 +1291,9 @@
 				49E759A826658DCC0064BB34 /* TransitioningDelegate.swift in Sources */,
 				49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */,
 				49E7D64C267AA73F00E8815A /* ChatViewController1.swift in Sources */,
-				495FE3DE271FA19A000433AF /* PostViewController + DirectSaleRevised.swift in Sources */,
 				497CF7A726F82818003EF69E /* ParentLocationSearchViewController.swift in Sources */,
 				4964E516264777BF005B3268 /* ImageCell.swift in Sources */,
+				4962D98A272D489E005B2F0F /* SolireyAuction.swift in Sources */,
 				496F6FFD2651F15200E4056B /* ListCell.swift in Sources */,
 				492556B9271696EC0073188F /* SimplePaymentWithRoyalty.swift in Sources */,
 				4958117526D6DAF1002C8F3B /* IPFSService.swift in Sources */,

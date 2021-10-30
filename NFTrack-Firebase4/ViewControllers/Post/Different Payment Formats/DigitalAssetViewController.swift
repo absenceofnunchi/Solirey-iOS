@@ -339,57 +339,48 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
         alert.showDetail("Payment Method", with: "The payment method for digital items is determined by the sale format.", alignment: .left, for: self)
     }
     
-    // MARK: - processMint
-    final override func processEscrow(_ mintParameters: MintParameters) {
-        guard let sm = SaleFormat(rawValue: mintParameters.saleFormat) else { return }
-        switch sm {
-            case .onlineDirect:
-                guard let price = mintParameters.price, !price.isEmpty else {
-                    self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
-                    return
-                }
-                
-                onlineDirect(
-                    price: price,
-                    itemTitle: mintParameters.itemTitle,
-                    desc: mintParameters.desc,
-                    category: mintParameters.category,
-                    convertedId: mintParameters.convertedId,
-                    tokensArr: mintParameters.tokensArr,
-                    userId: userId,
-                    deliveryMethod: mintParameters.deliveryMethod,
-                    saleFormat: mintParameters.saleFormat,
-                    paymentMethod: mintParameters.paymentMethod
-                )
-                
-            case .openAuction:
-                guard let auctionDuration = auctionDurationLabel.text,
-                      !auctionDuration.isEmpty else {
-                    self.alert.showDetail("Incomplete", with: "Please specify the auction duration.", for: self)
-                    return
-                }
-                guard let auctionStartingPrice = auctionStartingPriceTextField.text,
-                      !auctionStartingPrice.isEmpty else {
-                    self.alert.showDetail("Incomplete", with: "Please specify the starting price for your auction.", for: self)
-                    return
-                }
-
-                auction(
-                    price: "0",
-                    itemTitle: mintParameters.itemTitle,
-                    desc: mintParameters.desc,
-                    category: mintParameters.category,
-                    convertedId: mintParameters.convertedId,
-                    tokensArr: mintParameters.tokensArr,
-                    userId: userId,
-                    deliveryMethod: mintParameters.deliveryMethod,
-                    saleFormat: mintParameters.saleFormat,
-                    paymentMethod: mintParameters.paymentMethod,
-                    auctionDuration: auctionDuration,
-                    auctionStartingPrice: auctionStartingPrice
-                )
-        }
-    }
+//    // MARK: - processMint
+//    final override func processEscrow(_ mintParameters: MintParameters) {
+//        guard let sm = SaleFormat(rawValue: mintParameters.saleFormat) else { return }
+//        switch sm {
+//            case .onlineDirect:
+//                guard let price = mintParameters.price, !price.isEmpty else {
+//                    self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+//                    return
+//                }
+//                
+//                onlineDirect(
+//                    price: price,
+//                    itemTitle: mintParameters.itemTitle,
+//                    desc: mintParameters.desc,
+//                    category: mintParameters.category,
+//                    convertedId: mintParameters.convertedId,
+//                    tokensArr: mintParameters.tokensArr,
+//                    userId: userId,
+//                    deliveryMethod: mintParameters.deliveryMethod,
+//                    saleFormat: mintParameters.saleFormat,
+//                    paymentMethod: mintParameters.paymentMethod
+//                )
+//                
+//            case .openAuction:
+//                guard let auctionDuration = auctionDurationLabel.text,
+//                      !auctionDuration.isEmpty else {
+//                    self.alert.showDetail("Incomplete", with: "Please specify the auction duration.", for: self)
+//                    return
+//                }
+//                
+//                guard let auctionStartingPrice = auctionStartingPriceTextField.text,
+//                      !auctionStartingPrice.isEmpty else {
+//                    self.alert.showDetail("Incomplete", with: "Please specify the starting price for your auction.", for: self)
+//                    return
+//                }
+//                
+//                mintParameters.auctionDuration = auctionDuration
+//                mintParameters.auctionStartingPrice = auctionStartingPrice
+//
+//                processAuction(mintParameters)
+//        }
+//    }
 }
 
 // MARK: - Picker

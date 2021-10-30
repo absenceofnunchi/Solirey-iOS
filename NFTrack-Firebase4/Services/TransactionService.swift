@@ -509,6 +509,7 @@ extension TransactionService {
         abi: String,
         param: [AnyObject] = [AnyObject](),
         contractAddress: EthereumAddress,
+        to: EthereumAddress? = nil,
         amountString: String?,
         completion: @escaping (WriteTransaction?, PostingError?) -> Void
     ) {
@@ -534,6 +535,10 @@ extension TransactionService {
                           
                 options.value = amount
             }
+            
+            if let to = to {
+                options.to = to
+            }
                  
             options.from = myAddress
             options.gasLimit = TransactionOptions.GasLimitPolicy.automatic
@@ -554,13 +559,6 @@ extension TransactionService {
                 return
             }
             
-//            do {
-//                let result = try transaction.call(transactionOptions: options)
-//                print("result", result)
-//            } catch {
-//                print("errorrrr", error)
-//            }
-            
             completion(transaction, nil)
         }
     }
@@ -579,6 +577,7 @@ extension TransactionService {
             abi: abi,
             param: param,
             contractAddress: contractAddress,
+            to: to,
             amountString: amountString
         ) { (transaction, error) in
             if let error = error {

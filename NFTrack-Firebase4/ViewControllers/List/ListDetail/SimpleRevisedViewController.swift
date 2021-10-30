@@ -494,5 +494,27 @@ extension SimpleRevisedViewController {
         
         activityIndicatorView.stopAnimating()
     }
+    
+    func getInfo() {
+        let parameters: [AnyObject] = [41, "9d78038e487b15758beb4d90ea733b626c1fb7a7d756fb8a77c2fa1de838f730"] as [AnyObject]
+        Deferred { [weak self] in
+            Future<SmartContractProperty, PostingError> { promise in
+                self?.transactionService.prepareTransactionForReading(
+                    method: NFTrackContract.ContractMethods.getInfo.rawValue,
+                    parameters: parameters,
+                    abi: NFTrackABIRevisedABI,
+                    contractAddress: ContractAddresses.NFTrackABIRevisedAddress!,
+                    promise: promise
+                )
+            }
+            .eraseToAnyPublisher()
+        }
+        .sink { (completion) in
+            print(completion)
+        } receiveValue: { (properties) in
+            print("properties", properties)
+        }
+        .store(in: &storage)
+    }
 }
 

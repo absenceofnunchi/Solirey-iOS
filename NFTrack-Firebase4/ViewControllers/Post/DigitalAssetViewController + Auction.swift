@@ -12,24 +12,23 @@ import BigInt
 
 extension DigitalAssetViewController {
     // MARK: - auction mint
-    final func auction(
-        price: String = "0",
-        itemTitle: String,
-        desc: String,
-        category: String,
-        convertedId: String,
-        tokensArr: Set<String>,
-        userId: String,
-        deliveryMethod: String,
-        saleFormat: String,
-        paymentMethod: String,
-        auctionDuration: String,
-        auctionStartingPrice: String
-    ) {
+    final override func processAuction(_ mintParameters: ParentPostViewController.MintParameters) {
+        guard let auctionDuration = auctionDurationLabel.text,
+              !auctionDuration.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please specify the auction duration.", for: self)
+            return
+        }
+        guard let auctionStartingPrice = auctionStartingPriceTextField.text,
+              !auctionStartingPrice.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please specify the starting price for your auction.", for: self)
+            return
+        }
         
         guard let index = auctionDuration.firstIndex(of: "d") else { return }
+        
         let newIndex = auctionDuration.index(before: index)
         let newStr = auctionDuration[..<newIndex]
+        
         guard let numOfDays = NumberFormatter().number(from: String(newStr)) else {
             self.alert.showDetail("Sorry", with: "Could not convert the auction duration into a proper format. Please try again.", for: self)
             return
@@ -253,16 +252,16 @@ extension DigitalAssetViewController {
                                             escrowHash: "N/A",
                                             auctionHash: auctionHash,
                                             mintHash: mintHash,
-                                            itemTitle: itemTitle,
-                                            desc: desc,
+                                            itemTitle: mintParameters.itemTitle,
+                                            desc: mintParameters.desc,
                                             price: "N/A",
-                                            category: category,
-                                            tokensArr: tokensArr,
-                                            convertedId: convertedId,
+                                            category: mintParameters.category,
+                                            tokensArr: mintParameters.tokensArr,
+                                            convertedId: mintParameters.convertedId,
                                             type: "digital",
-                                            deliveryMethod: deliveryMethod,
-                                            saleFormat: saleFormat,
-                                            paymentMethod: paymentMethod,
+                                            deliveryMethod: mintParameters.deliveryMethod,
+                                            saleFormat: mintParameters.saleFormat,
+                                            paymentMethod: mintParameters.paymentMethod,
                                             topics: topicsRetainer,
                                             urlStrings: urlStrings,
                                             ipfsURLStrings: [],
@@ -304,10 +303,10 @@ extension DigitalAssetViewController {
                                             
                                             // index Core Spotlight
                                             self.indexSpotlight(
-                                                itemTitle: itemTitle,
-                                                desc: desc,
-                                                tokensArr: tokensArr,
-                                                convertedId: convertedId
+                                                itemTitle: mintParameters.itemTitle,
+                                                desc: mintParameters.desc,
+                                                tokensArr: mintParameters.tokensArr,
+                                                convertedId: mintParameters.convertedId
                                             )
                                             
                                             DispatchQueue.main.async {

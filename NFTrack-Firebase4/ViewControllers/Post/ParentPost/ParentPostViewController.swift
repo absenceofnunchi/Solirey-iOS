@@ -22,6 +22,10 @@ import web3swift
 import QuickLook
 import Combine
 
+// test
+import CryptoKit
+import BigInt
+
 class ParentPostViewController: UIViewController, ButtonPanelConfigurable, TokenConfigurable, ShippingDelegate, CoreSpotlightDelegate, FileUploadable, HandleError {
     let db = FirebaseService.shared.db!
     var scrollView: UIScrollView!
@@ -227,6 +231,183 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         if observation != nil {
             observation?.invalidate()
         }
+        
+        getInfo()
+    }
+    
+    func getInfo() {
+        let parameters: [AnyObject] = [41, "9d78038e487b15758beb4d90ea733b626c1fb7a7d756fb8a77c2fa1de838f730"] as [AnyObject]
+        Deferred { [weak self] in
+            Future<SmartContractProperty, PostingError> { promise in
+                self?.transactionService.prepareTransactionForReading(
+                    method: NFTrackContract.ContractMethods.getInfo.rawValue,
+                    parameters: parameters,
+                    abi: NFTrackABIRevisedABI,
+                    contractAddress: ContractAddresses.NFTrackABIRevisedAddress!,
+                    promise: promise
+                )
+            }
+            .eraseToAnyPublisher()
+        }
+        .flatMap({ (property) -> AnyPublisher<[String: Any], PostingError> in
+            Future<[String: Any], PostingError> { promise in
+                do {
+                    guard let result = try property.transaction?.call() else {
+                        promise(.failure(.generalError(reason: "Could not execute the transaction.")))
+                        return
+                    }
+                    promise(.success(result))
+                } catch {
+                    promise(.failure(.generalError(reason: "Could not execute the transaction.")))
+                }
+            }
+            .eraseToAnyPublisher()
+        })
+        .sink { (completion) in
+            print(completion)
+        } receiveValue: { (properties) in
+            
+            if let onSale = properties["0"] as? Bool {
+                print("onSale", onSale)
+            }
+            
+            if let price = properties["1"] as? BigUInt {
+                print("price", price)
+            }
+            
+            if let tokenId = properties["2"] as? BigUInt {
+                print("tokenId", tokenId)
+            }
+            print("properties", properties)
+        }
+        .store(in: &storage)
+    }
+    
+    func test5() {
+        let combinedString = self.ref.document().documentID
+        let inputData = Data(combinedString.utf8)
+        let hashedId = SHA256.hash(data: inputData)
+        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+        self.simplePaymentId = hashString
+        
+        guard let tokenID = post?.tokenID,
+              let tokenIDNumber = Int(tokenID) else {
+            self.alert.showDetail("Error", with: "Unable to retrieve the token ID to resell. Please try restarting the app.", for: self)
+            return
+        }
+        
+        let price = "0.0000000002"
+        guard !price.isEmpty,
+              let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth) else {
+            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
+            return
+        }
+        
+        // change to this after testing
+        //        guard let convertedPrice = Double(price), convertedPrice > 0.01 else {
+        //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+        //            return
+        //        }
+        
+        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
+            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
+            return
+        }
+        
+        print("priceInWei", priceInWei)
+        print("hashString", hashString)
+        print("tokenIDNumber", tokenIDNumber)
+        print("type", type(of: tokenIDNumber))
+        
+        let param: [AnyObject] = [priceInWei, hashString, tokenIDNumber] as [AnyObject]
+        
+        Deferred { [weak self] in
+            Future<WriteTransaction, PostingError> { promise in
+                self?.transactionService.prepareTransactionForWriting(
+                    method: NFTrackContract.ContractMethods.resell.rawValue,
+                    abi: NFTrackABIRevisedABI,
+                    param: param,
+                    contractAddress: NFTrackABIRevisedAddress,
+                    amountString: nil,
+                    to: NFTrackABIRevisedAddress,
+                    promise: promise
+                )
+            }
+        }
+//        .flatMap({ (transaction) -> AnyPublisher<TxPackage, PostingError> in
+//            Future<TxPackage, PostingError> { promise in
+//                do {
+//                    let gasEstimate = try transaction.estimateGas()
+//                    let txPackage = TxPackage(
+//                        transaction: transaction,
+//                        gasEstimate: gasEstimate,
+//                        price: nil,
+//                        type: .mint
+//                    )
+//                    
+//                    promise(.success(txPackage))
+//                } catch {
+//                    promise(.failure(.retrievingEstimatedGasError))
+//                }
+//            }
+//            .eraseToAnyPublisher()
+//        })
+//        Deferred { [weak self] in
+//            Future<Bool, PostingError> { promise in
+//                self?.db.collection("post")
+//                    .whereField("itemIdentifier", isEqualTo: "sadfsdf")
+//                    .whereField("status", isNotEqualTo: "complete")
+//                    .getDocuments() { (querySnapshot, err) in
+//                        if let err = err {
+//                            print(err)
+//                            promise(.failure(PostingError.generalError(reason: "Unable to check for the Unique Identifier duplicates")))
+//                            return
+//                        }
+//
+//                        if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
+//                            promise(.success(true))
+//                        } else {
+//                            promise(.failure(PostingError.generalError(reason: "The item already exists. Please resell it through the app instead of selling it as a new item.")))
+//                        }
+//                    }
+//            }
+//        }
+//        .flatMap { (isDuplicate) -> AnyPublisher<TxPackage, PostingError> in
+//            Future<TxPackage, PostingError> { [weak self] promise in
+//                self?.transactionService.prepareTransactionForWritingWithGasEstimate(
+//                    method: NFTrackContract.ContractMethods.resell.rawValue,
+//                    abi: NFTrackABIRevisedABI,
+//                    param: param,
+//                    contractAddress: NFTrackABIRevisedAddress,
+//                    amountString: nil,
+//                    promise: promise
+//                )
+//            }
+//            .eraseToAnyPublisher()
+//        }
+//        .flatMap({ [weak self] (txPackage) -> AnyPublisher<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> in
+//            self?.txPackageArr.append(txPackage)
+//            return Future<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> { promise in
+//                self?.transactionService.estimateGas(
+//                    gasEstimate: txPackage.gasEstimate,
+//                    promise: promise
+//                )
+//            }
+//            .eraseToAnyPublisher()
+//        })
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    self?.processFailure(error)
+                    break
+            }
+        } receiveValue: { [weak self] (estimates) in
+            self?.hideSpinner()
+            print("estimates", estimates)
+        }
+        .store(in: &storage)
     }
     
     override func viewDidDisappear(_ animated: Bool) {

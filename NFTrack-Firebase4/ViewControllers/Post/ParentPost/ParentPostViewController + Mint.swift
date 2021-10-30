@@ -108,7 +108,8 @@ extension ParentPostViewController {
                 postType: postType,
                 saleType: (self?.post != nil) ? .resale : .newSale,
                 delivery: deliveryMethodEnum,
-                payment: paymentMethodEnum
+                payment: paymentMethodEnum,
+                contractFormat: .integral
             )
             
             let mintParameters = MintParameters(
@@ -125,8 +126,11 @@ extension ParentPostViewController {
                 postType: postType.asString()
             )
             
+            print("saleConfig.value", saleConfig.value as Any)
             switch saleConfig.value {
-                case .tangibleNewSaleInPersonEscrow:
+                case .tangibleNewSaleInPersonEscrowIntegral:
+                    break
+                case .tangibleNewSaleInPersonEscrowIndividual:
                     self?.checkExistingId(id: convertedId) { (isDuplicate, err) in
                         if let _ = err {
                             self?.alert.showDetail("Error", with: "There was an error checking for the Unique Identifier duplicates.", for: self)
@@ -140,11 +144,16 @@ extension ParentPostViewController {
                         } // not duplicate
                     } // end of checkExistingId
                     break
-                case .tangibleNewSaleInPersonDirectPayment:
+ 
+                case .tangibleNewSaleInPersonDirectPaymentIntegral:
+                    break
+                case .tangibleNewSaleInPersonDirectPaymentIndividual:
                     // The direct transfer option for in-person pickup doesn't require any contracts to be deployed
                     self?.processDirectSaleRevised(mintParameters, isAddressRequired: true, postType: .tangible)
                     break
-                case .tangibleNewSaleShippingEscrow:
+                case .tangibleNewSaleShippingEscrowIntegral:
+                    break
+                case .tangibleNewSaleShippingEscrowIndividual:
                     self?.checkExistingId(id: convertedId) { (isDuplicate, err) in
                         if let _ = err {
                             self?.alert.showDetail("Error", with: "There was an error checking for the Unique Identifier duplicates.", for: self)
@@ -158,24 +167,39 @@ extension ParentPostViewController {
                         } // not duplicate
                     } // end of checkExistingId
                     break
-                case .tangibleResaleInPersonEscrow:
+                case .tangibleResaleInPersonEscrowIntegral:
+                    break
+                case .tangibleResaleInPersonEscrowIndividual:
                     self?.processEscrowResale(mintParameters)
                     break
-                case .tangibleResaleInPersonDirectPayment:
+                case .tangibleResaleInPersonDirectPaymentIntegral:
+                    break
+                case .tangibleResaleInPersonDirectPaymentIndividual:
                     self?.processDirectResaleRevised(mintParameters, isAddressRequired: true, postType: .tangible)
                     break
-                case .tangibleResaleShippingEscrow:
+                case .tangibleResaleShippingEscrowIntegral:
+                    break
+                case .tangibleResaleShippingEscrowIndividual:
                     self?.processEscrowResale(mintParameters)
                     break
-                case .digitalNewSaleOnlineDirectPayment:
+                case .digitalNewSaleOnlineDirectPaymentIntegral:
+                    break
+                case .digitalNewSaleOnlineDirectPaymentIndividual:
                     self?.processDirectSaleRevised(mintParameters, isAddressRequired: false, postType: .digital)
                     break
-                case .digitalNewSaleAuctionBeneficiary:
+                case .digitalNewSaleAuctionBeneficiaryIntegral:
                     break
-                case .digitalResaleOnlineDirectPayment:
+                case .digitalNewSaleAuctionBeneficiaryIndividual:
+                    self?.processAuction(mintParameters)
+                    break
+                case .digitalResaleOnlineDirectPaymentIntegral:
+                    break
+                case .digitalResaleOnlineDirectPaymentIndividual:
                     self?.processDirectResaleRevised(mintParameters, isAddressRequired: false, postType: .digital)
                     break
-                case .digitalResaleAuctionBeneficiary:
+                case .digitalResaleAuctionBeneficiaryIntegral:
+                    break
+                case .digitalResaleAuctionBeneficiaryIndividual:
                     break
                 default:
                     print("no sale config exists")
@@ -233,6 +257,8 @@ extension ParentPostViewController {
     
     @objc dynamic func processDirectResale(_ mintParameters: MintParameters) {}
      
+    @objc dynamic func processAuction(_ mintParameters: MintParameters) {}
+    
     @objc dynamic func configureProgress() {}
 }
 
@@ -269,3 +295,5 @@ extension ParentPostViewController {
         }
     }
 }
+
+

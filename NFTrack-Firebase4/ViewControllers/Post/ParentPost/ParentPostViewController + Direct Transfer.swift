@@ -65,7 +65,7 @@ extension ParentPostViewController {
                     .whereField("status", isNotEqualTo: "complete")
                     .getDocuments() { (querySnapshot, err) in
                         if let err = err {
-                            print(err)
+                            print("error from the duplicate check", err)
                             promise(.failure(PostingError.generalError(reason: "Unable to check for the Unique Identifier duplicates")))
                             return
                         }
@@ -101,8 +101,14 @@ extension ParentPostViewController {
             }
             .eraseToAnyPublisher()
         })
-        .sink { (completion) in
-            print(completion)
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    self?.processFailure(error)
+                    break
+            }
         } receiveValue: { [weak self] (estimates) in
             self?.hideSpinner()
             self?.executeTransaction(
@@ -397,8 +403,14 @@ extension ParentPostViewController {
             }
             .eraseToAnyPublisher()
         })
-        .sink { (completion) in
-            print(completion)
+        .sink { [weak self] (completion) in
+            switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    self?.processFailure(error)
+                    break
+            }
         } receiveValue: { [weak self] (estimates) in
             self?.hideSpinner()
             self?.executeTransactionForResale(
