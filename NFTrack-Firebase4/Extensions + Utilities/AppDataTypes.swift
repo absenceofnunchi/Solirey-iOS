@@ -831,13 +831,20 @@ enum DeliveryMethod: String {
 
 enum PaymentMethod: String {
     case escrow = "Escrow"
+    case integralEscrow = "Default Escrow"
     case directTransfer = "Direct Transfer" // Simple Payment smart contract
+    case integralSimplePayment = "Default Simple Payment"
     case auctionBeneficiary = "Auction Beneficiary"
+    case integralAuction = "Default Auction"
 }
 
-enum ContractFormat: String {
+enum ContractFormat: String, CaseIterable {
     case integral = "Default" // uses the contract pre-launched by me
     case individual = "Individual" // deploys a brand new contract just for this particular transaction
+    
+    static func getAll() -> [String] {
+        return ContractFormat.allCases.map { $0.rawValue }
+    }
 }
 
 // Configures how to post an item depending on the status of its delivery method, payment method, new/resale.
@@ -1038,6 +1045,10 @@ struct InfoText {
     static let ownerOf = """
     Prior to the resale of your item, it is recommended that you confirm the ownership of the current item on the blockchain. This is ensure that you're using the same wallet used to purchase the current item or the ownership has not been transferred to another wallet.
     """
+    
+    static let contractFormatInfo = """
+    The individual smart contract option will deploy a brand new smart contract to the blockchain specifically designated to your transaction.
+    """
 }
 
 // MARK: - SmartContractProperty
@@ -1101,10 +1112,16 @@ struct Topics {
     static let Aborted = ""
     static let SimplePaymentPurchased = "0x3a2d0e41c506b136330c6e5e0295ccbf0966daece99bfe7c89020cc01dbfb8d6"
     static let SimplePaymentMint = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+    
+    struct IntegralAuction {
+        static let auctionCreated = "0x5d551e2a2cc977fd8c530317059b4f2d9f504fb82f7dfad736f8d56679bcdfd0"
+        static let transfer = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+    }
 }
 
 struct ContractAddresses {
     static let NFTrackABIRevisedAddress = EthereumAddress("0xd3F95b3292Cbc7543228B6edEDFA42b474651e8D")
+    static let integralAuctionAddress = EthereumAddress("0x110a0e31e2030573d9040cd609b946b7db82d211")
 }
 
 struct ShippingInfo {

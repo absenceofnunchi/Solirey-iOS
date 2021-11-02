@@ -208,6 +208,8 @@ class QuickUICheckViewController: ParentListViewController<Post>, FetchContractA
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
+            default:
+                break
         }
     }
 }

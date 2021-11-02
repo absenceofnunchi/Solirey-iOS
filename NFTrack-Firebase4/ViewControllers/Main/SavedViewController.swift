@@ -159,6 +159,8 @@ class SavedViewController: ParentListViewController<Post>, PostParseDelegate, Fe
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
+            default:
+                break
         }
     }
 

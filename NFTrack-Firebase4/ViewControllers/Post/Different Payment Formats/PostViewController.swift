@@ -84,97 +84,6 @@ class PostViewController: ParentPostViewController {
         
         // picker for the payment method: escrow, direct
         paymentMethodLabel.tag = 3
-        
-//        let combinedString = self.ref.document().documentID
-//        let inputData = Data(combinedString.utf8)
-//        let hashedId = SHA256.hash(data: inputData)
-//        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
-//        
-//        guard let priceInWei = Web3.Utils.parseToBigUInt("0.0000002", units: .eth) else {
-//            self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
-//            return
-//        }
-//        
-//        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
-//            self.alert.showDetail("Error", with: "Unable to get the smart contract address.", for: self)
-//            return
-//        }
-//        self.socketDelegate = SocketDelegate(contractAddress: NFTrackABIRevisedAddress, topics: [Topics.SimplePaymentMint])
-//        let param: [AnyObject] = [priceInWei, hashString] as [AnyObject]
-//
-//        Deferred {
-//            Future<TxPackage, PostingError> { [weak self] promise in
-//                self?.transactionService.prepareTransactionForWritingWithGasEstimate(
-//                    method: NFTrackContract.ContractMethods.createSimplePayment.rawValue,
-//                    abi: NFTrackABIRevisedABI,
-//                    param: param,
-//                    contractAddress: NFTrackABIRevisedAddress,
-//                    amountString: nil,
-//                    promise: promise
-//                )
-//            }
-//            .eraseToAnyPublisher()
-//        }
-//        .flatMap({ [weak self] (txPackage) -> AnyPublisher<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> in
-//            self?.txPackageArr.append(txPackage)
-//            return Future<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> { promise in
-//                self?.transactionService.estimateGas(
-//                    gasEstimate: txPackage.gasEstimate,
-//                    promise: promise
-//                )
-//            }
-//            .eraseToAnyPublisher()
-//        })
-//        .flatMap({ [weak self] (tokenId) -> AnyPublisher<TransactionSendingResult, PostingError> in
-//            Future<TransactionSendingResult, PostingError> { promise in
-//                do {
-//                    guard let result = try self?.txPackageArr.first!.transaction.send(password: "111111", transactionOptions: nil) else { return }
-//                    promise(.success(result))
-//                } catch {
-//                    promise(.failure(.generalError(reason: "Unable to execute the transaction.")))
-//                }
-//            }
-//            .eraseToAnyPublisher()
-//        })
-//        // get the topics of the paymentMade event from the socket delegate
-//        .flatMap { [weak self] (txResult) -> AnyPublisher<BigUInt, PostingError> in
-//            let update: [String: PostProgress] = ["update": .estimatGas]
-//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-//                        
-//            // retain the mint transaction details for FireStore
-//            return Future<BigUInt, PostingError> { promise in
-//                self?.socketDelegate.didReceiveTopics = { webSocketMessage in
-//                    
-//                    guard let topics = webSocketMessage["topics"] as? [String] else { return }
-//                    
-//                    let fromAddress = topics[2]
-//                    let paddedTokenId = topics[3]
-//                    
-//                    guard let tokenId = Web3Utils.hexToBigUInt(paddedTokenId) else {
-//                        promise(.failure(.generalError(reason: "Unable to parse the newly minted token ID.")))
-//                        return
-//                    }
-//                    
-//                    let data = Data(hex: fromAddress)
-//                    guard let decodedFromAddress = ABIDecoder.decode(types: [.address], data:data)?.first as? EthereumAddress else {
-//                        promise(.failure(.generalError(reason: "Unable to decode the contract address.")))
-//                        return
-//                    }
-//                    
-//                    if decodedFromAddress == Web3swiftService.currentAddress {
-//                        promise(.success(tokenId))
-//                    }
-//                }
-//            }
-//            .eraseToAnyPublisher()
-//        }
-//        .sink { (completion) in
-//            print(completion)
-//        } receiveValue: { [weak self] (estimates) in
-//            self?.hideSpinner()
-//            print("estimates", estimates)
-//        }
-//        .store(in: &storage)
     }
     
     func test() {
@@ -455,7 +364,7 @@ class PostViewController: ParentPostViewController {
 }
 
 extension PostViewController {
-    override var inputView: UIView? {
+    final override var inputView: UIView? {
         switch pickerTag {
             case 1:
                 return self.deliveryMethodPicker.inputView
@@ -463,12 +372,14 @@ extension PostViewController {
                 return self.pvc.inputView
             case 3:
                 return self.paymentMethodPicker.inputView
+            case 49:
+                return self.contractFormatPicker.inputView
             default:
                 return nil
         }
     }
     
-    @objc func doDone() { // user tapped button in accessory view
+    @objc final func doDone() { // user tapped button in accessory view
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
@@ -479,6 +390,8 @@ extension PostViewController {
                 self.pickerLabel.text = pvc.currentPep
             case 3:
                 self.paymentMethodLabel.text = paymentMethodPicker.currentPep
+            case 49:
+                self.smartContractFormatLabel.text = contractFormatPicker.currentPep
             default:
                 break
         }

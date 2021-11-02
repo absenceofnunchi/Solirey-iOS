@@ -262,13 +262,11 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 let simpleVC = SimpleRevisedViewController()
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
+                break
+            case .integralAuction:
                 
-//                guard let escrowHash = post.escrowHash else { return }
-//                getContractAddress(with: escrowHash) { [weak self] (contractAddress) in
-//                    let simplePaymentDetailVC = SimplePaymentDetailViewController(deployedContractAddress: contractAddress)
-//                    simplePaymentDetailVC.post = post
-//                    self?.navigationController?.pushViewController(simplePaymentDetailVC, animated: true)
-//                }
+                break
+            default:
                 break
         }
     }

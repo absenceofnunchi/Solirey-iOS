@@ -80,6 +80,9 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var paymentMethodTitleLabel: UILabel!
     var paymentInfoButton: UIButton!
     var paymentMethodLabel: UILabel!
+    var smartContractFormatTitleLabel: UILabel!
+    var smartContractFormatInfoButton: UIButton!
+    var smartContractFormatLabel: UILabel!
     lazy var saleMethodTopConstraint: NSLayoutConstraint! = saleMethodTitleLabel.topAnchor.constraint(equalTo: addressLabel.bottomAnchor, constant: 0)
     var saleMethodInfoButton: UIButton!
     var saleMethodTitleLabel: UILabel!
@@ -156,6 +159,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     let deliveryMethodPicker = MyPickerVC(currentPep: DeliveryMethod.shipping.rawValue, pep: [DeliveryMethod.shipping.rawValue, DeliveryMethod.inPerson.rawValue])
     lazy var pvc: MyPickerVC =  MyPickerVC(currentPep: Category.electronics.asString(), pep: self.post != nil ? Category.getTangibleResaleOptions() : Category.getAll())
     let paymentMethodPicker = MyPickerVC(currentPep: PaymentMethod.escrow.rawValue, pep: [PaymentMethod.escrow.rawValue, PaymentMethod.directTransfer.rawValue])
+    let contractFormatPicker = MyPickerVC(currentPep: ContractFormat.integral.rawValue, pep: ContractFormat.getAll())
     
     /// done button for the picker
     let mdbvc = MyDoneButtonVC()
@@ -174,7 +178,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         return imageName
     }
     
-    var SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat! = 1650
+    var SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT: CGFloat! = 1750
     var IMAGE_PREVIEW_HEIGHT: CGFloat! = 180
     lazy var SCROLLVIEW_CONTENTSIZE_WITH_IMAGE_PREVIEW: CGFloat! = SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT + IMAGE_PREVIEW_HEIGHT
     var escrowHash: String!
@@ -210,7 +214,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         setConstraints()
         setColorPatchView()
         configureOwnerOf()
-
+        
         // Determine whether the postType is tangible or digital, which was set my the segmentedControl
         // This is to be used for minting
         postType = type(of: self) == PostViewController.self ? .tangible : .digital
@@ -231,8 +235,6 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         if observation != nil {
             observation?.invalidate()
         }
-        
-        getInfo()
     }
     
     func getInfo() {
@@ -563,6 +565,21 @@ extension ParentPostViewController {
         paymentMethodLabel = createLabel(text: "")
         scrollView.addSubview(paymentMethodLabel)
         
+        smartContractFormatTitleLabel = createTitleLabel(text: "Smart Contract Format")
+        smartContractFormatTitleLabel.isUserInteractionEnabled = true
+        scrollView.addSubview(smartContractFormatTitleLabel)
+        
+        smartContractFormatInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
+        smartContractFormatInfoButton.tag = 6
+        smartContractFormatInfoButton.translatesAutoresizingMaskIntoConstraints = false
+        smartContractFormatTitleLabel.addSubview(smartContractFormatInfoButton)
+        
+        smartContractFormatLabel = createLabel(text: "")
+        smartContractFormatLabel.isUserInteractionEnabled = true
+        smartContractFormatLabel.tag = 49
+        scrollView.addSubview(smartContractFormatLabel)        
+        smartContractFormatLabel.addGestureRecognizer(tap)
+        
         let paymentLabelTap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
         paymentMethodLabel.addGestureRecognizer(paymentLabelTap)
         
@@ -730,8 +747,21 @@ extension ParentPostViewController {
         paymentMethodLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
         paymentMethodLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
         
+        smartContractFormatTitleLabel.topAnchor.constraint(equalTo: paymentMethodLabel.bottomAnchor, constant: 20).isActive = true
+        smartContractFormatTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        smartContractFormatTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        smartContractFormatTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        
+        smartContractFormatInfoButton.trailingAnchor.constraint(equalTo: paymentMethodTitleLabel.trailingAnchor).isActive = true
+        smartContractFormatInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        
+        smartContractFormatLabel.topAnchor.constraint(equalTo: smartContractFormatTitleLabel.bottomAnchor, constant: 0).isActive = true
+        smartContractFormatLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        smartContractFormatLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        smartContractFormatLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        
         // category
-        pickerTitleLabel.topAnchor.constraint(equalTo: paymentMethodLabel.bottomAnchor, constant: 20).isActive = true
+        pickerTitleLabel.topAnchor.constraint(equalTo: smartContractFormatLabel.bottomAnchor, constant: 20).isActive = true
         pickerTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
         pickerTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
         pickerTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
@@ -788,25 +818,34 @@ extension ParentPostViewController {
             switch sender.tag {
                 case 3:
                     mint()
+                    break
                 case 4:
                     if let text = tagTextField.text, !text.isEmpty {
                         tagTextField.text?.removeAll()
                         let token = createSearchToken(text: text, index: tagTextField.tokens.count)
                         tagTextField.insertToken(token, at: tagTextField.tokens.count > 0 ? tagTextField.tokens.count : 0)
                     }
+                    break
                 case 5:
                     configureProgress()
+                    break
+                case 6:
+                    let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Smart Contract Format", detail: InfoText.contractFormatInfo)])
+                    self.present(infoVC, animated: true, completion: nil)
+                    break
                 case 7:
                     let scannerVC = ScannerViewController()
                     scannerVC.delegate = self
                     scannerVC.modalPresentationStyle = .fullScreen
                     self.present(scannerVC, animated: true, completion: nil)
+                    break
                 case 8:
                     let vc = UIImagePickerController()
                     vc.sourceType = .camera
                     vc.allowsEditing = true
                     vc.delegate = self
                     present(vc, animated: true)
+                    break
                 case 9:
                     let imagePickerController = UIImagePickerController()
                     imagePickerController.allowsEditing = false
@@ -814,12 +853,15 @@ extension ParentPostViewController {
                     imagePickerController.delegate = self
                     imagePickerController.modalPresentationStyle = .fullScreen
                     present(imagePickerController, animated: true, completion: nil)
+                    break
                 case 10:
                     documentPicker = DocumentPicker(presentationController: self, delegate: self)
                     documentPicker.displayPicker()
+                    break
                 case 24:
                     let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Pricing", detail: InfoText.pricing)])
                     self.present(infoVC, animated: true, completion: nil)
+                    break
                 default:
                     break
             }

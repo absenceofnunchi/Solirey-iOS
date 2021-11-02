@@ -183,6 +183,8 @@ class ListViewController: ParentListViewController<Post>, FetchContractAddress {
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
+            default:
+                break
         }
     }
     

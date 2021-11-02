@@ -7,6 +7,7 @@
 
 import Foundation
 import web3swift
+import BigInt
 
 protocol ContractMethodsEnum {}
 protocol ContractPropertiesEnum {
@@ -341,4 +342,74 @@ enum NFTrackProperties: ContractPropertiesEnum {
 struct NFTrackContract: PropertyLoadable {
     typealias ContractMethods = NFTrackMethods
     typealias ContractProperties = NFTrackProperties
+}
+
+// MARK: - Integral Auction
+enum IntegralAuctionMethods: String, ContractMethodsEnum {
+    case createAuction
+    case abort
+    case resell
+    case bid
+    case withdraw
+    case auctionEnd
+    case getTheHighestBid
+    case transferToken
+}
+
+enum IntegralAuctionProperties: ContractPropertiesEnum {
+    case _auctionInfo(BigUInt)
+    case _artist(BigUInt)
+    
+    struct AuctionInfo {
+        let beneficiary: String
+        let auctionEndTime: BigUInt
+        let startingBid: BigUInt
+        let tokenId: BigUInt
+        let highestBidder: BigUInt
+        let highestBid: BigUInt
+        let pendingReturns: [EthereumAddress: BigUInt]
+        let ended: Bool
+        let transferred: Bool
+    }
+    
+    // tuple because some properties like mapping requires a key such as pendingReturns
+    var value: (String, AnyObject?) {
+        switch self {
+            case ._auctionInfo(let id):
+                return ("_auctionInfo", id as AnyObject)
+            case ._artist(let tokenId):
+                return ("_artist", tokenId as AnyObject)
+        }
+    }
+    
+    func toDisplay() -> String {
+        switch self {
+            case ._auctionInfo(_):
+                return "Auction Info"
+            case ._artist(_):
+                return "Artist"
+        }
+    }
+}
+
+struct IntegralAuctionContract: PropertyLoadable {
+    typealias ContractMethods = IntegralAuctionMethods
+    typealias ContractProperties = IntegralAuctionProperties
+}
+
+enum IntegralAuctionStatus: String {
+    case ready, bid, ended, transferred
+    
+    var toDisplay: String! {
+        switch self {
+            case .bid:
+                return "Bid"
+            case .ended:
+                return "Auction Ended"
+            case .transferred:
+                return "Transferred"
+            default:
+                return "ready"
+        }
+    }
 }

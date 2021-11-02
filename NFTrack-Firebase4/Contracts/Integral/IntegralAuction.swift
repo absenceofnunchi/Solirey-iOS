@@ -7,9 +7,12 @@
 
 /*
  Abstract:
- The cheaper version of AuctionABI. The child contract of Solirey.
+ The cheaper version of AuctionABI that doesn't need to be individually deployed. The child contract of Solirey.
  */
-let solireyAuctionABI = """
+
+import web3swift
+
+let integralAuctionABI = """
 [
     {
         "anonymous": false,
@@ -66,9 +69,22 @@ let solireyAuctionABI = """
         "inputs": [
             {
                 "indexed": false,
-                "internalType": "string",
+                "internalType": "uint256",
                 "name": "id",
-                "type": "string"
+                "type": "uint256"
+            }
+        ],
+        "name": "AuctionCreated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
             }
         ],
         "name": "AuctionEnded",
@@ -79,9 +95,9 @@ let solireyAuctionABI = """
         "inputs": [
             {
                 "indexed": false,
-                "internalType": "string",
+                "internalType": "uint256",
                 "name": "id",
-                "type": "string"
+                "type": "uint256"
             },
             {
                 "indexed": false,
@@ -127,9 +143,9 @@ let solireyAuctionABI = """
     {
         "inputs": [
             {
-                "internalType": "string",
+                "internalType": "uint256",
                 "name": "id",
-                "type": "string"
+                "type": "uint256"
             }
         ],
         "name": "abort",
@@ -158,9 +174,9 @@ let solireyAuctionABI = """
     {
         "inputs": [
             {
-                "internalType": "string",
+                "internalType": "uint256",
                 "name": "id",
-                "type": "string"
+                "type": "uint256"
             }
         ],
         "name": "auctionEnd",
@@ -171,9 +187,9 @@ let solireyAuctionABI = """
     {
         "inputs": [
             {
-                "internalType": "string",
+                "internalType": "uint256",
                 "name": "id",
-                "type": "string"
+                "type": "uint256"
             }
         ],
         "name": "bid",
@@ -183,11 +199,6 @@ let solireyAuctionABI = """
     },
     {
         "inputs": [
-            {
-                "internalType": "string",
-                "name": "id",
-                "type": "string"
-            },
             {
                 "internalType": "uint256",
                 "name": "_biddingTime",
@@ -207,9 +218,9 @@ let solireyAuctionABI = """
     {
         "inputs": [
             {
-                "internalType": "string",
+                "internalType": "uint256",
                 "name": "id",
-                "type": "string"
+                "type": "uint256"
             }
         ],
         "name": "getTheHighestBid",
@@ -219,11 +230,6 @@ let solireyAuctionABI = """
     },
     {
         "inputs": [
-            {
-                "internalType": "string",
-                "name": "id",
-                "type": "string"
-            },
             {
                 "internalType": "uint256",
                 "name": "_biddingTime",
@@ -340,9 +346,9 @@ let solireyAuctionABI = """
     {
         "inputs": [
             {
-                "internalType": "string",
+                "internalType": "uint256",
                 "name": "id",
-                "type": "string"
+                "type": "uint256"
             }
         ],
         "name": "withdraw",
@@ -359,9 +365,28 @@ let solireyAuctionABI = """
     {
         "inputs": [
             {
-                "internalType": "string",
+                "internalType": "uint256",
                 "name": "",
-                "type": "string"
+                "type": "uint256"
+            }
+        ],
+        "name": "_artist",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "name": "_auctionInfo",
@@ -557,3 +582,4 @@ let solireyAuctionABI = """
     }
 ]
 """
+

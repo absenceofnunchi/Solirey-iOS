@@ -213,6 +213,8 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
+            default:
+                break
         }
     }
     

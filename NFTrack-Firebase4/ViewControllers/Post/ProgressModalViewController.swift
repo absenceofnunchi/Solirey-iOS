@@ -44,6 +44,10 @@ struct PostProgressData {
                 phases = [.estimatGas, .minting, .images]
             case .auctionBeneficiary:
                 phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
+            case .integralAuction:
+                phases = [.estimatGas, .minting, .images]
+            default:
+                phases = []
         }
     }
     

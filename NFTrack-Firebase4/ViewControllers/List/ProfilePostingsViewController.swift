@@ -79,6 +79,8 @@ class ProfilePostingsViewController: ProfileListViewController<Post>, PostParseD
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
+            default:
+                break
         }
     }
     

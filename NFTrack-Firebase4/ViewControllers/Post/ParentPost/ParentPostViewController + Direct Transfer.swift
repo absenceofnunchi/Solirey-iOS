@@ -16,7 +16,6 @@
 
 import UIKit
 import web3swift
-import CryptoKit
 import Combine
 
 extension ParentPostViewController {
@@ -48,15 +47,16 @@ extension ParentPostViewController {
             return
         }
         
+        // ** important ** this is not deprecated
         // create an ID for the new item to be saved into the _simplePayment mapping.
-        let combinedString = self.ref.document().documentID + mintParameters.userId
-        let inputData = Data(combinedString.utf8)
-        let hashedId = SHA256.hash(data: inputData)
-        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
-        self.simplePaymentId = hashString
+//        let combinedString = self.ref.document().documentID + mintParameters.userId
+//        let inputData = Data(combinedString.utf8)
+//        let hashedId = SHA256.hash(data: inputData)
+//        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+//        self.simplePaymentId = hashString
         
         // The parameters for the createSimplePayment method
-        let param: [AnyObject] = [priceInWei, hashString] as [AnyObject]
+        let param: [AnyObject] = [priceInWei] as [AnyObject]
         
         Deferred { [weak self] in
             Future<Bool, PostingError> { promise in
@@ -114,7 +114,6 @@ extension ParentPostViewController {
             self?.executeTransaction(
                 estimates: estimates,
                 mintParameters: mintParameters,
-                hashString: hashString,
                 postType: postType
             )
         }
@@ -124,7 +123,6 @@ extension ParentPostViewController {
     private func executeTransaction(
         estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
         mintParameters: MintParameters,
-        hashString: String,
         postType: PostType
     ) {
         var txResultRetainer: TransactionSendingResult!
@@ -252,8 +250,7 @@ extension ParentPostViewController {
                                 NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                 
                                 guard let self = self,
-                                      let currentAddressString = Web3swiftService.currentAddressString,
-                                      let simplePaymentId = self.simplePaymentId else {
+                                      let currentAddressString = Web3swiftService.currentAddressString else {
                                     return Fail(error: PostingError.generalError(reason: "Unable to prepare data for the database update."))
                                         .eraseToAnyPublisher()
                                 }
@@ -277,9 +274,9 @@ extension ParentPostViewController {
                                         paymentMethod: mintParameters.paymentMethod,
                                         tokenId: tokenIdRetainer,
                                         urlStrings: urlStrings,
-                                        simplePaymentId: simplePaymentId,
                                         ipfsURLStrings: [],
                                         shippingInfo: self.shippingInfo,
+                                        solireyUid: "something",
                                         promise: promise
                                     )
                                 }
@@ -320,12 +317,14 @@ extension ParentPostViewController {
 // MARK: - Resale
 extension ParentPostViewController {
     final func processDirectResaleRevised(_ mintParameters: ParentPostViewController.MintParameters, isAddressRequired: Bool, postType: PostType) {
+        
+        // ** important now deprecated
         // create an ID for the existing item to be saved into the _simplePayment mapping as a new posting.
-        let combinedString = self.ref.document().documentID + mintParameters.userId
-        let inputData = Data(combinedString.utf8)
-        let hashedId = SHA256.hash(data: inputData)
-        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
-        self.simplePaymentId = hashString
+//        let combinedString = self.ref.document().documentID + mintParameters.userId
+//        let inputData = Data(combinedString.utf8)
+//        let hashedId = SHA256.hash(data: inputData)
+//        let hashString = hashedId.compactMap { String(format: "%02x", $0) }.joined()
+//        self.simplePaymentId = hashString
         
         guard let tokenID = post?.tokenID,
               let tokenIDNumber = NumberFormatter().number(from: tokenID) else {
@@ -358,7 +357,7 @@ extension ParentPostViewController {
             return
         }
         
-        let param: [AnyObject] = [priceInWei, hashString, tokenIDNumber] as [AnyObject]
+        let param: [AnyObject] = [priceInWei, tokenIDNumber] as [AnyObject]
         
         Deferred { [weak self] in
             Future<Bool, PostingError> { promise in
@@ -416,7 +415,6 @@ extension ParentPostViewController {
             self?.executeTransactionForResale(
                 estimates: estimates,
                 mintParameters: mintParameters,
-                hashString: hashString,
                 postType: postType
             )
         }
@@ -426,7 +424,6 @@ extension ParentPostViewController {
     private func executeTransactionForResale(
         estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
         mintParameters: MintParameters,
-        hashString: String,
         postType: PostType
     ) {
         var txResultRetainer: TransactionSendingResult!
@@ -513,7 +510,6 @@ extension ParentPostViewController {
                         .flatMap { [weak self] (urlStrings) -> AnyPublisher<Bool, PostingError> in
                             guard let self = self,
                                   let currentAddressString = Web3swiftService.currentAddressString,
-                                  let simplePaymentId = self.simplePaymentId,
                                   let tokenId = self.post?.tokenID else {
                                 return Fail(error: PostingError.generalError(reason: "Unable to prepare data for the database update."))
                                     .eraseToAnyPublisher()
@@ -538,9 +534,9 @@ extension ParentPostViewController {
                                     paymentMethod: mintParameters.paymentMethod,
                                     tokenId: tokenId,
                                     urlStrings: urlStrings,
-                                    simplePaymentId: simplePaymentId,
                                     ipfsURLStrings: [],
                                     shippingInfo: self.shippingInfo,
+                                    solireyUid: "something",
                                     promise: promise
                                 )
                             }

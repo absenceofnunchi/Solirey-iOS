@@ -30,13 +30,12 @@ class MyDoneButtonVC : UIInputViewController {
         b.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
 //            iv.topAnchor.constraint(equalTo: view.topAnchor),
-                        iv.heightAnchor.constraint(equalToConstant: 50),
+            iv.heightAnchor.constraint(equalToConstant: 50),
             iv.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             iv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             iv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             
             b.topAnchor.constraint(equalTo: iv.topAnchor),
-//            b.heightAnchor.constraint(equalToConstant: 50),
             b.bottomAnchor.constraint(equalTo: iv.bottomAnchor),
             b.leadingAnchor.constraint(equalTo: iv.leadingAnchor),
             b.trailingAnchor.constraint(equalTo: iv.trailingAnchor),

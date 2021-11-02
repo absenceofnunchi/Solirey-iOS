@@ -129,6 +129,8 @@ class SearchResultsController: ParentListViewController<Post>, UISearchBarDelega
 //                    self?.navigationController?.pushViewController(simplePaymentDetailVC, animated: true)
 //                }
                 break
+            default:
+                break
         }
     }
     

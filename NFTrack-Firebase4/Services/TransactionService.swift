@@ -1008,11 +1008,11 @@ extension TransactionService {
         paymentMethod: String,
         tokenId: String,
         urlStrings: [String?],
-        simplePaymentId: String,
         ipfsURLStrings: [String?],
         shippingInfo: ShippingInfo? = nil,
         isWithdrawn: Bool = true,
         isAdminWithdrawn: Bool = true,
+        solireyUid: String,
         promise: @escaping (Result<Bool, PostingError>) -> Void
     ) {
         let ref = self.db.collection("post")
@@ -1053,10 +1053,10 @@ extension TransactionService {
             "bidders": [],
             "shippingInfo": shippingInfoData,
             "saleType": SaleType.newSale.rawValue,
-            "simplePaymentId": simplePaymentId,
             "isWithdrawn": isWithdrawn, // There are contracts like Auction or SimplePayment that requires the bidders that have been outbid or the seller whose item has been purchased, respectively, that require the user to withdraw their funds manually
             "isAdminWithdrawn": isAdminWithdrawn, // The fee collected by the admin
-            "tokenId": tokenId
+            "tokenId": tokenId,
+            "solireyUid": solireyUid // Solirey unique ID that's required for each posting on the contract (i.e. mapping's key)
         ]
         
         // txHash is either minting or transferring the ownership

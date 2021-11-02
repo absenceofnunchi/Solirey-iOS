@@ -41,6 +41,13 @@ extension ParentPostViewController {
                 return
             }
             
+            guard let contractFormat = self?.smartContractFormatLabel.text,
+                  !contractFormat.isEmpty,
+                  let contractFormatEnum = ContractFormat(rawValue: contractFormat) else {
+                self?.alert.showDetail("Incomplete", with: "Please select the smart contract format.", for: self)
+                return
+            }
+            
             guard let category = self?.pickerLabel.text,
                   !category.isEmpty else {
                 self?.alert.showDetail("Incomplete", with: "Please choose the category.", for: self)
@@ -109,7 +116,7 @@ extension ParentPostViewController {
                 saleType: (self?.post != nil) ? .resale : .newSale,
                 delivery: deliveryMethodEnum,
                 payment: paymentMethodEnum,
-                contractFormat: .integral
+                contractFormat: contractFormatEnum
             )
             
             let mintParameters = MintParameters(
@@ -123,10 +130,11 @@ extension ParentPostViewController {
                 deliveryMethod: deliveryMethod,
                 saleFormat: saleFormat,
                 paymentMethod: paymentMethod,
-                postType: postType.asString()
+                contractFormat: contractFormat,
+                postType: postType.asString(),
+                saleConfigValue: saleConfig.value
             )
             
-            print("saleConfig.value", saleConfig.value as Any)
             switch saleConfig.value {
                 case .tangibleNewSaleInPersonEscrowIntegral:
                     break
@@ -144,8 +152,7 @@ extension ParentPostViewController {
                         } // not duplicate
                     } // end of checkExistingId
                     break
- 
-                case .tangibleNewSaleInPersonDirectPaymentIntegral:
+                 case .tangibleNewSaleInPersonDirectPaymentIntegral:
                     break
                 case .tangibleNewSaleInPersonDirectPaymentIndividual:
                     // The direct transfer option for in-person pickup doesn't require any contracts to be deployed
@@ -188,6 +195,7 @@ extension ParentPostViewController {
                     self?.processDirectSaleRevised(mintParameters, isAddressRequired: false, postType: .digital)
                     break
                 case .digitalNewSaleAuctionBeneficiaryIntegral:
+                    self?.processAuction(mintParameters)
                     break
                 case .digitalNewSaleAuctionBeneficiaryIndividual:
                     self?.processAuction(mintParameters)
@@ -219,7 +227,9 @@ extension ParentPostViewController {
         let deliveryMethod: String
         let saleFormat: String
         let paymentMethod: String
+        let contractFormat: String
         let postType: String
+        let saleConfigValue: DeliveryAndPaymentMethod?
         
         init(
             price: String?,
@@ -232,7 +242,9 @@ extension ParentPostViewController {
             deliveryMethod: String,
             saleFormat: String,
             paymentMethod: String,
-            postType: String
+            contractFormat: String,
+            postType: String,
+            saleConfigValue: DeliveryAndPaymentMethod?
         ) {
             self.price = price
             self.itemTitle = itemTitle
@@ -244,8 +256,25 @@ extension ParentPostViewController {
             self.deliveryMethod = deliveryMethod
             self.saleFormat = saleFormat
             self.paymentMethod = paymentMethod
+            self.contractFormat = contractFormat
             self.postType = postType
+            self.saleConfigValue = saleConfigValue
         }
+        
+//        func getSaleConfigValue() -> DeliveryAndPaymentMethod? {
+//            guard let postTypeValue = PostType(rawValue: postType),
+//                  let deliveryMethodValue = DeliveryMethod(rawValue: deliveryMethod),
+//                  let paymentMethodValue = PaymentMethod(rawValue: paymentMethod),
+//                  let contractFormatValue = ContractFormat(rawValue: contractFormat) else { return nil }
+//
+//            let saleConfig = SaleConfig.hybridMethod(
+//                postType: postTypeValue,
+//                saleType: (self.post != nil) ? .resale : .newSale,
+//                delivery: deliveryMethodValue,
+//                payment: paymentMethodValue,
+//                contractFormat: contractFormatValue
+//            )
+//        }
     }
     
     @objc dynamic func processEscrow(_ mintParameters: MintParameters) {}

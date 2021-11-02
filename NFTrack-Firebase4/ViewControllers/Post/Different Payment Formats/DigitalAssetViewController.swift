@@ -389,6 +389,8 @@ extension DigitalAssetViewController {
         switch pickerTag {
             case 3:
                 return self.saleFormatPicker.inputView
+            case 49:
+                return self.contractFormatPicker.inputView
             case 50:
                 return self.auctionDurationPicker.inputView
             default:
@@ -403,6 +405,8 @@ extension DigitalAssetViewController {
         switch pickerTag {
             case 3:
                 self.saleMethodLabel.text = saleFormatPicker.currentPep
+            case 49:
+                self.smartContractFormatLabel.text = contractFormatPicker.currentPep
             case 50:
                 self.auctionDurationLabel.textColor = .black
                 self.auctionDurationLabel.text = auctionDurationPicker.currentPep + " days"
