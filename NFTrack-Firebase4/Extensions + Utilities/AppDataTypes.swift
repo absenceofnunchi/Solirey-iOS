@@ -1117,11 +1117,17 @@ struct Topics {
         static let auctionCreated = "0x5d551e2a2cc977fd8c530317059b4f2d9f504fb82f7dfad736f8d56679bcdfd0"
         static let transfer = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
     }
+    
+    struct IndividualAuction {
+        static let mint = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+    }
 }
 
 struct ContractAddresses {
     static let NFTrackABIRevisedAddress = EthereumAddress("0xd3F95b3292Cbc7543228B6edEDFA42b474651e8D")
     static let integralAuctionAddress = EthereumAddress("0x110a0e31e2030573d9040cd609b946b7db82d211")
+    static let solireyMintContractAddress = EthereumAddress("0x7714F9D47cb475fE1F8041c8CE60b6B98487a454")
+//    static let solireyMintContractAddress = EthereumAddress("0x0b7964f34699bf1db6642d34bb10226aaa47fff2")
 }
 
 struct ShippingInfo {
@@ -1144,3 +1150,48 @@ struct ProgressMeterNode {
     var dateLabelText: String? = ""
 }
 
+class MintParameters: NSObject {
+    let price: String?
+    let itemTitle: String
+    let desc: String
+    let category: String
+    let convertedId: String
+    let tokensArr: Set<String>
+    let userId: String
+    let deliveryMethod: String
+    let saleFormat: String
+    let paymentMethod: String
+    let contractFormat: String
+    let postType: String
+    let saleConfigValue: DeliveryAndPaymentMethod?
+    
+    init(
+        price: String?,
+        itemTitle: String,
+        desc: String,
+        category: String,
+        convertedId: String,
+        tokensArr: Set<String>,
+        userId: String,
+        deliveryMethod: String,
+        saleFormat: String,
+        paymentMethod: String,
+        contractFormat: String,
+        postType: String,
+        saleConfigValue: DeliveryAndPaymentMethod?
+    ) {
+        self.price = price
+        self.itemTitle = itemTitle
+        self.desc = desc
+        self.category = category
+        self.convertedId = convertedId
+        self.tokensArr = tokensArr
+        self.userId = userId
+        self.deliveryMethod = deliveryMethod
+        self.saleFormat = saleFormat
+        self.paymentMethod = paymentMethod
+        self.contractFormat = contractFormat
+        self.postType = postType
+        self.saleConfigValue = saleConfigValue
+    }
+}

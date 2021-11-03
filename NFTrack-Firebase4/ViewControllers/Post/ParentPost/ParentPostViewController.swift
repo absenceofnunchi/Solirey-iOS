@@ -205,6 +205,8 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     // The unique ID for a post on the smart contract
     var simplePaymentId: String!
     var txPackageArr = [TxPackage]()
+    var txResultArr = [TxResult2]()
+    var topicsRetainer: [String]!
 
     override func viewDidLoad() {
         super.viewDidLoad()

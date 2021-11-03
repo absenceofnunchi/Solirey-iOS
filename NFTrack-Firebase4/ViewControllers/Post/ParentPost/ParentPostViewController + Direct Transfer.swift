@@ -316,7 +316,7 @@ extension ParentPostViewController {
 
 // MARK: - Resale
 extension ParentPostViewController {
-    final func processDirectResaleRevised(_ mintParameters: ParentPostViewController.MintParameters, isAddressRequired: Bool, postType: PostType) {
+    final func processDirectResaleRevised(_ mintParameters: MintParameters, isAddressRequired: Bool, postType: PostType) {
         
         // ** important now deprecated
         // create an ID for the existing item to be saved into the _simplePayment mapping as a new posting.

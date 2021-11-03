@@ -131,6 +131,8 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
                     }
             }
         }
+        
+        test100()
     }
     
     final override func viewDidDisappear(_ animated: Bool) {

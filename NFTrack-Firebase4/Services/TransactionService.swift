@@ -417,7 +417,7 @@ extension TransactionService {
         options.gasPrice = TransactionOptions.GasPricePolicy.automatic
         
         let web3 = Web3swiftService.web3instance
-        guard let contract = web3.contract(NFTrackABI, at: NFTrackAddress, abiVersion: 2) else {
+        guard let contract = web3.contract(mintContractABI, at: ContractAddresses.solireyMintContractAddress, abiVersion: 2) else {
             promise(.failure(PostingError.contractLoadingError))
             return
         }
@@ -1316,7 +1316,7 @@ extension TransactionService {
     }
     
     // Confirms that a block has been added to the blockchain by counting the number of confirmations.
-    func confirmTransactions(_ receipt: TransactionReceipt, confirmations: Int = 5) -> AnyPublisher<TransactionReceipt, PostingError> {
+    final func confirmTransactions(_ receipt: TransactionReceipt, confirmations: Int = 5) -> AnyPublisher<TransactionReceipt, PostingError> {
         Deferred {
             Future<BigUInt, PostingError> { promise in
                 Web3swiftService.getBlock(promise)
@@ -1350,7 +1350,7 @@ extension TransactionService {
         }
     }
         
-    func estimateGas(gasEstimate: BigUInt, completion: @escaping ((totalGasCost: String, balance: String, gasPriceInGwei: String)?, PostingError?) -> Void)  {
+    final func estimateGas(gasEstimate: BigUInt, completion: @escaping ((totalGasCost: String, balance: String, gasPriceInGwei: String)?, PostingError?) -> Void)  {
         var gasPrice: BigUInt!
         do {
             gasPrice = try Web3swiftService.web3instance.eth.getGasPrice()
@@ -1387,7 +1387,7 @@ extension TransactionService {
         completion((convertedTotalGasCost, convertedBalance, gasPriceInGwei), nil)
     }
     
-    func estimateGas(
+    final func estimateGas(
         gasEstimate: BigUInt,
         promise: @escaping (Result<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError>) -> Void
     )  {
@@ -1429,26 +1429,8 @@ extension TransactionService {
         promise(.success((trimmedTotalGasCost, convertedBalance, gasPriceInGwei)))
     }
 
-    func delay(_ delay:Double, closure:@escaping ()->()) {
+    final func delay(_ delay:Double, closure:@escaping ()->()) {
         let when = DispatchTime.now() + delay
         DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
     }
 }
-
-// subscription
-//address = 0x656f9BF02FA8EfF800f383E5678e699ce2788C5C;
-//blockHash = 0x545365244348926581806b2e144679cfbfc48692a349a9ab0ad023bc42b62c82;
-//blockNumber = 0x849e11;
-//data = 0x;
-//logIndex = 0x5;
-//removed = 0;
-//topics =     (
-//0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef,
-//0x0000000000000000000000000000000000000000000000000000000000000000,
-//0x0000000000000000000000006879f0a123056b5bb56c7e787cf64a67f3a16a71,
-//0x0000000000000000000000000000000000000000000000000000000000000030
-//);
-//transactionHash = 0x60d5a11effe213fd143ca40133880d29819b3eff37580ed29ba0918f87b7c3c5;
-//transactionIndex = 0x4;
-
-

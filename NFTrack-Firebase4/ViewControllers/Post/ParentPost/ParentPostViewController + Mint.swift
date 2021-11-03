@@ -215,51 +215,6 @@ extension ParentPostViewController {
             }
         }
     }
-    
-    class MintParameters: NSObject {
-        let price: String?
-        let itemTitle: String
-        let desc: String
-        let category: String
-        let convertedId: String
-        let tokensArr: Set<String>
-        let userId: String
-        let deliveryMethod: String
-        let saleFormat: String
-        let paymentMethod: String
-        let contractFormat: String
-        let postType: String
-        let saleConfigValue: DeliveryAndPaymentMethod?
-        
-        init(
-            price: String?,
-            itemTitle: String,
-            desc: String,
-            category: String,
-            convertedId: String,
-            tokensArr: Set<String>,
-            userId: String,
-            deliveryMethod: String,
-            saleFormat: String,
-            paymentMethod: String,
-            contractFormat: String,
-            postType: String,
-            saleConfigValue: DeliveryAndPaymentMethod?
-        ) {
-            self.price = price
-            self.itemTitle = itemTitle
-            self.desc = desc
-            self.category = category
-            self.convertedId = convertedId
-            self.tokensArr = tokensArr
-            self.userId = userId
-            self.deliveryMethod = deliveryMethod
-            self.saleFormat = saleFormat
-            self.paymentMethod = paymentMethod
-            self.contractFormat = contractFormat
-            self.postType = postType
-            self.saleConfigValue = saleConfigValue
-        }
         
 //        func getSaleConfigValue() -> DeliveryAndPaymentMethod? {
 //            guard let postTypeValue = PostType(rawValue: postType),
@@ -275,7 +230,7 @@ extension ParentPostViewController {
 //                contractFormat: contractFormatValue
 //            )
 //        }
-    }
+//    }
     
     @objc dynamic func processEscrow(_ mintParameters: MintParameters) {}
     

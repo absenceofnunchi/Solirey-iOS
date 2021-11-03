@@ -14,9 +14,6 @@ import CryptoKit
 import BigInt
 
 class PostViewController: ParentPostViewController {
-    var topicsRetainer: [String]!
-    var txResultArr = [TxResult2]()
-
     final override var panelButtons: [PanelButton] {
         let buttonPanels = [
             PanelButton(imageName: "camera.circle", imageConfig: configuration, tintColor: UIColor(red: 198/255, green: 122/255, blue: 206/255, alpha: 1), tag: 8),

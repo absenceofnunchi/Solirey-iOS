@@ -117,7 +117,7 @@ extension PostViewController {
     } // processDirectSale
     
     // MARK: - processDirectResale
-    override func processDirectResale(_ mintParameters: ParentPostViewController.MintParameters) {
+    override func processDirectResale(_ mintParameters: MintParameters) {
         guard let price = mintParameters.price, !price.isEmpty else {
             self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
             return
@@ -288,7 +288,6 @@ extension PostViewController {
                     break
             }
         } receiveValue: { [weak self](txResults) in
-            self?.txResultArr = txResults
             completion(txResults)
         }
         .store(in: &storage)

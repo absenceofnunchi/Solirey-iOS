@@ -10,8 +10,6 @@
  The cheaper version of AuctionABI that doesn't need to be individually deployed. The child contract of Solirey.
  */
 
-import web3swift
-
 let integralAuctionABI = """
 [
     {
