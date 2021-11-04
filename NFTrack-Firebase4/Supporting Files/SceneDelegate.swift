@@ -19,6 +19,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let _ = (scene as? UIWindowScene) else { return }
                 
+        
+        // for testing only
+//        FirebaseService.shared.db.clearPersistence { (error) in
+//            if let error = error {
+//                print("error", error)
+//            } else {
+//                print("success")
+//            }
+//        }
+        
         CacheService.shared.removeAllObjects()
         if let windowScene = scene as? UIWindowScene {
             self.window = UIWindow(windowScene: windowScene)

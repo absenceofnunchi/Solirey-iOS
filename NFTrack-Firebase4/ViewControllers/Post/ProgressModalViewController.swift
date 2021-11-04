@@ -67,13 +67,16 @@ class ProgressModalViewController: UIViewController {
     private var completionCount: Int = 0
     private var doneButton: UIView!
     var progressView: UIProgressView!
+    let progress = Progress(totalUnitCount: 3)
     var progressLabel: UILabel!
     var postProgressData: PostProgressData!
+    var paymentMethod: PaymentMethod!
     private var alert = Alerts()
     
     init(height: CGFloat = 350, paymentMethod: PaymentMethod) {
         super.init(nibName: nil, bundle: nil)
         self.height = height
+        self.paymentMethod = paymentMethod
         self.postProgressData = PostProgressData(paymentMethod: paymentMethod)
         self.modalPresentationStyle = .custom
         self.transitioningDelegate = customTransitioningDelegate
@@ -87,6 +90,7 @@ class ProgressModalViewController: UIViewController {
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         NotificationCenter.default.removeObserver(self, name: .didUpdateProgress, object: nil)
+//        NotificationCenter.default.removeObserver(self, name: .progressViewUpdate, object: nil)
         NotificationCenter.default.removeObserver(self, name: .willDismiss, object: nil)
         
         if let timer = timer {
@@ -104,6 +108,7 @@ class ProgressModalViewController: UIViewController {
         configureUI()
         setConstraints()
         NotificationCenter.default.addObserver(self, selector: #selector(onDidUpdateProgress), name: .didUpdateProgress, object: nil)
+//        NotificationCenter.default.addObserver(self, selector: #selector(onDidUpdateProgressView), name: .progressViewUpdate, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(onWillDismiss), name: .willDismiss, object: nil)
     }
 
@@ -187,6 +192,21 @@ class ProgressModalViewController: UIViewController {
                 }
             }
         }
+    }
+    
+    @objc func onDidUpdateProgressView(_ notification: Notification) {
+//        print("onDidUpdateProgressView")
+//        guard let update = notification.userInfo?["update"] as? Int64 else { return }
+//        print("update", update)
+//        progress.completedUnitCount += update
+//        let progressFloat = Float(self.progress.fractionCompleted)
+//        progressView.setProgress(progressFloat, animated: true)
+//
+//        if progress.completedUnitCount >= progress.totalUnitCount {
+//            delay(0.3) { [weak self] in // delay to let progress bar to complete the animation
+//                self?.progressView.isHidden = true
+//            }
+//        }
     }
     
     @objc func onWillDismiss(_ notification: Notification) {
@@ -293,13 +313,13 @@ private extension ProgressModalViewController {
             containerView.addSubview(progressLabel)
             
             NSLayoutConstraint.activate([
-                dotsImageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-                dotsImageView.heightAnchor.constraint(equalTo: containerView.heightAnchor),
-                dotsImageView.widthAnchor.constraint(equalToConstant: 35),
-                
                 progressLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
                 progressLabel.heightAnchor.constraint(equalTo: containerView.heightAnchor),
-                progressLabel.trailingAnchor.constraint(equalTo: dotsImageView.leadingAnchor)
+                progressLabel.trailingAnchor.constraint(equalTo: dotsImageView.leadingAnchor),
+                
+                dotsImageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+                dotsImageView.heightAnchor.constraint(equalTo: containerView.heightAnchor),
+                dotsImageView.widthAnchor.constraint(equalToConstant: 35)
             ])
             
             stackView.addArrangedSubview(containerView)
@@ -322,21 +342,11 @@ private extension ProgressModalViewController {
         progressView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(progressView)
         
-        progressLabel = UILabel()
-        progressView.isHidden = true
-        progressLabel.textAlignment = .right
-        progressLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(progressLabel)
-        
-//        delay(5) {
-//            let update0: [String: PostProgress] = ["update": .estimatGas]
-//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update0)
-//
-//            let update1: [String: PostProgress] = ["update": .minting]
-//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update1)
-//
-//            let update2: [String: PostProgress] = ["update": .images]
-//            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update2)
+//        switch paymentMethod {
+//            case .auctionBeneficiary, .escrow:
+//                progressView.isHidden = false
+//            default:
+//                progressView.isHidden = true
 //        }
     }
     
@@ -353,21 +363,16 @@ private extension ProgressModalViewController {
             stackView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
             stackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             stackView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.50),
+
+            progressView.bottomAnchor.constraint(equalTo: doneButton.topAnchor, constant: -10),
+            progressView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            progressView.heightAnchor.constraint(equalToConstant: 4),
+            progressView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
             doneButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
             doneButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
             doneButton.heightAnchor.constraint(equalToConstant: 40),
-            doneButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            progressView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
-            progressView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-            progressView.heightAnchor.constraint(equalToConstant: 10),
-            progressView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            progressLabel.topAnchor.constraint(equalTo: progressView.bottomAnchor),
-            progressLabel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
-            progressLabel.heightAnchor.constraint(equalToConstant: 20),
-            progressLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            doneButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
     }
     

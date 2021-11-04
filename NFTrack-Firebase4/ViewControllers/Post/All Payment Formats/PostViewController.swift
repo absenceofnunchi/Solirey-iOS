@@ -28,6 +28,7 @@ class PostViewController: ParentPostViewController {
         super.viewDidAppear(animated)
         // When the DeliveryMethod is In Person Pickup, Category cannot be Digital
         // When the post is for resale,
+        deliveryMethodLabel.isUserInteractionEnabled = true
         deliveryMethodObserver = deliveryMethodLabel.observe(\.text) { [weak self] (label, observedChange) in
             guard let text = label.text, let deliveryMethod = DeliveryMethod(rawValue: text) else { return }
             switch deliveryMethod {
@@ -66,6 +67,7 @@ class PostViewController: ParentPostViewController {
     final override func viewDidLoad() {
         super.viewDidLoad()
   
+        // configure the UI for Tangible items (The UI for Digital items is different)
         deliveryInfoButton.tag = 20
         // picker for the deliver method: in-person, shipping
         deliveryMethodLabel.isUserInteractionEnabled = true

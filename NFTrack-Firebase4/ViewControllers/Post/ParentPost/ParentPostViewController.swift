@@ -207,6 +207,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var txPackageArr = [TxPackage]()
     var txResultArr = [TxResult2]()
     var topicsRetainer: [String]!
+    var tokenIdRetainer: String!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -816,64 +817,122 @@ extension ParentPostViewController {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
         
-        if previewDataArr.count < 6 {
-            switch sender.tag {
-                case 3:
-                    mint()
-                    break
-                case 4:
-                    if let text = tagTextField.text, !text.isEmpty {
-                        tagTextField.text?.removeAll()
-                        let token = createSearchToken(text: text, index: tagTextField.tokens.count)
-                        tagTextField.insertToken(token, at: tagTextField.tokens.count > 0 ? tagTextField.tokens.count : 0)
+        switch sender.tag {
+            case 3:
+                if let categoryText = self.pickerLabel.text,
+                   let category = Category(rawValue: categoryText),
+                   category == .digital {
+                    guard previewDataArr.count < 2 else {
+                        self.alert.showDetail(
+                            "Upload Limit",
+                            with: "There is a limit of 1 file per post.",
+                            for: self
+                        )
+                        return
                     }
-                    break
-                case 5:
-                    configureProgress()
-                    break
-                case 6:
-                    let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Smart Contract Format", detail: InfoText.contractFormatInfo)])
-                    self.present(infoVC, animated: true, completion: nil)
-                    break
-                case 7:
-                    let scannerVC = ScannerViewController()
-                    scannerVC.delegate = self
-                    scannerVC.modalPresentationStyle = .fullScreen
-                    self.present(scannerVC, animated: true, completion: nil)
-                    break
-                case 8:
-                    let vc = UIImagePickerController()
-                    vc.sourceType = .camera
-                    vc.allowsEditing = true
-                    vc.delegate = self
-                    present(vc, animated: true)
-                    break
-                case 9:
-                    let imagePickerController = UIImagePickerController()
-                    imagePickerController.allowsEditing = false
-                    imagePickerController.sourceType = .photoLibrary
-                    imagePickerController.delegate = self
-                    imagePickerController.modalPresentationStyle = .fullScreen
-                    present(imagePickerController, animated: true, completion: nil)
-                    break
-                case 10:
-                    documentPicker = DocumentPicker(presentationController: self, delegate: self)
-                    documentPicker.displayPicker()
-                    break
-                case 24:
-                    let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Pricing", detail: InfoText.pricing)])
-                    self.present(infoVC, animated: true, completion: nil)
-                    break
-                default:
-                    break
-            }
-        } else {
-            self.alert.showDetail(
-                "Upload Limit",
-                with: "There is a limit of 6 files per post.",
-                for: self) {
-                print("something")
-            } completion:  {}
+                } else {
+                    guard previewDataArr.count < 7 else {
+                        self.alert.showDetail(
+                            "Upload Limit",
+                            with: "There is a limit of 6 files per post.",
+                            for: self
+                        )
+                        return
+                    }
+                }
+                
+                mint()
+                break
+            case 4:
+                if let text = tagTextField.text, !text.isEmpty {
+                    tagTextField.text?.removeAll()
+                    let token = createSearchToken(text: text, index: tagTextField.tokens.count)
+                    tagTextField.insertToken(token, at: tagTextField.tokens.count > 0 ? tagTextField.tokens.count : 0)
+                }
+                break
+            case 5:
+                configureProgress()
+                break
+            case 6:
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Smart Contract Format", detail: InfoText.contractFormatInfo)])
+                self.present(infoVC, animated: true, completion: nil)
+                break
+            case 7:
+                let scannerVC = ScannerViewController()
+                scannerVC.delegate = self
+                scannerVC.modalPresentationStyle = .fullScreen
+                self.present(scannerVC, animated: true, completion: nil)
+                break
+            case 8:
+                if let categoryText = self.pickerLabel.text,
+                   let category = Category(rawValue: categoryText),
+                   category == .digital {
+                    guard previewDataArr.count < 1 else {
+                        self.alert.showDetail(
+                            "Upload Limit",
+                            with: "There is a limit of 1 file per post.",
+                            for: self
+                        )
+                        return
+                    }
+                } else {
+                    guard previewDataArr.count < 6 else {
+                        self.alert.showDetail(
+                            "Upload Limit",
+                            with: "There is a limit of 6 files per post.",
+                            for: self
+                        )
+                        return
+                    }
+                }
+                
+                
+                let vc = UIImagePickerController()
+                vc.sourceType = .camera
+                vc.allowsEditing = true
+                vc.delegate = self
+                present(vc, animated: true)
+                break
+            case 9:
+                if let categoryText = self.pickerLabel.text,
+                   let category = Category(rawValue: categoryText),
+                   category == .digital {
+                    guard previewDataArr.count < 1 else {
+                        self.alert.showDetail(
+                            "Upload Limit",
+                            with: "There is a limit of 1 file per post.",
+                            for: self
+                        )
+                        return
+                    }
+                } else {
+                    guard previewDataArr.count < 6 else {
+                        self.alert.showDetail(
+                            "Upload Limit",
+                            with: "There is a limit of 6 files per post.",
+                            for: self
+                        )
+                        return
+                    }
+                }
+                
+                let imagePickerController = UIImagePickerController()
+                imagePickerController.allowsEditing = false
+                imagePickerController.sourceType = .photoLibrary
+                imagePickerController.delegate = self
+                imagePickerController.modalPresentationStyle = .fullScreen
+                present(imagePickerController, animated: true, completion: nil)
+                break
+            case 10:
+                documentPicker = DocumentPicker(presentationController: self, delegate: self)
+                documentPicker.displayPicker()
+                break
+            case 24:
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Pricing", detail: InfoText.pricing)])
+                self.present(infoVC, animated: true, completion: nil)
+                break
+            default:
+                break
         }
     }
     

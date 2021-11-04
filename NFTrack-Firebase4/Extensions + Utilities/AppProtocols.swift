@@ -1015,11 +1015,10 @@ extension PostParseDelegate {
         guard let querySnapshot = querySnapshot else { return nil }
         for document in querySnapshot.documents {
             let data = document.data()
-            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, simplePaymentId, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category: String!
+            var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, simplePaymentId, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category, contractFormat, saleType: String!
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
             var files, savedBy: [String]?
             var shippingInfo: ShippingInfo!
-            var saleType: SaleType!
             var tokenId: String?
             
             data.forEach { (item) in
@@ -1111,13 +1110,14 @@ extension PostParseDelegate {
                         break
                     case "saleType":
                         // For the resale items, some adjustments need to be made, such as diabling the tappable mintHash on HistoryDetailVC
-                        guard let saleTypeString = item.value as? String else { return }
-                        saleType = SaleType(rawValue: saleTypeString)
+                        saleType = item.value as? String
                     case "tokenId":
                         // The existing Token ID is needed for the resale since a new token is not being minted
                         tokenId = item.value as? String
                     case "category":
                         category = item.value as? String
+                    case "contractFormat":
+                        contractFormat = item.value as? String
                     default:
                         break
                 }
@@ -1158,7 +1158,8 @@ extension PostParseDelegate {
                 shippingInfo: shippingInfo,
                 saleType: saleType,
                 tokenId: tokenId,
-                category: category
+                category: category,
+                contractFormat: contractFormat
             )
             
             postArr.append(post)
@@ -1169,12 +1170,11 @@ extension PostParseDelegate {
     // Parse single document query
     func parseDocument(document: DocumentSnapshot) -> Post? {
         guard let data = document.data() else { return nil }
-        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, simplePaymentId, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category: String!
+        var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, simplePaymentId, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category, contractFormat, saleType: String!
         var tokenId: String?
         var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
         var files, savedBy: [String]?
         var shippingInfo: ShippingInfo!
-        var saleType: SaleType!
         data.forEach { (item) in
             switch item.key {
                 case "sellerUserId":
@@ -1265,13 +1265,14 @@ extension PostParseDelegate {
                     break
                 case "saleType":
                     // For the resale items, some adjustments need to be made, such as diabling the tappable mintHash on HistoryDetailVC
-                    guard let saleTypeString = item.value as? String else { return }
-                    saleType = SaleType(rawValue: saleTypeString)
+                    saleType = item.value as? String
                 case "tokenId":
                     // The existing Token ID is needed for the resale since a new token is not being minted
                     tokenId = item.value as? String
                 case "category":
                     category = item.value as? String
+                case "contractFormat":
+                    contractFormat = item.value as? String
                 default:
                     break
             }
@@ -1312,7 +1313,8 @@ extension PostParseDelegate {
             shippingInfo: shippingInfo,
             saleType: saleType,
             tokenId: tokenId,
-            category: category
+            category: category,
+            contractFormat: contractFormat
         )
         return post
     }

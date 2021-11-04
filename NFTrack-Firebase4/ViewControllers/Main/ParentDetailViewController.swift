@@ -90,7 +90,9 @@ class ParentDetailViewController: UIViewController, SharableDelegate, PostEditDe
         configureImageDisplay(post: post)
         configureUI()
         setConstraints()
-        guard post.saleType == SaleType.resale else { return }
+        
+        guard let saleType = SaleType(rawValue: post.saleType),
+              saleType == SaleType.resale else { return }
         configureResale()
     }
     

@@ -88,7 +88,7 @@ extension ParentPostViewController {
                 tokensArr.insert(item)
             }
             
-            for token in self!.tagTextField.tokens {
+            for token in tagTextField.tokens {
                 if let retrievedToken = token.representedObject as? String {
                     tokensArr.insert(retrievedToken.lowercased())
                 }

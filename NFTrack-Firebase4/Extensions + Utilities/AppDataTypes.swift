@@ -111,9 +111,10 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var auctionTransferredDate: Date?
     var address: String?
     var shippingInfo: ShippingInfo?
-    var saleType: SaleType!
+    var saleType: String!
     var tokenID: String?
     var category: String!
+    var contractFormat: String!
     
     init(
         documentId: String,
@@ -148,9 +149,10 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         auctionTransferredDate: Date?,
         address: String?,
         shippingInfo: ShippingInfo?,
-        saleType: SaleType,
+        saleType: String!,
         tokenId: String?,
-        category: String
+        category: String,
+        contractFormat: String
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
@@ -186,6 +188,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.saleType = saleType
         self.tokenID = tokenId
         self.category = category
+        self.contractFormat = contractFormat
     }
 }
 
@@ -839,7 +842,7 @@ enum PaymentMethod: String {
 }
 
 enum ContractFormat: String, CaseIterable {
-    case integral = "Default" // uses the contract pre-launched by me
+    case integral = "Default" // uses the contract pre-launched by the admin
     case individual = "Individual" // deploys a brand new contract just for this particular transaction
     
     static func getAll() -> [String] {
@@ -1119,7 +1122,7 @@ struct Topics {
     }
     
     struct IndividualAuction {
-        static let mint = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+        static let mintNft = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
     }
 }
 
@@ -1164,6 +1167,8 @@ class MintParameters: NSObject {
     let contractFormat: String
     let postType: String
     let saleConfigValue: DeliveryAndPaymentMethod?
+    var biddingTime: Int? = nil
+    var startingBid: NSNumber? = nil
     
     init(
         price: String?,

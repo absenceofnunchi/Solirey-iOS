@@ -277,6 +277,7 @@ extension ParentPostViewController {
                                         ipfsURLStrings: [],
                                         shippingInfo: self.shippingInfo,
                                         solireyUid: "something",
+                                        contractFormat: mintParameters.contractFormat,
                                         promise: promise
                                     )
                                 }
@@ -537,6 +538,7 @@ extension ParentPostViewController {
                                     ipfsURLStrings: [],
                                     shippingInfo: self.shippingInfo,
                                     solireyUid: "something",
+                                    contractFormat: mintParameters.contractFormat,
                                     promise: promise
                                 )
                             }

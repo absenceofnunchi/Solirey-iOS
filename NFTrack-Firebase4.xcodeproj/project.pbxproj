@@ -188,6 +188,7 @@
 		49B4329F27193995000A3F13 /* CollectFundsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B4329E27193995000A3F13 /* CollectFundsViewController.swift */; };
 		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
 		49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */; };
+		49B9BD722733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */; };
 		49BF2CE327083BD4009CA5F2 /* ImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */; };
 		49BF2CE827083E11009CA5F2 /* NoImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */; };
 		49BF2CEE27084599009CA5F2 /* ImageProgressCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CED27084599009CA5F2 /* ImageProgressCardCell.swift */; };
@@ -417,6 +418,7 @@
 		49B4329E27193995000A3F13 /* CollectFundsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectFundsViewController.swift; sourceTree = "<group>"; };
 		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
 		49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + ContextMenu.swift"; sourceTree = "<group>"; };
+		49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Integral Auction.swift"; sourceTree = "<group>"; };
 		49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCardCell.swift; sourceTree = "<group>"; };
 		49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoImageCardCell.swift; sourceTree = "<group>"; };
 		49BF2CED27084599009CA5F2 /* ImageProgressCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProgressCardCell.swift; sourceTree = "<group>"; };
@@ -574,6 +576,7 @@
 		494DDBDD27327EEF00510026 /* Integral */ = {
 			isa = PBXGroup;
 			children = (
+				49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */,
 			);
 			path = Integral;
 			sourceTree = "<group>";
@@ -581,8 +584,8 @@
 		494DDBEC27328C5200510026 /* Auction */ = {
 			isa = PBXGroup;
 			children = (
-				494DDBDC27327EE900510026 /* Individual */,
 				494DDBDD27327EEF00510026 /* Integral */,
+				494DDBDC27327EE900510026 /* Individual */,
 			);
 			path = Auction;
 			sourceTree = "<group>";
@@ -616,6 +619,8 @@
 		495FE3CC271F9BB6000433AF /* All Payment Formats */ = {
 			isa = PBXGroup;
 			children = (
+				49A72281273489260020B227 /* SimplePayment */,
+				49A7227D273488E60020B227 /* Escrow */,
 				494DDBEC27328C5200510026 /* Auction */,
 				495FD31B268B9DCA00F1D81D /* NewPostViewController.swift */,
 				49E759B72666BCCF0064BB34 /* ResaleViewController.swift */,
@@ -990,6 +995,116 @@
 				4969A27327036DAD0093068C /* CustomTabBarController.swift */,
 			);
 			path = ETC;
+			sourceTree = "<group>";
+		};
+		49A7227D273488E60020B227 /* Escrow */ = {
+			isa = PBXGroup;
+			children = (
+				49A7227E273488F60020B227 /* Tangible */,
+				49A72280273489140020B227 /* Digital */,
+			);
+			path = Escrow;
+			sourceTree = "<group>";
+		};
+		49A7227E273488F60020B227 /* Tangible */ = {
+			isa = PBXGroup;
+			children = (
+				49A7228A27348A4C0020B227 /* Integral */,
+				49A7228927348A460020B227 /* Individual */,
+			);
+			path = Tangible;
+			sourceTree = "<group>";
+		};
+		49A72280273489140020B227 /* Digital */ = {
+			isa = PBXGroup;
+			children = (
+				49A7228B27348A540020B227 /* Integral */,
+				49A7228C27348A5A0020B227 /* Individual */,
+			);
+			path = Digital;
+			sourceTree = "<group>";
+		};
+		49A72281273489260020B227 /* SimplePayment */ = {
+			isa = PBXGroup;
+			children = (
+				49A72282273489300020B227 /* Tangible */,
+				49A72283273489360020B227 /* Digital */,
+			);
+			path = SimplePayment;
+			sourceTree = "<group>";
+		};
+		49A72282273489300020B227 /* Tangible */ = {
+			isa = PBXGroup;
+			children = (
+				49A7228527348A140020B227 /* Integral */,
+				49A7228427348A040020B227 /* Individual */,
+			);
+			path = Tangible;
+			sourceTree = "<group>";
+		};
+		49A72283273489360020B227 /* Digital */ = {
+			isa = PBXGroup;
+			children = (
+				49A7228627348A290020B227 /* Integral */,
+				49A7228827348A370020B227 /* Individual */,
+			);
+			path = Digital;
+			sourceTree = "<group>";
+		};
+		49A7228427348A040020B227 /* Individual */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Individual;
+			sourceTree = "<group>";
+		};
+		49A7228527348A140020B227 /* Integral */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Integral;
+			sourceTree = "<group>";
+		};
+		49A7228627348A290020B227 /* Integral */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Integral;
+			sourceTree = "<group>";
+		};
+		49A7228827348A370020B227 /* Individual */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Individual;
+			sourceTree = "<group>";
+		};
+		49A7228927348A460020B227 /* Individual */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Individual;
+			sourceTree = "<group>";
+		};
+		49A7228A27348A4C0020B227 /* Integral */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Integral;
+			sourceTree = "<group>";
+		};
+		49A7228B27348A540020B227 /* Integral */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Integral;
+			sourceTree = "<group>";
+		};
+		49A7228C27348A5A0020B227 /* Individual */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Individual;
 			sourceTree = "<group>";
 		};
 		49BF2CEC27084575009CA5F2 /* ProgressCard */ = {
@@ -1426,6 +1541,7 @@
 				492C81E526F2312F0083C3B5 /* ChatInitializer.swift in Sources */,
 				49DEFF6A26868065004C2DD0 /* ImagePreviewHeaderView.swift in Sources */,
 				49A0AE622707FC02003A5F27 /* PDFCell.swift in Sources */,
+				49B9BD722733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift in Sources */,
 				49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */,
 				49D59C762663326500107F79 /* SocketDelegate.swift in Sources */,
 				49E759B82666BCCF0064BB34 /* ResaleViewController.swift in Sources */,

@@ -606,6 +606,7 @@ extension Notification.Name {
     static let willDismiss = Notification.Name("willDismiss")
     static let auctionButtonDidUpdate = Notification.Name("auctionButtonDidUpdate")
     static let auctionDidWithdraw = Notification.Name("auctionDidWithdraw")
+    static let progressViewUpdate = Notification.Name("progressViewUpdate")
 }
 
 extension UIImageView {

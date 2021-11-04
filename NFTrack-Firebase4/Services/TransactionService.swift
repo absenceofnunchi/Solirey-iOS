@@ -1013,6 +1013,7 @@ extension TransactionService {
         isWithdrawn: Bool = true,
         isAdminWithdrawn: Bool = true,
         solireyUid: String,
+        contractFormat: String,
         promise: @escaping (Result<Bool, PostingError>) -> Void
     ) {
         let ref = self.db.collection("post")
@@ -1056,7 +1057,8 @@ extension TransactionService {
             "isWithdrawn": isWithdrawn, // There are contracts like Auction or SimplePayment that requires the bidders that have been outbid or the seller whose item has been purchased, respectively, that require the user to withdraw their funds manually
             "isAdminWithdrawn": isAdminWithdrawn, // The fee collected by the admin
             "tokenId": tokenId,
-            "solireyUid": solireyUid // Solirey unique ID that's required for each posting on the contract (i.e. mapping's key)
+            "solireyUid": solireyUid, // Solirey unique ID that's required for each posting on the integral contracts (i.e. mapping's key)
+            "contractFormat": contractFormat
         ]
         
         // txHash is either minting or transferring the ownership
@@ -1288,16 +1290,7 @@ extension TransactionService {
     final func confirmReceipt( txHash: String) -> AnyPublisher<TransactionReceipt, PostingError> {
         Deferred {
             Future<TransactionReceipt, PostingError> { promise in
-                do {
-                    let receipt = try Web3swiftService.web3instance.eth.getTransactionReceipt(txHash)
-                    promise(.success(receipt))
-                } catch {
-                    if let err = error as? Web3Error {
-                        promise(.failure(.generalError(reason: err.errorDescription)))
-                    } else {
-                        promise(.failure(.generalError(reason: error.localizedDescription)))
-                    }
-                }
+                Web3swiftService.getReceipt(hash: txHash, promise: promise)
             }
         }
         .retryIfWithDelay(
@@ -1316,7 +1309,7 @@ extension TransactionService {
     }
     
     // Confirms that a block has been added to the blockchain by counting the number of confirmations.
-    final func confirmTransactions(_ receipt: TransactionReceipt, confirmations: Int = 5) -> AnyPublisher<TransactionReceipt, PostingError> {
+    final func confirmTransactions(_ receipt: TransactionReceipt, confirmations: Int = 3) -> AnyPublisher<TransactionReceipt, PostingError> {
         Deferred {
             Future<BigUInt, PostingError> { promise in
                 Web3swiftService.getBlock(promise)
@@ -1330,6 +1323,11 @@ extension TransactionService {
                 if txConfirmations >= confirmations {
                     promise(.success(receipt))
                 } else {
+//                    if let txConfirmsNumber = Int(txConfirmations.description) {
+//                        let update: [String: Int] = ["update": txConfirmsNumber]
+//                        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+//                    }
+                    
                     promise(.failure(.generalError(reason: "pending")))
                 }
             }
