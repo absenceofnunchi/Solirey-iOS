@@ -356,21 +356,21 @@ enum IntegralAuctionMethods: String, ContractMethodsEnum {
     case transferToken
 }
 
+struct AuctionInfo {
+    let beneficiary: String
+    let auctionEndTime: Date
+    let startingBid: String
+    let tokenId: BigUInt
+    let highestBidder: String
+    let highestBid: String
+    let pendingReturns: String?
+    let ended: Bool
+    let transferred: Bool
+}
+
 enum IntegralAuctionProperties: ContractPropertiesEnum {
     case _auctionInfo(BigUInt)
     case _artist(BigUInt)
-    
-    struct AuctionInfo {
-        let beneficiary: String
-        let auctionEndTime: BigUInt
-        let startingBid: BigUInt
-        let tokenId: BigUInt
-        let highestBidder: BigUInt
-        let highestBid: BigUInt
-        let pendingReturns: [EthereumAddress: BigUInt]
-        let ended: Bool
-        let transferred: Bool
-    }
     
     // tuple because some properties like mapping requires a key such as pendingReturns
     var value: (String, AnyObject?) {
@@ -388,6 +388,22 @@ enum IntegralAuctionProperties: ContractPropertiesEnum {
                 return "Auction Info"
             case ._artist(_):
                 return "Artist"
+        }
+    }
+    
+    enum AuctionInfo: String, CaseIterable {
+        case beneficiary
+        case auctionEndTime
+        case startingBid
+        case tokenId
+        case highestBidder
+        case highestBid
+        case pendingReturns
+        case ended
+        case transferred
+        
+        static func getAll() -> [String] {
+            return AuctionInfo.allCases.filter { $0 != .pendingReturns && $0 != .tokenId && $0 != .transferred }.map { $0.rawValue }
         }
     }
 }

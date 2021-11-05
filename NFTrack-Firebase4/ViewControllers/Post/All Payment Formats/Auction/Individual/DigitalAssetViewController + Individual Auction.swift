@@ -221,7 +221,8 @@ extension DigitalAssetViewController {
                         }
                         
                         let parsedEvent = contract.parseEvent(receipt.logs[0])
-                        guard let eventData = parsedEvent.eventData, let tokenId = eventData["tokenId"] as? BigUInt else {
+                        guard let eventData = parsedEvent.eventData,
+                              let tokenId = eventData["tokenId"] as? BigUInt else {
                             return
                         }
                         

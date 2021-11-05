@@ -287,7 +287,7 @@ extension PostViewController {
                     NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                     break
             }
-        } receiveValue: { [weak self](txResults) in
+        } receiveValue: { (txResults) in
             completion(txResults)
         }
         .store(in: &storage)

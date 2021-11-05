@@ -7,7 +7,7 @@
 
 /*
  Abstract:
- The screen for an auction prior to bidding
+ The individual auction.
  Update the status and the date of each step: bid, ended, and transferred.  These three are for the ProgressCell indicator.
  */
 

@@ -213,7 +213,7 @@ extension ParentPostViewController {
                     print("no sale config exists")
                     break
             }
-        }
+        }    
     }
         
 //        func getSaleConfigValue() -> DeliveryAndPaymentMethod? {

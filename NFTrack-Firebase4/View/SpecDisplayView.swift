@@ -15,60 +15,25 @@ import UIKit
 import Combine
 
 class SpecDisplayView: UIView {
-    var borderColor: UIColor = .lightGray {
+    final var borderColor: UIColor = .lightGray {
         didSet {
             layer.borderColor = borderColor.cgColor
         }
     }
-    var cornerRadius: CGFloat = 5 {
+    final var cornerRadius: CGFloat = 5 {
         didSet {
             layer.cornerRadius = cornerRadius
         }
     }
-    var borderWidth: CGFloat = 0.5 {
+    final var borderWidth: CGFloat = 0.5 {
         didSet {
             layer.borderWidth = borderWidth
         }
     }
     
     private var storage = Set<AnyCancellable>()
-//    var fetchedDataArr: [SmartContractProperty]! {
-//        didSet {
-//            stackView.arrangedSubviews.enumerated().forEach { (index, element) in
-//                let specDetail = fetchedDataArr[index]
-//                for case let subview as UILabel in element.subviews {
-//                    /// tag 1 refers to the property name such as "Highest Bid"
-//                    /// tag 2 refers to the property value such as "2 ether"
-//                    switch subview.tag {
-//                        case 1:
-//                            subview.text = specDetail.propertyName
-//                        case 2:
-//                            // parse according to the type of the instance property's value
-//                            switch specDetail.propertyDesc {
-//                                case is String:
-//                                    subview.text = specDetail.propertyDesc as? String
-//                                case is Date:
-//                                    guard let propDesc = specDetail.propertyDesc as? Date else { return }
-//                                    let formatter = DateFormatter()
-//                                    formatter.timeStyle = .short
-//                                    formatter.dateStyle = .short
-//                                    formatter.timeZone = .current
-//                                    let formattedDate = formatter.string(from: propDesc)
-//                                    subview.text = formattedDate
-//                                default:
-//                                    break
-//                            }
-//                        default:
-//                            break
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    
-//    var dataSource: ((SpecDisplayView)->Void)?
     private var listingDetailArr: [SmartContractProperty]!
-    var stackView: UIStackView!
+    final var stackView: UIStackView!
     
     init(listingDetailArr: [SmartContractProperty]) {
         super.init(frame: .zero)

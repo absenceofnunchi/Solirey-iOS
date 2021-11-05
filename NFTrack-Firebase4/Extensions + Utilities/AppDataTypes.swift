@@ -115,6 +115,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var tokenID: String?
     var category: String!
     var contractFormat: String!
+    var solireyUid: String? // For the integral contracts (auction, escrow, simple payment) that require a key for mapping
     
     init(
         documentId: String,
@@ -152,7 +153,8 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         saleType: String!,
         tokenId: String?,
         category: String,
-        contractFormat: String
+        contractFormat: String,
+        solireyUid: String?
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
@@ -189,6 +191,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.tokenID = tokenId
         self.category = category
         self.contractFormat = contractFormat
+        self.solireyUid = solireyUid
     }
 }
 
@@ -1128,7 +1131,7 @@ struct Topics {
 
 struct ContractAddresses {
     static let NFTrackABIRevisedAddress = EthereumAddress("0xd3F95b3292Cbc7543228B6edEDFA42b474651e8D")
-    static let integralAuctionAddress = EthereumAddress("0x110a0e31e2030573d9040cd609b946b7db82d211")
+    static let integralAuctionAddress = EthereumAddress("0xa6a7846cc9c24695e5a52d7dad0f3e24a9dbe145")
     static let solireyMintContractAddress = EthereumAddress("0x7714F9D47cb475fE1F8041c8CE60b6B98487a454")
 //    static let solireyMintContractAddress = EthereumAddress("0x0b7964f34699bf1db6642d34bb10226aaa47fff2")
 }

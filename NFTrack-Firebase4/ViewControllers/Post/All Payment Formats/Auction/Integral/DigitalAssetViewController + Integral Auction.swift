@@ -182,7 +182,6 @@ extension DigitalAssetViewController {
                                 
                                 return Future<(uid: String, tokenId: String), PostingError> { promise in
                                     self?.socketDelegate.didReceiveTopics = { webSocketMessage in
-                                        print("webSocketMessage", webSocketMessage)
                                         guard let transactionHash = webSocketMessage["transactionHash"] as? String,
                                               transactionHash == txResult.txResult.hash,
                                               let topics = webSocketMessage["topics"] as? [String] else { return }

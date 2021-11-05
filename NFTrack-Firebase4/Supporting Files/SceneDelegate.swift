@@ -21,13 +21,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
                 
         
         // for testing only
-//        FirebaseService.shared.db.clearPersistence { (error) in
-//            if let error = error {
-//                print("error", error)
-//            } else {
-//                print("success")
-//            }
-//        }
+        FirebaseService.shared.db.clearPersistence { (error) in
+            if let error = error {
+                print("error", error)
+            } else {
+                print("success")
+            }
+        }
         
         CacheService.shared.removeAllObjects()
         if let windowScene = scene as? UIWindowScene {

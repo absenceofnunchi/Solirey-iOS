@@ -261,6 +261,15 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
             case .digitalNewSaleAuctionBeneficiaryIntegral:
+                guard let currentAddress = Web3swiftService.currentAddress,
+                      let auctionContract = ContractAddresses.integralAuctionAddress else {
+                    self.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
+                    return
+                }
+                
+                let integralAuctionVC = IntegralAuctionViewController(auctionContractAddress: auctionContract, myContractAddress: currentAddress, post: post)
+                integralAuctionVC.post = post
+                self.navigationController?.pushViewController(integralAuctionVC, animated: true)
                 
                 break
             case .digitalNewSaleAuctionBeneficiaryIndividual:

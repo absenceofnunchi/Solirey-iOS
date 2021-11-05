@@ -1019,7 +1019,7 @@ extension PostParseDelegate {
             var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
             var files, savedBy: [String]?
             var shippingInfo: ShippingInfo!
-            var tokenId: String?
+            var tokenId, solireyUid: String?
             
             data.forEach { (item) in
                 switch item.key {
@@ -1118,6 +1118,8 @@ extension PostParseDelegate {
                         category = item.value as? String
                     case "contractFormat":
                         contractFormat = item.value as? String
+                    case "solireyUid":
+                        solireyUid = item.value as? String
                     default:
                         break
                 }
@@ -1159,7 +1161,8 @@ extension PostParseDelegate {
                 saleType: saleType,
                 tokenId: tokenId,
                 category: category,
-                contractFormat: contractFormat
+                contractFormat: contractFormat,
+                solireyUid: solireyUid
             )
             
             postArr.append(post)
@@ -1171,7 +1174,7 @@ extension PostParseDelegate {
     func parseDocument(document: DocumentSnapshot) -> Post? {
         guard let data = document.data() else { return nil }
         var buyerHash, sellerUserId, buyerUserId, sellerHash, title, description, price, mintHash, escrowHash, auctionHash, simplePaymentId, id, transferHash, status, confirmPurchaseHash, confirmReceivedHash, type, deliveryMethod, paymentMethod, saleFormat, address, category, contractFormat, saleType: String!
-        var tokenId: String?
+        var tokenId, solireyUid: String?
         var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
         var files, savedBy: [String]?
         var shippingInfo: ShippingInfo!
@@ -1273,6 +1276,8 @@ extension PostParseDelegate {
                     category = item.value as? String
                 case "contractFormat":
                     contractFormat = item.value as? String
+                case "solireyUid":
+                    solireyUid = item.value as? String
                 default:
                     break
             }
@@ -1314,7 +1319,8 @@ extension PostParseDelegate {
             saleType: saleType,
             tokenId: tokenId,
             category: category,
-            contractFormat: contractFormat
+            contractFormat: contractFormat,
+            solireyUid: solireyUid
         )
         return post
     }

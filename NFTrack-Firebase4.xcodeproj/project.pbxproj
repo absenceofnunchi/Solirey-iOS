@@ -158,6 +158,8 @@
 		497CF7A726F82818003EF69E /* ParentLocationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497CF7A626F82818003EF69E /* ParentLocationSearchViewController.swift */; };
 		497F1F2D26DC920800E0F967 /* ShippingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F1F2C26DC920800E0F967 /* ShippingViewController.swift */; };
 		497F1F3226DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F1F3126DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift */; };
+		4981CC6D2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4981CC6C2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift */; };
+		4981CC722734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4981CC712734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift */; };
 		4983BB2026E5B3D200A45703 /* ShippingAddressChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983BB1F26E5B3D200A45703 /* ShippingAddressChecker.swift */; };
 		4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */; };
 		4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */; };
@@ -388,6 +390,8 @@
 		497CF7A626F82818003EF69E /* ParentLocationSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentLocationSearchViewController.swift; sourceTree = "<group>"; };
 		497F1F2C26DC920800E0F967 /* ShippingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShippingViewController.swift; sourceTree = "<group>"; };
 		497F1F3126DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilteredLocationSearchViewController.swift; sourceTree = "<group>"; };
+		4981CC6C2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAuctionDetailViewController.swift; sourceTree = "<group>"; };
+		4981CC712734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IntegralAuctionViewController + Properties Parse.swift"; sourceTree = "<group>"; };
 		4983BB1F26E5B3D200A45703 /* ShippingAddressChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShippingAddressChecker.swift; sourceTree = "<group>"; };
 		4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecDisplayView.swift; sourceTree = "<group>"; };
 		4983D4BF26A258D400C2E5A3 /* PropertyLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyLoader.swift; sourceTree = "<group>"; };
@@ -518,6 +522,7 @@
 			children = (
 				49843D4E273149D800471C43 /* Individual */,
 				49843D52273149EB00471C43 /* Integral */,
+				4981CC6C2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift */,
 			);
 			path = ListDetail;
 			sourceTree = "<group>";
@@ -875,6 +880,7 @@
 			isa = PBXGroup;
 			children = (
 				49843D492731499600471C43 /* IntegralAuctionViewController.swift */,
+				4981CC712734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift */,
 			);
 			path = Integral;
 			sourceTree = "<group>";
@@ -1424,8 +1430,10 @@
 				49333361268281B800B8BFC2 /* ProfilePostingsViewController.swift in Sources */,
 				494DDBE02732845600510026 /* MintContractABI.swift in Sources */,
 				49409A75265946870060193C /* SearchResultsViewController.swift in Sources */,
+				4981CC722734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift in Sources */,
 				4962FADF26F647C6004B01A8 /* CacheService.swift in Sources */,
 				495FE3C8271F8D29000433AF /* NFTrackABIRevised.swift in Sources */,
+				4981CC6D2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift in Sources */,
 				4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */,
 				4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */,
 				495FB37526BB496D0047E91D /* AuctionButtonController.swift in Sources */,

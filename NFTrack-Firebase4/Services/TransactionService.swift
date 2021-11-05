@@ -488,7 +488,7 @@ extension TransactionService {
             return
         }
         
-        DispatchQueue.global(qos: .background).async {
+        DispatchQueue.global().async {
             guard let transaction = contract.read(
                 method,
                 parameters: parameters ?? [AnyObject](),
