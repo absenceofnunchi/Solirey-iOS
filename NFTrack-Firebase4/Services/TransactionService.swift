@@ -14,11 +14,11 @@ import FirebaseFirestore
 class TransactionService {
     let keysService = KeysService()
     let db = FirebaseService.shared.db!
-    let alert = Alerts()
     var userId: String? {
         return UserDefaults.standard.string(forKey: UserDefaultKeys.userId) 
     }
     let localDatabase = LocalDatabase()
+    var storage = Set<AnyCancellable>()
     
     final func requestGasPrice(onComplition:@escaping (Double?) -> Void) {
         let path = "https://ethgasstation.info/json/ethgasAPI.json"
@@ -1430,5 +1430,66 @@ extension TransactionService {
     final func delay(_ delay:Double, closure:@escaping ()->()) {
         let when = DispatchTime.now() + delay
         DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
+    }
+    
+    // MARK: - prelaunch
+    /// The purposes of prelaunch are two folds:
+    ///     1. Checking for the duplicate on firestore (eventually eliminate the checkExistingId method if prelaunch is universalized)
+    ///     2. Estimate the total gas fee in the format that the execution completion handler can understand with the transaction of any kind provided as a parameter
+    final func preLaunch(
+        mintParameters: MintParameters,
+        transactionToEstimate: @escaping () -> AnyPublisher<TxPackage, PostingError>,
+        completionHandler: @escaping ((totalGasCost: String, balance: String, gasPriceInGwei: String)?, TxPackage?, PostingError?) -> Void
+    ) {
+        
+        var txPackageRetainer: TxPackage!
+        
+        Deferred { [weak self] in
+            Future<Bool, PostingError> { promise in
+                self?.db.collection("post")
+                    .whereField("itemIdentifier", isEqualTo: mintParameters.convertedId)
+                    .whereField("status", isNotEqualTo: "complete")
+                    .getDocuments() { (querySnapshot, err) in
+                        if let err = err {
+                            print("error from the duplicate check", err)
+                            promise(.failure(PostingError.generalError(reason: "Unable to check for the Unique Identifier duplicates")))
+                            return
+                        }
+
+                        if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
+                            promise(.success(true))
+                        } else {
+                            promise(.failure(PostingError.generalError(reason: "The item already exists. Please resell it through the app instead of selling it as a new item.")))
+                        }
+                    }
+            }
+        }
+        .flatMap { (_) -> AnyPublisher<TxPackage, PostingError> in
+            return transactionToEstimate()
+        }
+        .flatMap({ [weak self] (txPackage) -> AnyPublisher<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> in
+            txPackageRetainer = txPackage
+            return Future<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> { promise in
+                self?.estimateGas(
+                    gasEstimate: txPackage.gasEstimate,
+                    promise: promise
+                )
+            }
+            .eraseToAnyPublisher()
+        })
+        .sink { (completion) in
+            switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    completionHandler(nil, nil, error)
+                    break
+            }
+        } receiveValue: { (estimates) in
+//            self?.hideSpinner()
+            print("txPackageRetainer", txPackageRetainer as Any)
+            completionHandler(estimates, txPackageRetainer, nil)
+        }
+        .store(in: &self.storage)
     }
 }

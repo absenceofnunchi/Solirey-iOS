@@ -36,7 +36,8 @@ extension DigitalAssetViewController {
     
     final func executeIndividualAuction(
         estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
-        mintParameters: MintParameters
+        mintParameters: MintParameters,
+        txPackage: TxPackage
     ) {
         
         guard let txPackageRetainer = self.txPackageArr.first else {
@@ -86,16 +87,14 @@ extension DigitalAssetViewController {
                             let update: [String: PostProgress] = ["update": .estimatGas]
                             NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                             
-                            guard let txPackageArr = self?.txPackageArr,
-                                  let transaction = txPackageArr.first?.transaction,
-                                  let transactionService = self?.transactionService,
+                            guard let transactionService = self?.transactionService,
                                   let self = self else {
                                 return
                             }
                             
                             Deferred {
                                 transactionService.executeTransaction2(
-                                    transaction: transaction,
+                                    transaction: txPackage.transaction,
                                     password: password,
                                     type: .auctionContract
                                 )
@@ -122,7 +121,6 @@ extension DigitalAssetViewController {
                                                 break
                                         }
                                     } receiveValue: { (receipt) in
-
                                         // confirm that the block is added to the chain
                                         self.transactionService.confirmTransactions(receipt)
                                             .sink(receiveCompletion: { (completion) in
@@ -133,7 +131,6 @@ extension DigitalAssetViewController {
                                                         break
                                                 }
                                             }, receiveValue: { (receipt) in
-                                                
                                                 self.mintAndTransfer(
                                                     txReceipt: receipt,
                                                     password: password,

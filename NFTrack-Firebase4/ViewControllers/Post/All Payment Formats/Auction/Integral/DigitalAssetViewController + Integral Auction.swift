@@ -8,6 +8,7 @@
 import UIKit
 import Combine
 import web3swift
+import BigInt
 
 extension DigitalAssetViewController {
     final func getIntegralAuctionEstimate(transactionParameters: [AnyObject]) -> AnyPublisher<TxPackage, PostingError> {
@@ -106,17 +107,12 @@ extension DigitalAssetViewController {
     
     func executeIntegralAuction(
         estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
-        mintParameters: MintParameters
+        mintParameters: MintParameters,
+        txPackage: TxPackage
     ) {
         var txResultRetainer: TransactionSendingResult!
-        // To be used for the event topics from the socket
-        var postUid: String!
-        var tokenId: String!
-        // To retain the above information for Firestore
-        var topicsInfoRetainer: (uid: String, tokenId: String)!
         
-        guard let integralAuctionAddress = ContractAddresses.integralAuctionAddress,
-              let txPackageRetainer = self.txPackageArr.first else {
+        guard let integralAuctionAddress = ContractAddresses.integralAuctionAddress else {
             return
         }
         
@@ -134,7 +130,7 @@ extension DigitalAssetViewController {
                 titleString: "Gas Estimate",
                 titleColor: UIColor.white,
                 body: [
-                    "Total Gas Units": txPackageRetainer.gasEstimate.description,
+                    "Total Gas Units": txPackage.gasEstimate.description,
                     "Gas Price": "\(estimates.gasPriceInGwei) Gwei",
                     "Total Gas Cost": "\(estimates.totalGasCost) Ether",
                     "Your Current Balance": "\(estimates.balance) Ether"
@@ -145,6 +141,8 @@ extension DigitalAssetViewController {
                 alertStyle: .noButton
             )
         ]
+        
+        self.hideSpinner()
         
         DispatchQueue.main.async { [weak self] in
             let alertVC = AlertViewController(height: 350, standardAlertContent: content)
@@ -171,159 +169,77 @@ extension DigitalAssetViewController {
                                         .eraseToAnyPublisher()
                                 }
                                 
-                                return transactionService.executeTransaction2(transaction: txPackageRetainer.transaction, password: password, type: .auctionContract)
+                                return transactionService.executeTransaction2(transaction: txPackage.transaction, password: password, type: .auctionContract)
                                     .eraseToAnyPublisher()
                             }
-                            // get the topics of the AuctionCreated event from the socket delegate and parse it
-                            .flatMap { [weak self] (txResult) -> AnyPublisher<(uid: String, tokenId: String), PostingError> in
-                                let update: [String: PostProgress] = ["update": .estimatGas]
-                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                txResultRetainer = txResult.txResult
-                                
-                                return Future<(uid: String, tokenId: String), PostingError> { promise in
-                                    self?.socketDelegate.didReceiveTopics = { webSocketMessage in
-                                        guard let transactionHash = webSocketMessage["transactionHash"] as? String,
-                                              transactionHash == txResult.txResult.hash,
-                                              let topics = webSocketMessage["topics"] as? [String] else { return }
-                                        
-                                        switch topics[0] {
-                                            case Topics.IntegralAuction.auctionCreated:
-                                                guard let _postUid = Web3Utils.hexToBigUInt(topics[1]) else {
-                                                    promise(.failure(.generalError(reason: "Unable to parse the newly minted token ID.")))
-                                                    return
-                                                }
-                                                postUid = _postUid.description
-                                                break
-                                            case Topics.IntegralAuction.transfer:
-                                                guard let _tokenId = Web3Utils.hexToBigUInt(topics[3]) else {
-                                                    promise(.failure(.generalError(reason: "Unable to parse the newly minted token ID.")))
-                                                    return
-                                                }
-                                                tokenId = _tokenId.description
-                                                break
-                                            default:
-                                                break
-                                        }
-                                        
-                                        // Pass only when both are fetched
-                                        if let uid = postUid, let tid = tokenId {
-                                            promise(.success((uid: uid, tokenId: tid)))
-                                        }
-                                    }
-                                }
-                                .eraseToAnyPublisher()
-                            }
-                            .flatMap({ [weak self] (topicsInfo) -> AnyPublisher<[String?], PostingError> in
-                                topicsInfoRetainer = topicsInfo
-                                
-                                let update: [String: PostProgress] = ["update": .minting]
-                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                
-                                // upload images/files to the Firebase Storage and get the array of URLs
-                                if let previewDataArr = self?.previewDataArr, previewDataArr.count > 0 {
-                                    let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
-                                        return Future<String?, PostingError> { promise in
-                                            self?.uploadFileWithPromise(
-                                                fileURL: previewData.filePath,
-                                                userId: mintParameters.userId,
-                                                promise: promise
-                                            )
-                                        }.eraseToAnyPublisher()
-                                    }
-                                    return Publishers.MergeMany(fileURLs)
-                                        .collect()
-                                        .eraseToAnyPublisher()
-                                } else {
-                                    // if there are none to upload, return an empty array
-                                    return Result.Publisher([] as [String]).eraseToAnyPublisher()
-                                }
-                            })
-                            // upload the details to Firestore
-                            .flatMap { [weak self] (urlStrings) -> AnyPublisher<Bool, PostingError> in
-                                let update: [String: PostProgress] = ["update": .images]
-                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                
-                                guard let self = self,
-                                      let currentAddressString = Web3swiftService.currentAddressString else {
-                                    return Fail(error: PostingError.generalError(reason: "Unable to prepare data for the database update."))
-                                        .eraseToAnyPublisher()
-                                }
-                                
-                                return Future<Bool, PostingError> { promise in
-                                    self.transactionService.createFireStoreEntryRevised(
-                                        documentId: &self.documentId,
-                                        senderAddress: currentAddressString,
-                                        escrowHash: "N/A",
-                                        auctionHash: txResultRetainer.hash,
-                                        mintHash: "N/A",
-                                        itemTitle: mintParameters.itemTitle,
-                                        desc: mintParameters.desc,
-                                        price: mintParameters.price ?? "N/A",
-                                        category: mintParameters.category,
-                                        tokensArr: mintParameters.tokensArr,
-                                        convertedId: mintParameters.convertedId,
-                                        type: mintParameters.postType,
-                                        deliveryMethod: mintParameters.deliveryMethod,
-                                        saleFormat: mintParameters.saleFormat,
-                                        paymentMethod: mintParameters.paymentMethod,
-                                        tokenId: topicsInfoRetainer.tokenId,
-                                        urlStrings: urlStrings,
-                                        ipfsURLStrings: [],
-                                        shippingInfo: self.shippingInfo,
-                                        solireyUid: topicsInfoRetainer.uid,
-                                        contractFormat: mintParameters.contractFormat,
-                                        promise: promise
-                                    )
-                                }
-                                .eraseToAnyPublisher()
-                            }
-                            .sink { [weak self] (completion) in
-                                if self?.socketDelegate != nil {
-                                    self?.socketDelegate.disconnectSocket()
-                                }
-                                
+                            .sink(receiveCompletion: { (completion) in
                                 switch completion {
                                     case .failure(let error):
                                         self?.processFailure(error)
                                     case .finished:
-                                        self?.afterPostReset()
-                                        
-                                        DispatchQueue.main.async { [weak self] in
-                                            self?.saleMethodContainerConstraintHeight.constant = 50
-                                            self?.priceTextFieldConstraintHeight.constant = 50
-                                            self?.priceTextField.alpha = 1
-                                            self?.priceLabelConstraintHeight.constant = 50
-                                            self?.priceLabel.alpha = 1
-                                            self?.auctionDurationTitleLabel.alpha = 0
-                                            self?.auctionDurationLabel.alpha = 0
-                                            self?.auctionDurationLabel.text = nil
-                                            self?.auctionStartingPriceTitleLabel.alpha = 0
-                                            self?.auctionStartingPriceTextField.alpha = 0
-                                            self?.auctionStartingPriceTextField.text = nil
-                                            self?.saleMethodLabel.text = nil
-                                            self?.deliveryMethodLabel.text = DeliveryMethod.onlineTransfer.rawValue
-                                            self?.pickerLabel.text = Category.digital.asString()
-
-                                            UIView.animate(withDuration: 0.5) {
-                                                self?.view.layoutIfNeeded()
+                                        break
+                                }
+                            }, receiveValue: { (txResult) in
+                                let update: [String: PostProgress] = ["update": .estimatGas]
+                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                txResultRetainer = txResult.txResult
+                                
+                                // Get the token ID by parsing the receipt from the minting transaction
+                                guard let self = self else { return }
+                                
+                                self.transactionService.confirmReceipt(txHash: txResult.txResult.hash)
+                                    .flatMap { (receipt) -> AnyPublisher<(id: String, tokenId: String), PostingError> in
+                                        Future<(id: String, tokenId: String), PostingError> { promise in
+                                            
+                                            let web3 = Web3swiftService.web3instance
+                                            guard let contract = web3.contract(integralAuctionABI, at: ContractAddresses.integralAuctionAddress, abiVersion: 2) else {
+                                                return
                                             }
                                             
-                                            guard let `self` = self else { return }
-                                            self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT)
+                                            // Two events will be emitted (AuctionCreated, Transfer).
+                                            // Following determines which event in the logs array is which so that the order shouldn't matter. i.e. logs[0] could be either AuctionCreated or Transfer.
+                                            let parsedEvent1 = contract.parseEvent(receipt.logs[0])
+                                            let parsedEvent2 = contract.parseEvent(receipt.logs[1])
+                                            
+                                            if parsedEvent1.eventName == "AuctionCreated" {
+                                                guard let eventData1 = parsedEvent1.eventData,
+                                                      let id = eventData1["id"] as? BigUInt,
+                                                      let eventData2 = parsedEvent2.eventData,
+                                                      let tokenId = eventData2["tokenId"] as? BigUInt else {
+                                                    return
+                                                }
+
+                                                promise(.success((id: id.description, tokenId: tokenId.description)))
+                                            } else {
+                                                guard let eventData1 = parsedEvent1.eventData,
+                                                      let id = eventData1["tokenId"] as? BigUInt,
+                                                      let eventData2 = parsedEvent2.eventData,
+                                                      let tokenId = eventData2["id"] as? BigUInt else {
+                                                    return
+                                                }
+                                                
+                                                promise(.success((id: id.description, tokenId: tokenId.description)))
+                                            }
                                         }
+                                        .eraseToAnyPublisher()
+                                    }
+                                    .sink { [weak self] (completion) in
+                                        switch completion {
+                                            case .failure(let error):
+                                                self?.processFailure(error)
+                                            case .finished:
+                                                break
+                                        }
+                                    } receiveValue: { [weak self] (topicsInfo) in
                                         
-                                        guard let documentId = self?.documentId else { return }
-                                        FirebaseService.shared.sendToTopicsVoid(
-                                            title: "New item has been listed on \(mintParameters.category)",
-                                            content: mintParameters.itemTitle,
-                                            topic: mintParameters.category,
-                                            docId: documentId
+                                        self?.updateFirestore(
+                                            topicsInfo: topicsInfo,
+                                            mintParameters: mintParameters,
+                                            txResultRetainer: txResultRetainer
                                         )
-                                        
-                                    //  register spotlight?
-                                }
-                            } receiveValue: { (_) in
-                            }
+                                    }
+                                    .store(in: &self.storage)
+                            })
                             .store(in: &self!.storage)
                         })
                     })
@@ -331,5 +247,120 @@ extension DigitalAssetViewController {
             } // alertVC.action
             self?.present(alertVC, animated: true, completion: nil)
         }
+    }
+    
+    private func updateFirestore(
+        topicsInfo: (id: String, tokenId: String),
+        mintParameters: MintParameters,
+        txResultRetainer: TransactionSendingResult
+    ) {
+        let update: [String: PostProgress] = ["update": .minting]
+        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+        
+        guard let previewDataArr = self.previewDataArr, previewDataArr.count == 1 else {
+            alert.showDetail("Error", with: "A single digital asset is required.", for: self)
+            return
+        }
+        
+        let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+            return Future<String?, PostingError> { promise in
+                self.uploadFileWithPromise(
+                    fileURL: previewData.filePath,
+                    userId: mintParameters.userId,
+                    promise: promise
+                )
+            }.eraseToAnyPublisher()
+        }
+        
+        Publishers.MergeMany(fileURLs)
+            .collect()
+            .eraseToAnyPublisher()
+        // upload the details to Firestore
+        .flatMap { [weak self] (urlStrings) -> AnyPublisher<Bool, PostingError> in
+            let update: [String: PostProgress] = ["update": .images]
+            NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+            
+            guard let self = self,
+                  let currentAddressString = Web3swiftService.currentAddressString else {
+                return Fail(error: PostingError.generalError(reason: "Unable to prepare data for the database update."))
+                    .eraseToAnyPublisher()
+            }
+            
+            return Future<Bool, PostingError> { promise in
+                self.transactionService.createFireStoreEntryRevised(
+                    documentId: &self.documentId,
+                    senderAddress: currentAddressString,
+                    escrowHash: "N/A",
+                    auctionHash: txResultRetainer.hash,
+                    mintHash: "N/A",
+                    itemTitle: mintParameters.itemTitle,
+                    desc: mintParameters.desc,
+                    price: mintParameters.price ?? "N/A",
+                    category: mintParameters.category,
+                    tokensArr: mintParameters.tokensArr,
+                    convertedId: mintParameters.convertedId,
+                    type: mintParameters.postType,
+                    deliveryMethod: mintParameters.deliveryMethod,
+                    saleFormat: mintParameters.saleFormat,
+                    paymentMethod: mintParameters.paymentMethod,
+                    tokenId: topicsInfo.tokenId,
+                    urlStrings: urlStrings,
+                    ipfsURLStrings: [],
+                    shippingInfo: self.shippingInfo,
+                    solireyUid: topicsInfo.id,
+                    contractFormat: mintParameters.contractFormat,
+                    promise: promise
+                )
+            }
+            .eraseToAnyPublisher()
+        }
+        .sink { [weak self] (completion) in
+            if self?.socketDelegate != nil {
+                self?.socketDelegate.disconnectSocket()
+            }
+            
+            switch completion {
+                case .failure(let error):
+                    self?.processFailure(error)
+                case .finished:
+                    self?.afterPostReset()
+                    
+                    DispatchQueue.main.async { [weak self] in
+                        self?.saleMethodContainerConstraintHeight.constant = 50
+                        self?.priceTextFieldConstraintHeight.constant = 50
+                        self?.priceTextField.alpha = 1
+                        self?.priceLabelConstraintHeight.constant = 50
+                        self?.priceLabel.alpha = 1
+                        self?.auctionDurationTitleLabel.alpha = 0
+                        self?.auctionDurationLabel.alpha = 0
+                        self?.auctionDurationLabel.text = nil
+                        self?.auctionStartingPriceTitleLabel.alpha = 0
+                        self?.auctionStartingPriceTextField.alpha = 0
+                        self?.auctionStartingPriceTextField.text = nil
+                        self?.saleMethodLabel.text = nil
+                        self?.deliveryMethodLabel.text = DeliveryMethod.onlineTransfer.rawValue
+                        self?.pickerLabel.text = Category.digital.asString()
+                        
+                        UIView.animate(withDuration: 0.5) {
+                            self?.view.layoutIfNeeded()
+                        }
+                        
+                        guard let `self` = self else { return }
+                        self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT)
+                    }
+                    
+                    guard let documentId = self?.documentId else { return }
+                    FirebaseService.shared.sendToTopicsVoid(
+                        title: "New item has been listed on \(mintParameters.category)",
+                        content: mintParameters.itemTitle,
+                        topic: mintParameters.category,
+                        docId: documentId
+                    )
+                    
+                //  register spotlight?
+            }
+        } receiveValue: { (_) in
+        }
+        .store(in: &self.storage)
     }
 }

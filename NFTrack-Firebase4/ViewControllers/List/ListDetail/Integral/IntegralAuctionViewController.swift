@@ -23,7 +23,6 @@ class IntegralAuctionViewController: ParentDetailViewController {
     final let LIST_DETAIL_MARGIN: CGFloat = 10
     final var propertiesToLoad: [IntegralAuctionContract.ContractProperties]!
     lazy final var auctionDetailArr: [SmartContractProperty] = IntegralAuctionProperties.AuctionInfo.getAll().map { SmartContractProperty(propertyName: $0, propertyDesc: "loading...") }
-
     lazy final var auctionButtonNarrowConstraint: NSLayoutConstraint! = auctionButton.widthAnchor.constraint(equalTo: bidContainer.widthAnchor, multiplier: 0.45)
     lazy final var auctionButtonWideConstraint: NSLayoutConstraint! = auctionButton.widthAnchor.constraint(equalTo: bidContainer.widthAnchor, multiplier: 1)
     final var auctionContractAddress: EthereumAddress!
@@ -59,17 +58,7 @@ class IntegralAuctionViewController: ParentDetailViewController {
         
         self.contractAddress = myContractAddress
         self.auctionContractAddress = auctionContractAddress
-        
-//        self.propertiesToLoad = [
-//            AuctionContract.ContractProperties.startingBid,
-//            AuctionContract.ContractProperties.highestBid,
-//            AuctionContract.ContractProperties.highestBidder,
-//            AuctionContract.ContractProperties.auctionEndTime,
-//            AuctionContract.ContractProperties.ended,
-//            AuctionContract.ContractProperties.pendingReturns(myContractAddress),
-//            AuctionContract.ContractProperties.beneficiary
-//        ]
-        
+
         guard let uid = post.solireyUid,
               let convertedUid = BigUInt(uid) else { return }
         
@@ -342,6 +331,7 @@ extension IntegralAuctionViewController: UITextFieldDelegate {
     }
     
     final func bid() {
+        print("bid")
         guard auctionButtonController.isAuctionEnded == false else {
             self.alert.showDetail("Sorry", with: "The auction has already ended", for: self)
             return

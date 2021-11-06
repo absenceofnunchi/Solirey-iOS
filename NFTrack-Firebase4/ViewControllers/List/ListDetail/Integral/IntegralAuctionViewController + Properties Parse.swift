@@ -100,7 +100,6 @@ extension IntegralAuctionViewController {
                   let ended = result[IntegralAuctionProperties.AuctionInfo.ended.rawValue] as? Bool,
                   let transferred = result[IntegralAuctionProperties.AuctionInfo.transferred.rawValue] as? Bool else { return }
 
-            print("auctionEndTime", auctionEndTime)
             let auctionEndDate = Date(timeIntervalSince1970: Double(auctionEndTime))
             let convertedStartingBid = self.transactionService.stripZeros(bidInEth) // starting bid
 
@@ -161,7 +160,7 @@ extension IntegralAuctionViewController {
                   let descLabel = getLabelWithTag(views: element.subviews, tag: 2) else { return }
             
             switch titleLabel.text {
-                case IntegralAuctionProperties.AuctionInfo.highestBidder.rawValue:
+                case IntegralAuctionProperties.AuctionInfo.highestBidder.value:
                     let highestBidder = auctionInfo.highestBidder
                     auctionButtonController.highestBidder = highestBidder
                     
@@ -170,7 +169,7 @@ extension IntegralAuctionViewController {
                     } else {
                         descLabel.text = highestBidder
                     }
-                case IntegralAuctionProperties.AuctionInfo.ended.rawValue:
+                case IntegralAuctionProperties.AuctionInfo.ended.value:
                     let status = auctionInfo.ended
                     descLabel.text = status == false ? "Active" : "Ended"
                     auctionButtonController.isAuctionOfficiallyEnded = status
@@ -195,9 +194,8 @@ extension IntegralAuctionViewController {
                         statusInfoButton.alpha = 1
                     }
                     break
-                case IntegralAuctionProperties.AuctionInfo.auctionEndTime.rawValue:
+                case IntegralAuctionProperties.AuctionInfo.auctionEndTime.value:
                     let auctionEndTime = auctionInfo.auctionEndTime
-//                    print("auctionEndTime", auctionEndTime)
                     auctionButtonController.auctionEndTime = auctionEndTime
                     auctionButtonController.isAuctionEnded = auctionEndTime < Date()
                     
@@ -208,7 +206,7 @@ extension IntegralAuctionViewController {
                     let formattedDate = formatter.string(from: auctionEndTime)
                     descLabel.text = formattedDate
                     break
-                case IntegralAuctionProperties.AuctionInfo.beneficiary.rawValue:
+                case IntegralAuctionProperties.AuctionInfo.beneficiary.value:
                     let beneficiary = auctionInfo.beneficiary
                     auctionButtonController.beneficiary = beneficiary
                     if beneficiary == self.contractAddress.address {
@@ -217,8 +215,8 @@ extension IntegralAuctionViewController {
                         descLabel.text = beneficiary
                     }
                     break
-                case IntegralAuctionProperties.AuctionInfo.startingBid.rawValue,
-                     IntegralAuctionProperties.AuctionInfo.highestBid.rawValue:
+                case IntegralAuctionProperties.AuctionInfo.startingBid.value,
+                     IntegralAuctionProperties.AuctionInfo.highestBid.value:
                     descLabel.text = auctionInfo.startingBid
                 default:
                     break
@@ -278,9 +276,11 @@ extension IntegralAuctionViewController {
                 
                 let contract = web3.contract(auctionABI, at: auctionContractAddress, abiVersion: 2)
                 
-                //                var filter = EventFilter()
-                //                filter.fromBlock = .blockNumber(0)
-                //                filter.toBlock = .latest
+                var filter = EventFilter()
+//                filter.
+//                EventFilterable
+                filter.fromBlock = .blockNumber(0)
+                filter.toBlock = .latest
                 let eventParser = contract?.createEventParser("HighestBidIncreased", filter: nil)
                 
                 var blockNumber: BigUInt!

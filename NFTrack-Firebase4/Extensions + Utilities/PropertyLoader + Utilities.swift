@@ -402,8 +402,27 @@ enum IntegralAuctionProperties: ContractPropertiesEnum {
         case ended
         case transferred
         
+        var value: String! {
+            switch self {
+                case .beneficiary:
+                    return "Beneficiary"
+                case .auctionEndTime:
+                    return "End Time"
+                case .startingBid:
+                    return "Starting Bid"
+                case .highestBidder:
+                    return "Highest Bidder"
+                case .highestBid:
+                    return "Highest Bid"
+                case .ended:
+                    return "Status"
+                default:
+                    return ""
+            }
+        }
+        
         static func getAll() -> [String] {
-            return AuctionInfo.allCases.filter { $0 != .pendingReturns && $0 != .tokenId && $0 != .transferred }.map { $0.rawValue }
+            return AuctionInfo.allCases.filter { $0 != .pendingReturns && $0 != .tokenId && $0 != .transferred }.map { $0.value }
         }
     }
 }
