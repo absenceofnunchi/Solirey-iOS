@@ -601,7 +601,7 @@ extension PostViewController {
         
         Future<WriteTransaction, PostingError> { [weak self] promise in
             guard let fromAddress = Web3swiftService.currentAddress else {
-                promise(.failure(.generalError(reason: "Could not get your address.")))
+                promise(.failure(.generalError(reason: "Could not get your wallet address.")))
                 return
             }
             

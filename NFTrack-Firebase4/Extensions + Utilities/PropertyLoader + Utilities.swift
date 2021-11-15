@@ -314,6 +314,7 @@ enum SimplePaymentStatus: String {
 }
 
 // MARK: - NFTrack Contract
+/// Deprecated
 enum NFTrackMethods: String, ContractMethodsEnum {
     case ownerOf
     case name
@@ -347,8 +348,46 @@ enum NFTrackProperties: ContractPropertiesEnum {
 }
 
 struct NFTrackContract: PropertyLoadable {
-    typealias ContractMethods = NFTrackMethods
-    typealias ContractProperties = NFTrackProperties
+    typealias ContractMethods = SolireyMethods
+    typealias ContractProperties = SolireyProperties
+}
+
+// MARK: - Solirey Contract
+enum SolireyMethods: String, ContractMethodsEnum {
+    case ownerOf
+    case name
+    case symbol
+    case safeTransferFrom
+    case transferFrom
+    case createSimplePayment
+    case resell
+    case pay
+    case withdraw
+    case withdrawFee
+    case getInfo
+}
+
+enum SolireyProperties: ContractPropertiesEnum {
+    case address
+    // Tuple since the property could be mapping that requires a key
+    var value: (String, AnyObject?) {
+        switch self {
+            case .address:
+                return ("address", nil)
+        }
+    }
+    
+    func toDisplay() -> String {
+        switch self {
+            case .address:
+                return "Address"
+        }
+    }
+}
+
+struct SolireyContract: PropertyLoadable {
+    typealias ContractMethods = SolireyMethods
+    typealias ContractProperties = SolireyProperties
 }
 
 // MARK: - Integral Auction

@@ -99,7 +99,10 @@ extension DigitalAssetViewController {
                             self?.executeIndividualAuction(
                                 estimates: estimates,
                                 mintParameters: mintParameters,
-                                txPackage: txPackage
+                                txPackage: txPackage,
+                                completion: { (receipt, password, mintParameters) in
+                                    self?.mintAndTransfer(txReceipt: receipt, password: password, mintParameters: mintParameters)
+                                }
                             )
                         }
                     }
@@ -131,6 +134,36 @@ extension DigitalAssetViewController {
                                 estimates: estimates,
                                 mintParameters: mintParameters,
                                 txPackage: txPackage
+                            )
+                        }
+                    }
+                    break
+                case .digitalResaleAuctionBeneficiaryIndividual:
+                    self.transactionService.preLaunch(transactionToEstimate: { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
+                        let transactionParameters: [AnyObject] = [biddingTime, startingBid] as [AnyObject]
+                        
+                        guard let getIndividualAuctionEstimate = self?.getIndividualAuctionEstimate else {
+                            return Fail(error: PostingError.generalError(reason: "Unable to estimate gas."))
+                                .eraseToAnyPublisher()
+                        }
+                        return getIndividualAuctionEstimate(transactionParameters)
+                        
+                    }) { [weak self] (estimates, txPackage, error) in
+                        
+                        if let error = error {
+                            self?.processFailure(error)
+                        }
+                        
+                        if let estimates = estimates,
+                           let txPackage = txPackage {
+                            
+                            self?.executeIndividualAuction(
+                                estimates: estimates,
+                                mintParameters: mintParameters,
+                                txPackage: txPackage,
+                                completion: { (receipt, password, mintParameters) in
+                                    self?.transferToken(txReceipt: receipt, password: password, mintParameters: mintParameters)
+                                }
                             )
                         }
                     }

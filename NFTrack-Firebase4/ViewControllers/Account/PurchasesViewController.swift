@@ -75,12 +75,12 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
         guard let userId = userId else { return }
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
-            .whereField("status", in: [PostStatus.complete.rawValue, AuctionStatus.ended.rawValue])
+            .whereField("status", in: [PostStatus.complete.rawValue, AuctionStatus.transferred.rawValue])
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .getDocuments() { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
                 if let error = error {
-                    self?.alert.showDetail("Error in Fetching Data", with: error.localizedDescription, for: self)
+                    self?.alert.showDetail("Error In Fetching Data", with: error.localizedDescription, for: self)
                 } else {
                     defer {
                         DispatchQueue.main.async {
@@ -117,7 +117,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
         guard let userId = userId else { return }
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
-            .whereField("status", in: [PostStatus.complete.rawValue, AuctionStatus.ended.rawValue])
+            .whereField("status", in: [PostStatus.complete.rawValue, AuctionStatus.transferred.rawValue])
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)

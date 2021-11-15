@@ -65,6 +65,7 @@
 		49409A75265946870060193C /* SearchResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A74265946870060193C /* SearchResultsViewController.swift */; };
 		49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */; };
 		494284B7273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494284B6273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift */; };
+		49434A5327427EE60043E45B /* ParentAuctionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49434A5227427EE50043E45B /* ParentAuctionViewController.swift */; };
 		494DDBD527327C5800510026 /* IndividualAuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494DDBD427327C5800510026 /* IndividualAuctionABI.swift */; };
 		494DDBE02732845600510026 /* MintContractABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494DDBDF2732845600510026 /* MintContractABI.swift */; };
 		494DDBE82732896500510026 /* DigitalAssetViewController + Individual Auction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494DDBE72732896500510026 /* DigitalAssetViewController + Individual Auction.swift */; };
@@ -192,6 +193,7 @@
 		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
 		49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */; };
 		49B9BD722733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */; };
+		49BD34E2274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BD34E1274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift */; };
 		49BF2CE327083BD4009CA5F2 /* ImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */; };
 		49BF2CE827083E11009CA5F2 /* NoImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */; };
 		49BF2CEE27084599009CA5F2 /* ImageProgressCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CED27084599009CA5F2 /* ImageProgressCardCell.swift */; };
@@ -292,6 +294,7 @@
 		49409A74265946870060193C /* SearchResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsViewController.swift; sourceTree = "<group>"; };
 		49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + ResultsUpdate.swift"; sourceTree = "<group>"; };
 		494284B6273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IntegralAuctionViewController + CreateAuctionMethod.swift"; sourceTree = "<group>"; };
+		49434A5227427EE50043E45B /* ParentAuctionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAuctionViewController.swift; sourceTree = "<group>"; };
 		494DDBD427327C5800510026 /* IndividualAuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndividualAuctionABI.swift; sourceTree = "<group>"; };
 		494DDBDF2732845600510026 /* MintContractABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintContractABI.swift; sourceTree = "<group>"; };
 		494DDBE72732896500510026 /* DigitalAssetViewController + Individual Auction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Individual Auction.swift"; sourceTree = "<group>"; };
@@ -425,6 +428,7 @@
 		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
 		49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + ContextMenu.swift"; sourceTree = "<group>"; };
 		49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Integral Auction.swift"; sourceTree = "<group>"; };
+		49BD34E1274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Individual Auction Resale.swift"; sourceTree = "<group>"; };
 		49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCardCell.swift; sourceTree = "<group>"; };
 		49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoImageCardCell.swift; sourceTree = "<group>"; };
 		49BF2CED27084599009CA5F2 /* ImageProgressCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProgressCardCell.swift; sourceTree = "<group>"; };
@@ -525,6 +529,7 @@
 				49843D4E273149D800471C43 /* Individual */,
 				49843D52273149EB00471C43 /* Integral */,
 				4981CC6C2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift */,
+				49434A5227427EE50043E45B /* ParentAuctionViewController.swift */,
 			);
 			path = ListDetail;
 			sourceTree = "<group>";
@@ -574,6 +579,7 @@
 			isa = PBXGroup;
 			children = (
 				494DDBE72732896500510026 /* DigitalAssetViewController + Individual Auction.swift */,
+				49BD34E1274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift */,
 			);
 			path = Individual;
 			sourceTree = "<group>";
@@ -1452,6 +1458,7 @@
 				493BF9D7264C4DE100B9C9D2 /* BackgroundView2.swift in Sources */,
 				495FD333268D402900F1D81D /* FilterCell.swift in Sources */,
 				490C3FA126FD6B830093C323 /* BackgroundView4.swift in Sources */,
+				49434A5327427EE60043E45B /* ParentAuctionViewController.swift in Sources */,
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
 				495FB37A26BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift in Sources */,
 				495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */,
@@ -1485,6 +1492,7 @@
 				4983BB2026E5B3D200A45703 /* ShippingAddressChecker.swift in Sources */,
 				49721DA226D58385009BA7E7 /* ReportViewController.swift in Sources */,
 				4997030A2676CC00001DD80A /* SavedViewController.swift in Sources */,
+				49BD34E2274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift in Sources */,
 				499702AB2673F75E001DD80A /* MessageCell.swift in Sources */,
 				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
 				492E009727200B3900A7C072 /* SimpleRevisedViewController.swift in Sources */,

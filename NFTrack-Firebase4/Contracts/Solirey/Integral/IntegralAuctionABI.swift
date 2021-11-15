@@ -8,6 +8,7 @@
 /*
  Abstract:
  The cheaper version of AuctionABI that doesn't need to be individually deployed. The child contract of Solirey.
+ This contract is used for checking the ownership of tokens of resale.
  */
 
 let integralAuctionABI = """

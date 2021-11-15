@@ -217,10 +217,10 @@ extension ParentPostViewController {
                 self.processDirectResaleRevised(mintParameters, isAddressRequired: false, postType: .digital)
                 break
             case .digitalResaleAuctionBeneficiaryIntegral:
-                // here
                 self.processAuction(mintParameters)
                 break
             case .digitalResaleAuctionBeneficiaryIndividual:
+                self.processAuction(mintParameters)
                 break
             default:
                 break

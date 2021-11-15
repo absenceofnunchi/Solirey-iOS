@@ -37,7 +37,8 @@ extension DigitalAssetViewController {
     final func executeIndividualAuction(
         estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
         mintParameters: MintParameters,
-        txPackage: TxPackage
+        txPackage: TxPackage,
+        completion: @escaping ((TransactionReceipt, String, MintParameters) -> Void)
     ) {
         
         let content = [
@@ -78,8 +79,13 @@ extension DigitalAssetViewController {
                         return
                     }
                     
+                    guard let deliveryAndPaymentMethod = mintParameters.saleConfigValue else {
+                        self?.alert.showDetail("Error", with: "Unable to configure the delivery and the payment method.", for: self)
+                        return
+                    }
+                    
                     self?.dismiss(animated: true, completion: {
-                        let progressModal = ProgressModalViewController(paymentMethod: .auctionBeneficiary)
+                        let progressModal = ProgressModalViewController(deliveryAndPaymentMethod: deliveryAndPaymentMethod)
                         progressModal.titleString = "Posting In Progress"
                         self?.present(progressModal, animated: true, completion: {
                             let update: [String: PostProgress] = ["update": .estimatGas]
@@ -129,11 +135,7 @@ extension DigitalAssetViewController {
                                                         break
                                                 }
                                             }, receiveValue: { (receipt) in
-                                                self.mintAndTransfer(
-                                                    txReceipt: receipt,
-                                                    password: password,
-                                                    mintParameters: mintParameters
-                                                )
+                                                completion(receipt, password, mintParameters)
                                             })
                                             .store(in: &self.storage)
                                     }

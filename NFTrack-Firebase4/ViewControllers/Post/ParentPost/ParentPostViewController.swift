@@ -363,7 +363,7 @@ extension ParentPostViewController {
         scrollView.addSubview(titleLabel)
         
         titleTextField = createTextField(delegate: self)
-        titleTextField.autocorrectionType = .no
+        titleTextField.autocorrectionType = .yes
         scrollView.addSubview(titleTextField)
         
         priceLabel = createTitleLabel(text: "Price")
@@ -383,6 +383,7 @@ extension ParentPostViewController {
         
         descTextView = UITextView()
         descTextView.delegate = self
+        descTextView.autocorrectionType = .yes
         descTextView.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 245/255)
         descTextView.layer.cornerRadius = 10
         descTextView.contentInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
@@ -907,7 +908,7 @@ extension ParentPostViewController {
     }
     
     private func checkOwnership() {
-        guard let solireyMintContractAddress = ContractAddresses.solireyMintContractAddress else {
+        guard let integralAuctionAddress = ContractAddresses.integralAuctionAddress else {
             alert.showDetail("Error", with: "Unable to retrieve the smart contract address for checking the ownership.", for: self)
             return
         }
@@ -930,7 +931,7 @@ extension ParentPostViewController {
 //                        method: NFTrackContract.ContractMethods.ownerOf.rawValue,
 //                        parameters: ownerOfParameters,
 //                        abi: mintContractABI,
-//                        contractAddress: solireyMintContractAddress,
+//                        contractAddress: integralAuctionAddress,
 //                        promise: promise
 //                    )
 //                }
@@ -938,8 +939,8 @@ extension ParentPostViewController {
                     self.transactionService.prepareTransactionForReading(
                         method: NFTrackContract.ContractMethods.ownerOf.rawValue,
                         parameters: ownerOfParameters,
-                        abi: mintContractABI,
-                        contractAddress: solireyMintContractAddress,
+                        abi: integralAuctionABI,
+                        contractAddress: integralAuctionAddress,
                         promise: promise
                     )
                 }

@@ -14,9 +14,25 @@ extension IntegralAuctionViewController: HandleError, PostParseDelegate {
     // Dynamically determine what auction method to call
     func callAuctionMethod(for method: AuctionContract.ContractMethods, amountString: String? = nil) {
         guard let integralAuctionAddress = ContractAddresses.integralAuctionAddress else {
+            self.alert.showDetail("Error", with: "Unable to get the auction contract address.", for: self)
             return
         }
-                        
+        
+        guard let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) else {
+            self.alert.showDetail("Error", with: "Unable to retrieve the user ID. Please try re-starting the app.", for: self)
+            return
+        }
+        
+        guard let currentAddress = Web3swiftService.currentAddressString else {
+            self.alert.showDetail("Error", with: "Unable to update the database.", for: self)
+            return
+        }
+        
+        guard let documentId = self.post.documentId else {
+            self.alert.showDetail("Error", with: "Unable to get the document ID of the database.", for: self)
+            return
+        }
+        
         let parameters: [AnyObject] = [post.solireyUid] as [AnyObject]
         
         self.transactionService.preLaunch { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
@@ -93,11 +109,6 @@ extension IntegralAuctionViewController: HandleError, PostParseDelegate {
                                     )
                                 }
                                 .flatMap({ (txResult) -> AnyPublisher<Data, PostingError> in
-                                    guard let documentId = self?.post.documentId else {
-                                        return Fail(error: PostingError.generalError(reason: "Unable to update the database."))
-                                            .eraseToAnyPublisher()
-                                    }
-
                                     self?.txResult = txResult
 
                                     switch method {
@@ -109,17 +120,12 @@ extension IntegralAuctionViewController: HandleError, PostParseDelegate {
                                         case .bid:
                                             // let's every user involved in the auction (who has previously bid before) know through the push notification that there's been a new bid
                                             let fcmToken = UserDefaults.standard.string(forKey: UserDefaultKeys.fcmToken)
-                                            let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId)
 
-                                            guard let currentAddress = Web3swiftService.currentAddressString else {
-                                                return Fail(error: PostingError.generalError(reason: "Unable to update the database."))
-                                                    .eraseToAnyPublisher()
-                                            }
                                             // The update of the status and the date is to display the progress on ProgressCell
                                             // The wallet address/userId pairing is necessary to update the buyerUserId with the highest bidder account address.
                                             self?.db.collection("post").document(documentId).updateData([
                                                 "bidderTokens": FieldValue.arrayUnion([fcmToken ?? ""]),
-                                                "bidders": FieldValue.arrayUnion([userId ?? ""]),
+                                                "bidders": FieldValue.arrayUnion([userId]),
                                                 "status": AuctionStatus.bid.rawValue,
                                                 "bidDate": Date(),
                                                 "bidderWalletAddress": [currentAddress: userId]
@@ -205,10 +211,10 @@ extension IntegralAuctionViewController: HandleError, PostParseDelegate {
                                                     // we need to find out the user ID with the highest bidder's wallet address at the end.
                                                     // This is so that the buyerUserId is recorded with the Firestore User ID on Firestore in order for the PurchaseVC to query posts using the user ID.
                                                     Future<String, PostingError> { [weak self] promise in
-                                                        guard let documentId = self?.post.documentId else {
-                                                            promise(.failure(.generalError(reason: "Unable to update the database.")))
-                                                            return
-                                                        }
+//                                                        guard let documentId = self?.post.documentId else {
+//                                                            promise(.failure(.generalError(reason: "Unable to update the database.")))
+//                                                            return
+//                                                        }
                                                         
                                                         FirebaseService.shared.db
                                                             .collection("post")
@@ -238,12 +244,10 @@ extension IntegralAuctionViewController: HandleError, PostParseDelegate {
                                                     .eraseToAnyPublisher()
                                                     .flatMap { [weak self] (userId) -> AnyPublisher<Bool, PostingError> in
                                                         Future<Bool, PostingError> { promise in
-                                                            print("userId", userId as Any)
-
-                                                            guard let documentId = self?.post.documentId else {
-                                                                promise(.failure(.generalError(reason: "Unable to update the database.")))
-                                                                return
-                                                            }
+//                                                            guard let documentId = self?.post.documentId else {
+//                                                                promise(.failure(.generalError(reason: "Unable to update the database.")))
+//                                                                return
+//                                                            }
                                                             
                                                             self?.db.collection("post").document(documentId).updateData([
                                                                 "buyerUserId": userId

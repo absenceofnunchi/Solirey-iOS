@@ -1141,8 +1141,7 @@ struct Topics {
 struct ContractAddresses {
     static let NFTrackABIRevisedAddress = EthereumAddress("0xd3F95b3292Cbc7543228B6edEDFA42b474651e8D")
     static let integralAuctionAddress = EthereumAddress("0x6d23ebe8d9ff75fe79fc0f4ae4b75b811cad2daa")
-    static let solireyMintContractAddress = EthereumAddress("0x7714F9D47cb475fE1F8041c8CE60b6B98487a454")
-//    static let solireyMintContractAddress = EthereumAddress("0x0b7964f34699bf1db6642d34bb10226aaa47fff2")
+    static let solireyMintContractAddress = EthereumAddress("0x273a9c24096dEe6071CED1c386dB8cFD857DF017")
 }
 
 struct ShippingInfo {

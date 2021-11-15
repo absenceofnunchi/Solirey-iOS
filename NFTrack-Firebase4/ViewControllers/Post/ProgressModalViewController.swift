@@ -14,6 +14,7 @@ enum PostProgress: Int, CaseIterable {
     case minting
     case images
     case initializeAuction
+    case transferToken
     
     func asString() -> String {
         switch self {
@@ -29,6 +30,8 @@ enum PostProgress: Int, CaseIterable {
                 return "Checking for images to upload"
             case .initializeAuction:
                 return "Initializing the auction contract"
+            case .transferToken:
+                return "Transferring the token"
         }
     }
 }
@@ -46,6 +49,24 @@ struct PostProgressData {
                 phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
             case .integralAuction:
                 phases = [.estimatGas, .minting, .images]
+            default:
+                phases = []
+        }
+    }
+
+    // More fine-grained control of what to display, especially the resale phases without minting.
+    init(deliveryAndPaymentMethod: DeliveryAndPaymentMethod) {
+        switch deliveryAndPaymentMethod {
+            case .tangibleNewSaleInPersonEscrowIndividual, .tangibleNewSaleShippingEscrowIndividual:
+                phases = [.estimatGas, .deployingEscrow, .minting, .images]
+            case .tangibleNewSaleInPersonDirectPaymentIntegral, .tangibleNewSaleInPersonDirectPaymentIndividual:
+                phases = [.estimatGas, .minting, .images]
+            case .digitalNewSaleAuctionBeneficiaryIndividual:
+                phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
+            case .digitalNewSaleAuctionBeneficiaryIntegral:
+                phases = [.estimatGas, .minting, .images]
+            case .digitalResaleAuctionBeneficiaryIndividual:
+                phases = [.estimatGas, .images, .deployingAuction, .transferToken]
             default:
                 phases = []
         }
@@ -71,6 +92,7 @@ class ProgressModalViewController: UIViewController {
     var progressLabel: UILabel!
     var postProgressData: PostProgressData!
     var paymentMethod: PaymentMethod!
+    var deliveryAndPaymentMethod: DeliveryAndPaymentMethod!
     private var alert = Alerts()
     
     init(height: CGFloat = 350, paymentMethod: PaymentMethod) {
@@ -78,6 +100,16 @@ class ProgressModalViewController: UIViewController {
         self.height = height
         self.paymentMethod = paymentMethod
         self.postProgressData = PostProgressData(paymentMethod: paymentMethod)
+        self.modalPresentationStyle = .custom
+        self.transitioningDelegate = customTransitioningDelegate
+        self.modalTransitionStyle = .crossDissolve
+    }
+    
+    init(height: CGFloat = 350, deliveryAndPaymentMethod: DeliveryAndPaymentMethod) {
+        super.init(nibName: nil, bundle: nil)
+        self.height = height
+        self.deliveryAndPaymentMethod = deliveryAndPaymentMethod
+        self.postProgressData = PostProgressData(deliveryAndPaymentMethod: deliveryAndPaymentMethod)
         self.modalPresentationStyle = .custom
         self.transitioningDelegate = customTransitioningDelegate
         self.modalTransitionStyle = .crossDissolve
