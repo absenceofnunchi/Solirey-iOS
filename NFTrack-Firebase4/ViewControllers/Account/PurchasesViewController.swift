@@ -75,7 +75,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
         guard let userId = userId else { return }
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
-            .whereField("status", in: [PostStatus.complete.rawValue])
+            .whereField("status", in: [PostStatus.complete.rawValue, AuctionStatus.ended.rawValue])
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .getDocuments() { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
@@ -117,7 +117,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
         guard let userId = userId else { return }
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
-            .whereField("status", in: [PostStatus.complete.rawValue])
+            .whereField("status", in: [PostStatus.complete.rawValue, AuctionStatus.ended.rawValue])
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)
@@ -181,19 +181,48 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
         
-        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod) else {
+        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod),
+              let postType = PostType(rawValue: post.type),
+              let saleType = SaleType(rawValue: post.saleType),
+              let deliveryMethod = DeliveryMethod(rawValue: post.deliveryMethod),
+              let contractFormat = ContractFormat(rawValue: post.contractFormat) else {
             self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
             return
         }
         
-        switch paymentMethod {
-            case .escrow:
+        let saleConfig = SaleConfig.hybridMethod(
+            postType: postType,
+            saleType: saleType,
+            delivery: deliveryMethod,
+            payment: paymentMethod,
+            contractFormat: contractFormat
+        )
+        
+        switch saleConfig.value {
+            case .tangibleNewSaleShippingEscrowIndividual:
                 let listDetailVC = ListDetailViewController()
                 listDetailVC.post = post
                 // refreshes the MainDetailVC table when the user updates the status
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
                 break
-            case .auctionBeneficiary:
+            case .digitalNewSaleOnlineDirectPaymentIndividual:
+                let simpleVC = SimpleRevisedViewController()
+                simpleVC.post = post
+                self.navigationController?.pushViewController(simpleVC, animated: true)
+                break
+            case .digitalNewSaleAuctionBeneficiaryIntegral:
+                guard let currentAddress = Web3swiftService.currentAddress,
+                      let auctionContract = ContractAddresses.integralAuctionAddress else {
+                    self.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
+                    return
+                }
+                
+                let integralAuctionVC = IntegralAuctionViewController(auctionContractAddress: auctionContract, myContractAddress: currentAddress, post: post)
+                integralAuctionVC.post = post
+                self.navigationController?.pushViewController(integralAuctionVC, animated: true)
+                
+                break
+            case .digitalNewSaleAuctionBeneficiaryIndividual:
                 guard let auctionHash = post.auctionHash else { return }
                 getContractAddress(with: auctionHash) { [weak self] (contractAddress) in
                     guard let currentAddress = Web3swiftService.currentAddress else {
@@ -208,17 +237,12 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
                     }
                 }
                 break
-            case .directTransfer:
-                let simpleVC = SimpleRevisedViewController()
-                simpleVC.post = post
-                self.navigationController?.pushViewController(simpleVC, animated: true)
-                break
             default:
                 break
         }
     }
     
-    final override func executeAfterDragging() {
+    override func executeAfterDragging() {
         refetchData(lastSnapshot: lastSnapshot)
     }
 }

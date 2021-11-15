@@ -338,6 +338,7 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
             originalImage: originalImage
         )
         
+        previewDataArr.removeAll()
         previewDataArr.append(previewData)
         
         if let imageData = originalImage.pngData() {

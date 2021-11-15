@@ -52,6 +52,7 @@ class IntegralAuctionViewController: ParentDetailViewController {
     final var db: Firestore! {
         return FirebaseService.shared.db
     }
+    final var solireyUid: BigUInt!
     
     init(auctionContractAddress: EthereumAddress, myContractAddress: EthereumAddress, post: Post) {
         super.init(nibName: nil, bundle: nil)
@@ -62,8 +63,11 @@ class IntegralAuctionViewController: ParentDetailViewController {
         guard let uid = post.solireyUid,
               let convertedUid = BigUInt(uid) else { return }
         
+        self.solireyUid = convertedUid
+        
         self.propertiesToLoad = [
-            IntegralAuctionContract.ContractProperties._auctionInfo(convertedUid)
+            IntegralAuctionContract.ContractProperties._auctionInfo(solireyUid),
+            IntegralAuctionContract.ContractProperties.getPendingReturn(solireyUid)
         ]
     }
     
@@ -110,7 +114,9 @@ class IntegralAuctionViewController: ParentDetailViewController {
         removeKeyboardObserver()
         
         if let timer = auctionButtonController.timer {
-            timer.invalidate()
+            for _ in 0...10 {
+                timer.invalidate()
+            }
         }
     }
     
@@ -239,7 +245,6 @@ extension IntegralAuctionViewController: UITextFieldDelegate {
         ])
     }
     
-    
     @objc final override func buttonPressed(_ sender: UIButton) {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
@@ -261,7 +266,19 @@ extension IntegralAuctionViewController: UITextFieldDelegate {
             case 3:
                 callAuctionMethod(for: .getTheHighestBid)
             case 5:
-                callAuctionMethod(for: .transferToken)
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Auction Ended", detail: InfoText.auctionEnded)])
+                self.present(infoVC, animated: true, completion: nil)
+                break
+            case 6:
+                callAuctionMethod(for: .abort)
+                break
+            case 7:
+                // resell
+                let resaleVC = ResaleViewController()
+                resaleVC.post = post
+                resaleVC.title = "Resale"
+                navigationController?.pushViewController(resaleVC, animated: true)
+                break
             case 11:
                 let listEditVC = DigitalListEditViewController()
                 listEditVC.post = post
@@ -287,6 +304,15 @@ extension IntegralAuctionViewController: UITextFieldDelegate {
                   self?.auctionButtonWideConstraint != nil else { return }
             
             switch status {
+                case .abort:
+                    self?.bidTextField.isEnabled = false
+                    self?.bidTextField.alpha = 0
+                    
+                    self?.auctionButtonNarrowConstraint.isActive = false
+                    self?.auctionButtonWideConstraint.isActive = true
+                    self?.auctionButton.setTitle("Abort", for: .normal)
+                    self?.auctionButton.tag = 6
+                    break
                 case .bid:
                     self?.bidTextField.isEnabled = true
                     self?.bidTextField.alpha = 1
@@ -298,6 +324,7 @@ extension IntegralAuctionViewController: UITextFieldDelegate {
                     
                     self?.auctionButton.setTitle("Bid Now", for: .normal)
                     self?.auctionButton.tag = 0
+                    break
                 case .auctionEnd:
                     self?.bidTextField.isEnabled = false
                     self?.bidTextField.alpha = 0
@@ -306,21 +333,54 @@ extension IntegralAuctionViewController: UITextFieldDelegate {
                     self?.auctionButtonWideConstraint.isActive = true
                     self?.auctionButton.setTitle("End Auction", for: .normal)
                     self?.auctionButton.tag = 1
+                    break
                 case .getTheHighestBid:
                     self?.auctionButtonNarrowConstraint.isActive = false
                     self?.auctionButtonWideConstraint.isActive = true
                     self?.auctionButton.setTitle("Claim The Final Bid", for: .normal)
                     self?.auctionButton.tag = 3
+                    break
                 case .transferToken:
+                    // This state signifies the last step in the auction.
                     self?.bidTextField.isEnabled = false
                     self?.bidTextField.alpha = 0
                     
                     self?.auctionButtonNarrowConstraint.isActive = false
                     self?.auctionButtonWideConstraint.isActive = true
                     
-                    self?.auctionButton.setTitle("Transfer the Ownership", for: .normal)
-                    self?.auctionButton.tag = 5
+                    // If the highest bidder happens to be the seller (which would be an edge case), then the seller would be treated the same as the highest bidder.
+                    if self?.auctionButtonController.highestBidder == self?.auctionButtonController.beneficiary {
+                        self?.auctionButton.setTitle("Claim The Final Bid", for: .normal)
+                        self?.auctionButton.tag = 3
+                    } else {
+                        // If the user that had purchased the item is viewing the item, allow them to resell
+                        if self?.post.buyerUserId == self?.userId {
+                            self?.auctionButton.setTitle("Resell", for: .normal)
+                            self?.auctionButton.tag = 7
+                        } else {
+                            self?.auctionButton.setTitle("Auction Ended", for: .normal)
+                            self?.auctionButton.tag = 5
+                        }
+                    }
+                    break
+                case .resell:
+                    self?.bidTextField.isEnabled = false
+                    self?.bidTextField.alpha = 0
+                    
+                    self?.auctionButtonNarrowConstraint.isActive = false
+                    self?.auctionButtonWideConstraint.isActive = true
+                    self?.auctionButton.setTitle("Resell", for: .normal)
+                    self?.auctionButton.tag = 7
+                    break
                 default:
+                    self?.bidTextField.isEnabled = false
+                    self?.bidTextField.alpha = 0
+                    
+                    self?.auctionButtonNarrowConstraint.isActive = false
+                    self?.auctionButtonWideConstraint.isActive = true
+                    self?.auctionButton.setTitle("Auction In Progress", for: .normal)
+                    // no functionality
+                    self?.auctionButton.tag = 345
                     break
             }
             
@@ -331,7 +391,8 @@ extension IntegralAuctionViewController: UITextFieldDelegate {
     }
     
     final func bid() {
-        print("bid")
+        self.showSpinner()
+        
         guard auctionButtonController.isAuctionEnded == false else {
             self.alert.showDetail("Sorry", with: "The auction has already ended", for: self)
             return
@@ -353,10 +414,6 @@ extension IntegralAuctionViewController: UITextFieldDelegate {
         }
         
         callAuctionMethod(for: AuctionContract.ContractMethods.bid, amountString: bidAmount)
-    }
-    
-    // Dynamically determine what auction method to call
-    func callAuctionMethod(for method: AuctionContract.ContractMethods, amountString: String? = nil) {
     }
 }
 

@@ -665,6 +665,7 @@ extension UsernameBannerConfigurable {
                     let photoURL = data[UserDefaultKeys.photoURL] as? String
                     let memberSince = data[UserDefaultKeys.memberSince] as? Timestamp
                     var shippingAddress: ShippingAddress!
+
                     if let sa = data["shippingAddress"] as? [String: Any],
                        let address = sa[UserDefaultKeys.address] as? String,
                        let longitude = sa["longitude"] as? Double,
@@ -805,6 +806,7 @@ extension FetchUserConfigurable {
                     let displayName = data[UserDefaultKeys.displayName] as? String
                     let photoURL = data[UserDefaultKeys.photoURL] as? String
                     let memberSince = data[UserDefaultKeys.memberSince] as? Timestamp
+                    
                     var shippingAddress: ShippingAddress!
                     if let sa = data["shippingAddress"] as? [String: Any],
                        let address = sa[UserDefaultKeys.address] as? String,
@@ -1020,6 +1022,7 @@ extension PostParseDelegate {
             var files, savedBy: [String]?
             var shippingInfo: ShippingInfo!
             var tokenId, solireyUid: String?
+            var bidderWalletAddress: [String: String]?
             
             data.forEach { (item) in
                 switch item.key {
@@ -1120,6 +1123,8 @@ extension PostParseDelegate {
                         contractFormat = item.value as? String
                     case "solireyUid":
                         solireyUid = item.value as? String
+                    case "bidderWalletAddress":
+                        bidderWalletAddress = item.value as? [String: String]
                     default:
                         break
                 }
@@ -1162,7 +1167,8 @@ extension PostParseDelegate {
                 tokenId: tokenId,
                 category: category,
                 contractFormat: contractFormat,
-                solireyUid: solireyUid
+                solireyUid: solireyUid,
+                bidderWalletAddress: bidderWalletAddress
             )
             
             postArr.append(post)
@@ -1178,6 +1184,8 @@ extension PostParseDelegate {
         var date, confirmPurchaseDate, transferDate, confirmReceivedDate, bidDate, auctionEndDate, auctionTransferredDate: Date!
         var files, savedBy: [String]?
         var shippingInfo: ShippingInfo!
+        var bidderWalletAddress: [String: String]?
+        
         data.forEach { (item) in
             switch item.key {
                 case "sellerUserId":
@@ -1278,6 +1286,8 @@ extension PostParseDelegate {
                     contractFormat = item.value as? String
                 case "solireyUid":
                     solireyUid = item.value as? String
+                case "bidderWalletAddress":
+                    bidderWalletAddress = item.value as? [String: String]
                 default:
                     break
             }
@@ -1320,7 +1330,8 @@ extension PostParseDelegate {
             tokenId: tokenId,
             category: category,
             contractFormat: contractFormat,
-            solireyUid: solireyUid
+            solireyUid: solireyUid,
+            bidderWalletAddress: bidderWalletAddress
         )
         return post
     }
@@ -1869,7 +1880,7 @@ extension ProgressPanel {
         // parse Post so that the node title like "Bid" or "Purchase" is paired up with its own dates accordingly
         
         switch post.paymentMethod {
-            case PaymentMethod.auctionBeneficiary.rawValue:
+            case PaymentMethod.auctionBeneficiary.rawValue, PaymentMethod.integralAuction.rawValue:
                 // auction
                 
                 // auction first node

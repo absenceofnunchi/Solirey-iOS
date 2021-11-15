@@ -45,7 +45,7 @@ extension AuctionDetailViewController {
                     case .failure(.generalError(reason: let msg)):
                         self?.alert.showDetail("Auction Info Retrieval Error", with: msg, for: self)
                     case .finished:
-                        print("get auction info finished")
+                        break
                     default:
                         self?.alert.showDetail("Auction Info Retrieval Error", with: "Unable to fetch the auction contract information.", for: self)
                 }

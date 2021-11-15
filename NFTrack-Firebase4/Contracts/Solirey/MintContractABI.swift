@@ -5,6 +5,11 @@
 //  Created by J C on 2021-11-03.
 //
 
+/*
+ Abstract:
+ solireyMintContractAddress for the address
+ */
+
 let mintContractABI = """
 [
     {

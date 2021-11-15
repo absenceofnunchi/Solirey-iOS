@@ -54,7 +54,6 @@ class AuctionButtonController {
             configure()
         }
     }
-    
     final var timer: Timer!
     final var status: AuctionContract.ContractMethods!
     
@@ -63,9 +62,27 @@ class AuctionButtonController {
         self.status = .bid
     }
     
+    init(
+        isAuctionEnded: Bool,
+        isAuctionOfficiallyEnded: Bool,
+        highestBidder: String,
+        beneficiary: String
+    ) {
+        self.currentAddress = Web3swiftService.currentAddress
+        self.status = .bid
+        self.isAuctionEnded = isAuctionEnded
+        self.isAuctionOfficiallyEnded = isAuctionOfficiallyEnded
+        self.highestBidder = highestBidder
+        self.beneficiary = beneficiary
+        
+        configure()
+    }
+    
     deinit {
         if let timer = timer {
-            timer.invalidate()
+            for _ in 0...10 {
+                timer.invalidate()
+            }
         }
     }
 }
@@ -75,13 +92,12 @@ extension AuctionButtonController {
         DispatchQueue.main.async { [weak self] in
             guard let isAuctionOfficiallyEnded = self?.isAuctionOfficiallyEnded,
                   let isAuctionEnded = self?.isAuctionEnded else { return }
-            // the auction end time has expired && someone has ended it officially by pressing the end button
+            
+            // the auction end time has expired && someone has ended the auction officially by pressing the end button
             if isAuctionOfficiallyEnded == true && isAuctionEnded == true {
                 if self?.beneficiary == self?.currentAddress.address {
                     self?.status = .getTheHighestBid
-                }
-                
-                if self?.highestBidder == self?.currentAddress.address {
+                } else if self?.highestBidder == self?.currentAddress.address {
                     self?.status = .transferToken
                 }
             // the auction end time has expired, but no one has officially ended the auction by pressing the end button
@@ -90,11 +106,25 @@ extension AuctionButtonController {
                 self.status = .auctionEnd
             // the auction is still ongoing
             } else if isAuctionOfficiallyEnded == false && isAuctionEnded == false {
-                self?.status = .bid
+                if self?.beneficiary == self?.currentAddress.address {
+                    // If no bid has been made
+                    if self?.highestBidder == "No Bidder" {
+                        self?.status = .abort
+                    } else {
+                        self?.status = .none
+                    }
+                } else {
+                    self?.status = .bid
+                }
+                
                 guard var differenceInSeconds = self?.auctionEndTime.timeIntervalSince(Date()) else { return }
+                
+                if self?.timer != nil {
+                    self?.timer.invalidate()
+                }
+                
                 self?.timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { (Timer) in
                     if differenceInSeconds > 0 {
-                        //                         print ("\(differenceInSeconds) seconds")
                         differenceInSeconds -= 1
                     } else {
                         self?.isAuctionEnded = true
@@ -102,6 +132,9 @@ extension AuctionButtonController {
                         self?.status = .auctionEnd
                     }
                 }
+            // The auction has been aborted
+            } else if isAuctionOfficiallyEnded == true && isAuctionEnded == false {
+                self?.status = .resell
             }
             
             NotificationCenter.default.post(name: .auctionButtonDidUpdate, object: self?.status)

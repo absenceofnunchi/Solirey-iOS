@@ -139,33 +139,51 @@ class ListViewController: ParentListViewController<Post>, FetchContractAddress {
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
         
-        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod) else {
+        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod),
+              let postType = PostType(rawValue: post.type),
+              let saleType = SaleType(rawValue: post.saleType),
+              let deliveryMethod = DeliveryMethod(rawValue: post.deliveryMethod),
+              let contractFormat = ContractFormat(rawValue: post.contractFormat) else {
             self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
             return
         }
         
-        switch paymentMethod {
-            case .escrow:
+        let saleConfig = SaleConfig.hybridMethod(
+            postType: postType,
+            saleType: saleType,
+            delivery: deliveryMethod,
+            payment: paymentMethod,
+            contractFormat: contractFormat
+        )
+        
+        switch saleConfig.value {
+            case .tangibleNewSaleShippingEscrowIndividual:
                 let listDetailVC = ListDetailViewController()
                 listDetailVC.post = post
                 // refreshes the MainDetailVC table when the user updates the status
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
                 break
-            case .auctionBeneficiary:
-                guard let auctionHash = post.auctionHash else { return }
-                Future<TransactionReceipt, PostingError> { promise in
-                    Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
+            case .digitalNewSaleOnlineDirectPaymentIndividual:
+                let simpleVC = SimpleRevisedViewController()
+                simpleVC.post = post
+                self.navigationController?.pushViewController(simpleVC, animated: true)
+                break
+            case .digitalNewSaleAuctionBeneficiaryIntegral:
+                guard let currentAddress = Web3swiftService.currentAddress,
+                      let auctionContract = ContractAddresses.integralAuctionAddress else {
+                    self.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
+                    return
                 }
-                .sink { [weak self] (completion) in
-                    switch completion {
-                        case .failure(let error):
-                            self?.alert.showDetail("Contract Address Loading Error", with: error.localizedDescription, for: self)
-                        case .finished:
-                            break
-                    }
-                } receiveValue: { [weak self] (receipt) in
-                    guard let contractAddress = receipt.contractAddress,
-                          let currentAddress = Web3swiftService.currentAddress else {
+                
+                let integralAuctionVC = IntegralAuctionViewController(auctionContractAddress: auctionContract, myContractAddress: currentAddress, post: post)
+                integralAuctionVC.post = post
+                self.navigationController?.pushViewController(integralAuctionVC, animated: true)
+                
+                break
+            case .digitalNewSaleAuctionBeneficiaryIndividual:
+                guard let auctionHash = post.auctionHash else { return }
+                getContractAddress(with: auctionHash) { [weak self] (contractAddress) in
+                    guard let currentAddress = Web3swiftService.currentAddress else {
                         self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
                         return
                     }
@@ -176,16 +194,53 @@ class ListViewController: ParentListViewController<Post>, FetchContractAddress {
                         self?.navigationController?.pushViewController(auctionDetailVC, animated: true)
                     }
                 }
-                .store(in: &storage)
-                break
-            case .directTransfer:
-                let simpleVC = SimpleRevisedViewController()
-                simpleVC.post = post
-                self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
             default:
                 break
         }
+        
+//        switch paymentMethod {
+//            case .escrow:
+//                let listDetailVC = ListDetailViewController()
+//                listDetailVC.post = post
+//                // refreshes the MainDetailVC table when the user updates the status
+//                self.navigationController?.pushViewController(listDetailVC, animated: true)
+//                break
+//            case .auctionBeneficiary:
+//                guard let auctionHash = post.auctionHash else { return }
+//                Future<TransactionReceipt, PostingError> { promise in
+//                    Web3swiftService.getReceipt(hash: auctionHash, promise: promise)
+//                }
+//                .sink { [weak self] (completion) in
+//                    switch completion {
+//                        case .failure(let error):
+//                            self?.alert.showDetail("Contract Address Loading Error", with: error.localizedDescription, for: self)
+//                        case .finished:
+//                            break
+//                    }
+//                } receiveValue: { [weak self] (receipt) in
+//                    guard let contractAddress = receipt.contractAddress,
+//                          let currentAddress = Web3swiftService.currentAddress else {
+//                        self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
+//                        return
+//                    }
+//
+//                    DispatchQueue.main.async {
+//                        let auctionDetailVC = AuctionDetailViewController(auctionContractAddress: contractAddress, myContractAddress: currentAddress)
+//                        auctionDetailVC.post = post
+//                        self?.navigationController?.pushViewController(auctionDetailVC, animated: true)
+//                    }
+//                }
+//                .store(in: &storage)
+//                break
+//            case .directTransfer:
+//                let simpleVC = SimpleRevisedViewController()
+//                simpleVC.post = post
+//                self.navigationController?.pushViewController(simpleVC, animated: true)
+//                break
+//            default:
+//                break
+//        }
     }
     
     // MARK: - didRefreshTableView
@@ -251,7 +306,7 @@ class ListViewController: ParentListViewController<Post>, FetchContractAddress {
             case .selling:
                     configureDataRefetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue], lastSnapshot: lastSnapshot)
             case .posts:
-                    configureDataRefetch(isBuyer: false, status: [PostStatus.ready.rawValue], lastSnapshot: lastSnapshot)
+                configureDataRefetch(isBuyer: false, status: [PostStatus.ready.rawValue, PostStatus.aborted.rawValue], lastSnapshot: lastSnapshot)
             case .auction:
                     configureAuctionRefetch()
             default:
@@ -331,7 +386,7 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
             case .auction:
                 self.configureAuctionFetch()
             case .posts:
-                self.configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue])
+                self.configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue, PostStatus.aborted.rawValue])
         }
         
 //        transitionView { [weak self] in
@@ -361,6 +416,8 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
         firstListener = db.collection("post")
             .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
             .whereField("status", in: status)
+            .whereField("paymentMethod", isNotEqualTo: PaymentMethod.auctionBeneficiary.rawValue)
+            .order(by: "paymentMethod", descending: true)
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .addSnapshotListener() { [weak self] (querySnapshot, error) in
@@ -405,6 +462,8 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
         nextListener = db.collection("post")
             .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
             .whereField("status", in: status)
+            .whereField("paymentMethod", isNotEqualTo: PaymentMethod.auctionBeneficiary.rawValue)
+            .order(by: "paymentMethod", descending: true)
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)
@@ -454,9 +513,12 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
         postArr.removeAll()
         tableView.reloadData()
 
+        // The order of the auction progress: bid, ended, transfer
+        // When the auctionEnd is called the transfer is done at the same time, which means "ended" and "transfer" happen at the same time.
+        // Therefore, you only need to fetch the "bid" status.
         firstListener = db.collection("post")
             .whereField("bidders", arrayContains: userId)
-            .whereField("status", in: [AuctionStatus.bid.rawValue, AuctionStatus.ended.rawValue, AuctionStatus.transferred.rawValue])
+            .whereField("status", in: [AuctionStatus.bid.rawValue, AuctionStatus.ended.rawValue])
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .addSnapshotListener() { [weak self] (querySnapshot, error) in
@@ -499,9 +561,12 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
     final func configureAuctionRefetch() {
         guard let userId = userId else { return }
         
+        // The order of the auction progress: bid, ended, transfer
+        // When the auctionEnd is called the transfer is done at the same time, which means "ended" and "transfer" happen at the same time.
+        // Therefore, you only need to fetch the "bid" status.
         nextListener = db.collection("post")
             .whereField("bidders", arrayContains: userId)
-            .whereField("status", in: [AuctionStatus.bid.rawValue, AuctionStatus.ended.rawValue, AuctionStatus.transferred.rawValue])
+            .whereField("status", in: [AuctionStatus.bid.rawValue, AuctionStatus.ended.rawValue])
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)

@@ -40,10 +40,6 @@ extension DigitalAssetViewController {
         txPackage: TxPackage
     ) {
         
-        guard let txPackageRetainer = self.txPackageArr.first else {
-            return
-        }
-        
         let content = [
             StandardAlertContent(
                 titleString: "Enter Your Password",
@@ -58,7 +54,7 @@ extension DigitalAssetViewController {
                 titleString: "Gas Estimate",
                 titleColor: UIColor.white,
                 body: [
-                    "Total Gas Units": txPackageRetainer.gasEstimate.description,
+                    "Total Gas Units": txPackage.gasEstimate.description,
                     "Gas Price": "\(estimates.gasPriceInGwei) Gwei",
                     "Total Gas Cost": "\(estimates.totalGasCost) Ether",
                     "Your Current Balance": "\(estimates.balance) Ether"
@@ -69,6 +65,8 @@ extension DigitalAssetViewController {
                 alertStyle: .noButton
             )
         ]
+        
+        self.hideSpinner()
         
         DispatchQueue.main.async { [weak self] in
             let alertVC = AlertViewController(height: 350, standardAlertContent: content)
@@ -228,6 +226,8 @@ extension DigitalAssetViewController {
                     .eraseToAnyPublisher()
                 }
                 .flatMap { [weak self] (tokenId) -> AnyPublisher<[String?], PostingError> in
+                    let update: [String: PostProgress] = ["update": .minting]
+                    NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                     self?.tokenIdRetainer = tokenId
                     
                     // upload images/files to the Firebase Storage and get the array of URLs
@@ -348,6 +348,7 @@ extension DigitalAssetViewController {
                                 docId: documentId
                             )
                             
+                            self?.storage.removeAll()
                         //  register spotlight?
                     }
                 } receiveValue: { (_) in

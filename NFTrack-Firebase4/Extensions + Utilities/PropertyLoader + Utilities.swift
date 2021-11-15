@@ -50,6 +50,7 @@ enum PurchaseMethods: String, ContractMethodsEnum {
 enum PurchaseProperties: ContractPropertiesEnum {
     case state
     var value: (String, AnyObject?) {
+        
         return ("state", nil)
     }
     
@@ -153,6 +154,8 @@ enum AuctionMethods: String, ContractMethodsEnum {
     case auctionEnd
     case getTheHighestBid
     case transferToken
+    case abort
+    case resell
 }
 
 enum AuctionProperties: ContractPropertiesEnum {
@@ -197,7 +200,7 @@ enum AuctionProperties: ContractPropertiesEnum {
             case .ended:
                 return "Auction Status"
             case .pendingReturns(_):
-                return "Amount To Withdraw"
+                return "Your Outbid Amount"
             case .beneficiary:
                 return "Beneficiary"
         }
@@ -214,7 +217,7 @@ struct AuctionContract: PropertyLoadable {
 }
 
 enum AuctionStatus: String {
-    case ready, bid, ended, transferred
+    case ready, aborted, bid, ended, transferred, resell
     
     var toDisplay: String! {
         switch self {
@@ -224,6 +227,10 @@ enum AuctionStatus: String {
                 return "Auction Ended"
             case .transferred:
                 return "Transferred"
+            case .aborted:
+                return "Aborted"
+            case .resell:
+                return "Resell"
             default:
                 return "ready"
         }
@@ -371,6 +378,7 @@ struct AuctionInfo {
 enum IntegralAuctionProperties: ContractPropertiesEnum {
     case _auctionInfo(BigUInt)
     case _artist(BigUInt)
+    case getPendingReturn(BigUInt)
     
     // tuple because some properties like mapping requires a key such as pendingReturns
     var value: (String, AnyObject?) {
@@ -379,6 +387,8 @@ enum IntegralAuctionProperties: ContractPropertiesEnum {
                 return ("_auctionInfo", id as AnyObject)
             case ._artist(let tokenId):
                 return ("_artist", tokenId as AnyObject)
+            case .getPendingReturn(let id):
+                return ("getPendingReturn", id as AnyObject)
         }
     }
     
@@ -388,6 +398,8 @@ enum IntegralAuctionProperties: ContractPropertiesEnum {
                 return "Auction Info"
             case ._artist(_):
                 return "Artist"
+            case .getPendingReturn(_):
+                return "Pending Returns"
         }
     }
     
@@ -416,13 +428,15 @@ enum IntegralAuctionProperties: ContractPropertiesEnum {
                     return "Highest Bid"
                 case .ended:
                     return "Status"
+                case .pendingReturns:
+                    return "Your Outbid Amount"
                 default:
                     return ""
             }
         }
         
         static func getAll() -> [String] {
-            return AuctionInfo.allCases.filter { $0 != .pendingReturns && $0 != .tokenId && $0 != .transferred }.map { $0.value }
+            return AuctionInfo.allCases.filter { $0 != .tokenId && $0 != .transferred }.map { $0.value }
         }
     }
 }

@@ -1014,6 +1014,7 @@ extension TransactionService {
         isAdminWithdrawn: Bool = true,
         solireyUid: String,
         contractFormat: String,
+        bidders: [String] = [],
         promise: @escaping (Result<Bool, PostingError>) -> Void
     ) {
         let ref = self.db.collection("post")
@@ -1051,7 +1052,7 @@ extension TransactionService {
             "IPFS": ipfsURLStrings,
             "paymentMethod": paymentMethod,
             "bidderTokens": [],
-            "bidders": [],
+            "bidders": bidders,
             "shippingInfo": shippingInfoData,
             "saleType": SaleType.newSale.rawValue,
             "isWithdrawn": isWithdrawn, // There are contracts like Auction or SimplePayment that requires the bidders that have been outbid or the seller whose item has been purchased, respectively, that require the user to withdraw their funds manually
@@ -1437,36 +1438,14 @@ extension TransactionService {
     ///     1. Checking for the duplicate on firestore (eventually eliminate the checkExistingId method if prelaunch is universalized)
     ///     2. Estimate the total gas fee in the format that the execution completion handler can understand with the transaction of any kind provided as a parameter
     final func preLaunch(
-        mintParameters: MintParameters,
+//        mintParameters: MintParameters,
         transactionToEstimate: @escaping () -> AnyPublisher<TxPackage, PostingError>,
         completionHandler: @escaping ((totalGasCost: String, balance: String, gasPriceInGwei: String)?, TxPackage?, PostingError?) -> Void
     ) {
         
         var txPackageRetainer: TxPackage!
-        
-        Deferred { [weak self] in
-            Future<Bool, PostingError> { promise in
-                self?.db.collection("post")
-                    .whereField("itemIdentifier", isEqualTo: mintParameters.convertedId)
-                    .whereField("status", isNotEqualTo: "complete")
-                    .getDocuments() { (querySnapshot, err) in
-                        if let err = err {
-                            print("error from the duplicate check", err)
-                            promise(.failure(PostingError.generalError(reason: "Unable to check for the Unique Identifier duplicates")))
-                            return
-                        }
 
-                        if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
-                            promise(.success(true))
-                        } else {
-                            promise(.failure(PostingError.generalError(reason: "The item already exists. Please resell it through the app instead of selling it as a new item.")))
-                        }
-                    }
-            }
-        }
-        .flatMap { (_) -> AnyPublisher<TxPackage, PostingError> in
-            return transactionToEstimate()
-        }
+        transactionToEstimate()
         .flatMap({ [weak self] (txPackage) -> AnyPublisher<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> in
             txPackageRetainer = txPackage
             return Future<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> { promise in
@@ -1486,8 +1465,6 @@ extension TransactionService {
                     break
             }
         } receiveValue: { (estimates) in
-//            self?.hideSpinner()
-            print("txPackageRetainer", txPackageRetainer as Any)
             completionHandler(estimates, txPackageRetainer, nil)
         }
         .store(in: &self.storage)

@@ -1,5 +1,5 @@
 //
-//  PostViewController + DirectSale.swift
+//  PostViewController + IndividualSimplePayment.swift
 //  NFTrack-Firebase4
 //
 //  Created by J C on 2021-10-08.

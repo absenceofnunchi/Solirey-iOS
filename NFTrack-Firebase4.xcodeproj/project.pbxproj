@@ -27,7 +27,7 @@
 		49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B7D2670FA190031A756 /* ParentListViewController.swift */; };
 		49221B892670FC2F0031A756 /* TempViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B882670FC2F0031A756 /* TempViewController.swift */; };
 		49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B90267112200031A756 /* ParentProfileViewController.swift */; };
-		492556A227104DB30073188F /* PostViewController + DirectSale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556A127104DB30073188F /* PostViewController + DirectSale.swift */; };
+		492556A227104DB30073188F /* PostViewController + IndividualSimplePayment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556A127104DB30073188F /* PostViewController + IndividualSimplePayment.swift */; };
 		492556AA271186320073188F /* SimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556A9271186320073188F /* SimplePaymentABI.swift */; };
 		492556AF27122F9D0073188F /* MintABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556AE27122F9D0073188F /* MintABI.swift */; };
 		492556B4271643990073188F /* SimplePaymentDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556B3271643970073188F /* SimplePaymentDetailViewController.swift */; };
@@ -64,10 +64,11 @@
 		493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */; };
 		49409A75265946870060193C /* SearchResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A74265946870060193C /* SearchResultsViewController.swift */; };
 		49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */; };
+		494284B7273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494284B6273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift */; };
 		494DDBD527327C5800510026 /* IndividualAuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494DDBD427327C5800510026 /* IndividualAuctionABI.swift */; };
 		494DDBE02732845600510026 /* MintContractABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494DDBDF2732845600510026 /* MintContractABI.swift */; };
 		494DDBE82732896500510026 /* DigitalAssetViewController + Individual Auction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494DDBE72732896500510026 /* DigitalAssetViewController + Individual Auction.swift */; };
-		4952F8A2272917AC0008D237 /* ParentPostViewController + Direct Transfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4952F8A1272917AC0008D237 /* ParentPostViewController + Direct Transfer.swift */; };
+		4952F8A2272917AC0008D237 /* ParentPostViewController + IntegralSimplePayment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4952F8A1272917AC0008D237 /* ParentPostViewController + IntegralSimplePayment.swift */; };
 		4957CF5127054CD0004F7320 /* BigImagePreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4957CF5027054CD0004F7320 /* BigImagePreviewViewController.swift */; };
 		4957CF5D2705730E004F7320 /* ParentSinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4957CF5C2705730E004F7320 /* ParentSinglePageViewController.swift */; };
 		4958117526D6DAF1002C8F3B /* IPFSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4958117426D6DAF1002C8F3B /* IPFSService.swift */; };
@@ -254,7 +255,7 @@
 		49221B7D2670FA190031A756 /* ParentListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentListViewController.swift; sourceTree = "<group>"; };
 		49221B882670FC2F0031A756 /* TempViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempViewController.swift; sourceTree = "<group>"; };
 		49221B90267112200031A756 /* ParentProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentProfileViewController.swift; sourceTree = "<group>"; };
-		492556A127104DB30073188F /* PostViewController + DirectSale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + DirectSale.swift"; sourceTree = "<group>"; };
+		492556A127104DB30073188F /* PostViewController + IndividualSimplePayment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + IndividualSimplePayment.swift"; sourceTree = "<group>"; };
 		492556A9271186320073188F /* SimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimplePaymentABI.swift; sourceTree = "<group>"; };
 		492556AE27122F9D0073188F /* MintABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintABI.swift; sourceTree = "<group>"; };
 		492556B3271643970073188F /* SimplePaymentDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimplePaymentDetailViewController.swift; sourceTree = "<group>"; };
@@ -290,10 +291,11 @@
 		493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ERC721PresetABI.swift; sourceTree = "<group>"; };
 		49409A74265946870060193C /* SearchResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsViewController.swift; sourceTree = "<group>"; };
 		49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + ResultsUpdate.swift"; sourceTree = "<group>"; };
+		494284B6273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IntegralAuctionViewController + CreateAuctionMethod.swift"; sourceTree = "<group>"; };
 		494DDBD427327C5800510026 /* IndividualAuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndividualAuctionABI.swift; sourceTree = "<group>"; };
 		494DDBDF2732845600510026 /* MintContractABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintContractABI.swift; sourceTree = "<group>"; };
 		494DDBE72732896500510026 /* DigitalAssetViewController + Individual Auction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Individual Auction.swift"; sourceTree = "<group>"; };
-		4952F8A1272917AC0008D237 /* ParentPostViewController + Direct Transfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + Direct Transfer.swift"; sourceTree = "<group>"; };
+		4952F8A1272917AC0008D237 /* ParentPostViewController + IntegralSimplePayment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + IntegralSimplePayment.swift"; sourceTree = "<group>"; };
 		4957CF5027054CD0004F7320 /* BigImagePreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigImagePreviewViewController.swift; sourceTree = "<group>"; };
 		4957CF5C2705730E004F7320 /* ParentSinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentSinglePageViewController.swift; sourceTree = "<group>"; };
 		4958117426D6DAF1002C8F3B /* IPFSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPFSService.swift; sourceTree = "<group>"; };
@@ -556,8 +558,7 @@
 		493BF9FC264CDBDD00B9C9D2 /* Contracts */ = {
 			isa = PBXGroup;
 			children = (
-				4960CC382730D06F000E13CC /* Individual */,
-				4960CC372730D064000E13CC /* Integral */,
+				49BD34DA273FD00800CB1597 /* Solirey */,
 				493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */,
 				497A9AEB2655A60300F09CAA /* NFTrackABI.swift */,
 				495FE3C7271F8D29000433AF /* NFTrackABIRevised.swift */,
@@ -565,7 +566,6 @@
 				49B47E9B26953B05003D6F7A /* AuctionABI.swift */,
 				492556A9271186320073188F /* SimplePaymentABI.swift */,
 				492556B8271696EB0073188F /* SimplePaymentWithRoyalty.swift */,
-				494DDBDF2732845600510026 /* MintContractABI.swift */,
 			);
 			path = Contracts;
 			sourceTree = "<group>";
@@ -589,6 +589,7 @@
 		494DDBEC27328C5200510026 /* Auction */ = {
 			isa = PBXGroup;
 			children = (
+				49141497270D0A27005E93BA /* DigitalAssetViewController + Auction.swift */,
 				494DDBDD27327EEF00510026 /* Integral */,
 				494DDBDC27327EE900510026 /* Individual */,
 			);
@@ -601,7 +602,7 @@
 				49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */,
 				495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */,
 				496D56BF2659E75D00C3E7FD /* ParentPostViewController + Picker.swift */,
-				4952F8A1272917AC0008D237 /* ParentPostViewController + Direct Transfer.swift */,
+				4952F8A1272917AC0008D237 /* ParentPostViewController + IntegralSimplePayment.swift */,
 			);
 			path = ParentPost;
 			sourceTree = "<group>";
@@ -631,7 +632,7 @@
 				49E759B72666BCCF0064BB34 /* ResaleViewController.swift */,
 				4964E5092644B07D005B3268 /* PostViewController.swift */,
 				495FE3D0271F9BF5000433AF /* PostViewController + Escrow.swift */,
-				492556A127104DB30073188F /* PostViewController + DirectSale.swift */,
+				492556A127104DB30073188F /* PostViewController + IndividualSimplePayment.swift */,
 				4900962C270E76FE00EDB593 /* PostViewController + Resale.swift */,
 				495FD316268AAB3100F1D81D /* DigitalAssetViewController.swift */,
 			);
@@ -881,6 +882,7 @@
 			children = (
 				49843D492731499600471C43 /* IntegralAuctionViewController.swift */,
 				4981CC712734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift */,
+				494284B6273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift */,
 			);
 			path = Integral;
 			sourceTree = "<group>";
@@ -918,7 +920,6 @@
 				496D56BA2659E72100C3E7FD /* MyPickerViewController.swift */,
 				490D275C267ECEA0003500C1 /* ProgressModalViewController.swift */,
 				49DEFF642686552E004C2DD0 /* PreviewPDFViewController.swift */,
-				49141497270D0A27005E93BA /* DigitalAssetViewController + Auction.swift */,
 				4914149C270D0AD0005E93BA /* DigitalAssetViewController + OnlineDirect.swift */,
 				495D5E07268FE92E00F5DF71 /* InfoViewController.swift */,
 				497F1F2C26DC920800E0F967 /* ShippingViewController.swift */,
@@ -1111,6 +1112,16 @@
 			children = (
 			);
 			path = Individual;
+			sourceTree = "<group>";
+		};
+		49BD34DA273FD00800CB1597 /* Solirey */ = {
+			isa = PBXGroup;
+			children = (
+				494DDBDF2732845600510026 /* MintContractABI.swift */,
+				4960CC372730D064000E13CC /* Integral */,
+				4960CC382730D06F000E13CC /* Individual */,
+			);
+			path = Solirey;
 			sourceTree = "<group>";
 		};
 		49BF2CEC27084575009CA5F2 /* ProgressCard */ = {
@@ -1416,7 +1427,7 @@
 				4964E5902649B5CF005B3268 /* SingleWalletPageViewController.swift in Sources */,
 				49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */,
 				495FD2E026895B3300F1D81D /* ProfileReviewListViewController.swift in Sources */,
-				4952F8A2272917AC0008D237 /* ParentPostViewController + Direct Transfer.swift in Sources */,
+				4952F8A2272917AC0008D237 /* ParentPostViewController + IntegralSimplePayment.swift in Sources */,
 				497CF79F26F7C050003EF69E /* ChatMapViewController.swift in Sources */,
 				496D56D0265AEDAB00C3E7FD /* ImageDataStore.swift in Sources */,
 				499F998E266C8D9700FC6CDE /* ProgressCell.swift in Sources */,
@@ -1554,7 +1565,8 @@
 				49D59C762663326500107F79 /* SocketDelegate.swift in Sources */,
 				49E759B82666BCCF0064BB34 /* ResaleViewController.swift in Sources */,
 				497F1F2D26DC920800E0F967 /* ShippingViewController.swift in Sources */,
-				492556A227104DB30073188F /* PostViewController + DirectSale.swift in Sources */,
+				494284B7273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift in Sources */,
+				492556A227104DB30073188F /* PostViewController + IndividualSimplePayment.swift in Sources */,
 				492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */,
 				4958118A26D978EF002C8F3B /* LocationSearchViewController.swift in Sources */,
 				49054D0626C5B2D000ECCB58 /* BalanceCardView.swift in Sources */,

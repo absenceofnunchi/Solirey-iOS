@@ -11,7 +11,10 @@ import web3swift
 import BigInt
 
 extension DigitalAssetViewController {
-    final func getIntegralAuctionEstimate(transactionParameters: [AnyObject]) -> AnyPublisher<TxPackage, PostingError> {
+    final func getIntegralAuctionEstimate(
+        method: IntegralAuctionContract.ContractMethods,
+        transactionParameters: [AnyObject]
+    ) -> AnyPublisher<TxPackage, PostingError> {
         Future<TxPackage, PostingError> { [weak self] promise in
             guard let integralAuctionAddress = ContractAddresses.integralAuctionAddress else {
                 promise(.failure(PostingError.generalError(reason: "Unable to prepare the contract address.")))
@@ -19,7 +22,7 @@ extension DigitalAssetViewController {
             }
             
             self?.transactionService.prepareTransactionForWritingWithGasEstimate(
-                method: IntegralAuctionContract.ContractMethods.createAuction.rawValue,
+                method: method.rawValue,
                 abi: integralAuctionABI,
                 param: transactionParameters,
                 contractAddress: integralAuctionAddress,
@@ -29,81 +32,6 @@ extension DigitalAssetViewController {
         }
         .eraseToAnyPublisher()
     }
-    
-//    // MARK: - newIntegralAuction
-//    func getIntegralAuctionEstimate1(
-//        mintParameters: MintParameters,
-//        biddingTime: Int,
-//        startingBid: NSNumber
-//    ) {
-//        guard let integralAuctionAddress = ContractAddresses.integralAuctionAddress else {
-//            return
-//        }
-//
-//        // The parameters for the createAuction method
-//        let transactionParameters: [AnyObject] = [biddingTime, startingBid] as [AnyObject]
-//
-//        Deferred { [weak self] in
-//            Future<Bool, PostingError> { promise in
-//                self?.db.collection("post")
-//                    .whereField("itemIdentifier", isEqualTo: mintParameters.convertedId)
-//                    .whereField("status", isNotEqualTo: "complete")
-//                    .getDocuments() { (querySnapshot, err) in
-//                        if let err = err {
-//                            print("error from the duplicate check", err)
-//                            promise(.failure(PostingError.generalError(reason: "Unable to check for the Unique Identifier duplicates")))
-//                            return
-//                        }
-//
-//                        if let querySnapshot = querySnapshot, querySnapshot.isEmpty {
-//                            promise(.success(true))
-//                        } else {
-//                            promise(.failure(PostingError.generalError(reason: "The item already exists. Please resell it through the app instead of selling it as a new item.")))
-//                        }
-//                    }
-//            }
-//        }
-//        .flatMap { (_) -> AnyPublisher<TxPackage, PostingError> in
-//            Future<TxPackage, PostingError> { [weak self] promise in
-//                self?.transactionService.prepareTransactionForWritingWithGasEstimate(
-//                    method: IntegralAuctionContract.ContractMethods.createAuction.rawValue,
-//                    abi: integralAuctionABI,
-//                    param: transactionParameters,
-//                    contractAddress: integralAuctionAddress,
-//                    amountString: nil,
-//                    promise: promise
-//                )
-//            }
-//            .eraseToAnyPublisher()
-//        }
-//        .flatMap({ [weak self] (txPackage) -> AnyPublisher<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> in
-//            self?.txPackageArr.append(txPackage)
-//            return Future<(totalGasCost: String, balance: String, gasPriceInGwei: String), PostingError> { promise in
-//                self?.transactionService.estimateGas(
-//                    gasEstimate: txPackage.gasEstimate,
-//                    promise: promise
-//                )
-//            }
-//            .eraseToAnyPublisher()
-//        })
-//        .sink { [weak self] (completion) in
-//            switch completion {
-//                case .finished:
-//                    break
-//                case .failure(let error):
-//                    self?.processFailure(error)
-//                    break
-//            }
-//        } receiveValue: { [weak self] (estimates) in
-//            self?.hideSpinner()
-//
-//            self?.executeIntegralAuction(
-//                estimates: estimates,
-//                mintParameters: mintParameters
-//            )
-//        }
-//        .store(in: &storage)
-//    }
     
     func executeIntegralAuction(
         estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
@@ -155,7 +83,7 @@ extension DigitalAssetViewController {
                     }
                     
                     self?.dismiss(animated: true, completion: {
-                        let progressModal = ProgressModalViewController(paymentMethod: .directTransfer)
+                        let progressModal = ProgressModalViewController(paymentMethod: .integralAuction)
                         progressModal.titleString = "Posting In Progress"
                         self?.present(progressModal, animated: true, completion: {
                             self?.socketDelegate = SocketDelegate(
@@ -262,14 +190,31 @@ extension DigitalAssetViewController {
             return
         }
         
-        let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
-            return Future<String?, PostingError> { promise in
-                self.uploadFileWithPromise(
-                    fileURL: previewData.filePath,
-                    userId: mintParameters.userId,
-                    promise: promise
-                )
-            }.eraseToAnyPublisher()
+        var fileURLs: [AnyPublisher<String?, PostingError>]!
+        
+        // Use the existing file path if this is reselling. No need to upload to the Storage.
+        // Since the remote image's url is used to display the digital image during the resale (not the local directory URL)
+        // the attempt to use uploadFileWithPromise will result in no image found.
+        if let post = self.post,
+           let files = post.files,
+           let filePath = files.first {
+            
+            let resellURLPromise = Future<String?, PostingError> { promise in
+                promise(.success(filePath))
+            }
+            .eraseToAnyPublisher()
+            
+            fileURLs = [resellURLPromise]
+        } else {
+            fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+                return Future<String?, PostingError> { promise in
+                    self.uploadFileWithPromise(
+                        fileURL: previewData.filePath,
+                        userId: mintParameters.userId,
+                        promise: promise
+                    )
+                }.eraseToAnyPublisher()
+            }
         }
         
         Publishers.MergeMany(fileURLs)
@@ -307,8 +252,11 @@ extension DigitalAssetViewController {
                     urlStrings: urlStrings,
                     ipfsURLStrings: [],
                     shippingInfo: self.shippingInfo,
+                    isWithdrawn: false,
+                    isAdminWithdrawn: false,
                     solireyUid: topicsInfo.id,
                     contractFormat: mintParameters.contractFormat,
+                    bidders: [self.userId],
                     promise: promise
                 )
             }
@@ -357,6 +305,7 @@ extension DigitalAssetViewController {
                         docId: documentId
                     )
                     
+                    self?.storage.removeAll()
                 //  register spotlight?
             }
         } receiveValue: { (_) in

@@ -1,5 +1,5 @@
 //
-//  ParentPostViewController + Direct Transfer.swift
+//  ParentPostViewController + IntegralSimplePayment.swift
 //  NFTrack-Firebase4
 //
 //  Created by J C on 2021-10-27.
@@ -21,7 +21,7 @@ import Combine
 extension ParentPostViewController {
     // Revised SimplePayment embedded in NFTrack
     // MARK: - New Sale
-    final func processDirectSaleRevised(_ mintParameters: MintParameters, isAddressRequired: Bool, postType: PostType) {
+    final func processIntegralSimplePayment(_ mintParameters: MintParameters, isAddressRequired: Bool, postType: PostType) {
         guard let price = mintParameters.price,
               !price.isEmpty,
               let priceInWei = Web3.Utils.parseToBigUInt(price, units: .eth) else {

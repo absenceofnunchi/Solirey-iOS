@@ -6,8 +6,9 @@
 //
 
 import UIKit
-import FirebaseAuth
 import Combine
+import FirebaseAuth
+import FirebaseFirestore
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
     var window: UIWindow?
@@ -55,36 +56,44 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, FetchUserConfigurable {
             UserDefaults.standard.set(nil, forKey: UserDefaultKeys.photoURL)
         }
         
-        Future<UserInfo, PostingError> { [weak self] promise in
-            self?.fetchUserData(userId: user.uid, promise: promise)
+        Future<Bool, PostingError> { promise in
+            var urlString: String!
+            
+            if user.photoURL != nil {
+                urlString = "\(user.photoURL!)"
+            } else {
+                urlString = "NA"
+            }
+            
+            FirebaseService.shared.db.collection("user").document(user.uid).setData([
+                "photoURL": urlString!,
+                "displayName": user.displayName ?? "No Name",
+                "uid": user.uid,
+                "walletAddresses": FieldValue.arrayUnion([Web3swiftService.currentAddressString ?? ""])
+            ], merge: true, completion: { (error) in
+                if let _ = error {
+                    promise(.failure(.generalError(reason: "User Info Update Error.")))
+                } else {
+                    promise(.success(true))
+                }
+            })
         }
-        .sink { (completion) in
-            print(completion)
+        .flatMap({ [weak self] (_) -> AnyPublisher<UserInfo, PostingError> in
+            Future<UserInfo, PostingError> { promise in
+                self?.fetchUserData(userId: user.uid, promise: promise)
+            }
+            .eraseToAnyPublisher()
+        })
+        .sink { (_) in
+
         } receiveValue: { (userInfo) in
             guard let address = userInfo.shippingAddress?.address,
                   let memberSince = userInfo.memberSince else { return }
+            
             UserDefaults.standard.set(address, forKey: UserDefaultKeys.address)
             UserDefaults.standard.set(memberSince, forKey: UserDefaultKeys.memberSince)
         }
         .store(in: &storage)
-        
-        //                    var urlString: String!
-        //
-        //                    if user.photoURL != nil {
-        //                        urlString = "\(user.photoURL!)"
-        //                    } else {
-        //                        urlString = "NA"
-        //                    }
-        //
-        //                    FirebaseService.shared.db.collection("user").document(user.uid).setData([
-        //                        "photoURL": urlString!,
-        //                        "displayName": user.displayName ?? "No name",
-        //                        "uid": user.uid
-        //                    ], completion: { (error) in
-        //                        if let error = error {
-        //                            print("error updating profile", error.localizedDescription)
-        //                        }
-        //                    })
         
         let tabBarVC = CustomTabBarViewController()
         

@@ -116,6 +116,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var category: String!
     var contractFormat: String!
     var solireyUid: String? // For the integral contracts (auction, escrow, simple payment) that require a key for mapping
+    var bidderWalletAddress: [String: String]? // For the integral auction. The buyerUserId needs to fetched with the wallet address as the key
     
     init(
         documentId: String,
@@ -154,7 +155,8 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         tokenId: String?,
         category: String,
         contractFormat: String,
-        solireyUid: String?
+        solireyUid: String?,
+        bidderWalletAddress: [String: String]? = nil
     ) {
         super.init(documentId: documentId, buyerUserId: buyerUserId, sellerUserId: sellerUserId)
         
@@ -192,6 +194,7 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.category = category
         self.contractFormat = contractFormat
         self.solireyUid = solireyUid
+        self.bidderWalletAddress = bidderWalletAddress
     }
 }
 
@@ -1055,6 +1058,10 @@ struct InfoText {
     static let contractFormatInfo = """
     The individual smart contract option will deploy a brand new smart contract to the blockchain specifically designated to your transaction.
     """
+    
+    static let auctionEnded = """
+    The auction has already ended!
+    """
 }
 
 // MARK: - SmartContractProperty
@@ -1122,6 +1129,8 @@ struct Topics {
     struct IntegralAuction {
         static let auctionCreated = "0x5d551e2a2cc977fd8c530317059b4f2d9f504fb82f7dfad736f8d56679bcdfd0"
         static let transfer = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+        static let bid = "0xda0a18da71d8ebd145966339a728fc0d8ccc07c22870d561890d823c515dda6b"
+        static let auctionEnd = "0x45806e512b1f4f10e33e8b3cb64d1d11d998d8c554a95e0841fc1c701278bd5d"
     }
     
     struct IndividualAuction {
@@ -1131,7 +1140,7 @@ struct Topics {
 
 struct ContractAddresses {
     static let NFTrackABIRevisedAddress = EthereumAddress("0xd3F95b3292Cbc7543228B6edEDFA42b474651e8D")
-    static let integralAuctionAddress = EthereumAddress("0xa6a7846cc9c24695e5a52d7dad0f3e24a9dbe145")
+    static let integralAuctionAddress = EthereumAddress("0x6d23ebe8d9ff75fe79fc0f4ae4b75b811cad2daa")
     static let solireyMintContractAddress = EthereumAddress("0x7714F9D47cb475fE1F8041c8CE60b6B98487a454")
 //    static let solireyMintContractAddress = EthereumAddress("0x0b7964f34699bf1db6642d34bb10226aaa47fff2")
 }

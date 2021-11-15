@@ -65,10 +65,6 @@ class Web3swiftService {
                 promise(.failure(.generalError(reason: error.localizedDescription)))
             }
         }
-        
-//        DispatchQueue.global(qos: .userInitiated).async {
-//
-//        }
     }
     
     static func getBlock(_ promise: @escaping (Result<BigUInt, PostingError>) -> Void) {

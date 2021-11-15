@@ -269,8 +269,12 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                 break
             case 3:
                 callAuctionMethod(for: .getTheHighestBid)
+                break
             case 5:
-                callAuctionMethod(for: .transferToken)
+//                callAuctionMethod(for: .transferToken)
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Auction Ended", detail: InfoText.auctionEnded)])
+                self.present(infoVC, animated: true, completion: nil)
+                break
             case 11:
                 let listEditVC = DigitalListEditViewController()
                 listEditVC.post = post
@@ -327,8 +331,13 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                     self?.auctionButtonNarrowConstraint.isActive = false
                     self?.auctionButtonWideConstraint.isActive = true
                     
-                    self?.auctionButton.setTitle("Transfer the Ownership", for: .normal)
-                    self?.auctionButton.tag = 5
+                    if self?.auctionButtonController.highestBidder == self?.auctionButtonController.beneficiary {
+                        self?.auctionButton.setTitle("Claim The Final Bid", for: .normal)
+                        self?.auctionButton.tag = 3
+                    } else {
+                        self?.auctionButton.setTitle("Auction Ended", for: .normal)
+                        self?.auctionButton.tag = 5
+                    }
                 default:
                     break
             }
@@ -489,18 +498,26 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                     self.auctionButtonController.isAuctionOfficiallyEnded = true
                                     
                                     self.db.collection("post").document(self.post.documentId).updateData([
-                                        "status": AuctionStatus.ended.rawValue,
-                                        "auctionEndDate": Date()
+                                        "status": AuctionStatus.transferred.rawValue,
+                                        "auctionEndDate": Date(),
+                                        "auctionTransferredDate": Date()
                                     ])
                                     return FirebaseService.shared.unsubscribeToTopic(topic: self.post.documentId)
                                 case .withdraw:
                                     NotificationCenter.default.post(name: .auctionDidWithdraw, object: true)
                                     return Result.Publisher(Data()).eraseToAnyPublisher()
                                 case .transferToken:
+//                                    self.db.collection("post").document(self.post.documentId).updateData([
+//                                        "status": AuctionStatus.transferred.rawValue,
+//                                        "auctionTransferredDate": Date()
+//                                    ])
+                                    return Result.Publisher(Data()).eraseToAnyPublisher()
+                                case .abort:
                                     self.db.collection("post").document(self.post.documentId).updateData([
-                                        "status": AuctionStatus.transferred.rawValue,
-                                        "auctionTransferredDate": Date()
+                                        "status": AuctionStatus.aborted.rawValue,
                                     ])
+                                    return Result.Publisher(Data()).eraseToAnyPublisher()
+                                case .resell:
                                     return Result.Publisher(Data()).eraseToAnyPublisher()
                                 default:
                                     return Result.Publisher(Data()).eraseToAnyPublisher()
@@ -523,7 +540,8 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                 case .finished:
                                     switch method {
                                         case .auctionEnd:
-                                            self.alert.showDetail("Auction Ended", with: "Congratulations. You have officially ended the auction! The winner can now transfer the item and the beneficiary can withdraw the fund.", for: self)
+                                            self.alert.showDetail("Auction Ended", with: "Congratulations. You have officially ended the auction! The item has been transferred and the beneficiary can now withdraw the winning bid.", for: self)
+                                            break
                                         case .bid:
                                             self.alert.showDetail("Bid Success!", with: "You have made a successful bid. It'll take a few moment to be reflected on the blockchain.", for: self, completion:  {
                                                 self.bidTextField.text?.removeAll()
@@ -533,10 +551,13 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                                     print("Subscribed to \(self.post.documentId ?? "") topic")
                                                 }
                                             })
+                                            break
                                         case .getTheHighestBid:
                                             self.alert.showDetail("Success!", with: "You have successfully withdrawn the final bid. It'll be reflected on your wallet soon.", for: self)
+                                            break
                                         case .transferToken:
                                             self.alert.showDetail("Congratulations!", with: "You are now the proud owner of the item. It'll take a few moment to be reflected on the app.", for: self)
+                                            break
                                         case .withdraw:
                                             self.alert.showDetail("Bid Withdraw", with: "You have successfully withdrawn the previous bid amount.", for: self)
                                             // the properties has to be manually refetched because the withDraw method doesn't have the events (which means no topics), therefore doesn't trigger the socket event
@@ -547,6 +568,19 @@ extension AuctionDetailViewController: UITextFieldDelegate {
                                                     contractAddress: self.auctionContractAddress
                                                 )
                                             }
+                                            break
+                                        case .abort:
+                                            self.alert.showDetail(
+                                                "Success!",
+                                                with: "You have successfully withdrawn the final bid. It'll be reflected on your wallet soon.",
+                                                for: self) { [weak self] in
+                                                DispatchQueue.main.async {
+                                                    self?.navigationController?.popViewController(animated: true)
+                                                }
+                                            } completion: {}
+                                            break
+                                        case .resell:
+                                            break
                                     }
                                     break
                             }

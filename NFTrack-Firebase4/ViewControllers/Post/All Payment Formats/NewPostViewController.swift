@@ -44,7 +44,6 @@ class NewPostViewController: UIViewController, SegmentConfigurable {
         segmentedControl.autoresizingMask = .flexibleWidth
         segmentedControl.frame = CGRect(x: 0, y: 0, width: 300, height: 30)
         segmentedControl.addTarget(self, action: #selector(segmentedControlSelectionDidChange(_:)), for: .valueChanged)
-//        segmentedControl.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
         UISegmentedControl.appearance().backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.1)
         segmentedControl.selectedSegmentTintColor = UIColor.white
         self.navigationItem.titleView = segmentedControl

@@ -135,102 +135,97 @@ extension ParentPostViewController {
                 saleConfigValue: saleConfig.value
             )
             
-            switch saleConfig.value {
-                case .tangibleNewSaleInPersonEscrowIntegral:
-                    break
-                case .tangibleNewSaleInPersonEscrowIndividual:
-                    self?.checkExistingId(id: convertedId) { (isDuplicate, err) in
-                        if let _ = err {
-                            self?.alert.showDetail("Error", with: "There was an error checking for the Unique Identifier duplicates.", for: self)
-                            return
-                        }
-                        
-                        if let isDuplicate = isDuplicate, isDuplicate == true {
-                            self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
-                        } else {
-                            self?.processEscrow(mintParameters)
-                        } // not duplicate
-                    } // end of checkExistingId
-                    break
-                 case .tangibleNewSaleInPersonDirectPaymentIntegral:
-                    break
-                case .tangibleNewSaleInPersonDirectPaymentIndividual:
-                    // The direct transfer option for in-person pickup doesn't require any contracts to be deployed
-                    self?.processDirectSaleRevised(mintParameters, isAddressRequired: true, postType: .tangible)
-                    break
-                case .tangibleNewSaleShippingEscrowIntegral:
-                    break
-                case .tangibleNewSaleShippingEscrowIndividual:
-                    self?.checkExistingId(id: convertedId) { (isDuplicate, err) in
-                        if let _ = err {
-                            self?.alert.showDetail("Error", with: "There was an error checking for the Unique Identifier duplicates.", for: self)
-                            return
-                        }
-                        
-                        if let isDuplicate = isDuplicate, isDuplicate == true {
-                            self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
-                        } else {
-                            self?.processEscrow(mintParameters)
-                        } // not duplicate
-                    } // end of checkExistingId
-                    break
-                case .tangibleResaleInPersonEscrowIntegral:
-                    break
-                case .tangibleResaleInPersonEscrowIndividual:
-                    self?.processEscrowResale(mintParameters)
-                    break
-                case .tangibleResaleInPersonDirectPaymentIntegral:
-                    break
-                case .tangibleResaleInPersonDirectPaymentIndividual:
-                    self?.processDirectResaleRevised(mintParameters, isAddressRequired: true, postType: .tangible)
-                    break
-                case .tangibleResaleShippingEscrowIntegral:
-                    break
-                case .tangibleResaleShippingEscrowIndividual:
-                    self?.processEscrowResale(mintParameters)
-                    break
-                case .digitalNewSaleOnlineDirectPaymentIntegral:
-                    break
-                case .digitalNewSaleOnlineDirectPaymentIndividual:
-                    self?.processDirectSaleRevised(mintParameters, isAddressRequired: false, postType: .digital)
-                    break
-                case .digitalNewSaleAuctionBeneficiaryIntegral:
-                    self?.processAuction(mintParameters)
-                    break
-                case .digitalNewSaleAuctionBeneficiaryIndividual:
-                    self?.processAuction(mintParameters)
-                    break
-                case .digitalResaleOnlineDirectPaymentIntegral:
-                    break
-                case .digitalResaleOnlineDirectPaymentIndividual:
-                    self?.processDirectResaleRevised(mintParameters, isAddressRequired: false, postType: .digital)
-                    break
-                case .digitalResaleAuctionBeneficiaryIntegral:
-                    break
-                case .digitalResaleAuctionBeneficiaryIndividual:
-                    break
-                default:
-                    print("no sale config exists")
-                    break
+            if self?.post == nil {
+                self?.checkExistingId(id: convertedId) { (isDuplicate, err) in
+                    if let _ = err {
+                        self?.alert.showDetail("Error", with: "There was an error checking for the Unique Identifier duplicates.", for: self)
+                        return
+                    }
+                    
+                    if let isDuplicate = isDuplicate, isDuplicate == true {
+                        self?.alert.showDetail("Duplicate", with: "The item has already been registered. Please transfer the ownership instead of re-posting it.", height: 350, for: self)
+                    } else {
+                        self?.getNewSale(saleConfigValue: saleConfig.value, mintParameters: mintParameters)
+                    } // not duplicate
+                } // end of checkExistingId
+            } else {
+                self?.getResale(saleConfigValue: saleConfig.value, mintParameters: mintParameters)
             }
         }    
     }
-        
-//        func getSaleConfigValue() -> DeliveryAndPaymentMethod? {
-//            guard let postTypeValue = PostType(rawValue: postType),
-//                  let deliveryMethodValue = DeliveryMethod(rawValue: deliveryMethod),
-//                  let paymentMethodValue = PaymentMethod(rawValue: paymentMethod),
-//                  let contractFormatValue = ContractFormat(rawValue: contractFormat) else { return nil }
-//
-//            let saleConfig = SaleConfig.hybridMethod(
-//                postType: postTypeValue,
-//                saleType: (self.post != nil) ? .resale : .newSale,
-//                delivery: deliveryMethodValue,
-//                payment: paymentMethodValue,
-//                contractFormat: contractFormatValue
-//            )
-//        }
-//    }
+    
+    func getNewSale(
+        saleConfigValue: DeliveryAndPaymentMethod?,
+        mintParameters: MintParameters
+    ) {
+        switch saleConfigValue {
+            case .tangibleNewSaleInPersonEscrowIntegral:
+                break
+            case .tangibleNewSaleInPersonEscrowIndividual:
+                self.processEscrow(mintParameters)
+                break
+            case .tangibleNewSaleInPersonDirectPaymentIntegral:
+                break
+            case .tangibleNewSaleInPersonDirectPaymentIndividual:
+                // The direct transfer option for in-person pickup doesn't require any contracts to be deployed
+                self.processIntegralSimplePayment(mintParameters, isAddressRequired: true, postType: .tangible)
+                break
+            case .tangibleNewSaleShippingEscrowIntegral:
+                break
+            case .tangibleNewSaleShippingEscrowIndividual:
+                self.processEscrow(mintParameters)
+                break
+            case .digitalNewSaleOnlineDirectPaymentIntegral:
+                break
+            case .digitalNewSaleOnlineDirectPaymentIndividual:
+                self.processIntegralSimplePayment(mintParameters, isAddressRequired: false, postType: .digital)
+                break
+            case .digitalNewSaleAuctionBeneficiaryIntegral:
+                self.processAuction(mintParameters)
+                break
+            case .digitalNewSaleAuctionBeneficiaryIndividual:
+                self.processAuction(mintParameters)
+                break
+            default:
+                break
+        }
+    }
+    
+    func getResale(
+        saleConfigValue: DeliveryAndPaymentMethod?,
+        mintParameters: MintParameters
+    ) {
+        switch saleConfigValue {
+            case .tangibleResaleInPersonEscrowIntegral:
+                break
+            case .tangibleResaleInPersonEscrowIndividual:
+                self.processEscrowResale(mintParameters)
+                break
+            case .tangibleResaleInPersonDirectPaymentIntegral:
+                break
+            case .tangibleResaleInPersonDirectPaymentIndividual:
+                self.processDirectResaleRevised(mintParameters, isAddressRequired: true, postType: .tangible)
+                break
+            case .tangibleResaleShippingEscrowIntegral:
+                break
+            case .tangibleResaleShippingEscrowIndividual:
+                self.processEscrowResale(mintParameters)
+                break
+            case .digitalResaleOnlineDirectPaymentIntegral:
+                break
+            case .digitalResaleOnlineDirectPaymentIndividual:
+                self.processDirectResaleRevised(mintParameters, isAddressRequired: false, postType: .digital)
+                break
+            case .digitalResaleAuctionBeneficiaryIntegral:
+                // here
+                self.processAuction(mintParameters)
+                break
+            case .digitalResaleAuctionBeneficiaryIndividual:
+                break
+            default:
+                break
+        }
+    }
     
     @objc dynamic func processEscrow(_ mintParameters: MintParameters) {}
     

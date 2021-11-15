@@ -17,15 +17,15 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     }()
     final var category: String! {
         didSet {
-            guard let category = category,
-                  let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) else { return }
+            guard let category = category else { return }
+//                  let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) else { return }
             
             title = category
             firstListener = FirebaseService.shared.db.collection("post")
                 .whereField("category", isEqualTo: category as String)
                 .whereField("status", isEqualTo: "ready")
-                .whereField("bidders", notIn: [userId])
-                .order(by: "bidders")
+//                .whereField("bidders", notIn: [userId])
+//                .order(by: "bidders")
                 .order(by: "date", descending: true)
                 .limit(to: 3)
                 .addSnapshotListener({ [weak self] (querySnapshot: QuerySnapshot?, err: Error?) in
@@ -128,6 +128,8 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     }
     
     private func fetchSubscriptionStatus() {
+        print("userId", userId as Any)
+        
         FirebaseService.shared.db
             .collection("deviceToken")
             .document(userId)
@@ -159,13 +161,13 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     }
     
     private func refetch(lastSnapshot: QueryDocumentSnapshot) {
-        guard let userId = userId else { return }
+//        guard let userId = userId else { return }
         
         nextListener = FirebaseService.shared.db.collection("post")
             .whereField("category", isEqualTo: category as String)
             .whereField("status", isEqualTo: "ready")
-            .whereField("bidders", notIn: [userId])
-            .order(by: "bidders")
+//            .whereField("bidders", notIn: [userId])
+//            .order(by: "bidders")
             .order(by: "date", descending: true)
             .limit(to: 3)
             .start(afterDocument: lastSnapshot)
