@@ -118,7 +118,7 @@ class SearchResultsController: ParentListViewController<Post>, UISearchBarDelega
                 }
                 break
             case .directTransfer:
-                let simpleVC = SimpleRevisedViewController()
+                let simpleVC = IntegratedSimplePaymentDetailViewController()
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 

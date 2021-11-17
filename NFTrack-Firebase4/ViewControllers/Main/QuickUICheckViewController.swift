@@ -204,7 +204,7 @@ class QuickUICheckViewController: ParentListViewController<Post>, FetchContractA
                 }
                 break
             case .directTransfer:
-                let simpleVC = SimpleRevisedViewController()
+                let simpleVC = IntegratedSimplePaymentDetailViewController()
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 break

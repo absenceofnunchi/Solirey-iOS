@@ -25,6 +25,8 @@ extension ParentPostViewController {
         pickerTag = v.tag
         /// MyDoneButtonVC
         self.mdbvc.view.alpha = 1
+        // This ultimately toggles the canBecomeFirstResponder, which usually brings up the keyboard, but instead provides the picker here
+        // canBecomeResponder and inputView are for the view that pops up and the inputAccessoryViewController and doDone are for MyDoneButtonVC
         self.showKeyboard = true
         self.becomeFirstResponder()
     }

@@ -1,5 +1,5 @@
 //
-//  SimpleRevisedViewController.swift
+//  IntegratedSimplePaymentDetailViewController.swift
 //  NFTrack-Firebase4
 //
 //  Created by J C on 2021-10-20.
@@ -19,7 +19,7 @@ import Combine
 import web3swift
 import BigInt
 
-class SimpleRevisedViewController: ParentDetailViewController {
+class IntegratedSimplePaymentDetailViewController: ParentDetailViewController {
     final var historyVC: HistoryViewController!
     lazy final var historyVCHeightConstraint: NSLayoutConstraint = historyVC.view.heightAnchor.constraint(equalToConstant: 100)
     private var payButton: UIButton!
@@ -114,7 +114,7 @@ class SimpleRevisedViewController: ParentDetailViewController {
     }
 }
 
-extension SimpleRevisedViewController {
+extension IntegratedSimplePaymentDetailViewController {
     final override func configureUI() {
         super.configureUI()
         title = post.title
@@ -178,17 +178,16 @@ extension SimpleRevisedViewController {
     @objc final override func buttonPressed(_ sender: UIButton) {
         switch sender.tag {
             case 0:
-                print("abort")
+                callContractMethod(for: .abort, param: [post.solireyUid] as [AnyObject])
                 break
             case 1:
-                let param: [AnyObject] = [post.simplePaymentId] as [AnyObject]
-                callContractMethod(for: .pay, param: param, price: post.price)
+                callContractMethod(for: .pay, param: [post.solireyUid] as [AnyObject], price: post.price)
                 break
             case 2:
-                callContractMethod(for: .withdraw, param: [post.simplePaymentId] as [AnyObject])
+                callContractMethod(for: .withdraw, param: [post.solireyUid] as [AnyObject])
                 break
             case 3:
-                // sell
+                // resell
                 let resaleVC = ResaleViewController()
                 resaleVC.post = post
                 resaleVC.title = "Resale"
@@ -210,41 +209,25 @@ extension SimpleRevisedViewController {
     }
 }
 
-extension SimpleRevisedViewController: HandleError {
-    // Dynamically determine what NFTrack contract method to call
-    private func callContractMethod(for method: NFTrackContract.ContractMethods, param: [AnyObject] = [AnyObject](), price: String = "0") {
+extension IntegratedSimplePaymentDetailViewController: HandleError {
+    // Dynamically determine what Solirey Integral Simplay Payment contract method to call
+    private func callContractMethod(for method: SolireyContract.ContractMethods, param: [AnyObject] = [AnyObject](), price: String? = nil) {
         showSpinner()
-        guard let NFTrackABIRevisedAddress = ContractAddresses.NFTrackABIRevisedAddress else {
+        guard let integralTangibleSimplePaymentAddress = ContractAddresses.integralTangibleSimplePaymentAddress else {
             self.alert.showDetail("Contract Address Needed", with: "Unable to retrieve the smart contract address.", for: self)
             return
         }
         
         Deferred {
             Future<TxPackage, PostingError> { [weak self] promise in
-                switch method {
-                    case .pay:
-                        self?.transactionService.prepareTransactionForWritingWithGasEstimate(
-                            method: NFTrackContract.ContractMethods.pay.rawValue,
-                            abi: NFTrackABIRevisedABI,
-                            param: param,
-                            contractAddress: NFTrackABIRevisedAddress,
-                            amountString: price,
-                            promise: promise
-                        )
-                        break
-                    case .withdraw:
-                        self?.transactionService.prepareTransactionForWritingWithGasEstimate(
-                            method: NFTrackContract.ContractMethods.withdraw.rawValue,
-                            abi: NFTrackABIRevisedABI,
-                            param: param,
-                            contractAddress: NFTrackABIRevisedAddress,
-                            amountString: price,
-                            promise: promise
-                        )
-                        break
-                    default:
-                        break
-                }
+                self?.transactionService.prepareTransactionForWritingWithGasEstimate(
+                    method: method.rawValue,
+                    abi: integralTangibleSimplePaymentABI,
+                    param: param,
+                    contractAddress: integralTangibleSimplePaymentAddress,
+                    amountString: price,
+                    promise: promise
+                )
             }
             .eraseToAnyPublisher()
         }
@@ -271,7 +254,7 @@ extension SimpleRevisedViewController: HandleError {
     
     private func executeTransaction(
         estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
-        method: NFTrackContract.ContractMethods
+        method: SolireyContract.ContractMethods
     ) {
         guard let txPackageRetainer = self.txPackageRetainer else { return }
         
@@ -352,14 +335,32 @@ extension SimpleRevisedViewController: HandleError {
                                 case .finished:
                                     switch method {
                                         case .pay:
-                                            self?.alert.showDetail("Success!", with: "You have successfully purchased the item.", for: self, buttonAction: {
-                                                self?.dismiss(animated: true, completion: nil)
-                                                self?.navigationController?.popViewController(animated: true)
-                                            })
+                                            self?.alert.showDetail(
+                                                "Success!",
+                                                with: "You have successfully purchased the item.",
+                                                for: self) {
+                                                DispatchQueue.main.async {
+                                                    self?.dismiss(animated: true, completion: nil)
+                                                    self?.navigationController?.popViewController(animated: true)
+                                                }
+                                            } completion: {}
+                                            break
                                         case .withdraw:
                                             self?.alert.showDetail("Success!", with: "You have successfully withdrawn the fund to your account.", for: self, buttonAction: {
                                                 self?.navigationController?.popViewController(animated: true)
                                             })
+                                            break
+                                        case .abort:
+                                            self?.alert.showDetail(
+                                                "Success!",
+                                                with: "You have successfully aborted the sale.",
+                                                for: self) {
+                                                DispatchQueue.main.async {
+                                                    self?.dismiss(animated: true, completion: nil)
+                                                    self?.navigationController?.popViewController(animated: true)
+                                                }
+                                            } completion: {}
+                                            break
                                         default:
                                             break
                                     }
@@ -380,7 +381,7 @@ extension SimpleRevisedViewController: HandleError {
     
     private func updateFirestore(
         txResult: TransactionSendingResult,
-        method: NFTrackContract.ContractMethods,
+        method: SolireyContract.ContractMethods,
         promise: @escaping (Result<Bool, PostingError>) -> Void
     ) {
         
@@ -412,9 +413,10 @@ extension SimpleRevisedViewController: HandleError {
                 ]
                 break
             case .withdraw:
-                postData = [
-                    "isWithdrawn": true
-                ]
+                postData = ["isWithdrawn": true]
+                break
+            case .abort:
+                postData = ["status": SimplePaymentStatus.aborted.rawValue]
                 break
             default:
                 break
@@ -431,9 +433,9 @@ extension SimpleRevisedViewController: HandleError {
     }
 }
 
-extension SimpleRevisedViewController {
+extension IntegratedSimplePaymentDetailViewController {
     private func createSocket() {
-        guard let contractAddress = ContractAddresses.NFTrackABIRevisedAddress else { return }
+        guard let contractAddress = ContractAddresses.integralTangibleSimplePaymentAddress else { return }
         Deferred {
             Future<[String:Any], PostingError> { [weak self] promise in
                 self?.socketDelegate = SocketDelegate(contractAddress: contractAddress, promise: promise)
@@ -487,23 +489,28 @@ extension SimpleRevisedViewController {
                     configureStatusButton(buttonTitle: "Inactive", tag: 100)
                 }
                 break
-            default:
-                configureStatusButton(buttonTitle: "", tag: 100)
+            case .aborted:
+                if userId == post.sellerUserId {
+                    configureStatusButton(buttonTitle: "Sell", tag: 3)
+                } else {
+                    configureStatusButton(buttonTitle: "Inactive", tag: 100)
+                }
                 break
         }
         
         activityIndicatorView.stopAnimating()
     }
     
+    // for testing
     func getInfo() {
         let parameters: [AnyObject] = [41, "9d78038e487b15758beb4d90ea733b626c1fb7a7d756fb8a77c2fa1de838f730"] as [AnyObject]
         Deferred { [weak self] in
             Future<SmartContractProperty, PostingError> { promise in
                 self?.transactionService.prepareTransactionForReading(
-                    method: NFTrackContract.ContractMethods.getInfo.rawValue,
+                    method: SolireyContract.ContractMethods.getInfo.rawValue,
                     parameters: parameters,
-                    abi: NFTrackABIRevisedABI,
-                    contractAddress: ContractAddresses.NFTrackABIRevisedAddress!,
+                    abi: integralTangibleSimplePaymentABI,
+                    contractAddress: ContractAddresses.integralTangibleSimplePaymentAddress!,
                     promise: promise
                 )
             }

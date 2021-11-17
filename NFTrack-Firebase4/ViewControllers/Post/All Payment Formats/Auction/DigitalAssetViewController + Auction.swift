@@ -79,8 +79,13 @@ extension DigitalAssetViewController {
                     }
                     break
                 case .digitalNewSaleAuctionBeneficiaryIndividual:
+                    guard let adminAddress = EthereumAddress("0x0b6fcFEc0133E77DcE6021Ff79BeFAd4b3af7564") else {
+                        self.alert.showDetail("Error", with: "Unable to get the admin address.", for: self)
+                        return
+                    }
+                    
                     self.transactionService.preLaunch(transactionToEstimate: { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
-                        let transactionParameters: [AnyObject] = [biddingTime, startingBid] as [AnyObject]
+                        let transactionParameters: [AnyObject] = [biddingTime, startingBid, adminAddress] as [AnyObject]
                         
                         guard let getIndividualAuctionEstimate = self?.getIndividualAuctionEstimate else {
                             return Fail(error: PostingError.generalError(reason: "Unable to estimate gas."))
@@ -172,5 +177,141 @@ extension DigitalAssetViewController {
                     break
             }
         } // hideSpinner
-    }   
+    }
+    
+    func updateFirestore(
+        topicsInfo: (id: String, tokenId: String),
+        mintParameters: MintParameters,
+        txResultRetainer: TransactionSendingResult
+    ) {
+        let update: [String: PostProgress] = ["update": .minting]
+        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+        
+        guard let previewDataArr = self.previewDataArr, previewDataArr.count == 1 else {
+            alert.showDetail("Error", with: "A single digital asset is required.", for: self)
+            return
+        }
+        
+        var fileURLs: [AnyPublisher<String?, PostingError>]!
+        
+        // Use the existing file path if this is reselling. No need to upload to the Storage.
+        // Since the remote image's url is used to display the digital image during the resale (not the local directory URL)
+        // the attempt to use uploadFileWithPromise will result in no image found.
+        if let post = self.post,
+           let files = post.files,
+           let filePath = files.first {
+            
+            let resellURLPromise = Future<String?, PostingError> { promise in
+                promise(.success(filePath))
+            }
+            .eraseToAnyPublisher()
+            
+            fileURLs = [resellURLPromise]
+        } else {
+            fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+                return Future<String?, PostingError> { promise in
+                    self.uploadFileWithPromise(
+                        fileURL: previewData.filePath,
+                        userId: mintParameters.userId,
+                        promise: promise
+                    )
+                }.eraseToAnyPublisher()
+            }
+        }
+        
+        Publishers.MergeMany(fileURLs)
+            .collect()
+            .eraseToAnyPublisher()
+            // upload the details to Firestore
+            .flatMap { [weak self] (urlStrings) -> AnyPublisher<Bool, PostingError> in
+                let update: [String: PostProgress] = ["update": .images]
+                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                
+                guard let self = self,
+                      let currentAddressString = Web3swiftService.currentAddressString else {
+                    return Fail(error: PostingError.generalError(reason: "Unable to prepare data for the database update."))
+                        .eraseToAnyPublisher()
+                }
+                
+                return Future<Bool, PostingError> { promise in
+                    self.transactionService.createFireStoreEntryRevised(
+                        documentId: &self.documentId,
+                        senderAddress: currentAddressString,
+                        escrowHash: "N/A",
+                        auctionHash: txResultRetainer.hash,
+                        mintHash: "N/A",
+                        itemTitle: mintParameters.itemTitle,
+                        desc: mintParameters.desc,
+                        price: mintParameters.price ?? "N/A",
+                        category: mintParameters.category,
+                        tokensArr: mintParameters.tokensArr,
+                        convertedId: mintParameters.convertedId,
+                        type: mintParameters.postType,
+                        deliveryMethod: mintParameters.deliveryMethod,
+                        saleFormat: mintParameters.saleFormat,
+                        paymentMethod: mintParameters.paymentMethod,
+                        tokenId: topicsInfo.tokenId,
+                        urlStrings: urlStrings,
+                        ipfsURLStrings: [],
+                        shippingInfo: self.shippingInfo,
+                        isWithdrawn: false,
+                        isAdminWithdrawn: false,
+                        solireyUid: topicsInfo.id,
+                        contractFormat: mintParameters.contractFormat,
+                        bidders: [self.userId],
+                        promise: promise
+                    )
+                }
+                .eraseToAnyPublisher()
+            }
+            .sink { [weak self] (completion) in
+                if self?.socketDelegate != nil {
+                    self?.socketDelegate.disconnectSocket()
+                }
+                
+                switch completion {
+                    case .failure(let error):
+                        self?.processFailure(error)
+                    case .finished:
+                        self?.afterPostReset()
+                        
+                        DispatchQueue.main.async { [weak self] in
+                            self?.saleMethodContainerConstraintHeight.constant = 50
+                            self?.priceTextFieldConstraintHeight.constant = 50
+                            self?.priceTextField.alpha = 1
+                            self?.priceLabelConstraintHeight.constant = 50
+                            self?.priceLabel.alpha = 1
+                            self?.auctionDurationTitleLabel.alpha = 0
+                            self?.auctionDurationLabel.alpha = 0
+                            self?.auctionDurationLabel.text = nil
+                            self?.auctionStartingPriceTitleLabel.alpha = 0
+                            self?.auctionStartingPriceTextField.alpha = 0
+                            self?.auctionStartingPriceTextField.text = nil
+                            self?.saleMethodLabel.text = nil
+                            self?.deliveryMethodLabel.text = DeliveryMethod.onlineTransfer.rawValue
+                            self?.pickerLabel.text = Category.digital.asString()
+                            
+                            UIView.animate(withDuration: 0.5) {
+                                self?.view.layoutIfNeeded()
+                            }
+                            
+                            guard let `self` = self else { return }
+                            self.scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: self.SCROLLVIEW_CONTENTSIZE_DEFAULT_HEIGHT)
+                        }
+                        
+                        guard let documentId = self?.documentId else { return }
+                        FirebaseService.shared.sendToTopicsVoid(
+                            title: "New item has been listed on \(mintParameters.category)",
+                            content: mintParameters.itemTitle,
+                            topic: mintParameters.category,
+                            docId: documentId
+                        )
+                        
+                        self?.storage.removeAll()
+                    //  register spotlight?
+                }
+            } receiveValue: { (_) in
+            }
+            .store(in: &self.storage)
+    }
 }

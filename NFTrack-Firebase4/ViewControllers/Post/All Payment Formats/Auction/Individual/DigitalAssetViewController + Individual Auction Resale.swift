@@ -86,7 +86,9 @@ extension DigitalAssetViewController {
             
             // Get the token ID by parsing the receipt from the minting transaction
             guard let receipt = txResults.first?.txResult.hash,
-                  let self = self else { return }
+                  let self = self else {
+                return
+            }
             
             self.transactionService.confirmReceipt(txHash: receipt)
                 .flatMap { (receipt) -> AnyPublisher<String, PostingError> in
@@ -97,12 +99,14 @@ extension DigitalAssetViewController {
                         
                         let web3 = Web3swiftService.web3instance
                         guard let contract = web3.contract(mintContractABI, at: solireyMintContractAddress, abiVersion: 2) else {
+                            self.alert.showDetail("Error", with: "Unable to parse the transaction.", for: self)
                             return
                         }
                         
                         let parsedEvent = contract.parseEvent(receipt.logs[0])
                         guard let eventData = parsedEvent.eventData,
                               let tokenId = eventData["tokenId"] as? BigUInt else {
+                            self.alert.showDetail("Error", with: "Unable to parse the transaction.", for: self)
                             return
                         }
                         

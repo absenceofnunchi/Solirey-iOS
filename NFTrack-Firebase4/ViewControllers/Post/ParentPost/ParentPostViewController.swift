@@ -148,7 +148,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         return []
     }
     
-    // All the pickers (DeliveryMethod, Category, PaymentMethod)
+    // All the pickers (DeliveryMethod, Category, PaymentMethod) that are to be inserted into inputView when canBecomeFirstResponder triggers the inputView to appear
     // For resale items, 2 things have to be restricted:
     //  1. The PostType has to be the same as the original item. For example, a digital item cannot be resold as a tangible item, or vice versa. Aside from the obvious, this is forbidden because
     //     the digital item's Unique Identifier is derived from hashing of its digital item whereas the tangible item requires the user to input it. ResaleViewController arranges this even before the user gets the
@@ -203,7 +203,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     // Which means only of of these are needed: ref vs documentId
     var documentId: String!
     // The unique ID for a post on the smart contract
-    var simplePaymentId: String!
+    var solireyUid: String!
     var txPackageArr = [TxPackage]()
     var txResultArr = [TxResult2]()
     var topicsRetainer: [String]!
@@ -404,8 +404,8 @@ extension ParentPostViewController {
         deliveryMethodLabel = createLabel(text: "")
         scrollView.addSubview(deliveryMethodLabel)
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
-        deliveryMethodLabel.addGestureRecognizer(tap)
+        let deliveryMethodTap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
+        deliveryMethodLabel.addGestureRecognizer(deliveryMethodTap)
         
         addressTitleLabel = createTitleLabel(text: "Shipping Restriction")
         scrollView.addSubview(addressTitleLabel)
@@ -454,8 +454,10 @@ extension ParentPostViewController {
         smartContractFormatLabel = createLabel(text: "")
         smartContractFormatLabel.isUserInteractionEnabled = true
         smartContractFormatLabel.tag = 49
-        scrollView.addSubview(smartContractFormatLabel)        
-        smartContractFormatLabel.addGestureRecognizer(tap)
+        scrollView.addSubview(smartContractFormatLabel)
+        
+        let smartContractLabelTap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
+        smartContractFormatLabel.addGestureRecognizer(smartContractLabelTap)
         
         let paymentLabelTap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
         paymentMethodLabel.addGestureRecognizer(paymentLabelTap)
@@ -1074,6 +1076,7 @@ extension ParentPostViewController {
             self.addressLabel.isUserInteractionEnabled = false
             self.addressTitleLabelConstraintHeight.constant = 0
             self.addressLabelConstraintHeight.constant = 0
+            self.smartContractFormatTitleLabel.text?.removeAll()
         }
         
         // remove the image and file previews

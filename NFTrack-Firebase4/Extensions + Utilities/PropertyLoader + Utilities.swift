@@ -353,18 +353,20 @@ struct NFTrackContract: PropertyLoadable {
 }
 
 // MARK: - Solirey Contract
+/// Simple Payment contract for both tangible and digital
 enum SolireyMethods: String, ContractMethodsEnum {
     case ownerOf
     case name
     case symbol
     case safeTransferFrom
     case transferFrom
-    case createSimplePayment
+    case createPayment
     case resell
     case pay
     case withdraw
     case withdrawFee
     case getInfo
+    case abort
 }
 
 enum SolireyProperties: ContractPropertiesEnum {

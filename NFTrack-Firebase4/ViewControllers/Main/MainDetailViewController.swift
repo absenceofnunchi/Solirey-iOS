@@ -128,8 +128,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     }
     
     private func fetchSubscriptionStatus() {
-        print("userId", userId as Any)
-        
         FirebaseService.shared.db
             .collection("deviceToken")
             .document(userId)
@@ -251,16 +249,16 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         )
         
         switch saleConfig.value {
+            case .tangibleNewSaleInPersonDirectPaymentIntegral, .digitalNewSaleOnlineDirectPaymentIndividual:
+                let simpleVC = IntegratedSimplePaymentDetailViewController()
+                simpleVC.post = post
+                self.navigationController?.pushViewController(simpleVC, animated: true)
+                break
             case .tangibleNewSaleShippingEscrowIndividual:
                 let listDetailVC = ListDetailViewController()
                 listDetailVC.post = post
                 // refreshes the MainDetailVC table when the user updates the status
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
-                break
-            case .digitalNewSaleOnlineDirectPaymentIndividual:
-                let simpleVC = SimpleRevisedViewController()
-                simpleVC.post = post
-                self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
             case .digitalNewSaleAuctionBeneficiaryIntegral:
                 guard let currentAddress = Web3swiftService.currentAddress,
@@ -272,7 +270,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
                 let integralAuctionVC = IntegralAuctionViewController(auctionContractAddress: auctionContract, myContractAddress: currentAddress, post: post)
                 integralAuctionVC.post = post
                 self.navigationController?.pushViewController(integralAuctionVC, animated: true)
-                
                 break
             case .digitalNewSaleAuctionBeneficiaryIndividual:
                 guard let auctionHash = post.auctionHash else { return }

@@ -90,7 +90,6 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
     var mintHash: String!
     var escrowHash: String?
     var auctionHash: String?
-    var simplePaymentId: String?
     var id: String!
     var status: String!
     var sellerHash: String!
@@ -128,7 +127,6 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         mintHash: String,
         escrowHash: String? = "N/A",
         auctionHash: String? = "N/A",
-        simplePaymentId: String? = "N/A",
         id: String,
         status: String,
         sellerUserId: String,
@@ -168,7 +166,6 @@ class Post: PostCoreModel, MediaConfigurable, DateConfigurable {
         self.mintHash = mintHash
         self.escrowHash = escrowHash
         self.auctionHash = auctionHash
-        self.simplePaymentId = simplePaymentId
         self.id = id
         self.status = status
         self.sellerHash = sellerHash
@@ -1142,6 +1139,7 @@ struct ContractAddresses {
     static let NFTrackABIRevisedAddress = EthereumAddress("0xd3F95b3292Cbc7543228B6edEDFA42b474651e8D")
     static let integralAuctionAddress = EthereumAddress("0x6d23ebe8d9ff75fe79fc0f4ae4b75b811cad2daa")
     static let solireyMintContractAddress = EthereumAddress("0x273a9c24096dEe6071CED1c386dB8cFD857DF017")
+    static let integralTangibleSimplePaymentAddress = EthereumAddress("0x05bc22ee90ba837defa936121e22a62e829258b7")
 }
 
 struct ShippingInfo {
@@ -1180,6 +1178,7 @@ class MintParameters: NSObject {
     let saleConfigValue: DeliveryAndPaymentMethod?
     var biddingTime: Int? = nil
     var startingBid: NSNumber? = nil
+    var shippingInfo: ShippingInfo?
     
     init(
         price: String?,
@@ -1194,7 +1193,8 @@ class MintParameters: NSObject {
         paymentMethod: String,
         contractFormat: String,
         postType: String,
-        saleConfigValue: DeliveryAndPaymentMethod?
+        saleConfigValue: DeliveryAndPaymentMethod?,
+        shippingInfo: ShippingInfo? = nil
     ) {
         self.price = price
         self.itemTitle = itemTitle
@@ -1209,5 +1209,6 @@ class MintParameters: NSObject {
         self.contractFormat = contractFormat
         self.postType = postType
         self.saleConfigValue = saleConfigValue
+        self.shippingInfo = shippingInfo
     }
 }

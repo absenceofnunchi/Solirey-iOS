@@ -59,12 +59,13 @@ struct PostProgressData {
         switch deliveryAndPaymentMethod {
             case .tangibleNewSaleInPersonEscrowIndividual, .tangibleNewSaleShippingEscrowIndividual:
                 phases = [.estimatGas, .deployingEscrow, .minting, .images]
-            case .tangibleNewSaleInPersonDirectPaymentIntegral, .tangibleNewSaleInPersonDirectPaymentIndividual:
+            case .tangibleNewSaleInPersonDirectPaymentIntegral,
+                 .tangibleNewSaleInPersonDirectPaymentIndividual,
+                 .digitalNewSaleOnlineDirectPaymentIndividual,
+                 .digitalNewSaleAuctionBeneficiaryIntegral:
                 phases = [.estimatGas, .minting, .images]
             case .digitalNewSaleAuctionBeneficiaryIndividual:
                 phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
-            case .digitalNewSaleAuctionBeneficiaryIntegral:
-                phases = [.estimatGas, .minting, .images]
             case .digitalResaleAuctionBeneficiaryIndividual:
                 phases = [.estimatGas, .images, .deployingAuction, .transferToken]
             default:

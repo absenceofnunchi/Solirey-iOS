@@ -28,7 +28,7 @@ extension AuctionDetailViewController {
             transactionHash: transactionHash,
             executeReadTransaction: executeReadTransaction,
             contractAddress: contractAddress,
-            contractABI: auctionABI
+            contractABI: individualAuctionABI
         )
 
         isPending = true

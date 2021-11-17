@@ -206,7 +206,7 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
                 break
             case .digitalNewSaleOnlineDirectPaymentIndividual:
-                let simpleVC = SimpleRevisedViewController()
+                let simpleVC = IntegratedSimplePaymentDetailViewController()
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 break

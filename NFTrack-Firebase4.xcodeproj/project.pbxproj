@@ -39,7 +39,7 @@
 		492C81F226F3EB2E0083C3B5 /* ParentChatListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81F126F3EB2E0083C3B5 /* ParentChatListViewController.swift */; };
 		492C820026F52DA60083C3B5 /* ChatViewController + SendMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81FF26F52DA50083C3B5 /* ChatViewController + SendMessage.swift */; };
 		492C820526F574D30083C3B5 /* ImageMessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C820426F574D20083C3B5 /* ImageMessageCell.swift */; };
-		492E009727200B3900A7C072 /* SimpleRevisedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492E009627200B3900A7C072 /* SimpleRevisedViewController.swift */; };
+		492E009727200B3900A7C072 /* IntegratedSimplePaymentDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492E009627200B3900A7C072 /* IntegratedSimplePaymentDetailViewController.swift */; };
 		49314F5F4CF8EC19FC270279 /* Pods_NFTrack_Firebase4Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 839241BF6F24156A30E120AF /* Pods_NFTrack_Firebase4Tests.framework */; };
 		4933332D268033D900B8BFC2 /* ReviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4933332C268033D900B8BFC2 /* ReviewViewController.swift */; };
 		493333322681116F00B8BFC2 /* ReviewPostViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493333312681116F00B8BFC2 /* ReviewPostViewController.swift */; };
@@ -64,8 +64,7 @@
 		493BF9FE264CDC0A00B9C9D2 /* ERC721PresetABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */; };
 		49409A75265946870060193C /* SearchResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A74265946870060193C /* SearchResultsViewController.swift */; };
 		49409A7A265949C80060193C /* MainViewController + ResultsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */; };
-		494284B7273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494284B6273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift */; };
-		49434A5327427EE60043E45B /* ParentAuctionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49434A5227427EE50043E45B /* ParentAuctionViewController.swift */; };
+		49434A5327427EE60043E45B /* ParentAuctionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49434A5227427EE50043E45B /* ParentAuctionDetailViewController.swift */; };
 		494DDBD527327C5800510026 /* IndividualAuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494DDBD427327C5800510026 /* IndividualAuctionABI.swift */; };
 		494DDBE02732845600510026 /* MintContractABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494DDBDF2732845600510026 /* MintContractABI.swift */; };
 		494DDBE82732896500510026 /* DigitalAssetViewController + Individual Auction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494DDBE72732896500510026 /* DigitalAssetViewController + Individual Auction.swift */; };
@@ -160,7 +159,6 @@
 		497CF7A726F82818003EF69E /* ParentLocationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497CF7A626F82818003EF69E /* ParentLocationSearchViewController.swift */; };
 		497F1F2D26DC920800E0F967 /* ShippingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F1F2C26DC920800E0F967 /* ShippingViewController.swift */; };
 		497F1F3226DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F1F3126DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift */; };
-		4981CC6D2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4981CC6C2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift */; };
 		4981CC722734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4981CC712734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift */; };
 		4983BB2026E5B3D200A45703 /* ShippingAddressChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983BB1F26E5B3D200A45703 /* ShippingAddressChecker.swift */; };
 		4983D4B8269F3ED800C2E5A3 /* SpecDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */; };
@@ -193,6 +191,8 @@
 		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
 		49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */; };
 		49B9BD722733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */; };
+		49BC4BD627434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift */; };
+		49BC4BDB2743C09700250D6E /* ParentPostViewController + SimplePayment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BC4BDA2743C09700250D6E /* ParentPostViewController + SimplePayment.swift */; };
 		49BD34E2274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BD34E1274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift */; };
 		49BF2CE327083BD4009CA5F2 /* ImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */; };
 		49BF2CE827083E11009CA5F2 /* NoImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */; };
@@ -269,7 +269,7 @@
 		492C81F126F3EB2E0083C3B5 /* ParentChatListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentChatListViewController.swift; sourceTree = "<group>"; };
 		492C81FF26F52DA50083C3B5 /* ChatViewController + SendMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + SendMessage.swift"; sourceTree = "<group>"; };
 		492C820426F574D20083C3B5 /* ImageMessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageMessageCell.swift; sourceTree = "<group>"; };
-		492E009627200B3900A7C072 /* SimpleRevisedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleRevisedViewController.swift; sourceTree = "<group>"; };
+		492E009627200B3900A7C072 /* IntegratedSimplePaymentDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegratedSimplePaymentDetailViewController.swift; sourceTree = "<group>"; };
 		4933332C268033D900B8BFC2 /* ReviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViewController.swift; sourceTree = "<group>"; };
 		493333312681116F00B8BFC2 /* ReviewPostViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPostViewController.swift; sourceTree = "<group>"; };
 		4933335B26825D6600B8BFC2 /* CustomSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSegmentedControl.swift; sourceTree = "<group>"; };
@@ -293,8 +293,7 @@
 		493BF9FD264CDC0A00B9C9D2 /* ERC721PresetABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ERC721PresetABI.swift; sourceTree = "<group>"; };
 		49409A74265946870060193C /* SearchResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResultsViewController.swift; sourceTree = "<group>"; };
 		49409A79265949C80060193C /* MainViewController + ResultsUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController + ResultsUpdate.swift"; sourceTree = "<group>"; };
-		494284B6273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IntegralAuctionViewController + CreateAuctionMethod.swift"; sourceTree = "<group>"; };
-		49434A5227427EE50043E45B /* ParentAuctionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAuctionViewController.swift; sourceTree = "<group>"; };
+		49434A5227427EE50043E45B /* ParentAuctionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAuctionDetailViewController.swift; sourceTree = "<group>"; };
 		494DDBD427327C5800510026 /* IndividualAuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndividualAuctionABI.swift; sourceTree = "<group>"; };
 		494DDBDF2732845600510026 /* MintContractABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MintContractABI.swift; sourceTree = "<group>"; };
 		494DDBE72732896500510026 /* DigitalAssetViewController + Individual Auction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Individual Auction.swift"; sourceTree = "<group>"; };
@@ -395,7 +394,6 @@
 		497CF7A626F82818003EF69E /* ParentLocationSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentLocationSearchViewController.swift; sourceTree = "<group>"; };
 		497F1F2C26DC920800E0F967 /* ShippingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShippingViewController.swift; sourceTree = "<group>"; };
 		497F1F3126DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilteredLocationSearchViewController.swift; sourceTree = "<group>"; };
-		4981CC6C2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentAuctionDetailViewController.swift; sourceTree = "<group>"; };
 		4981CC712734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IntegralAuctionViewController + Properties Parse.swift"; sourceTree = "<group>"; };
 		4983BB1F26E5B3D200A45703 /* ShippingAddressChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShippingAddressChecker.swift; sourceTree = "<group>"; };
 		4983D4B7269F3ED800C2E5A3 /* SpecDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecDisplayView.swift; sourceTree = "<group>"; };
@@ -428,6 +426,8 @@
 		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
 		49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + ContextMenu.swift"; sourceTree = "<group>"; };
 		49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Integral Auction.swift"; sourceTree = "<group>"; };
+		49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralTangibleSimplePaymentABI.swift; sourceTree = "<group>"; };
+		49BC4BDA2743C09700250D6E /* ParentPostViewController + SimplePayment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + SimplePayment.swift"; sourceTree = "<group>"; };
 		49BD34E1274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Individual Auction Resale.swift"; sourceTree = "<group>"; };
 		49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCardCell.swift; sourceTree = "<group>"; };
 		49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoImageCardCell.swift; sourceTree = "<group>"; };
@@ -528,8 +528,7 @@
 			children = (
 				49843D4E273149D800471C43 /* Individual */,
 				49843D52273149EB00471C43 /* Integral */,
-				4981CC6C2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift */,
-				49434A5227427EE50043E45B /* ParentAuctionViewController.swift */,
+				49434A5227427EE50043E45B /* ParentAuctionDetailViewController.swift */,
 			);
 			path = ListDetail;
 			sourceTree = "<group>";
@@ -608,7 +607,6 @@
 				49E759AC26669ACB0064BB34 /* ParentPostViewController.swift */,
 				495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */,
 				496D56BF2659E75D00C3E7FD /* ParentPostViewController + Picker.swift */,
-				4952F8A1272917AC0008D237 /* ParentPostViewController + IntegralSimplePayment.swift */,
 			);
 			path = ParentPost;
 			sourceTree = "<group>";
@@ -649,6 +647,7 @@
 			isa = PBXGroup;
 			children = (
 				4962D989272D489E005B2F0F /* IntegralAuctionABI.swift */,
+				49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift */,
 			);
 			path = Integral;
 			sourceTree = "<group>";
@@ -878,7 +877,7 @@
 				49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */,
 				495FB37926BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift */,
 				492556B3271643970073188F /* SimplePaymentDetailViewController.swift */,
-				492E009627200B3900A7C072 /* SimpleRevisedViewController.swift */,
+				492E009627200B3900A7C072 /* IntegratedSimplePaymentDetailViewController.swift */,
 			);
 			path = Individual;
 			sourceTree = "<group>";
@@ -888,7 +887,6 @@
 			children = (
 				49843D492731499600471C43 /* IntegralAuctionViewController.swift */,
 				4981CC712734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift */,
-				494284B6273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift */,
 			);
 			path = Integral;
 			sourceTree = "<group>";
@@ -1042,6 +1040,8 @@
 			children = (
 				49A72282273489300020B227 /* Tangible */,
 				49A72283273489360020B227 /* Digital */,
+				49BC4BDA2743C09700250D6E /* ParentPostViewController + SimplePayment.swift */,
+				4952F8A1272917AC0008D237 /* ParentPostViewController + IntegralSimplePayment.swift */,
 			);
 			path = SimplePayment;
 			sourceTree = "<group>";
@@ -1450,7 +1450,6 @@
 				4981CC722734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift in Sources */,
 				4962FADF26F647C6004B01A8 /* CacheService.swift in Sources */,
 				495FE3C8271F8D29000433AF /* NFTrackABIRevised.swift in Sources */,
-				4981CC6D2734A2C7006EE5EA /* ParentAuctionDetailViewController.swift in Sources */,
 				4964E55D2649645F005B3268 /* KeyWallet+CoreDataProperties.swift in Sources */,
 				4983D4C026A258D500C2E5A3 /* PropertyLoader.swift in Sources */,
 				495FB37526BB496D0047E91D /* AuctionButtonController.swift in Sources */,
@@ -1458,7 +1457,7 @@
 				493BF9D7264C4DE100B9C9D2 /* BackgroundView2.swift in Sources */,
 				495FD333268D402900F1D81D /* FilterCell.swift in Sources */,
 				490C3FA126FD6B830093C323 /* BackgroundView4.swift in Sources */,
-				49434A5327427EE60043E45B /* ParentAuctionViewController.swift in Sources */,
+				49434A5327427EE60043E45B /* ParentAuctionDetailViewController.swift in Sources */,
 				4964E4ED26445AED005B3268 /* AlertsView.swift in Sources */,
 				495FB37A26BB4A1D0047E91D /* AuctionDetailViewController + Properties Parse.swift in Sources */,
 				495FD312268A3D2000F1D81D /* ProfilePostCell.swift in Sources */,
@@ -1485,6 +1484,7 @@
 				4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */,
 				49DEFF5B268649A3004C2DD0 /* DocumentPicker.swift in Sources */,
 				493BF9CD264C493200B9C9D2 /* WalletButtonView.swift in Sources */,
+				49BC4BD627434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift in Sources */,
 				493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */,
 				4914149D270D0AD0005E93BA /* DigitalAssetViewController + OnlineDirect.swift in Sources */,
 				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
@@ -1495,8 +1495,9 @@
 				49BD34E2274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift in Sources */,
 				499702AB2673F75E001DD80A /* MessageCell.swift in Sources */,
 				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
-				492E009727200B3900A7C072 /* SimpleRevisedViewController.swift in Sources */,
+				492E009727200B3900A7C072 /* IntegratedSimplePaymentDetailViewController.swift in Sources */,
 				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
+				49BC4BDB2743C09700250D6E /* ParentPostViewController + SimplePayment.swift in Sources */,
 				49141498270D0A27005E93BA /* DigitalAssetViewController + Auction.swift in Sources */,
 				49D95C0727057E95004C6EEF /* BigSinglePageViewController.swift in Sources */,
 				495FE3D6271F9E45000433AF /* ParentPostViewController + Mint.swift in Sources */,
@@ -1573,7 +1574,6 @@
 				49D59C762663326500107F79 /* SocketDelegate.swift in Sources */,
 				49E759B82666BCCF0064BB34 /* ResaleViewController.swift in Sources */,
 				497F1F2D26DC920800E0F967 /* ShippingViewController.swift in Sources */,
-				494284B7273759570074A6D6 /* IntegralAuctionViewController + CreateAuctionMethod.swift in Sources */,
 				492556A227104DB30073188F /* PostViewController + IndividualSimplePayment.swift in Sources */,
 				492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */,
 				4958118A26D978EF002C8F3B /* LocationSearchViewController.swift in Sources */,

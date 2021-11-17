@@ -433,7 +433,7 @@ extension IntegralAuctionViewController {
                     return promise(.failure(.generalError(reason: "Unable to retrieve the auction contract")))
                 }
                 
-                let contract = web3.contract(auctionABI, at: auctionContractAddress, abiVersion: 2)
+                let contract = web3.contract(individualAuctionABI, at: auctionContractAddress, abiVersion: 2)
                 
                 var filter = EventFilter()
 //                filter.

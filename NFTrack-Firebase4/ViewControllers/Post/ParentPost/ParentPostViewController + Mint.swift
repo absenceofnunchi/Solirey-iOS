@@ -132,7 +132,8 @@ extension ParentPostViewController {
                 paymentMethod: paymentMethod,
                 contractFormat: contractFormat,
                 postType: postType.asString(),
-                saleConfigValue: saleConfig.value
+                saleConfigValue: saleConfig.value,
+                shippingInfo: self?.shippingInfo
             )
             
             if self?.post == nil {
@@ -158,6 +159,7 @@ extension ParentPostViewController {
         saleConfigValue: DeliveryAndPaymentMethod?,
         mintParameters: MintParameters
     ) {
+        print("saleConfigValue", saleConfigValue as Any)
         switch saleConfigValue {
             case .tangibleNewSaleInPersonEscrowIntegral:
                 break
@@ -165,10 +167,10 @@ extension ParentPostViewController {
                 self.processEscrow(mintParameters)
                 break
             case .tangibleNewSaleInPersonDirectPaymentIntegral:
+                // The direct transfer option for in-person pickup doesn't require any contracts to be deployed
+                self.processSimplePayment(mintParameters)
                 break
             case .tangibleNewSaleInPersonDirectPaymentIndividual:
-                // The direct transfer option for in-person pickup doesn't require any contracts to be deployed
-                self.processIntegralSimplePayment(mintParameters, isAddressRequired: true, postType: .tangible)
                 break
             case .tangibleNewSaleShippingEscrowIntegral:
                 break
@@ -178,7 +180,7 @@ extension ParentPostViewController {
             case .digitalNewSaleOnlineDirectPaymentIntegral:
                 break
             case .digitalNewSaleOnlineDirectPaymentIndividual:
-                self.processIntegralSimplePayment(mintParameters, isAddressRequired: false, postType: .digital)
+                self.processSimplePayment(mintParameters)
                 break
             case .digitalNewSaleAuctionBeneficiaryIntegral:
                 self.processAuction(mintParameters)

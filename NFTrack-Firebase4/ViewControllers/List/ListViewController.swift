@@ -163,8 +163,8 @@ class ListViewController: ParentListViewController<Post>, FetchContractAddress {
                 // refreshes the MainDetailVC table when the user updates the status
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
                 break
-            case .digitalNewSaleOnlineDirectPaymentIndividual:
-                let simpleVC = SimpleRevisedViewController()
+            case .digitalNewSaleOnlineDirectPaymentIndividual, .tangibleNewSaleInPersonDirectPaymentIntegral:
+                let simpleVC = IntegratedSimplePaymentDetailViewController()
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
@@ -305,10 +305,10 @@ class ListViewController: ParentListViewController<Post>, FetchContractAddress {
                     configureDataRefetch(isBuyer: true, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue], lastSnapshot: lastSnapshot)
             case .selling:
                     configureDataRefetch(isBuyer: false, status: [PostStatus.transferred.rawValue, PostStatus.pending.rawValue], lastSnapshot: lastSnapshot)
-            case .posts:
-                configureDataRefetch(isBuyer: false, status: [PostStatus.ready.rawValue, PostStatus.aborted.rawValue], lastSnapshot: lastSnapshot)
             case .auction:
-                    configureAuctionRefetch()
+                configureAuctionRefetch()
+            case .posts:
+                configurePostingsRefetch(isBuyer: false, status: [PostStatus.ready.rawValue, PostStatus.aborted.rawValue], lastSnapshot: lastSnapshot)
             default:
                 break
         }
@@ -386,7 +386,7 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
             case .auction:
                 self.configureAuctionFetch()
             case .posts:
-                self.configureDataFetch(isBuyer: false, status: [PostStatus.ready.rawValue, PostStatus.aborted.rawValue])
+                self.configurePostingsFetch(isBuyer: false, status: [PostStatus.ready.rawValue, PostStatus.aborted.rawValue])
         }
         
 //        transitionView { [weak self] in
@@ -597,6 +597,103 @@ extension ListViewController: SegmentConfigurable, PostParseDelegate {
                             }
                         }
                     }
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        DispatchQueue.main.async {
+                            self?.postArr.append(contentsOf: data)
+                        }
+                    }
+                }
+            }
+    }
+    
+    // MARK: - configurePostingsFetch
+    final func configurePostingsFetch(isBuyer: Bool, status: [String]) {
+        guard let userId = userId else { return }
+        
+        dataStore = nil
+        loadingQueue.cancelAllOperations()
+        loadingOperations.removeAll()
+        postArr.removeAll()
+        tableView.reloadData()
+        
+        firstListener = db.collection("post")
+            .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
+            .whereField("status", in: status)
+            .order(by: "date", descending: true)
+            .limit(to: PAGINATION_LIMIT)
+            .addSnapshotListener() { [weak self] (querySnapshot, error) in
+                if let _ = error {
+                    self?.alert.showDetail("Error in Fetching Data", with: "There was an error fetching the posts.", for: self)
+                } else {
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                            self?.delay(1.0) {
+                                DispatchQueue.main.async {
+                                    self?.refreshControl.endRefreshing()
+                                }
+                            }
+                        }
+                    }
+                    
+                    self?.cache.removeAllObjects()
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
+                    
+                    if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
+                        DispatchQueue.main.async {
+                            self?.postArr = data
+                        }
+                    }
+                }
+            }
+    }
+    
+    func configurePostingsRefetch(isBuyer: Bool, status: [String], lastSnapshot: QueryDocumentSnapshot) {
+        guard let userId = userId else { return }
+        nextListener = db.collection("post")
+            .whereField(isBuyer ? PositionStatus.buyerUserId.rawValue: PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
+            .whereField("status", in: status)
+            .order(by: "date", descending: true)
+            .limit(to: PAGINATION_LIMIT)
+            .start(afterDocument: lastSnapshot)
+            .addSnapshotListener() { [weak self] (querySnapshot, error) in
+                if let _ = error {
+                    self?.alert.showDetail("Error", with: "Unable to fetch data. Please try again.", for: self)
+                } else {
+                    guard let querySnapshot = querySnapshot else {
+                        return
+                    }
+                    
+                    defer {
+                        DispatchQueue.main.async {
+                            self?.tableView.reloadData()
+                            self?.delay(1.0) {
+                                DispatchQueue.main.async {
+                                    self?.refreshControl.endRefreshing()
+                                }
+                            }
+                        }
+                    }
+                    
+                    self?.cache.removeAllObjects()
+                    
+                    guard let lastSnapshot = querySnapshot.documents.last else {
+                        // The collection is empty.
+                        return
+                    }
+                    
+                    self?.lastSnapshot = lastSnapshot
                     
                     if let data = self?.parseDocuments(querySnapshot: querySnapshot) {
                         DispatchQueue.main.async {

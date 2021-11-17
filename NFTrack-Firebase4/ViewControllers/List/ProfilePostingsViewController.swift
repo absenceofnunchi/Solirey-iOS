@@ -75,7 +75,7 @@ class ProfilePostingsViewController: ProfileListViewController<Post>, PostParseD
                 }
                 break
             case .directTransfer:
-                let simpleVC = SimpleRevisedViewController()
+                let simpleVC = IntegratedSimplePaymentDetailViewController()
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
                 break
