@@ -35,6 +35,8 @@ class SocketDelegate: Web3SocketDelegate {
     }
     
     func connectSocket(contractAddress: EthereumAddress, topics: [String]? = nil) {
+        
+//        self.socketProvider = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/a972ea7cd273456ea8c6a1e4f7894575", delegate: self)
         self.socketProvider = InfuraWebsocketProvider("wss://rinkeby.infura.io/ws/v3/d011663e021f45e1b07ef4603e28ba90", delegate: self)
         self.socketProvider?.connectSocket()
         

@@ -44,7 +44,7 @@ extension DigitalAssetViewController {
         
 //        let startingBid = 100 as NSNumber
         
-//        let bidding`Time = numOfDays.intValue * 60 * 60 * 24
+//        let biddingTime = numOfDays.intValue * 60 * 60 * 24
         let biddingTime = 150
 
         mintParameters.biddingTime = biddingTime
@@ -180,9 +180,8 @@ extension DigitalAssetViewController {
     }
     
     func updateFirestore(
-        topicsInfo: (id: String, tokenId: String),
-        mintParameters: MintParameters,
-        txResultRetainer: TransactionSendingResult
+        txInfo: (txPackage: TxResult2, tokenId: String, id: String),
+        mintParameters: MintParameters
     ) {
         let update: [String: PostProgress] = ["update": .minting]
         NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
@@ -238,7 +237,7 @@ extension DigitalAssetViewController {
                         documentId: &self.documentId,
                         senderAddress: currentAddressString,
                         escrowHash: "N/A",
-                        auctionHash: txResultRetainer.hash,
+                        auctionHash: txInfo.txPackage.txResult.hash,
                         mintHash: "N/A",
                         itemTitle: mintParameters.itemTitle,
                         desc: mintParameters.desc,
@@ -250,13 +249,13 @@ extension DigitalAssetViewController {
                         deliveryMethod: mintParameters.deliveryMethod,
                         saleFormat: mintParameters.saleFormat,
                         paymentMethod: mintParameters.paymentMethod,
-                        tokenId: topicsInfo.tokenId,
+                        tokenId: txInfo.tokenId,
                         urlStrings: urlStrings,
                         ipfsURLStrings: [],
                         shippingInfo: self.shippingInfo,
                         isWithdrawn: false,
                         isAdminWithdrawn: false,
-                        solireyUid: topicsInfo.id,
+                        solireyUid: txInfo.id,
                         contractFormat: mintParameters.contractFormat,
                         bidders: [self.userId],
                         promise: promise

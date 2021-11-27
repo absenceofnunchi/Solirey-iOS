@@ -243,6 +243,24 @@ class ParentAuctionDetailViewController: ParentDetailViewController, UITextField
                 resaleVC.title = "Resale"
                 navigationController?.pushViewController(resaleVC, animated: true)
                 break
+            case 8:
+                db.collection("post").document(self.post.documentId).updateData([
+                    "isOutbidWithdrawn": true
+                ], completion: { (error) in
+                    if let error = error {
+                        print("firebase error", error)
+                    }
+                })
+                
+                self.alert.showDetail(
+                    "Success!",
+                    with: "You have no more outbid amounts to be claimed.",
+                    for: self) { [weak self] in
+                    DispatchQueue.main.async {
+                        self?.navigationController?.popViewController(animated: true)
+                    }
+                } completion: {}
+                break
             case 11:
                 let listEditVC = DigitalListEditViewController()
                 listEditVC.post = post
@@ -302,8 +320,25 @@ class ParentAuctionDetailViewController: ParentDetailViewController, UITextField
                 case .getTheHighestBid:
                     self?.auctionButtonNarrowConstraint.isActive = false
                     self?.auctionButtonWideConstraint.isActive = true
-                    self?.auctionButton.setTitle("Claim The Final Bid", for: .normal)
-                    self?.auctionButton.tag = 3
+                    
+                    // For CollectionVC. If the user is the beneficiary, the segmented controller will show this vc under the seller. Then, allow the user to claim the highest bid
+                    // If the user is not the beneficiary, you're either the buyer or one of the bidders that have been outbid.
+                    // Check to see if the oubid bidder has already claimed the outbid amount and show accordingly
+                    if self?.auctionButtonController.beneficiary != Web3swiftService.currentAddressString {
+                        // The user is the bidder and has already claimed the outbid amount. This won't be displayed
+                        if let isOutbidWithdrawn = self?.post.isOutbidWithdrawn, isOutbidWithdrawn == true {
+                            self?.auctionButton.setTitle("Complete", for: .normal)
+                            self?.auctionButton.tag = 400
+                        } else {
+                            // The user is the bidder and has not claimed the outbid amount
+                            self?.auctionButton.setTitle("No Outbid Amount", for: .normal)
+                            self?.auctionButton.tag = 8
+                        }
+                    } else {
+                        // The user is the seller
+                        self?.auctionButton.setTitle("Claim The Final Bid", for: .normal)
+                        self?.auctionButton.tag = 3
+                    }
                     break
                 case .transferToken:
                     // This state signifies the last step in the auction.

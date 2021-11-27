@@ -1182,6 +1182,7 @@ extension PostParseDelegate {
         var files, savedBy: [String]?
         var shippingInfo: ShippingInfo!
         var bidderWalletAddress: [String: String]?
+        var isOutbidWithdrawn: Bool?
         
         data.forEach { (item) in
             switch item.key {
@@ -1283,6 +1284,8 @@ extension PostParseDelegate {
                     solireyUid = item.value as? String
                 case "bidderWalletAddress":
                     bidderWalletAddress = item.value as? [String: String]
+                case "isOutbidWithdrawn":
+                    isOutbidWithdrawn = item.value as? Bool
                 default:
                     break
             }
@@ -1325,7 +1328,8 @@ extension PostParseDelegate {
             category: category,
             contractFormat: contractFormat,
             solireyUid: solireyUid,
-            bidderWalletAddress: bidderWalletAddress
+            bidderWalletAddress: bidderWalletAddress,
+            isOutbidWithdrawn: isOutbidWithdrawn
         )
         return post
     }

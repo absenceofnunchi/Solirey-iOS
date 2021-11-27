@@ -249,7 +249,9 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
         )
         
         switch saleConfig.value {
-            case .tangibleNewSaleInPersonDirectPaymentIntegral, .digitalNewSaleOnlineDirectPaymentIndividual:
+            case .tangibleNewSaleInPersonDirectPaymentIntegral,
+                 .digitalNewSaleOnlineDirectPaymentIndividual,
+                 .digitalNewSaleOnlineDirectPaymentIntegral:
                 let simpleVC = IntegratedSimplePaymentDetailViewController()
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)

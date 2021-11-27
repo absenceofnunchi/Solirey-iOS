@@ -213,18 +213,27 @@ extension IntegratedSimplePaymentDetailViewController: HandleError {
     // Dynamically determine what Solirey Integral Simplay Payment contract method to call
     private func callContractMethod(for method: SolireyContract.ContractMethods, param: [AnyObject] = [AnyObject](), price: String? = nil) {
         showSpinner()
-        guard let integralTangibleSimplePaymentAddress = ContractAddresses.integralTangibleSimplePaymentAddress else {
+        guard let integralTangibleSimplePaymentAddress = ContractAddresses.integralTangibleSimplePaymentAddress,
+              let integralDigitalSimplePaymentAddress = ContractAddresses.integralDigitalSimplePaymentAddress else {
             self.alert.showDetail("Contract Address Needed", with: "Unable to retrieve the smart contract address.", for: self)
             return
         }
+        
+        guard let postType = PostType(rawValue: post.type) else {
+            self.alert.showDetail("Error", with: "Unable to determine the item category.", for: self)
+            return
+        }
+        
+        // Since this detail VC is being used by both tangible and digital, the ABI and the address should be determined
+        let isDigital = postType == .digital
         
         Deferred {
             Future<TxPackage, PostingError> { [weak self] promise in
                 self?.transactionService.prepareTransactionForWritingWithGasEstimate(
                     method: method.rawValue,
-                    abi: integralTangibleSimplePaymentABI,
+                    abi: isDigital ? integralDigitalSimplePaymentABI : integralTangibleSimplePaymentABI,
                     param: param,
-                    contractAddress: integralTangibleSimplePaymentAddress,
+                    contractAddress: isDigital ? integralDigitalSimplePaymentAddress : integralTangibleSimplePaymentAddress,
                     amountString: price,
                     promise: promise
                 )
@@ -346,9 +355,15 @@ extension IntegratedSimplePaymentDetailViewController: HandleError {
                                             } completion: {}
                                             break
                                         case .withdraw:
-                                            self?.alert.showDetail("Success!", with: "You have successfully withdrawn the fund to your account.", for: self, buttonAction: {
-                                                self?.navigationController?.popViewController(animated: true)
-                                            })
+                                            self?.alert.showDetail(
+                                                "Success!",
+                                                with: "You have successfully withdrawn the fund to your account.",
+                                                for: self) {
+                                                DispatchQueue.main.async {
+                                                    self?.dismiss(animated: true, completion: nil)
+                                                    self?.navigationController?.popViewController(animated: true)
+                                                }
+                                            } completion: {}
                                             break
                                         case .abort:
                                             self?.alert.showDetail(
@@ -524,4 +539,3 @@ extension IntegratedSimplePaymentDetailViewController {
         .store(in: &storage)
     }
 }
-

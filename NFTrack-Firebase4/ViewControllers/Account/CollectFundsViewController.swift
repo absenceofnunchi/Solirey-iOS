@@ -201,14 +201,14 @@ extension CollectFundsViewController {
 
 extension CollectFundsViewController: SegmentConfigurable {
     private enum Segment: Int, CaseIterable {
-        case buyerUserId, sellerUserId
+        case sellerUserId, buyerUserId
 
         func asString() -> String {
             switch self {
-                case .buyerUserId:
-                    return "Purchased"
                 case .sellerUserId:
                     return "Sold"
+                case .buyerUserId:
+                    return "Purchased"
             }
         }
 
@@ -242,9 +242,9 @@ extension CollectFundsViewController: SegmentConfigurable {
         segmentContainer = segment
         
         switch segment {
-            case .buyerUserId:
-                fetchData()
             case .sellerUserId:
+                fetchData()
+            case .buyerUserId:
                 configureAuctionFetch()
         }
     }
@@ -262,10 +262,11 @@ extension CollectFundsViewController {
         
         // The order of the auction progress: bid, ended, transfer
         // When the auctionEnd is called the transfer is done at the same time, which means "ended" and "transfer" happen at the same time.
-        // Therefore, you only need to fetch the "bid" status.
-        firstListener =  FirebaseService.shared.db.collection("post")
+        firstListener = FirebaseService.shared.db.collection("post")
             .whereField("bidders", arrayContains: userId)
-            .whereField("status", in: [AuctionStatus.ended.rawValue])
+            .whereField("status", in: [AuctionStatus.transferred.rawValue])
+            .whereField("sellerUserId", isNotEqualTo: userId)
+            .order(by: "sellerUserId", descending: true)
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .addSnapshotListener() { [weak self] (querySnapshot, error) in
@@ -314,6 +315,8 @@ extension CollectFundsViewController {
         nextListener = FirebaseService.shared.db.collection("post")
             .whereField("bidders", arrayContains: userId)
             .whereField("status", in: [AuctionStatus.ended.rawValue])
+            .whereField("sellerUserId", isNotEqualTo: userId)
+            .order(by: "sellerUserId", descending: true)
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)

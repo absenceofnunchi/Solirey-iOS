@@ -12,6 +12,8 @@
  It uses the NFTrack contract deployed by the admin and requires no deployments from the user's end.
  
  The code is in ParentPostVC because new sale and resale methods are to be used in tangible and digital both.
+ 
+ The category parameter is needed to determine whether to use the integralTangibleSimplePaymentABI or the digital ABI. The difference between the two are whether the original creator of the token is accredited or not (former no, latter yes).
  */
 
 import UIKit
@@ -21,21 +23,23 @@ import BigInt
 
 extension ParentPostViewController {
     // MARK: - processIntegralSimplePayment
-    final func processIntegralSimplePayment(
+    func processIntegralSimplePayment(
         method: SolireyContract.ContractMethods,
-        transactionParameters: [AnyObject]
+        transactionParameters: [AnyObject],
+        isDigital: Bool
     ) -> AnyPublisher<TxPackage, PostingError> {
         Future<TxPackage, PostingError> { [weak self] promise in
-            guard let integralTangibleSimplePaymentAddress = ContractAddresses.integralTangibleSimplePaymentAddress else {
+            guard let integralTangibleSimplePaymentAddress = ContractAddresses.integralTangibleSimplePaymentAddress,
+                  let integralDigitalSimplePaymentAddress = ContractAddresses.integralDigitalSimplePaymentAddress else {
                 promise(.failure(PostingError.generalError(reason: "Unable to prepare the contract address.")))
                 return
             }
             
             self?.transactionService.prepareTransactionForWritingWithGasEstimate(
                 method: method.rawValue,
-                abi: integralTangibleSimplePaymentABI,
+                abi: isDigital ? integralDigitalSimplePaymentABI : integralTangibleSimplePaymentABI,
                 param: transactionParameters,
-                contractAddress: integralTangibleSimplePaymentAddress,
+                contractAddress: isDigital ? integralDigitalSimplePaymentAddress : integralTangibleSimplePaymentAddress,
                 amountString: nil,
                 promise: promise
             )

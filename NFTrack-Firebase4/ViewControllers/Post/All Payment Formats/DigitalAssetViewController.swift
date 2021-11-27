@@ -135,43 +135,6 @@ class DigitalAssetViewController: ParentPostViewController, ResaleDelegate {
                     }
             }
         }
-        
-//        test100()
-        
-//        Deferred {
-//            Future<TransactionReceipt, PostingError> { promise in
-//                DispatchQueue.global().async {
-//                    Web3swiftService.getReceipt(hash: "0xa9ab8b8332298105662dbf853b2c1505882f1e3d2b12efc237a9a9f3f737c0f0", promise: promise)
-//                }
-//            }
-//        }
-//        .sink { (completion) in
-//            print(completion)
-//        } receiveValue: { (receipt) in
-//            guard let solireyMintContractAddress = ContractAddresses.solireyMintContractAddress else {
-//                return
-//            }
-//
-//            let web3 = Web3swiftService.web3instance
-//            guard let contract = web3.contract(mintContractABI, at: solireyMintContractAddress, abiVersion: 2) else {
-//                return
-//            }
-//
-//            let parsedEvent = contract.parseEvent(receipt.logs[0])
-//
-//            guard let eventData = parsedEvent.eventData, let tokenId = eventData["tokenId"] as? BigUInt else {
-//                return
-//            }
-//
-//
-//            print("eventData", eventData)
-//
-//            print("type(of: tokenId)", type(of: tokenId))
-//
-//            print("tokenId", tokenId)
-//        }
-//        .store(in: &self.storage)
-        
     }
     
     final override func viewDidDisappear(_ animated: Bool) {

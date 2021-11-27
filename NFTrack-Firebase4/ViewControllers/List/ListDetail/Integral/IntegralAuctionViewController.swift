@@ -250,12 +250,7 @@ class IntegralAuctionViewController: ParentAuctionDetailViewController {
                                                     // Since the bidding is recorded on Firstore with the Firebase User ID and the highest bidder is recorded with the wallet address on the blockchain,
                                                     // we need to find out the user ID with the highest bidder's wallet address at the end.
                                                     // This is so that the buyerUserId is recorded with the Firestore User ID on Firestore in order for the PurchaseVC to query posts using the user ID.
-                                                    Future<String, PostingError> { [weak self] promise in
-                                                        //                                                        guard let documentId = self?.post.documentId else {
-                                                        //                                                            promise(.failure(.generalError(reason: "Unable to update the database.")))
-                                                        //                                                            return
-                                                        //                                                        }
-                                                        
+                                                    Future<String?, PostingError> { [weak self] promise in
                                                         FirebaseService.shared.db
                                                             .collection("post")
                                                             .document(documentId)
@@ -270,12 +265,16 @@ class IntegralAuctionViewController: ParentAuctionDetailViewController {
                                                                     return
                                                                 }
                                                                 
-                                                                if let post = self?.parseDocument(document: document),
-                                                                   let bidderWalletAddress = post.bidderWalletAddress,
-                                                                   let highestBidder = self?.auctionButtonController.highestBidder,
-                                                                   let highestBidderUserId = bidderWalletAddress[highestBidder] {
-                                                                    
-                                                                    promise(.success(highestBidderUserId))
+                                                                if let post = self?.parseDocument(document: document) {
+                                                                    // There has been at least one or more bids
+                                                                    if let bidderWalletAddress = post.bidderWalletAddress,
+                                                                      let highestBidder = self?.auctionButtonController.highestBidder,
+                                                                      let highestBidderUserId = bidderWalletAddress[highestBidder] {
+                                                                        promise(.success(highestBidderUserId))
+                                                                    } else {
+                                                                        // No bid has been made
+                                                                        promise(.success(nil))
+                                                                    }
                                                                 } else {
                                                                     promise(.failure(.generalError(reason: "Unable to update the database.")))
                                                                 }
@@ -284,20 +283,19 @@ class IntegralAuctionViewController: ParentAuctionDetailViewController {
                                                     .eraseToAnyPublisher()
                                                     .flatMap { [weak self] (userId) -> AnyPublisher<Bool, PostingError> in
                                                         Future<Bool, PostingError> { promise in
-                                                            //                                                            guard let documentId = self?.post.documentId else {
-                                                            //                                                                promise(.failure(.generalError(reason: "Unable to update the database.")))
-                                                            //                                                                return
-                                                            //                                                            }
-                                                            
-                                                            self?.db.collection("post").document(documentId).updateData([
-                                                                "buyerUserId": userId
-                                                            ], completion: { (error) in
-                                                                if let _ = error {
-                                                                    promise(.failure(.generalError(reason: "Unable to update the database.")))
-                                                                } else {
-                                                                    promise(.success(true))
-                                                                }
-                                                            })
+                                                            if let userId = userId {
+                                                                self?.db.collection("post").document(documentId).updateData([
+                                                                    "buyerUserId": userId
+                                                                ], completion: { (error) in
+                                                                    if let _ = error {
+                                                                        promise(.failure(.generalError(reason: "Unable to update the database.")))
+                                                                    } else {
+                                                                        promise(.success(true))
+                                                                    }
+                                                                })
+                                                            } else {
+                                                                promise(.success(true))
+                                                            }
                                                         }
                                                         .eraseToAnyPublisher()
                                                     }

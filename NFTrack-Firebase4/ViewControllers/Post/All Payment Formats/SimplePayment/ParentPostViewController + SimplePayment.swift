@@ -35,16 +35,18 @@ extension ParentPostViewController {
         //        }
         
         switch mintParameters.saleConfigValue {
-            case .tangibleNewSaleInPersonDirectPaymentIntegral:
+            case .tangibleNewSaleInPersonDirectPaymentIntegral,
+                 .digitalNewSaleOnlineDirectPaymentIntegral:
                 self.transactionService.preLaunch (transactionToEstimate: { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
-                    guard let processIntegralSimplePayment = self?.processIntegralSimplePayment else {
+                    guard let processIntegralSimplePayment = self?.processIntegralSimplePayment,
+                          let category = PostType(rawValue: mintParameters.postType) else {
                         return Fail(error: PostingError.generalError(reason: "Unable to estimate gas."))
                             .eraseToAnyPublisher()
                     }
                     
+                    let isDigital = category == .digital
                     let parameters: [AnyObject] = [priceInWei] as [AnyObject]
-                    return processIntegralSimplePayment(.createPayment, parameters)
-                    
+                    return processIntegralSimplePayment(.createPayment, parameters, isDigital)
                 }) { [weak self] (estimates, txPackage, error) in
                     if let error = error {
                         self?.processFailure(error)
@@ -52,7 +54,6 @@ extension ParentPostViewController {
                     
                     if let estimates = estimates,
                        let txPackage = txPackage {
-                        
                         self?.executeIntegralSimplePayment(
                             estimates: estimates,
                             mintParameters: mintParameters,
@@ -61,11 +62,37 @@ extension ParentPostViewController {
                     }
                 }
                 break
-            case .tangibleResaleInPersonDirectPaymentIntegral:
+            case .tangibleResaleInPersonDirectPaymentIntegral,
+                 .digitalResaleOnlineDirectPaymentIntegral:
+                self.transactionService.preLaunch (transactionToEstimate: { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
+                    guard let processIntegralSimplePayment = self?.processIntegralSimplePayment,
+                          let category = PostType(rawValue: mintParameters.postType),
+                          let tokenId = self?.post?.tokenID else {
+                        return Fail(error: PostingError.generalError(reason: "Unable to estimate gas."))
+                            .eraseToAnyPublisher()
+                    }
+                    
+                    let isDigital = category == .digital
+                    let parameters: [AnyObject] = [priceInWei, tokenId] as [AnyObject]
+                    return processIntegralSimplePayment(.resell, parameters, isDigital)
+                    
+                }) { [weak self] (estimates, txPackage, error) in
+                    if let error = error {
+                        self?.processFailure(error)
+                    }
+                    
+                    if let estimates = estimates,
+                       let txPackage = txPackage {
+                        self?.executeIntegralSimplePayment(
+                            estimates: estimates,
+                            mintParameters: mintParameters,
+                            txPackage: txPackage
+                        )
+                    }
+                }
                 break
             default:
                 break
         }
     }
-
 }

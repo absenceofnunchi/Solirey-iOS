@@ -66,7 +66,8 @@ class AuctionButtonController {
         isAuctionEnded: Bool,
         isAuctionOfficiallyEnded: Bool,
         highestBidder: String,
-        beneficiary: String
+        beneficiary: String,
+        isOutbidWithdrawn: Bool
     ) {
         self.currentAddress = Web3swiftService.currentAddress
         self.status = .bid

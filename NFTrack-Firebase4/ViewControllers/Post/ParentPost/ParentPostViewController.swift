@@ -208,6 +208,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var txResultArr = [TxResult2]()
     var topicsRetainer: [String]!
     var tokenIdRetainer: String!
+    var imagePickerController: UIImagePickerController!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -442,22 +443,22 @@ extension ParentPostViewController {
         paymentMethodLabel = createLabel(text: "")
         scrollView.addSubview(paymentMethodLabel)
         
-        smartContractFormatTitleLabel = createTitleLabel(text: "Smart Contract Format")
-        smartContractFormatTitleLabel.isUserInteractionEnabled = true
-        scrollView.addSubview(smartContractFormatTitleLabel)
-        
-        smartContractFormatInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
-        smartContractFormatInfoButton.tag = 6
-        smartContractFormatInfoButton.translatesAutoresizingMaskIntoConstraints = false
-        smartContractFormatTitleLabel.addSubview(smartContractFormatInfoButton)
-        
-        smartContractFormatLabel = createLabel(text: "")
-        smartContractFormatLabel.isUserInteractionEnabled = true
-        smartContractFormatLabel.tag = 49
-        scrollView.addSubview(smartContractFormatLabel)
-        
-        let smartContractLabelTap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
-        smartContractFormatLabel.addGestureRecognizer(smartContractLabelTap)
+//        smartContractFormatTitleLabel = createTitleLabel(text: "Smart Contract Format")
+//        smartContractFormatTitleLabel.isUserInteractionEnabled = true
+//        scrollView.addSubview(smartContractFormatTitleLabel)
+//
+//        smartContractFormatInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
+//        smartContractFormatInfoButton.tag = 6
+//        smartContractFormatInfoButton.translatesAutoresizingMaskIntoConstraints = false
+//        smartContractFormatTitleLabel.addSubview(smartContractFormatInfoButton)
+//
+//        smartContractFormatLabel = createLabel(text: "")
+//        smartContractFormatLabel.isUserInteractionEnabled = true
+//        smartContractFormatLabel.tag = 49
+//        scrollView.addSubview(smartContractFormatLabel)
+//
+//        let smartContractLabelTap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
+//        smartContractFormatLabel.addGestureRecognizer(smartContractLabelTap)
         
         let paymentLabelTap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
         paymentMethodLabel.addGestureRecognizer(paymentLabelTap)
@@ -626,21 +627,21 @@ extension ParentPostViewController {
         paymentMethodLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
         paymentMethodLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
         
-        smartContractFormatTitleLabel.topAnchor.constraint(equalTo: paymentMethodLabel.bottomAnchor, constant: 20).isActive = true
-        smartContractFormatTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
-        smartContractFormatTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
-        smartContractFormatTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
-        
-        smartContractFormatInfoButton.trailingAnchor.constraint(equalTo: paymentMethodTitleLabel.trailingAnchor).isActive = true
-        smartContractFormatInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
-        
-        smartContractFormatLabel.topAnchor.constraint(equalTo: smartContractFormatTitleLabel.bottomAnchor, constant: 0).isActive = true
-        smartContractFormatLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
-        smartContractFormatLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
-        smartContractFormatLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+//        smartContractFormatTitleLabel.topAnchor.constraint(equalTo: paymentMethodLabel.bottomAnchor, constant: 20).isActive = true
+//        smartContractFormatTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+//        smartContractFormatTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+//        smartContractFormatTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+//
+//        smartContractFormatInfoButton.trailingAnchor.constraint(equalTo: paymentMethodTitleLabel.trailingAnchor).isActive = true
+//        smartContractFormatInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+//
+//        smartContractFormatLabel.topAnchor.constraint(equalTo: smartContractFormatTitleLabel.bottomAnchor, constant: 0).isActive = true
+//        smartContractFormatLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+//        smartContractFormatLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+//        smartContractFormatLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
         
         // category
-        pickerTitleLabel.topAnchor.constraint(equalTo: smartContractFormatLabel.bottomAnchor, constant: 20).isActive = true
+        pickerTitleLabel.topAnchor.constraint(equalTo: paymentMethodLabel.bottomAnchor, constant: 20).isActive = true
         pickerTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
         pickerTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
         pickerTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
@@ -792,7 +793,7 @@ extension ParentPostViewController {
                     }
                 }
                 
-                let imagePickerController = UIImagePickerController()
+                imagePickerController = UIImagePickerController()
                 imagePickerController.allowsEditing = false
                 imagePickerController.sourceType = .photoLibrary
                 imagePickerController.delegate = self
@@ -850,7 +851,7 @@ extension ParentPostViewController: UIImagePickerControllerDelegate & UINavigati
             print("No image found")
             return
         }
-        
+
         let previewData = PreviewData(header: .image, filePath: filePath)
         previewDataArr.append(previewData)
     }
@@ -884,7 +885,7 @@ extension ParentPostViewController {
     // The option to check the ownership of the token. Automatically prompted prior to the resale.
     // Given as an option because it's recommended, but not necessary. It's read method, not a property.
     private func configureOwnerOf() {
-        guard post != nil else { return }
+        guard let post = post else { return }
         
         let buttonInfoArr = [
             ButtonInfo(title: "Check", tag: 500, backgroundColor: .black)
@@ -899,7 +900,7 @@ extension ParentPostViewController {
             switch tag {
                 case 500:
                     self?.dismiss(animated: true, completion: {
-                        self?.checkOwnership()
+                        self?.checkOwnership(post)
                     })
                 default:
                     break
@@ -909,15 +910,49 @@ extension ParentPostViewController {
         self.present(infoVC, animated: true, completion: nil)
     }
     
-    private func checkOwnership() {
-        guard let integralAuctionAddress = ContractAddresses.integralAuctionAddress else {
-            alert.showDetail("Error", with: "Unable to retrieve the smart contract address for checking the ownership.", for: self)
+    private func checkOwnership(_ post: Post) {
+        guard let tokenId = post.tokenID else {
+            self.alert.showDetail("Sorry", with: "Failed to load the Token ID for the current item.", for: self)
             return
         }
         
-        guard let tokenId = post?.tokenID else {
-            self.alert.showDetail("Sorry", with: "Failed to load the Token ID for the current item.", for: self)
+        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod),
+              let postType = PostType(rawValue: post.type),
+              let saleType = SaleType(rawValue: post.saleType),
+              let deliveryMethod = DeliveryMethod(rawValue: post.deliveryMethod),
+              let contractFormat = ContractFormat(rawValue: post.contractFormat) else {
+            self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
             return
+        }
+        
+        let saleConfig = SaleConfig.hybridMethod(
+            postType: postType,
+            saleType: saleType,
+            delivery: deliveryMethod,
+            payment: paymentMethod,
+            contractFormat: contractFormat
+        )
+        
+        var abi: String!
+        var contractAddress: EthereumAddress!
+        
+        switch saleConfig.value {
+//            case .tangibleNewSaleInPersonDirectPaymentIntegral,
+//                 .digitalNewSaleOnlineDirectPaymentIntegral:
+//                if postType == .tangible {
+//                    abi = integralTangibleSimplePaymentABI
+//                    contractAddress = ContractAddresses.integralTangibleSimplePaymentAddress
+//                } else {
+//                    abi = integralDigitalSimplePaymentABI
+//                    contractAddress = ContractAddresses.integralDigitalSimplePaymentAddress
+//                }
+//            case .digitalNewSaleAuctionBeneficiaryIntegral:
+//                abi = integralAuctionABI
+//                contractAddress = ContractAddresses.integralAuctionAddress
+            default:
+                abi = solireyABI
+                contractAddress = ContractAddresses.solireyContractAddress
+                break
         }
         
         let ownerOfParameters: [AnyObject] = [tokenId] as [AnyObject]
@@ -928,21 +963,12 @@ extension ParentPostViewController {
         
         self.showSpinner {
             Deferred {
-//                Future<SmartContractProperty, PostingError> { promise in
-//                    self.transactionService.prepareTransactionForReading(
-//                        method: NFTrackContract.ContractMethods.ownerOf.rawValue,
-//                        parameters: ownerOfParameters,
-//                        abi: mintContractABI,
-//                        contractAddress: integralAuctionAddress,
-//                        promise: promise
-//                    )
-//                }
                 Future<SmartContractProperty, PostingError> { promise in
                     self.transactionService.prepareTransactionForReading(
-                        method: NFTrackContract.ContractMethods.ownerOf.rawValue,
+                        method: SolireyContract.ContractMethods.ownerOf.rawValue,
                         parameters: ownerOfParameters,
-                        abi: integralAuctionABI,
-                        contractAddress: integralAuctionAddress,
+                        abi: abi,
+                        contractAddress: contractAddress,
                         promise: promise
                     )
                 }
@@ -957,7 +983,6 @@ extension ParentPostViewController {
                     
                     do {
                         let result: [String: Any] = try transaction.call()
-                        print("result", result as Any)
                         if let ownerAddress = result["0"] as? EthereumAddress {
                             promise(.success(ownerAddress))
                         }
@@ -1076,7 +1101,7 @@ extension ParentPostViewController {
             self.addressLabel.isUserInteractionEnabled = false
             self.addressTitleLabelConstraintHeight.constant = 0
             self.addressLabelConstraintHeight.constant = 0
-            self.smartContractFormatTitleLabel.text?.removeAll()
+//            self.smartContractFormatTitleLabel.text?.removeAll()
         }
         
         // remove the image and file previews
@@ -1089,3 +1114,4 @@ extension ParentPostViewController {
         }
     }
 }
+

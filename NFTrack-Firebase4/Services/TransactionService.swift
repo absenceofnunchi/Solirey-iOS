@@ -1059,7 +1059,8 @@ extension TransactionService {
             "isAdminWithdrawn": isAdminWithdrawn, // The fee collected by the admin
             "tokenId": tokenId,
             "solireyUid": solireyUid, // Solirey unique ID that's required for each posting on the integral contracts (i.e. mapping's key)
-            "contractFormat": contractFormat
+            "contractFormat": contractFormat,
+            "isOutbidWithdrawn": false
         ]
         
         // txHash is either minting or transferring the ownership

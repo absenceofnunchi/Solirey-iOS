@@ -41,12 +41,12 @@ extension ParentPostViewController {
                 return
             }
             
-            guard let contractFormat = self?.smartContractFormatLabel.text,
-                  !contractFormat.isEmpty,
-                  let contractFormatEnum = ContractFormat(rawValue: contractFormat) else {
-                self?.alert.showDetail("Incomplete", with: "Please select the smart contract format.", for: self)
-                return
-            }
+//            guard let contractFormat = self?.smartContractFormatLabel.text,
+//                  !contractFormat.isEmpty,
+//                  let contractFormatEnum = ContractFormat(rawValue: contractFormat) else {
+//                self?.alert.showDetail("Incomplete", with: "Please select the smart contract format.", for: self)
+//                return
+//            }
             
             guard let category = self?.pickerLabel.text,
                   !category.isEmpty else {
@@ -100,6 +100,7 @@ extension ParentPostViewController {
             //                self?.alert.showDetail("Error", with: "Unable to determine between a new sale and a resale.", for: self)
             //                return
             //            }
+            
             guard let postType = self?.postType else {
                 self?.alert.showDetail("Error", with: "Unable to determine between a new sale and a resale.", for: self)
                 return
@@ -116,7 +117,7 @@ extension ParentPostViewController {
                 saleType: (self?.post != nil) ? .resale : .newSale,
                 delivery: deliveryMethodEnum,
                 payment: paymentMethodEnum,
-                contractFormat: contractFormatEnum
+                contractFormat: ContractFormat.integral // default value only for now. Might include the individual option in later versions
             )
             
             let mintParameters = MintParameters(
@@ -130,12 +131,14 @@ extension ParentPostViewController {
                 deliveryMethod: deliveryMethod,
                 saleFormat: saleFormat,
                 paymentMethod: paymentMethod,
-                contractFormat: contractFormat,
+                contractFormat: ContractFormat.integral.rawValue, // default value only for now. Might include the individual option in later versions
                 postType: postType.asString(),
                 saleConfigValue: saleConfig.value,
                 shippingInfo: self?.shippingInfo
             )
             
+            print("saleConfigValue", saleConfig.value as Any)
+
             if self?.post == nil {
                 self?.checkExistingId(id: convertedId) { (isDuplicate, err) in
                     if let _ = err {
@@ -159,9 +162,9 @@ extension ParentPostViewController {
         saleConfigValue: DeliveryAndPaymentMethod?,
         mintParameters: MintParameters
     ) {
-        print("saleConfigValue", saleConfigValue as Any)
         switch saleConfigValue {
             case .tangibleNewSaleInPersonEscrowIntegral:
+                self.processEscrow(mintParameters)
                 break
             case .tangibleNewSaleInPersonEscrowIndividual:
                 self.processEscrow(mintParameters)
@@ -173,11 +176,13 @@ extension ParentPostViewController {
             case .tangibleNewSaleInPersonDirectPaymentIndividual:
                 break
             case .tangibleNewSaleShippingEscrowIntegral:
+                self.processEscrow(mintParameters)
                 break
             case .tangibleNewSaleShippingEscrowIndividual:
                 self.processEscrow(mintParameters)
                 break
             case .digitalNewSaleOnlineDirectPaymentIntegral:
+                self.processSimplePayment(mintParameters)
                 break
             case .digitalNewSaleOnlineDirectPaymentIndividual:
                 self.processSimplePayment(mintParameters)
@@ -199,6 +204,7 @@ extension ParentPostViewController {
     ) {
         switch saleConfigValue {
             case .tangibleResaleInPersonEscrowIntegral:
+                
                 break
             case .tangibleResaleInPersonEscrowIndividual:
                 self.processEscrowResale(mintParameters)
@@ -214,6 +220,7 @@ extension ParentPostViewController {
                 self.processEscrowResale(mintParameters)
                 break
             case .digitalResaleOnlineDirectPaymentIntegral:
+                self.processSimplePayment(mintParameters)
                 break
             case .digitalResaleOnlineDirectPaymentIndividual:
                 self.processDirectResaleRevised(mintParameters, isAddressRequired: false, postType: .digital)

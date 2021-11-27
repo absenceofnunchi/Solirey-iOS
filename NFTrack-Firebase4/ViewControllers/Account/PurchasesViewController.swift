@@ -198,6 +198,8 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
             contractFormat: contractFormat
         )
         
+        print("saleConfig.value", saleConfig.value as Any)
+        
         switch saleConfig.value {
             case .tangibleNewSaleShippingEscrowIndividual:
                 let listDetailVC = ListDetailViewController()
@@ -205,7 +207,11 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
                 // refreshes the MainDetailVC table when the user updates the status
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
                 break
-            case .digitalNewSaleOnlineDirectPaymentIndividual:
+            case .tangibleNewSaleInPersonDirectPaymentIntegral,
+                 .digitalNewSaleOnlineDirectPaymentIndividual,
+                 .tangibleResaleInPersonDirectPaymentIntegral,
+                 .digitalResaleOnlineDirectPaymentIntegral,
+                 .digitalNewSaleOnlineDirectPaymentIntegral:
                 let simpleVC = IntegratedSimplePaymentDetailViewController()
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
@@ -220,7 +226,6 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
                 let integralAuctionVC = IntegralAuctionViewController(auctionContractAddress: auctionContract, myContractAddress: currentAddress, post: post)
                 integralAuctionVC.post = post
                 self.navigationController?.pushViewController(integralAuctionVC, animated: true)
-                
                 break
             case .digitalNewSaleAuctionBeneficiaryIndividual:
                 guard let auctionHash = post.auctionHash else { return }

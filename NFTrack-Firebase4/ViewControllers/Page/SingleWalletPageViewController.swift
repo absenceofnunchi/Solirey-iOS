@@ -164,6 +164,7 @@ class SingleWalletPageViewController<T: Equatable>: ParentSinglePageViewControll
         
         // repeat password text field
         passwordTextField = UITextField()
+        passwordTextField.isSecureTextEntry = true
         passwordTextField.delegate = self
         passwordTextField.layer.borderWidth = 1
         passwordTextField.layer.borderColor = UIColor.gray.cgColor

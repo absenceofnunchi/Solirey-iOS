@@ -348,6 +348,7 @@ extension IntegralAuctionViewController {
                     
                     txHash = _txHash
                      
+                    print("run")
                     DispatchQueue.global().async {
                         return Web3swiftService.getReceipt(hash: txHash, promise: promise)
                     }

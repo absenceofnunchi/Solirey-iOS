@@ -163,7 +163,9 @@ class ListViewController: ParentListViewController<Post>, FetchContractAddress {
                 // refreshes the MainDetailVC table when the user updates the status
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
                 break
-            case .digitalNewSaleOnlineDirectPaymentIndividual, .tangibleNewSaleInPersonDirectPaymentIntegral:
+            case .digitalNewSaleOnlineDirectPaymentIndividual,
+                 .tangibleNewSaleInPersonDirectPaymentIntegral,
+                 .digitalNewSaleOnlineDirectPaymentIntegral:
                 let simpleVC = IntegratedSimplePaymentDetailViewController()
                 simpleVC.post = post
                 self.navigationController?.pushViewController(simpleVC, animated: true)
