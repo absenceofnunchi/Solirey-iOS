@@ -27,18 +27,17 @@ extension PostViewController {
         //            return
         //        }
         
-        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
-            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
-            return
-        }
-        
+//        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
+//            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+//            return
+//        }
         
         switch mintParameters.saleConfigValue {
             case .tangibleNewSaleInPersonEscrowIndividual, .tangibleNewSaleShippingEscrowIndividual:
                 escrowIndividual(mintParameters, price: price)
                 break
             case .tangibleNewSaleInPersonEscrowIntegral, .tangibleNewSaleShippingEscrowIntegral:
-                
+                escrowIntegral(mintParameters, price: price)
                 break
             default:
                 break

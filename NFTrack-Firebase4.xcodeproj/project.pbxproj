@@ -205,6 +205,9 @@
 		49BF2CF6270845BF009CA5F2 /* NoImageProgressCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CF5270845BF009CA5F2 /* NoImageProgressCardCell.swift */; };
 		49BFB4BE269E4666008D908F /* AuctionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */; };
 		49C4F0FD2671DF4F00B04D57 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */; };
+		49CB8F7627543EB0009E7AE0 /* IntegralEscrowDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49CB8F7527543EB0009E7AE0 /* IntegralEscrowDetailViewController.swift */; };
+		49CB8F7E27543F13009E7AE0 /* IntegralEscrowDetailViewController + GetStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49CB8F7D27543F13009E7AE0 /* IntegralEscrowDetailViewController + GetStatus.swift */; };
+		49CB8F8327544080009E7AE0 /* IntegralEscrowDetailViewController + UpdateState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49CB8F8227544080009E7AE0 /* IntegralEscrowDetailViewController + UpdateState.swift */; };
 		49D59C762663326500107F79 /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D59C752663326500107F79 /* SocketDelegate.swift */; };
 		49D95C0727057E95004C6EEF /* BigSinglePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D95C0627057E95004C6EEF /* BigSinglePageViewController.swift */; };
 		49DEFF5526841C54004C2DD0 /* ReviewDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */; };
@@ -446,6 +449,9 @@
 		49BF2CF5270845BF009CA5F2 /* NoImageProgressCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoImageProgressCardCell.swift; sourceTree = "<group>"; };
 		49BFB4BD269E4666008D908F /* AuctionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionDetailViewController.swift; sourceTree = "<group>"; };
 		49C4F0FC2671DF4F00B04D57 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
+		49CB8F7527543EB0009E7AE0 /* IntegralEscrowDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralEscrowDetailViewController.swift; sourceTree = "<group>"; };
+		49CB8F7D27543F13009E7AE0 /* IntegralEscrowDetailViewController + GetStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IntegralEscrowDetailViewController + GetStatus.swift"; sourceTree = "<group>"; };
+		49CB8F8227544080009E7AE0 /* IntegralEscrowDetailViewController + UpdateState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "IntegralEscrowDetailViewController + UpdateState.swift"; sourceTree = "<group>"; };
 		49D59C752663326500107F79 /* SocketDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
 		49D95C0627057E95004C6EEF /* BigSinglePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BigSinglePageViewController.swift; sourceTree = "<group>"; };
 		49DEFF5426841C54004C2DD0 /* ReviewDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewDetailViewController.swift; sourceTree = "<group>"; };
@@ -900,6 +906,9 @@
 				49843D492731499600471C43 /* IntegralAuctionViewController.swift */,
 				4981CC712734B2F5006EE5EA /* IntegralAuctionViewController + Properties Parse.swift */,
 				492E009627200B3900A7C072 /* IntegratedSimplePaymentDetailViewController.swift */,
+				49CB8F7527543EB0009E7AE0 /* IntegralEscrowDetailViewController.swift */,
+				49CB8F7D27543F13009E7AE0 /* IntegralEscrowDetailViewController + GetStatus.swift */,
+				49CB8F8227544080009E7AE0 /* IntegralEscrowDetailViewController + UpdateState.swift */,
 			);
 			path = Integral;
 			sourceTree = "<group>";
@@ -1455,9 +1464,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				493BF9DC264C515C00B9C9D2 /* TransactionService.swift in Sources */,
+				49CB8F7627543EB0009E7AE0 /* IntegralEscrowDetailViewController.swift in Sources */,
 				4964E57226498541005B3268 /* Web3swiftService.swift in Sources */,
 				4964E5902649B5CF005B3268 /* SingleWalletPageViewController.swift in Sources */,
 				49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */,
+				49CB8F8327544080009E7AE0 /* IntegralEscrowDetailViewController + UpdateState.swift in Sources */,
 				495FD2E026895B3300F1D81D /* ProfileReviewListViewController.swift in Sources */,
 				4952F8A2272917AC0008D237 /* ParentPostViewController + IntegralSimplePayment.swift in Sources */,
 				497CF79F26F7C050003EF69E /* ChatMapViewController.swift in Sources */,
@@ -1634,6 +1645,7 @@
 				495FE3D1271F9BF5000433AF /* PostViewController + Escrow.swift in Sources */,
 				49765A5226ADEE850094A8EC /* TestSocketDelegate.swift in Sources */,
 				495FD31C268B9DCA00F1D81D /* NewPostViewController.swift in Sources */,
+				49CB8F7E27543F13009E7AE0 /* IntegralEscrowDetailViewController + GetStatus.swift in Sources */,
 				49054D4226CA310300ECCB58 /* PendingIndicatorView.swift in Sources */,
 				499F9949266AB20700FC6CDE /* HistoryCell.swift in Sources */,
 				49E7D651267AA77000E8815A /* MeesageCells1.swift in Sources */,

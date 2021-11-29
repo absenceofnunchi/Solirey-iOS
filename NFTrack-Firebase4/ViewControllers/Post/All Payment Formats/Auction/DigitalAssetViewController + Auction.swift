@@ -114,18 +114,22 @@ extension DigitalAssetViewController {
                     break
                 case .digitalResaleAuctionBeneficiaryIntegral:
                     self.transactionService.preLaunch(transactionToEstimate: { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
-                        guard let tokenId = self?.post?.tokenID else {
-                            return Fail(error: PostingError.generalError(reason: "Unable to get the token ID."))
+                        guard let tokenId = self?.post?.tokenID,
+                              let currentAddress = Web3swiftService.currentAddress,
+                              let auctionContractAddress = ContractAddresses.integralAuctionAddress else {
+                            return Fail(error: PostingError.generalError(reason: "Unable to initialize the auction parameters."))
                                 .eraseToAnyPublisher()
                         }
                         
-                        let transactionParameters: [AnyObject] = [biddingTime, startingBid, tokenId] as [AnyObject]
+                        let values: [AnyObject] = [biddingTime, startingBid] as [AnyObject]
+                        let encodedData = ABIEncoder.encode(types: [.uint(bits: 256), .uint(bits: 256)], values: values) as AnyObject
+                        let transactionParameters: [AnyObject] = [currentAddress, auctionContractAddress, tokenId, encodedData] as [AnyObject]
                         
-                        guard let getIntegralAuctionEstimate = self?.getIntegralAuctionEstimate else {
+                        guard let getSafeTransferFromEstimate = self?.getSafeTransferFromEstimate else {
                             return Fail(error: PostingError.generalError(reason: "Unable to estimate gas."))
                                 .eraseToAnyPublisher()
                         }
-                        return getIntegralAuctionEstimate(.resell, transactionParameters)
+                        return getSafeTransferFromEstimate(transactionParameters)
                         
                     }) { [weak self] (estimates, txPackage, error) in
                         if let error = error {
@@ -135,7 +139,7 @@ extension DigitalAssetViewController {
                         if let estimates = estimates,
                            let txPackage = txPackage {
                             
-                            self?.executeIntegralAuction(
+                            self?.executeIntegralAuctionResale(
                                 estimates: estimates,
                                 mintParameters: mintParameters,
                                 txPackage: txPackage

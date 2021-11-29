@@ -16,6 +16,7 @@ extension IntegralAuctionViewController {
         executeReadTransaction: @escaping (_ propertyFetchModel: inout SmartContractProperty, _ promise: (Result<SmartContractProperty, PostingError>) -> Void) -> Void,
         contractAddress: EthereumAddress
     ) {
+        
         let auctionInfoLoader = PropertyLoader<IntegralAuctionContract>(
             propertiesToLoad: self.propertiesToLoad,
             transactionHash: transactionHash,

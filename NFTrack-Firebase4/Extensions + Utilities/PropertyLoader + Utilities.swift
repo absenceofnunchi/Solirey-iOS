@@ -29,6 +29,8 @@ enum PurchaseMethods: String, ContractMethodsEnum {
     case confirmPurchase = "Buy"
     case confirmReceived = "Confirm Received"
     case transferOwnership = "Transfer Ownership"
+    case createEscrow = "Create Escrow"
+    case resell = "Resell"
     
     var methodName: String {
         switch self {
@@ -43,6 +45,10 @@ enum PurchaseMethods: String, ContractMethodsEnum {
                 // the transfer method is in the Open Zeppelin contract
                 // not in the escrow contract
                 return "transfer"
+            case .createEscrow:
+                return "createEscrow"
+            case .resell:
+                return "resell"
         }
     }
 }
@@ -50,7 +56,6 @@ enum PurchaseMethods: String, ContractMethodsEnum {
 enum PurchaseProperties: ContractPropertiesEnum {
     case state
     var value: (String, AnyObject?) {
-        
         return ("state", nil)
     }
     
@@ -502,4 +507,74 @@ enum IntegralAuctionStatus: String {
                 return "ready"
         }
     }
+}
+
+// MARK: - IntegralEscrowMethods
+enum IntegralEscrowMethods: String, ContractMethodsEnum {
+    case createEscrow
+    case abort
+    case resell
+    case confirmPurchase
+    case confirmReceived
+}
+
+struct EscrowInfo {
+    let value: String
+    let seller: String
+    let buyer: String
+    let tokenId: String
+    let state: String?
+}
+
+// MARK: - IntegralEscrowProperties
+enum IntegralEscrowProperties: ContractPropertiesEnum {
+    case _escrowInfo(BigUInt)
+    
+    // tuple because some properties like mapping requires a key such as pendingReturns
+    var value: (String, AnyObject?) {
+        switch self {
+            case ._escrowInfo(let id):
+                return ("_escrowInfo", id as AnyObject)
+        }
+    }
+    
+    func toDisplay() -> String {
+        switch self {
+            case ._escrowInfo(_):
+                return "Escrow Info"
+        }
+    }
+    
+    enum EscrowInfo: String, CaseIterable {
+        case value
+        case seller
+        case buyer
+        case state
+        case tokenId
+        
+        var value: String! {
+            switch self {
+                case .value:
+                    return "Value"
+                case .seller:
+                    return "Seller"
+                case .buyer:
+                    return "Buyer"
+                case .state:
+                    return "State"
+                case .tokenId:
+                    return "Token ID"
+            }
+        }
+        
+        static func getAll() -> [String] {
+            return EscrowInfo.allCases.map { $0.value }
+        }
+    }
+}
+
+// MARK: - IntegralEscrowContract
+struct IntegralEscrowContract: PropertyLoadable {
+    typealias ContractMethods = IntegralEscrowMethods
+    typealias ContractProperties = IntegralEscrowProperties
 }

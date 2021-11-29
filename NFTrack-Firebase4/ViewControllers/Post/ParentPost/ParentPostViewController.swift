@@ -241,54 +241,6 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
         }
     }
     
-    func getInfo() {
-        let parameters: [AnyObject] = [41, "9d78038e487b15758beb4d90ea733b626c1fb7a7d756fb8a77c2fa1de838f730"] as [AnyObject]
-        Deferred { [weak self] in
-            Future<SmartContractProperty, PostingError> { promise in
-                self?.transactionService.prepareTransactionForReading(
-                    method: NFTrackContract.ContractMethods.getInfo.rawValue,
-                    parameters: parameters,
-                    abi: NFTrackABIRevisedABI,
-                    contractAddress: ContractAddresses.NFTrackABIRevisedAddress!,
-                    promise: promise
-                )
-            }
-            .eraseToAnyPublisher()
-        }
-        .flatMap({ (property) -> AnyPublisher<[String: Any], PostingError> in
-            Future<[String: Any], PostingError> { promise in
-                do {
-                    guard let result = try property.transaction?.call() else {
-                        promise(.failure(.generalError(reason: "Could not execute the transaction.")))
-                        return
-                    }
-                    promise(.success(result))
-                } catch {
-                    promise(.failure(.generalError(reason: "Could not execute the transaction.")))
-                }
-            }
-            .eraseToAnyPublisher()
-        })
-        .sink { (completion) in
-            print(completion)
-        } receiveValue: { (properties) in
-            
-            if let onSale = properties["0"] as? Bool {
-                print("onSale", onSale)
-            }
-            
-            if let price = properties["1"] as? BigUInt {
-                print("price", price)
-            }
-            
-            if let tokenId = properties["2"] as? BigUInt {
-                print("tokenId", tokenId)
-            }
-            print("properties", properties)
-        }
-        .store(in: &storage)
-    }
-    
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         if observation != nil {

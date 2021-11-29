@@ -65,12 +65,16 @@ struct PostProgressData {
                  .digitalNewSaleOnlineDirectPaymentIndividual,
                  .digitalNewSaleAuctionBeneficiaryIntegral,
                  .digitalResaleOnlineDirectPaymentIntegral,
-                 .tangibleResaleInPersonDirectPaymentIntegral:
+                 .tangibleResaleInPersonDirectPaymentIntegral,
+                 .tangibleNewSaleShippingEscrowIntegral,
+                 .tangibleNewSaleInPersonEscrowIntegral:
                 phases = [.estimatGas, .minting, .images]
             case .digitalNewSaleAuctionBeneficiaryIndividual:
                 phases = [.estimatGas, .images, .deployingAuction, .minting, .initializeAuction]
             case .digitalResaleAuctionBeneficiaryIndividual:
                 phases = [.estimatGas, .images, .deployingAuction, .transferToken]
+            case .digitalResaleAuctionBeneficiaryIntegral:
+                phases = [.estimatGas, .initializeAuction, .transferToken]
             default:
                 phases = []
         }

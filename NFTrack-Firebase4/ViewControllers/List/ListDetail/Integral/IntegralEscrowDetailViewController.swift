@@ -1,22 +1,18 @@
 //
-//  ListDetailViewController.swift
+//  IntegralEscrowDetailViewController.swift
 //  NFTrack-Firebase4
 //
-//  Created by J C on 2021-05-16.
+//  Created by J C on 2021-11-28.
 //
-
-/*
- Abstract:
- The detail VC for the individual escrow contract
- */
 
 import UIKit
 import Combine
 import FirebaseFirestore
 import web3swift
 import MapKit
+import BigInt
 
-class ListDetailViewController: ParentDetailViewController {
+class IntegralEscrowDetailViewController: ParentDetailViewController {
     private var statusTitleLabel: UILabel!
     final var statusLabel: UILabelPadding!
     final var updateStatusButton = UIButton()
@@ -24,7 +20,7 @@ class ListDetailViewController: ParentDetailViewController {
     final var historyVC: HistoryViewController!
     lazy var historyVCHeightConstraint: NSLayoutConstraint = historyVC.view.heightAnchor.constraint(equalToConstant: 100)
     final var observation: NSKeyValueObservation?
-    private var socketDelegate: SocketDelegate!
+    var socketDelegate: SocketDelegate!
     private var pendingIndicatorView: PendingIndicatorView!
     // indicator to show whether the transaction is pending or not
     // toggled when any events like purchase confirm or abort is emitted
@@ -80,6 +76,16 @@ class ListDetailViewController: ParentDetailViewController {
     // rest of the fields and labels
     let REST_HEIGHT: CGFloat = 1000
     var statusInfoButton: UIButton!
+    var solireyUid: BigUInt!
+    
+    final override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        guard let tempId = post.solireyUid,
+              let id = BigUInt(tempId) else { return }
+        
+        solireyUid = id
+    }
     
     final override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -89,7 +95,10 @@ class ListDetailViewController: ParentDetailViewController {
         
         // This function is here instead of in the property observer of post because the latter sets isPending prior to pendingActivityController
         // which means the activity controller won't show
-        getStatus()
+        guard let escrowHash = post.escrowHash,
+              let escrowContractAddress = ContractAddresses.integralEscrowAddress else { return }
+        
+        getStatus(transactionHash: escrowHash, executeReadTransaction: executeReadTransaction, contractAddress: escrowContractAddress)
     }
     
     final override func viewDidDisappear(_ animated: Bool) {
@@ -103,21 +112,9 @@ class ListDetailViewController: ParentDetailViewController {
         }
     }
     
-//    final override func viewDidLayoutSubviews() {
-//        super.viewDidLayoutSubviews()
-//        var contentHeight: CGFloat!
-//        if let files = post.files, files.count > 0 {
-//            contentHeight = descLabel.bounds.size.height + 800 + historyTableViewHeight + 250
-//        } else {
-//            contentHeight = descLabel.bounds.size.height + 800 + historyTableViewHeight
-//        }
-//
-//        scrollView.contentSize = CGSize(width: UIScreen.main.bounds.width, height: contentHeight)
-//    }
-    
     final override func preferredContentSizeDidChange(forChildContentContainer container: UIContentContainer) {
         super.preferredContentSizeDidChange(forChildContentContainer: container)
-
+        
         if let container = container as? HistoryViewController {
             historyVCHeightConstraint.constant = container.preferredContentSize.height
             
@@ -127,7 +124,7 @@ class ListDetailViewController: ParentDetailViewController {
             } else {
                 totalHeight = container.preferredContentSize.height + descLabel.bounds.size.height + REST_HEIGHT + ADDRESS_TITLE_HEIGHT + ADDRESS_LABEL_HEIGHT
             }
-
+            
             let adjustedSize = CGSize(
                 width: container.preferredContentSize.width,
                 height: totalHeight
@@ -163,7 +160,7 @@ class ListDetailViewController: ParentDetailViewController {
             imageHeightConstraint.constant = 250
         } else {
             pvc.galleries?.removeAll()
-//            singlePageVC = nil
+            //            singlePageVC = nil
             imageHeightConstraint.constant = 0
         }
         
@@ -176,7 +173,7 @@ class ListDetailViewController: ParentDetailViewController {
     }
 }
 
-extension ListDetailViewController {
+extension IntegralEscrowDetailViewController {
     final override func configureUI() {
         super.configureUI()
         title = post.title
@@ -193,7 +190,7 @@ extension ListDetailViewController {
         }
         pendingIndicatorView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(pendingIndicatorView)
-
+        
         guard let paymentInfoImage = UIImage(systemName: "info.circle") else { return }
         statusInfoButton = UIButton.systemButton(with: paymentInfoImage, target: self, action: #selector(buttonPressed(_:)))
         statusInfoButton.tag = 15
@@ -283,7 +280,7 @@ extension ListDetailViewController {
     }
 }
 
-extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
+extension IntegralEscrowDetailViewController: FetchUserConfigurable, HandleMapSearch {
     // MARK: - buttonPressed
     @objc final override func buttonPressed(_ sender: UIButton) {
         super.buttonPressed(sender)
@@ -293,7 +290,7 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
         switch sender.tag {
             case 1:
                 // abort by the seller
-                updateState(method: PurchaseMethods.abort.methodName, status: .aborted)
+                callEscrowMethod(for: .abort)
             case 2:
                 // confirm purchase or "buy"
                 if let deliveryMethod = listingDetailArr.filter({ $0.propertyName == "Delivery Method" }).first,
@@ -324,7 +321,7 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
                                 }
                             } receiveValue: { (shippingAddress) in
                                 if let address = shippingAddress?.address, address != "NA" {
-                                    self?.updateState(method: PurchaseMethods.confirmPurchase.methodName, price: String(price), status: .pending)
+                                    self?.callEscrowMethod(for: .confirmPurchase, price: String(price))
                                     self?.updateAddress(address: address)
                                 } else {
                                     self?.alert.showDetail(
@@ -350,11 +347,11 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
                     )
                 } else {
                     // not shipping so doesn't require an address
-                    self.updateState(method: PurchaseMethods.confirmPurchase.methodName, price: String(self.post.price), status: .pending)
+                    self.callEscrowMethod(for: .confirmPurchase, price: String(self.post.price))
                 }
             case 3:
                 // confirm received
-                updateState(method: PurchaseMethods.confirmReceived.methodName, status: .complete)
+                callEscrowMethod(for: .confirmReceived)
             case 4:
                 // sell
                 let resaleVC = ResaleViewController()
@@ -363,8 +360,7 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
                 navigationController?.pushViewController(resaleVC, animated: true)
             case 5:
                 // transfer ownership
-                guard let post = post else { return }
-                transferToken(post: post)
+                transferToken(for: .safeTransferFrom)
             case 8:
                 let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Status", detail: InfoText.transferPending)])
                 self.present(infoVC, animated: true, completion: nil)
@@ -419,7 +415,7 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
     
     override func tapped(_ sender: UITapGestureRecognizer!) {
         super.tapped(sender)
-                
+        
         let tag = sender.view?.tag
         switch tag {
             case 14:
@@ -449,7 +445,7 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
                 break
         }
     }
-
+    
     // MARK: - configureStatusButton
     final func configureStatusButton(buttonTitle: String = "Buy", tag: Int = 2) {
         DispatchQueue.main.async { [weak self] in
@@ -467,66 +463,67 @@ extension ListDetailViewController: FetchUserConfigurable, HandleMapSearch {
                 "address": address
             ]) { (error) in
                 if let _ = error {
-//                    self?.alert.showDetail("Error", with: "Unable to register the shipping address. Please contact the support.", for: self)
+                    //                    self?.alert.showDetail("Error", with: "Unable to register the shipping address. Please contact the support.", for: self)
                 }
             }
     }
 }
 
-extension ListDetailViewController {
-    final func createSocket(contractAddress: EthereumAddress, topics: [String]? = nil) {
-        guard socketDelegate == nil else { return }
-        socketDelegate = SocketDelegate(
-            contractAddress: contractAddress,
-            topics: topics,
-            passThroughSubject: PassthroughSubject<[String: Any], PostingError>()
-        )
-        
-        socketDelegate.passThroughSubject
-            .sink(receiveCompletion: { [weak self] (completion) in
-                switch completion {
-                    case .failure(let err):
-                        self?.alert.showDetail("Auction Detail Fetch Error", with: err.localizedDescription, for: self)
-                    case .finished:
-                        print("")
-                        break
-                }
-            }, receiveValue: { [weak self] (webSocketMessage) in
-                self?.isPending = true
-                
-                guard let topics = webSocketMessage["topics"] as? [String],
-                      let txHash = webSocketMessage["transactionHash"] as? String else { return }
-                
-                switch topics {
-                    case _ where topics.contains(Topics.Transfer) || topics.contains(Topics.Transfer2):
-                        self?.getStatus()
-//                        self?.isPending = true
-//                        guard let executeReadTransaction = self?.executeReadTransaction else { return }
-//                        self?.getAuctionInfo(
-//                            transactionHash: txHash,
-//                            executeReadTransaction: executeReadTransaction,
-//                            contractAddress: contractAddress
-//                        )
-                        print("transfer event")
-                        break
-                    case _ where topics.contains(Topics.PurchaseConfirmed):
-                        self?.getStatus()
-                        print("PurchaseConfirmed event")
-                        break
-                    case _ where topics.contains(Topics.ItemReceived):
-                        self?.getStatus()
-                        print("ItemReceived event")
-                        break
-                    case _ where topics.contains(Topics.Aborted):
-                        self?.getStatus()
-                        print("Aborted event")
-                        break
-                    default:
-                        print("other events")
-                }
-            })
-            .store(in: &storage)
-    }
+extension IntegralEscrowDetailViewController {
+    final func createSocket(){}
+//    final func createSocket(contractAddress: EthereumAddress, topics: [String]? = nil) {
+//        guard socketDelegate == nil else { return }
+//        socketDelegate = SocketDelegate(
+//            contractAddress: contractAddress,
+//            topics: topics,
+//            passThroughSubject: PassthroughSubject<[String: Any], PostingError>()
+//        )
+//
+//        socketDelegate.passThroughSubject
+//            .sink(receiveCompletion: { [weak self] (completion) in
+//                switch completion {
+//                    case .failure(let err):
+//                        self?.alert.showDetail("Auction Detail Fetch Error", with: err.localizedDescription, for: self)
+//                    case .finished:
+//                        print("")
+//                        break
+//                }
+//            }, receiveValue: { [weak self] (webSocketMessage) in
+//                self?.isPending = true
+//
+//                guard let topics = webSocketMessage["topics"] as? [String],
+//                      let txHash = webSocketMessage["transactionHash"] as? String else { return }
+//
+//                switch topics {
+//                    case _ where topics.contains(Topics.Transfer) || topics.contains(Topics.Transfer2):
+//                        self?.getStatus()
+//                        //                        self?.isPending = true
+//                        //                        guard let executeReadTransaction = self?.executeReadTransaction else { return }
+//                        //                        self?.getAuctionInfo(
+//                        //                            transactionHash: txHash,
+//                        //                            executeReadTransaction: executeReadTransaction,
+//                        //                            contractAddress: contractAddress
+//                        //                        )
+//                        print("transfer event")
+//                        break
+//                    case _ where topics.contains(Topics.PurchaseConfirmed):
+//                        self?.getStatus()
+//                        print("PurchaseConfirmed event")
+//                        break
+//                    case _ where topics.contains(Topics.ItemReceived):
+//                        self?.getStatus()
+//                        print("ItemReceived event")
+//                        break
+//                    case _ where topics.contains(Topics.Aborted):
+//                        self?.getStatus()
+//                        print("Aborted event")
+//                        break
+//                    default:
+//                        print("other events")
+//                }
+//            })
+//            .store(in: &storage)
+//    }
 }
 
 // Called when ProfileVC is closed
@@ -536,8 +533,11 @@ extension ListDetailViewController {
 // 2. After the potential buyer decides to buy. The "Buy" button will prompt the buyer to let them know that their shipping address will be shared. If they decide to proceed and doesn't have a shipping addres,
 //    they will be led to ProfileVC
 // After they register the shipping address and the ProfileVC model closes, getStatus() will be refetched to reflect the Buy button status.
-extension ListDetailViewController: RefetchDataDelegate {
+extension IntegralEscrowDetailViewController: RefetchDataDelegate {
     final func didFetchData() {
-        getStatus()
+        guard let escrowHash = post.escrowHash,
+              let escrowContractAddress = ContractAddresses.integralEscrowAddress else { return }
+        
+        getStatus(transactionHash: escrowHash, executeReadTransaction: executeReadTransaction, contractAddress: escrowContractAddress)
     }
 }
