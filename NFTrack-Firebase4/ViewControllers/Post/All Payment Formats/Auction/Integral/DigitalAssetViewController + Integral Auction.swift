@@ -332,7 +332,6 @@ extension DigitalAssetViewController {
                                             
                                             for i in 0..<receipt.logs.count {
                                                 let parsedEvent = contract.parseEvent(receipt.logs[i])
-                                                print("parsedEvent", parsedEvent)
                                                 switch parsedEvent.eventName {
                                                     case "AuctionCreated":
                                                         if let parsedData = parsedEvent.eventData,

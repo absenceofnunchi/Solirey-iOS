@@ -133,6 +133,7 @@ extension IntegralEscrowDetailViewController: ParseAddressDelegate {
                     self?.statusLabel.text = purchaseStatue.rawValue
                 }
             }
+            
             // The status that corresponds to 0, 1, and 2 refers to the variable on the Remote Purchase smart contract Created, Locked, or Inactive
             // They indicate the purchase status or where the transaction is at in the process of purchasing the item.
             switch purchaseStatue {

@@ -48,7 +48,7 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
             
             guard let param = self?.post.solireyUid else {
                 promise(.failure(PostingError.generalError(reason: "Unable to get the ID for the smart contract.")))
-                return
+                    return
             }
                         
             self?.transactionService.prepareTransactionForWritingWithGasEstimate(
@@ -270,19 +270,31 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
     ) -> AnyPublisher<TxPackage, PostingError> {
         return Future<TxPackage, PostingError> { [weak self] promise in
             guard let solireyContractAddress = ContractAddresses.solireyContractAddress else {
-                promise(.failure(PostingError.generalError(reason: "Unable to prepare the contract address.")))
+                promise(.failure(.generalError(reason: "Unable to prepare the contract address.")))
                 return
             }
             
-            guard let param = self?.post.solireyUid else {
-                promise(.failure(PostingError.generalError(reason: "Unable to get the ID for the smart contract.")))
+            guard let tokenId = self?.post.tokenID else {
+                promise(.failure(.generalError(reason: "Unable to get the ID for the smart contract.")))
                 return
             }
             
+            guard let currentAddress = Web3swiftService.currentAddress else {
+                promise(.failure(.generalError(reason: "Unable to fetch the user's current wallet address.")))
+                return
+            }
+            
+            guard let buyerAddressString = self?.post.buyerHash,
+                  let buyerAddress = EthereumAddress(buyerAddressString) else {
+                promise(.failure(.generalError(reason: "Unable to fetch the buyer's wallet address.")))
+                return
+            }
+            
+            let param: [AnyObject] = [currentAddress, buyerAddress, tokenId] as [AnyObject]
             self?.transactionService.prepareTransactionForWritingWithGasEstimate(
                 method: method.rawValue,
                 abi: solireyABI,
-                param: [param] as [AnyObject],
+                param: param,
                 contractAddress: solireyContractAddress,
                 amountString: nil,
                 promise: promise
@@ -356,19 +368,20 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
                             // Listen to the Transfer even emitted from the mint method of Solirey in order to get the tokenId
                             return Future<String, PostingError> { promise in
                                 switch method {
-                                    case .safeTransferFrom:
+                                    case .transferFrom:
                                         /// tag 2
                                         /// confirmedPurchase
                                         FirebaseService.shared.db.collection("post").document(documentId).updateData([
                                             "status": PostStatus.transferred.rawValue,
-                                            "\(method.rawValue)Hash": txPackage.txResult.hash,
-                                            "\(method.rawValue)Date": Date()
+                                            "transferHash": txPackage.txResult.hash,
+                                            "transferDate": Date()
                                         ], completion: { (error) in
                                             if let _ = error {
                                                 promise(.failure(.generalError(reason: "Unable to update the database")))
                                             } else {
                                                 guard let self = self,
                                                       let buyerUserId = self.post.buyerUserId else { return }
+                                                
                                                 FirebaseService.shared.sendNotification(
                                                     sender: self.userId,
                                                     recipient: buyerUserId,
@@ -387,11 +400,11 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
                             .eraseToAnyPublisher()
                         })
                         .sink(receiveCompletion: { (completion) in
-                            self?.socketDelegate.disconnectSocket()
                             switch completion {
                                 case .failure(let error):
                                     self?.processFailure(error)
                                 case .finished:
+                                    self?.hideSpinner()
                                     self?.alert.showDetail(
                                         "Success!",
                                         with: successMsg,

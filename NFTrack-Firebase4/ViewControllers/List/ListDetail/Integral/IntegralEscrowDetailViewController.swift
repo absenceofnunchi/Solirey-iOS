@@ -360,7 +360,7 @@ extension IntegralEscrowDetailViewController: FetchUserConfigurable, HandleMapSe
                 navigationController?.pushViewController(resaleVC, animated: true)
             case 5:
                 // transfer ownership
-                transferToken(for: .safeTransferFrom)
+                transferToken(for: .transferFrom)
             case 8:
                 let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Status", detail: InfoText.transferPending)])
                 self.present(infoVC, animated: true, completion: nil)

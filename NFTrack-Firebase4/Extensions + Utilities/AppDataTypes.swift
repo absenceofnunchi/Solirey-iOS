@@ -669,16 +669,16 @@ struct PanelButton {
     let tag: Int
 }
 
-enum PostType {
+enum PostType: String {
     case tangible
     case digital
     
     func asString() -> String {
         switch self {
             case .tangible:
-                return NSLocalizedString("Tangible", comment: "")
+                return NSLocalizedString("tangible", comment: "")
             case .digital:
-                return NSLocalizedString("Digital", comment: "")
+                return NSLocalizedString("digital", comment: "")
         }
     }
     
@@ -1161,7 +1161,6 @@ struct ShippingInfo {
     let longitude: Double?
     let latitude: Double?
 }
-
 
 enum MessageType: String {
     case text = "Text"
