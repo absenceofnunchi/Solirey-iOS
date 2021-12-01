@@ -293,61 +293,47 @@ extension IntegralEscrowDetailViewController: FetchUserConfigurable, HandleMapSe
                 callEscrowMethod(for: .abort)
             case 2:
                 // confirm purchase or "buy"
-                if let deliveryMethod = listingDetailArr.filter({ $0.propertyName == "Delivery Method" }).first,
-                   deliveryMethod.propertyDesc as? String == DeliveryMethod.shipping.rawValue {
-                    // if the delivery method is shipping, first check with the buyer that they'll have to disclose the shipping address
-                    self.alert.showDetail(
-                        "Shipping Address Disclosure",
-                        with: "This item is delivered through shipping and requires sharing your shipping address with the seller. Would you like to proceed?",
-                        for: self,
-                        alertStyle: .withCancelButton,
-                        buttonAction: { [weak self] in
-                            guard let price = self?.post.price,
-                                  let userId = self?.userId else { return }
-                            
-                            Future<ShippingAddress?, PostingError> { promise in
-                                self?.fetchAddress(userId: userId, promise: promise)
-                            }
-                            .sink { (completion) in
-                                switch completion {
-                                    case .failure(.generalError(reason: let err)):
-                                        self?.alert.showDetail("Error", with: err, for: self)
-                                        break
-                                    case .finished:
-                                        break
-                                    default:
-                                        self?.alert.showDetail("Error", with: "There was an error fetching the address info.", for: self)
-                                        break
-                                }
-                            } receiveValue: { (shippingAddress) in
-                                if let address = shippingAddress?.address, address != "NA" {
-                                    self?.callEscrowMethod(for: .confirmPurchase, price: String(price))
-                                    self?.updateAddress(address: address)
-                                } else {
-                                    self?.alert.showDetail(
-                                        "Address Required",
-                                        with: "The required shipping address is missing from your profile. Set it now?",
-                                        for: self,
-                                        alertStyle: .withCancelButton,
-                                        buttonAction: {
-                                            self?.dismiss(animated: true, completion: {
-                                                DispatchQueue.main.async {
-                                                    let profileVC = ProfileViewController()
-                                                    let nav = UINavigationController(rootViewController: profileVC)
-                                                    nav.modalPresentationStyle = .fullScreen
-                                                    self?.present(nav, animated: true, completion: nil)
-                                                }
-                                            })
-                                        }
-                                    )
-                                }
-                            }
-                            .store(in: &self!.storage)
+                guard let price = self.post.price,
+                      let convertedPrice = Double(price) else {
+                    self.alert.showDetail("Error", with: "Unable to fetch the price of the item.", for: self)
+                    return
+                }
+                let priceWithDeposit = convertedPrice * Double(2)
+                let finalPrice = NSDecimalNumber(value: priceWithDeposit)
+                
+                guard let address = Web3swiftService.currentAddress else {
+                    alert.showDetail("Error", with: "Unable to get the wallet address.", for: self)
+                    return
+                }
+                
+                DispatchQueue.global().async { [weak self] in
+                    do {
+                        let balance = try Web3swiftService.web3instance.eth.getBalance(address: address)
+                        guard let balanceString = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth, decimals: 17),
+                              let convertedBalance = Double(balanceString) else {
+                            return
                         }
-                    )
-                } else {
-                    // not shipping so doesn't require an address
-                    self.callEscrowMethod(for: .confirmPurchase, price: String(self.post.price))
+                        
+                        DispatchQueue.main.async {
+                            if convertedBalance > priceWithDeposit {
+                                self?.alert.showDetail(
+                                    "Deposit Required",
+                                    with: "The escrow requires paying a deposit equaling the price of the item, which will be reverted back to your wallet upon receiving the item. The deposits by both the seller and the buyer incentivize the transaction to completed in an efficient manner. \n\nWould you like to proceed?",
+                                    for: self,
+                                    alertStyle: .withCancelButton) {
+                                    self?.confirmPurchase(finalPrice.stringValue)
+                                } completion: {}
+                            } else {
+                                self?.alert.showDetail(
+                                    "Insufficient Balance",
+                                    with: "Escrow requires a deposit equaling the amount of the price: \n\nBalance: \(balanceString)\nPrice + Deposit: \(price) * 2",
+                                    for: self
+                                )
+                            }
+                        }
+                    } catch {
+                        self?.alert.showDetail("Error", with: "Unable to fetch the wallet balance.", for: self)
+                    }
                 }
             case 3:
                 // confirm received
@@ -410,6 +396,64 @@ extension IntegralEscrowDetailViewController: FetchUserConfigurable, HandleMapSe
                 break
             default:
                 break
+        }
+    }
+    
+    func confirmPurchase(_ priceWithDeposit: String) {
+        if let deliveryMethod = listingDetailArr.filter({ $0.propertyName == "Delivery Method" }).first,
+           deliveryMethod.propertyDesc as? String == DeliveryMethod.shipping.rawValue {
+            // if the delivery method is shipping, first check with the buyer that they'll have to disclose the shipping address
+            self.alert.showDetail(
+                "Shipping Address Disclosure",
+                with: "This item is delivered through shipping and requires sharing your shipping address with the seller. Would you like to proceed?",
+                for: self,
+                alertStyle: .withCancelButton,
+                buttonAction: { [weak self] in
+                    guard let userId = self?.userId else { return }
+                    
+                    Future<ShippingAddress?, PostingError> { promise in
+                        self?.fetchAddress(userId: userId, promise: promise)
+                    }
+                    .sink { (completion) in
+                        switch completion {
+                            case .failure(.generalError(reason: let err)):
+                                self?.alert.showDetail("Error", with: err, for: self)
+                                break
+                            case .finished:
+                                break
+                            default:
+                                self?.alert.showDetail("Error", with: "There was an error fetching the address info.", for: self)
+                                break
+                        }
+                    } receiveValue: { (shippingAddress) in
+                        if let address = shippingAddress?.address, address != "NA" {
+                            self?.callEscrowMethod(for: .confirmPurchase, price: priceWithDeposit)
+                            self?.updateAddress(address: address)
+                        } else {
+                            self?.alert.showDetail(
+                                "Address Required",
+                                with: "The required shipping address is missing from your profile. Set it now?",
+                                for: self,
+                                alertStyle: .withCancelButton,
+                                buttonAction: {
+                                    self?.dismiss(animated: true, completion: {
+                                        DispatchQueue.main.async {
+                                            let profileVC = ProfileViewController()
+                                            let nav = UINavigationController(rootViewController: profileVC)
+                                            nav.modalPresentationStyle = .fullScreen
+                                            self?.present(nav, animated: true, completion: nil)
+                                        }
+                                    })
+                                }
+                            )
+                        }
+                    }
+                    .store(in: &self!.storage)
+                }
+            )
+        } else {
+            // not shipping so doesn't require an address
+            self.callEscrowMethod(for: .confirmPurchase, price: priceWithDeposit)
         }
     }
     

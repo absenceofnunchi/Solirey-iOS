@@ -1,16 +1,24 @@
 //
-//  PostViewController + Individual Escrow.swift
+//  ParentPostViewController + Individual Escrow.swift
 //  NFTrack-Firebase4
 //
 //  Created by J C on 2021-11-27.
 //
+/*
+ Resale of a tangible item through shipping.
+ The difference between a new sale and a resale is that the mintHash is going to be "Resale" since no new token is being minted.
+ Therefore, only a new escrow contract is to be deployed and skips the call to the mint method.
+ Also, the unique identifier has to be reused and bypass the duplicate check.
+ 
+ For digital resale, the same image has to be reused.
+ */
 
 import UIKit
 import Combine
 import BigInt
 import web3swift
 
-extension PostViewController {
+extension ParentPostViewController {
     func escrowIndividual(_ mintParameters: MintParameters, price: String) {
         guard let NFTrackAddress = NFTrackAddress else {
             self.alert.showDetail("Sorry", with: "There was an error loading the minting contract address.", for: self)
@@ -234,7 +242,7 @@ extension PostViewController {
     }
     
     // MARK: - processEscrowResale
-    override func processEscrowResale(_ mintParameters: MintParameters) {
+    func processEscrowResale(_ mintParameters: MintParameters) {
         guard let price = mintParameters.price, !price.isEmpty else {
             self.alert.showDetail("Incomplete", with: "Please specify the price.", for: self)
             return
@@ -378,4 +386,25 @@ extension PostViewController {
             } // DispatchQueue
         }// self.hideSpinner
     } // processEscrowResale
+    
+    func uploadFilesResale() -> AnyPublisher<[String?], PostingError> {
+        // upload images/files to the Firebase Storage and get the array of URLs
+        if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
+            let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
+                return Future<String?, PostingError> { promise in
+                    self.uploadFileWithPromise(
+                        fileURL: previewData.filePath,
+                        userId: self.userId,
+                        promise: promise
+                    )
+                }.eraseToAnyPublisher()
+            }
+            return Publishers.MergeMany(fileURLs)
+                .collect()
+                .eraseToAnyPublisher()
+        } else {
+            // if there are none to upload, return an empty array
+            return Result.Publisher([] as [String]).eraseToAnyPublisher()
+        }
+    }
 }

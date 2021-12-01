@@ -50,7 +50,7 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
                 promise(.failure(PostingError.generalError(reason: "Unable to get the ID for the smart contract.")))
                     return
             }
-                        
+                
             self?.transactionService.prepareTransactionForWritingWithGasEstimate(
                 method: method.rawValue,
                 abi: integralEscrowABI,
@@ -157,6 +157,7 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
                                                 }
                                             }
                                         })
+                                        break
                                     case .confirmReceived:
                                         /// tag 3
                                         /// confirmRecieved
@@ -185,6 +186,7 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
                                                 }
                                             }
                                         })
+                                        break
                                     case .abort:
                                         FirebaseService.shared.db.collection("post").document(documentId).updateData([
                                             "status": PostStatus.aborted.rawValue,
@@ -194,7 +196,8 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
                                             successMsg = "You have aborted the sale. The deployed contract is now locked and your deposit will be sent back to your wallet."
                                             promise(.success(txPackage.txResult.hash))
                                         })
-                                    default:
+                                        break
+                                    case .resell:
                                         break
                                 }
                             }

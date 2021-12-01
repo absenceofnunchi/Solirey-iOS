@@ -20,25 +20,6 @@ import Combine
 import web3swift
 
 extension PostViewController {
-    func uploadFilesResale() -> AnyPublisher<[String?], PostingError> {
-        // upload images/files to the Firebase Storage and get the array of URLs
-        if let previewDataArr = self.previewDataArr, previewDataArr.count > 0 {
-            let fileURLs = previewDataArr.map { (previewData) -> AnyPublisher<String?, PostingError> in
-                return Future<String?, PostingError> { promise in
-                    self.uploadFileWithPromise(
-                        fileURL: previewData.filePath,
-                        userId: self.userId,
-                        promise: promise
-                    )
-                }.eraseToAnyPublisher()
-            }
-            return Publishers.MergeMany(fileURLs)
-                .collect()
-                .eraseToAnyPublisher()
-        } else {
-            // if there are none to upload, return an empty array
-            return Result.Publisher([] as [String]).eraseToAnyPublisher()
-        }
-    }
+
 }
 

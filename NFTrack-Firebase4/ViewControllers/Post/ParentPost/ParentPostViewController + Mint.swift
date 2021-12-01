@@ -204,7 +204,7 @@ extension ParentPostViewController {
     ) {
         switch saleConfigValue {
             case .tangibleResaleInPersonEscrowIntegral:
-                
+                self.processEscrow(mintParameters)
                 break
             case .tangibleResaleInPersonEscrowIndividual:
                 self.processEscrowResale(mintParameters)
@@ -215,6 +215,7 @@ extension ParentPostViewController {
                 self.processDirectResaleRevised(mintParameters, isAddressRequired: true, postType: .tangible)
                 break
             case .tangibleResaleShippingEscrowIntegral:
+                self.processEscrow(mintParameters)
                 break
             case .tangibleResaleShippingEscrowIndividual:
                 self.processEscrowResale(mintParameters)
@@ -236,9 +237,9 @@ extension ParentPostViewController {
         }
     }
     
-    @objc dynamic func processEscrow(_ mintParameters: MintParameters) {}
+//    @objc dynamic func processEscrow(_ mintParameters: MintParameters) {}
     
-    @objc dynamic func processEscrowResale(_ mintParameters: MintParameters) {}
+//    @objc dynamic func processEscrowResale(_ mintParameters: MintParameters) {}
     
     // SimplePayment contract payment method
     @objc dynamic func processDirectSale(_ mintParameters: MintParameters) {}

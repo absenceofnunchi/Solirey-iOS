@@ -1151,7 +1151,8 @@ struct ContractAddresses {
     // new
     static let solireyContractAddress = EthereumAddress("0x60176252b09ab6c35963705dc91733fa889a18d9")
     static let integralAuctionAddress = EthereumAddress("0x99c4134da005acd565ae697930d7d68888bb566c")
-    static let integralEscrowAddress = EthereumAddress("0xed92cd965e97f8aac47ac747a7630e2d38d9af82")
+    static let integralEscrowAddress = EthereumAddress("0x8338707ca4cd8db48a64809039face701010852a")
+    static let integralSimplePayment = EthereumAddress("0x52fbfeebb8ca0f97c87837845d92a1df7f36f3e5")
 }
 
 struct ShippingInfo {

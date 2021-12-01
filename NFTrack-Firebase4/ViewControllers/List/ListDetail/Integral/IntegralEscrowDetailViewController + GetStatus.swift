@@ -173,6 +173,10 @@ extension IntegralEscrowDetailViewController: ParseAddressDelegate {
                         if post.sellerUserId == userId {
                             // show the shipping address of the buyer to the seller so that the item could be shipped
                             DispatchQueue.main.async {
+                                guard let dm = self?.post.deliveryMethod,
+                                      let deliveryMethod = DeliveryMethod(rawValue: dm),
+                                      deliveryMethod == .shipping else { return }
+                                
                                 self?.showBuyerAddress = true
                             }
                             self?.configureStatusButton(buttonTitle: "Transfer Ownership", tag: 5)
@@ -183,7 +187,13 @@ extension IntegralEscrowDetailViewController: ParseAddressDelegate {
                     break
                 case .inactive:
                     if post.sellerUserId == userId {
-                        self?.configureStatusButton(buttonTitle: "Transfer Completed", tag: 10)
+                        if let postStatus = PostStatus(rawValue: post.status),
+                           postStatus == .aborted {
+                            self?.configureStatusButton(buttonTitle: "Sell", tag: 4)
+                        } else {
+                            self?.configureStatusButton(buttonTitle: "Transfer Completed", tag: 10)
+                        }
+                        
                     } else if post.buyerUserId == userId {
                         self?.configureStatusButton(buttonTitle: "Sell", tag: 4)
                     }

@@ -207,6 +207,12 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
                 // refreshes the MainDetailVC table when the user updates the status
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
                 break
+            case .tangibleNewSaleShippingEscrowIntegral,
+                 .tangibleNewSaleInPersonEscrowIntegral:
+                let integralEscrowDetailVC = IntegralEscrowDetailViewController()
+                integralEscrowDetailVC.post = post
+                self.navigationController?.pushViewController(integralEscrowDetailVC, animated: true)
+                break
             case .tangibleNewSaleInPersonDirectPaymentIntegral,
                  .digitalNewSaleOnlineDirectPaymentIndividual,
                  .tangibleResaleInPersonDirectPaymentIntegral,

@@ -163,7 +163,8 @@ class ListViewController: ParentListViewController<Post>, FetchContractAddress {
                 // refreshes the MainDetailVC table when the user updates the status
                 self.navigationController?.pushViewController(listDetailVC, animated: true)
                 break
-            case .tangibleNewSaleShippingEscrowIntegral:
+            case .tangibleNewSaleShippingEscrowIntegral,
+                 .tangibleNewSaleInPersonEscrowIntegral:
                 let integralEscrowDetailVC = IntegralEscrowDetailViewController()
                 integralEscrowDetailVC.post = post
                 self.navigationController?.pushViewController(integralEscrowDetailVC, animated: true)

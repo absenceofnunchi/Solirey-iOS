@@ -315,22 +315,10 @@ extension ParentPostViewController {
         titleLabel = createTitleLabel(text: "Title")
         scrollView.addSubview(titleLabel)
         
-        titleTextField = createTextField(delegate: self)
+        titleTextField = createTextField()
         titleTextField.autocorrectionType = .yes
         scrollView.addSubview(titleTextField)
         
-        priceLabel = createTitleLabel(text: "Price")
-        scrollView.addSubview(priceLabel)
-        
-        priceInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
-        priceInfoButton.translatesAutoresizingMaskIntoConstraints = false
-        priceLabel.addSubview(priceInfoButton)
-        
-        priceTextField = createTextField(delegate: self)
-        priceTextField.keyboardType = .decimalPad
-        priceTextField.placeholder = "In ETH"
-        scrollView.addSubview(priceTextField)
-    
         descLabel = createTitleLabel(text: "Description")
         scrollView.addSubview(descLabel)
         
@@ -431,6 +419,20 @@ extension ParentPostViewController {
         let categoryLabelTap = UITapGestureRecognizer(target: self, action: #selector(doPickBoy))
         pickerLabel.addGestureRecognizer(categoryLabelTap)
         
+        priceLabel = createTitleLabel(text: "Price")
+        scrollView.addSubview(priceLabel)
+        
+        priceInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
+        priceInfoButton.translatesAutoresizingMaskIntoConstraints = false
+        priceLabel.addSubview(priceInfoButton)
+        
+        priceTextField = createTextField(delegate: self)
+        priceTextField.delegate = self
+        priceTextField.tag = 600
+        priceTextField.keyboardType = .decimalPad
+        priceTextField.placeholder = "In ETH"
+        scrollView.addSubview(priceTextField)
+        
         tagContainerView = UIView()
         tagContainerView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(tagContainerView)
@@ -502,20 +504,7 @@ extension ParentPostViewController {
         titleTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
         titleTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 0).isActive = true
         
-        priceLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
-        priceLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
-        priceLabel.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 20).isActive = true
-        priceLabelConstraintHeight.isActive = true
-        
-        priceInfoButton.trailingAnchor.constraint(equalTo: priceLabel.trailingAnchor).isActive = true
-        priceInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
-        
-        priceTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
-        priceTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
-        priceTextField.topAnchor.constraint(equalTo: priceLabel.bottomAnchor, constant: 0).isActive = true
-        priceTextFieldConstraintHeight.isActive = true
-        
-        descLabel.topAnchor.constraint(equalTo: priceTextField.bottomAnchor, constant: 20).isActive = true
+        descLabel.topAnchor.constraint(equalTo: titleTextField.bottomAnchor, constant: 20).isActive = true
         descLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
         descLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
         descLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
@@ -602,11 +591,24 @@ extension ParentPostViewController {
         pickerLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
         pickerLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
         pickerLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+
+        priceLabel.topAnchor.constraint(equalTo: pickerLabel.bottomAnchor, constant: 20).isActive = true
+        priceLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        priceLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        priceLabelConstraintHeight.isActive = true
         
+        priceInfoButton.trailingAnchor.constraint(equalTo: priceLabel.trailingAnchor).isActive = true
+        priceInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        
+        priceTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
+        priceTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
+        priceTextField.topAnchor.constraint(equalTo: priceLabel.bottomAnchor, constant: 0).isActive = true
+        priceTextFieldConstraintHeight.isActive = true
+
+        tagTitleLabel.topAnchor.constraint(equalTo: priceTextField.bottomAnchor, constant: 20).isActive = true
         tagTitleLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
         tagTitleLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
         tagTitleLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
-        tagTitleLabel.topAnchor.constraint(equalTo: pickerLabel.bottomAnchor, constant: 20).isActive = true
         
         tagContainerView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
         tagContainerView.heightAnchor.constraint(equalToConstant: 50).isActive = true
@@ -829,6 +831,73 @@ extension ParentPostViewController: UITextFieldDelegate, UITextViewDelegate {
     func textViewDidBeginEditing(_ textView: UITextView) {
         showKeyboard = false
         mdbvc.view.alpha = 0
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        // price text field
+        if textField.tag == 600 {
+            
+            guard let text = textField.text else { return }
+            let whitespaceCharacterSet = CharacterSet.whitespaces
+            let trimmedText = text.trimmingCharacters(in: whitespaceCharacterSet).lowercased()
+            self.priceTextField.text = trimmedText
+            
+            guard let price = Double(trimmedText) else {
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Incorrect Format", detail: "The price has to be in a number format.")])
+                self.present(infoVC, animated: true, completion: nil)
+                return
+            }
+            
+            guard let paymentMethodText = paymentMethodLabel.text,
+                  let paymentMethod = PaymentMethod(rawValue: paymentMethodText),
+                  paymentMethod == .escrow else { return }
+            
+            guard let priceInDecimal = Decimal(string: trimmedText) else {
+                return
+            }
+            let decimalDigits = priceInDecimal.significantFractionalDecimalDigits
+            let tenthPower: Double = Double(pow(Double(10),Double(decimalDigits)))
+            let priceInInt = price * tenthPower
+                        
+            guard priceInInt.truncatingRemainder(dividingBy: 2) == 0 else {
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Incorrect Format", detail: "The last digit of the price has to be an even number.")])
+                self.present(infoVC, animated: true, completion: nil)
+                return
+            }
+            
+            guard let address = Web3swiftService.currentAddress else {
+                alert.showDetail("Error", with: "Unable to get the wallet address.", for: self)
+                return
+            }
+            
+            DispatchQueue.global().async { [weak self] in
+                do {
+                    let balance = try Web3swiftService.web3instance.eth.getBalance(address: address)
+                    guard let balanceString = Web3.Utils.formatToEthereumUnits(balance, toUnits: .eth, decimals: 17),
+                          let convertedBalance = Double(balanceString) else {
+                        return
+                    }
+                    
+                    DispatchQueue.main.async {
+                        if convertedBalance > (price * 2) {
+                            let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Deposit Required", detail: "Escrow requires a deposit equaling 200% of the price, which your wallet sufficiently has. The deposit will automatically be made to the contract as you submit the current form.")])
+                            self?.present(infoVC, animated: true, completion: nil)
+                        } else {
+                            let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Insufficient Balance", detail: "Escrow requires a deposit equaling the amount of the price: \n\nBalance: \(balanceString)\nDeposit: \(trimmedText) * 2")])
+                            self?.present(infoVC, animated: true, completion: nil)
+                        }
+                    }
+                } catch {
+                    self?.alert.showDetail("Error", with: "Unable to fetch the wallet balance.", for: self)
+                }
+            }
+        }
+    }
+}
+
+extension Decimal {
+    var significantFractionalDecimalDigits: Int {
+        return max(-exponent, 0)
     }
 }
 

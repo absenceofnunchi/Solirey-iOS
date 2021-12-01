@@ -44,7 +44,7 @@ class CollectFundsViewController: PurchasesViewController {
         
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.sellerUserId.rawValue, isEqualTo: userId)
-            .whereField("status", in: [PostStatus.complete.rawValue, AuctionStatus.transferred.rawValue])
+            .whereField("status", in: [AuctionStatus.transferred.rawValue])
             .whereField("isWithdrawn", isEqualTo: false)
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
@@ -87,14 +87,15 @@ class CollectFundsViewController: PurchasesViewController {
         guard let userId = userId else { return }
         FirebaseService.shared.db.collection("post")
             .whereField(PositionStatus.buyerUserId.rawValue, isEqualTo: userId)
-            .whereField("status", in: [PostStatus.complete.rawValue, AuctionStatus.transferred.rawValue])
+            .whereField("status", in: [AuctionStatus.transferred.rawValue])
             .whereField("isWithdrawn", isEqualTo: false)
             .order(by: "date", descending: true)
             .limit(to: PAGINATION_LIMIT)
             .start(afterDocument: lastSnapshot)
             .getDocuments() { [weak self] (querySnapshot: QuerySnapshot?, error: Error?) in
-                if let error = error {
-                    self?.alert.showDetail("Error in Fetching Data", with: error.localizedDescription, for: self)
+                print("error", error as Any)
+                if let _ = error {
+                    self?.alert.showDetail("Error in Fetching Data", with: "Unable to fetch the data.", for: self)
                 } else {
                     defer {
                         DispatchQueue.main.async {

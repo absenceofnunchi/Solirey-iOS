@@ -35,8 +35,7 @@
 		492556BE27169F9F0073188F /* SimplePaymentButtonController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556BD27169F9F0073188F /* SimplePaymentButtonController.swift */; };
 		492A008326A3B0D8008B9B34 /* StandardAlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */; };
 		492A00B326A4AA7B008B9B34 /* AlertViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492A00B226A4AA7B008B9B34 /* AlertViewController.swift */; };
-		492B3A8D2752DB0D0047194F /* PostViewController + Individual Escrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492B3A8C2752DB0D0047194F /* PostViewController + Individual Escrow.swift */; };
-		492B3A952752DF9C0047194F /* PostViewController + Integral Escrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492B3A942752DF9C0047194F /* PostViewController + Integral Escrow.swift */; };
+		492B3A8D2752DB0D0047194F /* ParentPostViewController + Individual Escrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492B3A8C2752DB0D0047194F /* ParentPostViewController + Individual Escrow.swift */; };
 		492C81E526F2312F0083C3B5 /* ChatInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81E426F2312F0083C3B5 /* ChatInitializer.swift */; };
 		492C81F226F3EB2E0083C3B5 /* ParentChatListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81F126F3EB2E0083C3B5 /* ParentChatListViewController.swift */; };
 		492C820026F52DA60083C3B5 /* ChatViewController + SendMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492C81FF26F52DA50083C3B5 /* ChatViewController + SendMessage.swift */; };
@@ -98,7 +97,6 @@
 		495FD32E268D292E00F1D81D /* FilterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD32D268D292E00F1D81D /* FilterViewController.swift */; };
 		495FD333268D402900F1D81D /* FilterCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FD332268D402900F1D81D /* FilterCell.swift */; };
 		495FE3C8271F8D29000433AF /* NFTrackABIRevised.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3C7271F8D29000433AF /* NFTrackABIRevised.swift */; };
-		495FE3D1271F9BF5000433AF /* PostViewController + Escrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3D0271F9BF5000433AF /* PostViewController + Escrow.swift */; };
 		495FE3D6271F9E45000433AF /* ParentPostViewController + Mint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */; };
 		4962D98A272D489E005B2F0F /* IntegralAuctionABI1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962D989272D489E005B2F0F /* IntegralAuctionABI1.swift */; };
 		4962FADF26F647C6004B01A8 /* CacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4962FADE26F647C6004B01A8 /* CacheService.swift */; };
@@ -195,6 +193,9 @@
 		49B47E9C26953B05003D6F7A /* AuctionABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B47E9B26953B05003D6F7A /* AuctionABI.swift */; };
 		49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */; };
 		49B9BD722733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */; };
+		49B9F8B32756BC3500E2528D /* ParentPostViewController + IntegralEscrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9F8B22756BC3500E2528D /* ParentPostViewController + IntegralEscrow.swift */; };
+		49B9F8B82756BF3F00E2528D /* ParentPostViewController + Escrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9F8B72756BF3F00E2528D /* ParentPostViewController + Escrow.swift */; };
+		49B9F8C92758162200E2528D /* IntegralSimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9F8C82758162200E2528D /* IntegralSimplePaymentABI.swift */; };
 		49BC4BD627434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift */; };
 		49BC4BDB2743C09700250D6E /* ParentPostViewController + SimplePayment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BC4BDA2743C09700250D6E /* ParentPostViewController + SimplePayment.swift */; };
 		49BCE1AA2745229000F373DF /* integralDigitalSimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BCE1A92745229000F373DF /* integralDigitalSimplePaymentABI.swift */; };
@@ -274,8 +275,7 @@
 		492556BD27169F9F0073188F /* SimplePaymentButtonController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimplePaymentButtonController.swift; sourceTree = "<group>"; };
 		492A008226A3B0D8008B9B34 /* StandardAlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardAlertViewController.swift; sourceTree = "<group>"; };
 		492A00B226A4AA7B008B9B34 /* AlertViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertViewController.swift; sourceTree = "<group>"; };
-		492B3A8C2752DB0D0047194F /* PostViewController + Individual Escrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + Individual Escrow.swift"; sourceTree = "<group>"; };
-		492B3A942752DF9C0047194F /* PostViewController + Integral Escrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + Integral Escrow.swift"; sourceTree = "<group>"; };
+		492B3A8C2752DB0D0047194F /* ParentPostViewController + Individual Escrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + Individual Escrow.swift"; sourceTree = "<group>"; };
 		492C81E426F2312F0083C3B5 /* ChatInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInitializer.swift; sourceTree = "<group>"; };
 		492C81F126F3EB2E0083C3B5 /* ParentChatListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentChatListViewController.swift; sourceTree = "<group>"; };
 		492C81FF26F52DA50083C3B5 /* ChatViewController + SendMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + SendMessage.swift"; sourceTree = "<group>"; };
@@ -336,7 +336,6 @@
 		495FD32D268D292E00F1D81D /* FilterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterViewController.swift; sourceTree = "<group>"; };
 		495FD332268D402900F1D81D /* FilterCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterCell.swift; sourceTree = "<group>"; };
 		495FE3C7271F8D29000433AF /* NFTrackABIRevised.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NFTrackABIRevised.swift; sourceTree = "<group>"; };
-		495FE3D0271F9BF5000433AF /* PostViewController + Escrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + Escrow.swift"; sourceTree = "<group>"; };
 		495FE3D5271F9E45000433AF /* ParentPostViewController + Mint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + Mint.swift"; sourceTree = "<group>"; };
 		4962D989272D489E005B2F0F /* IntegralAuctionABI1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralAuctionABI1.swift; sourceTree = "<group>"; };
 		4962FADE26F647C6004B01A8 /* CacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheService.swift; sourceTree = "<group>"; };
@@ -439,6 +438,9 @@
 		49B47E9B26953B05003D6F7A /* AuctionABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuctionABI.swift; sourceTree = "<group>"; };
 		49B72B4B26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChatViewController + ContextMenu.swift"; sourceTree = "<group>"; };
 		49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Integral Auction.swift"; sourceTree = "<group>"; };
+		49B9F8B22756BC3500E2528D /* ParentPostViewController + IntegralEscrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + IntegralEscrow.swift"; sourceTree = "<group>"; };
+		49B9F8B72756BF3F00E2528D /* ParentPostViewController + Escrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + Escrow.swift"; sourceTree = "<group>"; };
+		49B9F8C82758162200E2528D /* IntegralSimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralSimplePaymentABI.swift; sourceTree = "<group>"; };
 		49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralTangibleSimplePaymentABI.swift; sourceTree = "<group>"; };
 		49BC4BDA2743C09700250D6E /* ParentPostViewController + SimplePayment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + SimplePayment.swift"; sourceTree = "<group>"; };
 		49BCE1A92745229000F373DF /* integralDigitalSimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = integralDigitalSimplePaymentABI.swift; sourceTree = "<group>"; };
@@ -1033,29 +1035,11 @@
 		49A7227D273488E60020B227 /* Escrow */ = {
 			isa = PBXGroup;
 			children = (
-				49A7227E273488F60020B227 /* Tangible */,
-				49A72280273489140020B227 /* Digital */,
+				49B9F8B72756BF3F00E2528D /* ParentPostViewController + Escrow.swift */,
+				49B9F8B22756BC3500E2528D /* ParentPostViewController + IntegralEscrow.swift */,
+				492B3A8C2752DB0D0047194F /* ParentPostViewController + Individual Escrow.swift */,
 			);
 			path = Escrow;
-			sourceTree = "<group>";
-		};
-		49A7227E273488F60020B227 /* Tangible */ = {
-			isa = PBXGroup;
-			children = (
-				495FE3D0271F9BF5000433AF /* PostViewController + Escrow.swift */,
-				49A7228A27348A4C0020B227 /* Integral */,
-				49A7228927348A460020B227 /* Individual */,
-			);
-			path = Tangible;
-			sourceTree = "<group>";
-		};
-		49A72280273489140020B227 /* Digital */ = {
-			isa = PBXGroup;
-			children = (
-				49A7228B27348A540020B227 /* Integral */,
-				49A7228C27348A5A0020B227 /* Individual */,
-			);
-			path = Digital;
 			sourceTree = "<group>";
 		};
 		49A72281273489260020B227 /* SimplePayment */ = {
@@ -1115,36 +1099,6 @@
 			path = Individual;
 			sourceTree = "<group>";
 		};
-		49A7228927348A460020B227 /* Individual */ = {
-			isa = PBXGroup;
-			children = (
-				492B3A8C2752DB0D0047194F /* PostViewController + Individual Escrow.swift */,
-			);
-			path = Individual;
-			sourceTree = "<group>";
-		};
-		49A7228A27348A4C0020B227 /* Integral */ = {
-			isa = PBXGroup;
-			children = (
-				492B3A942752DF9C0047194F /* PostViewController + Integral Escrow.swift */,
-			);
-			path = Integral;
-			sourceTree = "<group>";
-		};
-		49A7228B27348A540020B227 /* Integral */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Integral;
-			sourceTree = "<group>";
-		};
-		49A7228C27348A5A0020B227 /* Individual */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Individual;
-			sourceTree = "<group>";
-		};
 		49BD34DA273FD00800CB1597 /* Solirey */ = {
 			isa = PBXGroup;
 			children = (
@@ -1174,6 +1128,7 @@
 				49F2A1812751275200569522 /* IntegralAuctionABI.swift */,
 				49452FDF2752D24100CA9E9C /* IntegralEscrowABI.swift */,
 				49452FE42752D96300CA9E9C /* SolireyABI.swift */,
+				49B9F8C82758162200E2528D /* IntegralSimplePaymentABI.swift */,
 			);
 			path = "New Solirey";
 			sourceTree = "<group>";
@@ -1579,6 +1534,7 @@
 				496D56C52659FF2100C3E7FD /* MainDetailViewController.swift in Sources */,
 				4964E57726499D74005B3268 /* RegisteredWalletViewController.swift in Sources */,
 				4933335C26825D6700B8BFC2 /* CustomSegmentedControl.swift in Sources */,
+				49B9F8B82756BF3F00E2528D /* ParentPostViewController + Escrow.swift in Sources */,
 				49B4329F27193995000A3F13 /* CollectFundsViewController.swift in Sources */,
 				4969A26C2702C8810093068C /* BackgroundView7.swift in Sources */,
 				493BF9E4264C549D00B9C9D2 /* ScannerViewController.swift in Sources */,
@@ -1594,7 +1550,7 @@
 				499702DD26745BC0001DD80A /* ChatCell.swift in Sources */,
 				493BF9D2264C4D3B00B9C9D2 /* SendViewController.swift in Sources */,
 				497F1F3226DD6E6C00E0F967 /* FilteredLocationSearchViewController.swift in Sources */,
-				492B3A8D2752DB0D0047194F /* PostViewController + Individual Escrow.swift in Sources */,
+				492B3A8D2752DB0D0047194F /* ParentPostViewController + Individual Escrow.swift in Sources */,
 				4958118426D898C1002C8F3B /* AddressViewController.swift in Sources */,
 				493BF9E9264C657200B9C9D2 /* ReceiveViewController.swift in Sources */,
 				492556B4271643990073188F /* SimplePaymentDetailViewController.swift in Sources */,
@@ -1607,7 +1563,6 @@
 				49843D4A2731499600471C43 /* IntegralAuctionViewController.swift in Sources */,
 				49BF2CEE27084599009CA5F2 /* ImageProgressCardCell.swift in Sources */,
 				492C81E526F2312F0083C3B5 /* ChatInitializer.swift in Sources */,
-				492B3A952752DF9C0047194F /* PostViewController + Integral Escrow.swift in Sources */,
 				49DEFF6A26868065004C2DD0 /* ImagePreviewHeaderView.swift in Sources */,
 				49A0AE622707FC02003A5F27 /* PDFCell.swift in Sources */,
 				49B9BD722733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift in Sources */,
@@ -1626,6 +1581,7 @@
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				49F2A1822751275200569522 /* IntegralAuctionABI.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
+				49B9F8C92758162200E2528D /* IntegralSimplePaymentABI.swift in Sources */,
 				49BF2CE827083E11009CA5F2 /* NoImageCardCell.swift in Sources */,
 				49054D5426CC785C00ECCB58 /* ParentListEditViewController.swift in Sources */,
 				49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */,
@@ -1642,7 +1598,6 @@
 				49BFB4BE269E4666008D908F /* AuctionDetailViewController.swift in Sources */,
 				4964E55C2649645F005B3268 /* KeyWallet+CoreDataClass.swift in Sources */,
 				499F9967266C195F00FC6CDE /* AccountCell.swift in Sources */,
-				495FE3D1271F9BF5000433AF /* PostViewController + Escrow.swift in Sources */,
 				49765A5226ADEE850094A8EC /* TestSocketDelegate.swift in Sources */,
 				495FD31C268B9DCA00F1D81D /* NewPostViewController.swift in Sources */,
 				49CB8F7E27543F13009E7AE0 /* IntegralEscrowDetailViewController + GetStatus.swift in Sources */,
@@ -1660,6 +1615,7 @@
 				4958118F26D9B082002C8F3B /* AddressCell.swift in Sources */,
 				4958119426DB4EFB002C8F3B /* MapViewController.swift in Sources */,
 				4964E52C2648B096005B3268 /* MyPresentationController.swift in Sources */,
+				49B9F8B32756BC3500E2528D /* ParentPostViewController + IntegralEscrow.swift in Sources */,
 				49721DAF26D5C2F3009BA7E7 /* GradientBackgroundView.swift in Sources */,
 				495FD2CE2687B33600F1D81D /* CustomPreviewItem.swift in Sources */,
 				495FD324268C034000F1D81D /* QuickUICheckViewController.swift in Sources */,
