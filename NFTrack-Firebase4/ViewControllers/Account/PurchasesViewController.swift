@@ -180,77 +180,8 @@ class PurchasesViewController: ParentListViewController<Post>, PostParseDelegate
     
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
-        
-        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod),
-              let postType = PostType(rawValue: post.type),
-              let saleType = SaleType(rawValue: post.saleType),
-              let deliveryMethod = DeliveryMethod(rawValue: post.deliveryMethod),
-              let contractFormat = ContractFormat(rawValue: post.contractFormat) else {
-            self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
-            return
-        }
-        
-        let saleConfig = SaleConfig.hybridMethod(
-            postType: postType,
-            saleType: saleType,
-            delivery: deliveryMethod,
-            payment: paymentMethod,
-            contractFormat: contractFormat
-        )
-        
-        print("saleConfig.value", saleConfig.value as Any)
-        
-        switch saleConfig.value {
-            case .tangibleNewSaleShippingEscrowIndividual:
-                let listDetailVC = ListDetailViewController()
-                listDetailVC.post = post
-                // refreshes the MainDetailVC table when the user updates the status
-                self.navigationController?.pushViewController(listDetailVC, animated: true)
-                break
-            case .tangibleNewSaleShippingEscrowIntegral,
-                 .tangibleNewSaleInPersonEscrowIntegral:
-                let integralEscrowDetailVC = IntegralEscrowDetailViewController()
-                integralEscrowDetailVC.post = post
-                self.navigationController?.pushViewController(integralEscrowDetailVC, animated: true)
-                break
-            case .tangibleNewSaleInPersonDirectPaymentIntegral,
-                 .digitalNewSaleOnlineDirectPaymentIndividual,
-                 .tangibleResaleInPersonDirectPaymentIntegral,
-                 .digitalResaleOnlineDirectPaymentIntegral,
-                 .digitalNewSaleOnlineDirectPaymentIntegral:
-                let simpleVC = IntegratedSimplePaymentDetailViewController()
-                simpleVC.post = post
-                self.navigationController?.pushViewController(simpleVC, animated: true)
-                break
-            case .digitalNewSaleAuctionBeneficiaryIntegral:
-                guard let currentAddress = Web3swiftService.currentAddress,
-                      let auctionContract = ContractAddresses.integralAuctionAddress else {
-                    self.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
-                    return
-                }
-                
-                let integralAuctionVC = IntegralAuctionViewController(auctionContractAddress: auctionContract, myContractAddress: currentAddress, post: post)
-                integralAuctionVC.post = post
-                self.navigationController?.pushViewController(integralAuctionVC, animated: true)
-                break
-            case .digitalNewSaleAuctionBeneficiaryIndividual:
-                guard let auctionHash = post.auctionHash else { return }
-                getContractAddress(with: auctionHash) { [weak self] (contractAddress) in
-                    guard let currentAddress = Web3swiftService.currentAddress else {
-                        self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
-                        return
-                    }
-                    
-                    DispatchQueue.main.async {
-                        let auctionDetailVC = AuctionDetailViewController(auctionContractAddress: contractAddress, myContractAddress: currentAddress)
-                        auctionDetailVC.post = post
-                        self?.navigationController?.pushViewController(auctionDetailVC, animated: true)
-                    }
-                }
-                break
-            default:
-                break
-        }
+        guard let vc = getPreviewVC(post: post) else { return }
+        navigationController?.pushViewController(vc, animated: true)
     }
     
     override func executeAfterDragging() {

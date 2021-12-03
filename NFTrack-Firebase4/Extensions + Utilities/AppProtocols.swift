@@ -2195,10 +2195,53 @@ extension ContextAction {
         navigationController?.pushViewController(resaleVC, animated: true)
     }
     
-    func getPreviewVC(post: Post) -> ListDetailViewController {
-        let listDetailVC = ListDetailViewController()
-        listDetailVC.post = post
-        return listDetailVC
+    func getPreviewVC(post: Post) -> ParentDetailViewController? {
+        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod),
+              let postType = PostType(rawValue: post.type),
+              let saleType = SaleType(rawValue: post.saleType),
+              let deliveryMethod = DeliveryMethod(rawValue: post.deliveryMethod),
+              let contractFormat = ContractFormat(rawValue: post.contractFormat) else {
+            self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
+            return nil
+        }
+        
+        let saleConfig = SaleConfig.hybridMethod(
+            postType: postType,
+            saleType: saleType,
+            delivery: deliveryMethod,
+            payment: paymentMethod,
+            contractFormat: contractFormat
+        )
+        
+        switch saleConfig.value {
+            case .tangibleNewSaleInPersonDirectPaymentIntegral,
+                 .digitalNewSaleOnlineDirectPaymentIndividual,
+                 .digitalNewSaleOnlineDirectPaymentIntegral:
+                let simpleVC = IntegratedSimplePaymentDetailViewController()
+                simpleVC.post = post
+                return simpleVC
+            case .tangibleNewSaleShippingEscrowIndividual:
+                let listDetailVC = ListDetailViewController()
+                listDetailVC.post = post
+                return listDetailVC
+            case .tangibleNewSaleShippingEscrowIntegral,
+                 .tangibleNewSaleInPersonEscrowIntegral:
+                let integralEscrowDetailVC = IntegralEscrowDetailViewController()
+                integralEscrowDetailVC.post = post
+                return integralEscrowDetailVC
+            case .digitalNewSaleAuctionBeneficiaryIntegral:
+                guard let currentAddress = Web3swiftService.currentAddress,
+                      let auctionContract = ContractAddresses.integralAuctionAddress else {
+                    self.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
+                    return nil
+                }
+                
+                let integralAuctionVC = IntegralAuctionViewController(auctionContractAddress: auctionContract, myContractAddress: currentAddress, post: post)
+                integralAuctionVC.post = post
+                return integralAuctionVC
+            default:
+                return nil
+        }
     }
     
     func navToProfileContextualAction(_ post: Post) -> UIContextualAction {

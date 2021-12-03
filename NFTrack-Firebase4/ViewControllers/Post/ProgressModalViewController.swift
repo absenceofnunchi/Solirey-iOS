@@ -57,7 +57,8 @@ struct PostProgressData {
     // More fine-grained control of what to display, especially the resale phases without minting.
     init(deliveryAndPaymentMethod: DeliveryAndPaymentMethod) {
         switch deliveryAndPaymentMethod {
-            case .tangibleNewSaleInPersonEscrowIndividual, .tangibleNewSaleShippingEscrowIndividual:
+            case .tangibleNewSaleInPersonEscrowIndividual,
+                 .tangibleNewSaleShippingEscrowIndividual:
                 phases = [.estimatGas, .deployingEscrow, .minting, .images]
             case .tangibleNewSaleInPersonDirectPaymentIntegral,
                  .tangibleNewSaleInPersonDirectPaymentIndividual,
@@ -65,7 +66,6 @@ struct PostProgressData {
                  .digitalNewSaleOnlineDirectPaymentIndividual,
                  .digitalNewSaleAuctionBeneficiaryIntegral,
                  .digitalResaleOnlineDirectPaymentIntegral,
-                 .tangibleResaleInPersonDirectPaymentIntegral,
                  .tangibleNewSaleShippingEscrowIntegral,
                  .tangibleNewSaleInPersonEscrowIntegral:
                 phases = [.estimatGas, .minting, .images]
@@ -75,6 +75,8 @@ struct PostProgressData {
                 phases = [.estimatGas, .images, .deployingAuction, .transferToken]
             case .digitalResaleAuctionBeneficiaryIntegral:
                 phases = [.estimatGas, .initializeAuction, .transferToken]
+            case .tangibleResaleInPersonDirectPaymentIntegral:
+                phases = [.estimatGas, .transferToken, .images]
             default:
                 phases = []
         }

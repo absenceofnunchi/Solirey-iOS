@@ -72,6 +72,8 @@ class LocalDatabase {
             }
             
             try mainContext.save()
+            
+            
             completion(nil)
         } catch {
             DispatchQueue.main.async {

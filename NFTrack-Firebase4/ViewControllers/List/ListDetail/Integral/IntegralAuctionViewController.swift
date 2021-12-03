@@ -15,6 +15,7 @@ import FirebaseMessaging
 class IntegralAuctionViewController: ParentAuctionDetailViewController {
     final var propertiesToLoad: [IntegralAuctionContract.ContractProperties]!
     final var solireyUid: BigUInt!
+    final var startingBidRetainer: String!
     
     init(auctionContractAddress: EthereumAddress, myContractAddress: EthereumAddress, post: Post) {
         super.init(nibName: nil, bundle: nil)
@@ -73,6 +74,18 @@ class IntegralAuctionViewController: ParentAuctionDetailViewController {
             return
         }
         
+        if method == .bid {
+            guard let amountString = amountString,
+                  let bidAmount = Double(amountString),
+                  let startingBid = Double(startingBidRetainer),
+                  bidAmount >= startingBid else {
+                guard let startingBidRetainer = startingBidRetainer else { return }
+                let stripped = self.transactionService.stripZeros(startingBidRetainer)
+                self.alert.showDetail("Insufficient Bid Amount", with: "The minimum bid amount is \(stripped) ETH.", for: self)
+                return
+            }
+        }
+        
         let parameters: [AnyObject] = [post.solireyUid] as [AnyObject]
         
         self.transactionService.preLaunch { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
@@ -116,6 +129,18 @@ class IntegralAuctionViewController: ParentAuctionDetailViewController {
                         ],
                         isEditable: false,
                         fieldViewHeight: 40,
+                        messageTextAlignment: .left,
+                        alertStyle: .noButton
+                    ),
+                    StandardAlertContent(
+                        index: 2,
+                        titleString: "Tip",
+                        titleColor: UIColor.white,
+                        body: [
+                            "": "\"Failed to locally sign a transaction\" usually means wrong password.",
+                        ],
+                        isEditable: false,
+                        fieldViewHeight: 100,
                         messageTextAlignment: .left,
                         alertStyle: .noButton
                     )

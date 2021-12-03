@@ -172,7 +172,7 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate, CoreS
                                     self?.navigationController?.popViewController(animated: true)
                                 })
                             }, completion:  {
-                                
+                                self?.delegate?.didUpdatePost(title: itemTitle, desc: desc, imagesString: nil)
                             })
                         }
                     }
@@ -252,7 +252,7 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate, CoreS
     }
     
     func createUpdateDeleteButtons(_ buttonData: [[String: Any]]) -> UIStackView {
-        let buttons = buttonData.map { createSingleButton(titleString: $0["title"] as! String, tag: $0["tag"] as! Int, bgColor: $0["bgColor"] as! UIColor)}
+        let buttons = buttonData.compactMap { createSingleButton(titleString: $0["title"] as! String, tag: $0["tag"] as! Int, bgColor: $0["bgColor"] as! UIColor)}
         let stackView = UIStackView(arrangedSubviews: buttons)
         stackView.axis = .horizontal
         stackView.distribution = .fillEqually
@@ -261,15 +261,34 @@ class ParentListEditViewController: UIViewController, UITextFieldDelegate, CoreS
         return stackView
     }
     
-    func createSingleButton(titleString: String, tag: Int, bgColor: UIColor) -> UIButton {
-        let button = UIButton()
-        button.backgroundColor = .black
-        button.layer.cornerRadius = 5
-        button.setTitle(titleString, for: .normal)
-        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
-        button.backgroundColor = bgColor
+//    func createSingleButton(titleString: String, tag: Int, bgColor: UIColor) -> UIButton {
+//        let button = UIButton()
+//        button.backgroundColor = .black
+//        button.layer.cornerRadius = 5
+//        button.setTitle(titleString, for: .normal)
+//        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+//        button.backgroundColor = bgColor
+//        button.tag = tag
+//        return button
+//    }
+    
+    func createSingleButton(titleString: String, tag: Int, bgColor: UIColor) -> UIView? {
+        let containerView = UIView()
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let button = ButtonWithShadow()
         button.tag = tag
-        return button
+        button.backgroundColor = bgColor
+        button.setTitle(titleString, for: .normal)
+        button.layer.cornerRadius = 4
+        button.setTitleColor(.white, for: .normal)
+        guard let pointSize = button.titleLabel?.font.pointSize else { return nil }
+        button.titleLabel?.font = .rounded(ofSize: pointSize, weight: .medium)
+        button.addTarget(self, action: #selector(buttonPressed(_:)), for: .touchUpInside)
+        containerView.addSubview(button)
+        button.fill()
+        
+        return containerView
     }
 }
 

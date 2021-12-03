@@ -35,11 +35,13 @@ extension ParentPostViewController {
                 return
             }
             
+            let contractAddress = isDigital ? integralDigitalSimplePaymentAddress : integralTangibleSimplePaymentAddress
+
             self?.transactionService.prepareTransactionForWritingWithGasEstimate(
                 method: method.rawValue,
                 abi: isDigital ? integralDigitalSimplePaymentABI : integralTangibleSimplePaymentABI,
                 param: transactionParameters,
-                contractAddress: isDigital ? integralDigitalSimplePaymentAddress : integralTangibleSimplePaymentAddress,
+                contractAddress: contractAddress,
                 amountString: nil,
                 promise: promise
             )
@@ -51,11 +53,10 @@ extension ParentPostViewController {
     func executeIntegralSimplePayment(
         estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
         mintParameters: MintParameters,
-        txPackage: TxPackage
+        txPackage: TxPackage,
+        isDigital: Bool,
+        isResale: Bool
     ) {
-
-        var txResultRetainer: TransactionSendingResult!
-
         guard let saleConfigValue = mintParameters.saleConfigValue else {
             self.alert.showDetail("Error", with: "Unable to get the sale to determine the sale type.", for: self)
             return
@@ -86,6 +87,18 @@ extension ParentPostViewController {
                 fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
+            ),
+            StandardAlertContent(
+                index: 2,
+                titleString: "Tip",
+                titleColor: UIColor.white,
+                body: [
+                    "": "\"Failed to locally sign a transaction\" usually means wrong password.",
+                ],
+                isEditable: false,
+                fieldViewHeight: 100,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
             )
         ]
 
@@ -113,8 +126,33 @@ extension ParentPostViewController {
                                         .eraseToAnyPublisher()
                                 }
 
-                                return transactionService.executeTransaction2(transaction: txPackage.transaction, password: password, type: .auctionContract)
+                                return transactionService.executeTransaction2(transaction: txPackage.transaction, password: password, type: .simplePayment)
                                     .eraseToAnyPublisher()
+                            }
+                            // get the topics of the mint event in the Solirey contract from the socket delegate and parse it
+                            .flatMap { [weak self] (txResult) -> AnyPublisher<(txResult: TxResult2, tokenId: String), PostingError> in
+                                let update: [String: PostProgress] = ["update": .estimatGas]
+                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
+                                                                
+                                return Future<(txResult: TxResult2, tokenId: String), PostingError> { promise in
+                                    self?.socketDelegate.didReceiveTopics = { webSocketMessage in
+                                        print("webSocketMessage", webSocketMessage as Any)
+                                        guard let txHash = webSocketMessage["transactionHash"] as? String,
+                                                let topics = webSocketMessage["topics"] as? [String] else { return }
+                                        
+                                        let paddedTokenId = topics[3]
+                                        
+                                        guard let tokenId = Web3Utils.hexToBigUInt(paddedTokenId) else {
+                                            promise(.failure(.generalError(reason: "Unable to parse the newly minted token ID.")))
+                                            return
+                                        }
+                                        
+                                        if txResult.txResult.hash == txHash {
+                                            promise(.success((txResult: txResult, tokenId.description)))
+                                        }
+                                    }
+                                }
+                                .eraseToAnyPublisher()
                             }
                             .sink(receiveCompletion: { [weak self] (completion) in
                                 switch completion {
@@ -123,24 +161,24 @@ extension ParentPostViewController {
                                     case .finished:
                                         break
                                 }
-                            }, receiveValue: { (txResult) in
-                                let update: [String: PostProgress] = ["update": .estimatGas]
-                                NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-                                txResultRetainer = txResult.txResult
+                            }, receiveValue: { (returnedValue) in
 
-                                // Get the token ID by parsing the receipt from the minting transaction
-                                self.transactionService.confirmReceipt(txHash: txResult.txResult.hash)
-                                    .flatMap { (receipt) -> AnyPublisher<(id: String, tokenId: String), PostingError> in
-                                        Future<(id: String, tokenId: String), PostingError> { promise in
+                                // Get the Solirey ID by parsing the receipt from the minting transaction
+                                self.transactionService.confirmReceipt(txHash: returnedValue.txResult.txResult.hash)
+                                    .flatMap { (receipt) -> AnyPublisher<(id: String, tokenId: String, txPackage: TxResult2), PostingError> in
+                                        Future<(id: String, tokenId: String, txPackage: TxResult2), PostingError> { promise in
 
                                             let web3 = Web3swiftService.web3instance
-                                            guard let contract = web3.contract(integralTangibleSimplePaymentABI, at: ContractAddresses.integralTangibleSimplePaymentAddress, abiVersion: 2) else {
+                                            guard let contract = web3.contract(
+                                                    isDigital ? integralDigitalSimplePaymentABI : integralTangibleSimplePaymentABI,
+                                                at: isDigital ? ContractAddresses.integralDigitalSimplePaymentAddress : ContractAddresses.integralTangibleSimplePaymentAddress,
+                                                abiVersion: 2
+                                            ) else {
                                                 self.alert.showDetail("Error", with: "Unable to parse the transaction.", for: self)
                                                 return
                                             }
   
                                             var id: String!
-                                            var tokenId: String!
                                             
                                             for i in 0..<receipt.logs.count {
                                                 let parsedEvent = contract.parseEvent(receipt.logs[i])
@@ -154,19 +192,19 @@ extension ParentPostViewController {
                                                             promise(.failure(.emptyResult))
                                                         }
                                                         break
-                                                    case "Transfer":
-                                                        if let parsedData = parsedEvent.eventData,
-                                                           let _tokenId = parsedData["tokenId"] as? BigUInt {
-                                                            tokenId = _tokenId.description
-                                                        } else {
-                                                            promise(.failure(.emptyResult))
-                                                        }
-                                                        break
+//                                                    case "Transfer":
+//                                                        if let parsedData = parsedEvent.eventData,
+//                                                           let _tokenId = parsedData["tokenId"] as? BigUInt {
+//                                                            tokenId = _tokenId.description
+//                                                        } else {
+//                                                            promise(.failure(.emptyResult))
+//                                                        }
+//                                                        break
                                                     default:
                                                         break
                                                 }
                                             }
-                                            promise(.success((id: id.description, tokenId: tokenId.description)))
+                                            promise(.success((id: id, tokenId: returnedValue.tokenId, txPackage: returnedValue.txResult)))
                                         }
                                         .eraseToAnyPublisher()
                                     }
@@ -177,12 +215,17 @@ extension ParentPostViewController {
                                             case .finished:
                                                 break
                                         }
-                                    } receiveValue: { [weak self] (topicsInfo) in
-
+                                    } receiveValue: { [weak self] (txInfo) in
+                                        if self?.socketDelegate != nil {
+                                            self?.socketDelegate.disconnectSocket()
+                                        }
+                                        
+                                        let updateEvent: PostProgress = isResale ? .transferToken : .minting
+                                        let update: [String: PostProgress] = ["update": updateEvent]
+                                        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
                                         self?.updateFirestoreForSimplePayment(
-                                            topicsInfo: topicsInfo,
-                                            mintParameters: mintParameters,
-                                            txResultRetainer: txResultRetainer
+                                            txInfo: txInfo,
+                                            mintParameters: mintParameters
                                         )
                                     }
                                     .store(in: &self.storage)
@@ -197,13 +240,9 @@ extension ParentPostViewController {
     }
 
     func updateFirestoreForSimplePayment(
-        topicsInfo: (id: String, tokenId: String),
-        mintParameters: MintParameters,
-        txResultRetainer: TransactionSendingResult
+        txInfo: (id: String, tokenId: String, txPackage: TxResult2),
+        mintParameters: MintParameters
     ) {
-        let update: [String: PostProgress] = ["update": .minting]
-        NotificationCenter.default.post(name: .didUpdateProgress, object: nil, userInfo: update)
-
 //        guard let previewDataArr = self.previewDataArr, previewDataArr.count == 1 else {
 //            alert.showDetail("Error", with: "A single digital asset is required.", for: self)
 //            return
@@ -256,7 +295,7 @@ extension ParentPostViewController {
                         senderAddress: currentAddressString,
                         escrowHash: "N/A",
                         auctionHash: "N/A",
-                        mintHash: txResultRetainer.hash,
+                        mintHash: txInfo.txPackage.txResult.hash,
                         itemTitle: mintParameters.itemTitle,
                         desc: mintParameters.desc,
                         price: mintParameters.price ?? "N/A",
@@ -267,13 +306,13 @@ extension ParentPostViewController {
                         deliveryMethod: mintParameters.deliveryMethod,
                         saleFormat: mintParameters.saleFormat,
                         paymentMethod: mintParameters.paymentMethod,
-                        tokenId: topicsInfo.tokenId,
+                        tokenId: txInfo.tokenId,
                         urlStrings: urlStrings,
                         ipfsURLStrings: [],
                         shippingInfo: self.shippingInfo,
                         isWithdrawn: false,
                         isAdminWithdrawn: false,
-                        solireyUid: topicsInfo.id,
+                        solireyUid: txInfo.id,
                         contractFormat: mintParameters.contractFormat,
                         bidders: [self.userId],
                         promise: promise
@@ -282,10 +321,6 @@ extension ParentPostViewController {
                 .eraseToAnyPublisher()
             }
             .sink { [weak self] (completion) in
-                if self?.socketDelegate != nil {
-                    self?.socketDelegate.disconnectSocket()
-                }
-
                 switch completion {
                     case .failure(let error):
                         self?.processFailure(error)
@@ -450,6 +485,18 @@ extension ParentPostViewController {
                 ],
                 isEditable: false,
                 fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            ),
+            StandardAlertContent(
+                index: 2,
+                titleString: "Tip",
+                titleColor: UIColor.white,
+                body: [
+                    "": "\"Failed to locally sign a transaction\" usually means wrong password.",
+                ],
+                isEditable: false,
+                fieldViewHeight: 100,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
             )
@@ -751,6 +798,18 @@ extension ParentPostViewController {
                 ],
                 isEditable: false,
                 fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            ),
+            StandardAlertContent(
+                index: 2,
+                titleString: "Tip",
+                titleColor: UIColor.white,
+                body: [
+                    "": "\"Failed to locally sign a transaction\" usually means wrong password.",
+                ],
+                isEditable: false,
+                fieldViewHeight: 100,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
             )

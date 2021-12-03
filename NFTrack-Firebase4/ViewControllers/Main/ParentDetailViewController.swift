@@ -104,7 +104,32 @@ class ParentDetailViewController: UIViewController, SharableDelegate, PostEditDe
     
     // Called when the TangibleListEditVC or DigitalListEditVC is finished and popped
     func didUpdatePost(title: String, desc: String, imagesString: [String]?) {
+        self.title = title
+        descLabel.text = desc
         
+        if let imagesString = imagesString,
+           imagesString.count > 0,
+           let firstImageString = imagesString.first {
+            pvc.galleries = imagesString
+            singlePageVC = SmallSinglePageViewController(gallery: firstImageString, galleries: imagesString)
+            imageHeightConstraint.constant = 250
+        } else {
+            pvc.galleries?.removeAll()
+            //            singlePageVC = nil
+            imageHeightConstraint.constant = 0
+        }
+        
+        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+        
+        // in case TangibleListEditVC gets pushed again
+        post.title = title
+        post.description = desc
+        post.files = imagesString
+    }
+    
+    deinit {
+        storage.forEach { $0.cancel() }
+        storage.removeAll()
     }
 }
 

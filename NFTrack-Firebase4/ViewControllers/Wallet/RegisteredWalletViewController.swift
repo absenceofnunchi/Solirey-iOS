@@ -569,3 +569,5 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
 // 100@email.com (Tom Cruise)
 // 123456
 
+// 1004@email.com (Hari Sheldon)
+// 111111

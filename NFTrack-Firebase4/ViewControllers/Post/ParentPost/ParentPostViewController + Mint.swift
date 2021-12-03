@@ -210,6 +210,7 @@ extension ParentPostViewController {
                 self.processEscrowResale(mintParameters)
                 break
             case .tangibleResaleInPersonDirectPaymentIntegral:
+                self.processSimplePayment(mintParameters)
                 break
             case .tangibleResaleInPersonDirectPaymentIndividual:
                 self.processDirectResaleRevised(mintParameters, isAddressRequired: true, postType: .tangible)

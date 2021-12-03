@@ -231,81 +231,57 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
     final override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let post = postArr[indexPath.row]
         
-        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod),
-              let postType = PostType(rawValue: post.type),
-              let saleType = SaleType(rawValue: post.saleType),
-              let deliveryMethod = DeliveryMethod(rawValue: post.deliveryMethod),
-              let contractFormat = ContractFormat(rawValue: post.contractFormat) else {
-            self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
-            return
-        }
-        
-        let saleConfig = SaleConfig.hybridMethod(
-            postType: postType,
-            saleType: saleType,
-            delivery: deliveryMethod,
-            payment: paymentMethod,
-            contractFormat: contractFormat
-        )
-        
-        switch saleConfig.value {
-            case .tangibleNewSaleInPersonDirectPaymentIntegral,
-                 .digitalNewSaleOnlineDirectPaymentIndividual,
-                 .digitalNewSaleOnlineDirectPaymentIntegral:
-                let simpleVC = IntegratedSimplePaymentDetailViewController()
-                simpleVC.post = post
-                self.navigationController?.pushViewController(simpleVC, animated: true)
-                break
-            case .tangibleNewSaleShippingEscrowIndividual:
-                let listDetailVC = ListDetailViewController()
-                listDetailVC.post = post
-                // refreshes the MainDetailVC table when the user updates the status
-                self.navigationController?.pushViewController(listDetailVC, animated: true)
-                break
-            case .tangibleNewSaleShippingEscrowIntegral,
-                 .tangibleNewSaleInPersonEscrowIntegral:
-                let integralEscrowDetailVC = IntegralEscrowDetailViewController()
-                integralEscrowDetailVC.post = post
-                self.navigationController?.pushViewController(integralEscrowDetailVC, animated: true)
-                break
-            case .digitalNewSaleAuctionBeneficiaryIntegral:
-                guard let currentAddress = Web3swiftService.currentAddress,
-                      let auctionContract = ContractAddresses.integralAuctionAddress else {
-                    self.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
-                    return
-                }
-                
-                let integralAuctionVC = IntegralAuctionViewController(auctionContractAddress: auctionContract, myContractAddress: currentAddress, post: post)
-                integralAuctionVC.post = post
-                self.navigationController?.pushViewController(integralAuctionVC, animated: true)
-                break
-            case .digitalNewSaleAuctionBeneficiaryIndividual:
-                guard let auctionHash = post.auctionHash else { return }
-                getContractAddress(with: auctionHash) { [weak self] (contractAddress) in
-                    guard let currentAddress = Web3swiftService.currentAddress else {
-                        self?.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
-                        return
-                    }
-                    
-                    DispatchQueue.main.async {
-                        let auctionDetailVC = AuctionDetailViewController(auctionContractAddress: contractAddress, myContractAddress: currentAddress)
-                        auctionDetailVC.post = post
-                        self?.navigationController?.pushViewController(auctionDetailVC, animated: true)
-                    }
-                }
-                break
-            default:
-                break
-        }
-        
-//        switch paymentMethod {
-//            case .escrow:
+        guard let vc = getPreviewVC(post: post) else { return }
+        self.navigationController?.pushViewController(vc, animated: true)
+//        guard let paymentMethod = PaymentMethod(rawValue: post.paymentMethod),
+//              let postType = PostType(rawValue: post.type),
+//              let saleType = SaleType(rawValue: post.saleType),
+//              let deliveryMethod = DeliveryMethod(rawValue: post.deliveryMethod),
+//              let contractFormat = ContractFormat(rawValue: post.contractFormat) else {
+//            self.alert.showDetail("Error", with: "There was an error accessing the item data.", for: self)
+//            return
+//        }
+//
+//        let saleConfig = SaleConfig.hybridMethod(
+//            postType: postType,
+//            saleType: saleType,
+//            delivery: deliveryMethod,
+//            payment: paymentMethod,
+//            contractFormat: contractFormat
+//        )
+//
+//        switch saleConfig.value {
+//            case .tangibleNewSaleInPersonDirectPaymentIntegral,
+//                 .digitalNewSaleOnlineDirectPaymentIndividual,
+//                 .digitalNewSaleOnlineDirectPaymentIntegral:
+//                let simpleVC = IntegratedSimplePaymentDetailViewController()
+//                simpleVC.post = post
+//                self.navigationController?.pushViewController(simpleVC, animated: true)
+//                break
+//            case .tangibleNewSaleShippingEscrowIndividual:
 //                let listDetailVC = ListDetailViewController()
 //                listDetailVC.post = post
 //                // refreshes the MainDetailVC table when the user updates the status
 //                self.navigationController?.pushViewController(listDetailVC, animated: true)
 //                break
-//            case .auctionBeneficiary:
+//            case .tangibleNewSaleShippingEscrowIntegral,
+//                 .tangibleNewSaleInPersonEscrowIntegral:
+//                let integralEscrowDetailVC = IntegralEscrowDetailViewController()
+//                integralEscrowDetailVC.post = post
+//                self.navigationController?.pushViewController(integralEscrowDetailVC, animated: true)
+//                break
+//            case .digitalNewSaleAuctionBeneficiaryIntegral:
+//                guard let currentAddress = Web3swiftService.currentAddress,
+//                      let auctionContract = ContractAddresses.integralAuctionAddress else {
+//                    self.alert.showDetail("Wallet Addres Loading Error", with: "Please ensure that you're logged into your wallet.", for: self)
+//                    return
+//                }
+//
+//                let integralAuctionVC = IntegralAuctionViewController(auctionContractAddress: auctionContract, myContractAddress: currentAddress, post: post)
+//                integralAuctionVC.post = post
+//                self.navigationController?.pushViewController(integralAuctionVC, animated: true)
+//                break
+//            case .digitalNewSaleAuctionBeneficiaryIndividual:
 //                guard let auctionHash = post.auctionHash else { return }
 //                getContractAddress(with: auctionHash) { [weak self] (contractAddress) in
 //                    guard let currentAddress = Web3swiftService.currentAddress else {
@@ -319,14 +295,6 @@ class MainDetailViewController: ParentListViewController<Post>, PostParseDelegat
 //                        self?.navigationController?.pushViewController(auctionDetailVC, animated: true)
 //                    }
 //                }
-//                break
-//            case .directTransfer:
-//                let simpleVC = SimpleRevisedViewController()
-//                simpleVC.post = post
-//                self.navigationController?.pushViewController(simpleVC, animated: true)
-//                break
-//            case .integralAuction:
-//
 //                break
 //            default:
 //                break
@@ -408,42 +376,42 @@ extension MainDetailViewController: ContextAction {
         } else {
             isSaved = false
         }
-        
+
         let starImage = isSaved ? "star.fill" : "star"
         let posting = UIAction(title: "Save", image: UIImage(systemName: starImage)) { [weak self] action in
             self?.savePost(post)
         }
         actionArray.append(posting)
-        
+
         let profile = UIAction(title: "Profile", image: UIImage(systemName: "person.crop.circle")) { [weak self] action in
             self?.navToProfile(post)
         }
         actionArray.append(profile)
-        
+
         if let files = post.files, files.count > 0 {
             let images = UIAction(title: "Images", image: UIImage(systemName: "photo")) { [weak self] action in
                 self?.imagePreivew(post)
             }
-            
+
             actionArray.append(images)
         }
-        
+
         let history = UIAction(title: "Tx Detail", image: UIImage(systemName: "rectangle.stack")) { [weak self] action in
             self?.navToHistory(post)
         }
         actionArray.append(history)
-        
+
         let reviews = UIAction(title: "Reviews", image: UIImage(systemName: "square.and.pencil")) { [weak self] action in
             self?.navToReviews(post)
         }
         actionArray.append(reviews)
-        
+
         if userId != post.sellerUserId {
             let chat = UIAction(title: "Chat", image: UIImage(systemName: "message")) { [weak self] action in
                 self?.navToChatVC(userId: self?.userId, post: post)
             }
             actionArray.append(chat)
-            
+
             let report = UIAction(title: "Report", image: UIImage(systemName: "flag")) { [weak self] action in
                 guard let userId = self?.userId else { return }
                 self?.navToReport(userId: userId, post: post)

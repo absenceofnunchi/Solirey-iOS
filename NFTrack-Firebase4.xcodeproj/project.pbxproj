@@ -25,7 +25,6 @@
 		49221B6B266ECEE70031A756 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B6A266ECEE70031A756 /* ProfileViewController.swift */; };
 		49221B79266FE4CB0031A756 /* ProfileDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */; };
 		49221B7E2670FA190031A756 /* ParentListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B7D2670FA190031A756 /* ParentListViewController.swift */; };
-		49221B892670FC2F0031A756 /* TempViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B882670FC2F0031A756 /* TempViewController.swift */; };
 		49221B91267112200031A756 /* ParentProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49221B90267112200031A756 /* ParentProfileViewController.swift */; };
 		492556A227104DB30073188F /* PostViewController + IndividualSimplePayment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556A127104DB30073188F /* PostViewController + IndividualSimplePayment.swift */; };
 		492556AA271186320073188F /* SimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492556A9271186320073188F /* SimplePaymentABI.swift */; };
@@ -135,6 +134,7 @@
 		4964E5812649A047005B3268 /* AppProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5802649A047005B3268 /* AppProtocols.swift */; };
 		4964E5902649B5CF005B3268 /* SingleWalletPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E58F2649B5CE005B3268 /* SingleWalletPageViewController.swift */; };
 		4964E5952649B6FA005B3268 /* PageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4964E5942649B6FA005B3268 /* PageViewController.swift */; };
+		496856EC27597AC60073B5C5 /* IntegralDigitalSimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496856EB27597AC60073B5C5 /* IntegralDigitalSimplePaymentABI.swift */; };
 		4969A26C2702C8810093068C /* BackgroundView7.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969A26B2702C8810093068C /* BackgroundView7.swift */; };
 		4969A27427036DAD0093068C /* CustomTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4969A27327036DAD0093068C /* CustomTabBarController.swift */; };
 		496D56B12659654A00C3E7FD /* CategoryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 496D56B02659654A00C3E7FD /* CategoryCell.swift */; };
@@ -195,10 +195,10 @@
 		49B9BD722733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */; };
 		49B9F8B32756BC3500E2528D /* ParentPostViewController + IntegralEscrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9F8B22756BC3500E2528D /* ParentPostViewController + IntegralEscrow.swift */; };
 		49B9F8B82756BF3F00E2528D /* ParentPostViewController + Escrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9F8B72756BF3F00E2528D /* ParentPostViewController + Escrow.swift */; };
-		49B9F8C92758162200E2528D /* IntegralSimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9F8C82758162200E2528D /* IntegralSimplePaymentABI.swift */; };
-		49BC4BD627434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift */; };
+		49B9F8C92758162200E2528D /* IntegralTangibleSimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B9F8C82758162200E2528D /* IntegralTangibleSimplePaymentABI.swift */; };
+		49BC4BD627434F1F00250D6E /* IntegralTangibleSimplePaymentABI1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI1.swift */; };
 		49BC4BDB2743C09700250D6E /* ParentPostViewController + SimplePayment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BC4BDA2743C09700250D6E /* ParentPostViewController + SimplePayment.swift */; };
-		49BCE1AA2745229000F373DF /* integralDigitalSimplePaymentABI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BCE1A92745229000F373DF /* integralDigitalSimplePaymentABI.swift */; };
+		49BCE1AA2745229000F373DF /* integralDigitalSimplePaymentABI1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BCE1A92745229000F373DF /* integralDigitalSimplePaymentABI1.swift */; };
 		49BD34E2274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BD34E1274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift */; };
 		49BF2CE327083BD4009CA5F2 /* ImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */; };
 		49BF2CE827083E11009CA5F2 /* NoImageCardCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */; };
@@ -265,7 +265,6 @@
 		49221B6A266ECEE70031A756 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		49221B78266FE4CB0031A756 /* ProfileDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileDetailViewController.swift; sourceTree = "<group>"; };
 		49221B7D2670FA190031A756 /* ParentListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentListViewController.swift; sourceTree = "<group>"; };
-		49221B882670FC2F0031A756 /* TempViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempViewController.swift; sourceTree = "<group>"; };
 		49221B90267112200031A756 /* ParentProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParentProfileViewController.swift; sourceTree = "<group>"; };
 		492556A127104DB30073188F /* PostViewController + IndividualSimplePayment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PostViewController + IndividualSimplePayment.swift"; sourceTree = "<group>"; };
 		492556A9271186320073188F /* SimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimplePaymentABI.swift; sourceTree = "<group>"; };
@@ -380,6 +379,7 @@
 		4964E5802649A047005B3268 /* AppProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppProtocols.swift; sourceTree = "<group>"; };
 		4964E58F2649B5CE005B3268 /* SingleWalletPageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleWalletPageViewController.swift; sourceTree = "<group>"; };
 		4964E5942649B6FA005B3268 /* PageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageViewController.swift; sourceTree = "<group>"; };
+		496856EB27597AC60073B5C5 /* IntegralDigitalSimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralDigitalSimplePaymentABI.swift; sourceTree = "<group>"; };
 		4969A26B2702C8810093068C /* BackgroundView7.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView7.swift; sourceTree = "<group>"; };
 		4969A27327036DAD0093068C /* CustomTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBarController.swift; sourceTree = "<group>"; };
 		496D56B02659654A00C3E7FD /* CategoryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryCell.swift; sourceTree = "<group>"; };
@@ -440,10 +440,10 @@
 		49B9BD712733AAC000ADBFFB /* DigitalAssetViewController + Integral Auction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Integral Auction.swift"; sourceTree = "<group>"; };
 		49B9F8B22756BC3500E2528D /* ParentPostViewController + IntegralEscrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + IntegralEscrow.swift"; sourceTree = "<group>"; };
 		49B9F8B72756BF3F00E2528D /* ParentPostViewController + Escrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + Escrow.swift"; sourceTree = "<group>"; };
-		49B9F8C82758162200E2528D /* IntegralSimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralSimplePaymentABI.swift; sourceTree = "<group>"; };
-		49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralTangibleSimplePaymentABI.swift; sourceTree = "<group>"; };
+		49B9F8C82758162200E2528D /* IntegralTangibleSimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralTangibleSimplePaymentABI.swift; sourceTree = "<group>"; };
+		49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegralTangibleSimplePaymentABI1.swift; sourceTree = "<group>"; };
 		49BC4BDA2743C09700250D6E /* ParentPostViewController + SimplePayment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ParentPostViewController + SimplePayment.swift"; sourceTree = "<group>"; };
-		49BCE1A92745229000F373DF /* integralDigitalSimplePaymentABI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = integralDigitalSimplePaymentABI.swift; sourceTree = "<group>"; };
+		49BCE1A92745229000F373DF /* integralDigitalSimplePaymentABI1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = integralDigitalSimplePaymentABI1.swift; sourceTree = "<group>"; };
 		49BD34E1274256E800CB1597 /* DigitalAssetViewController + Individual Auction Resale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DigitalAssetViewController + Individual Auction Resale.swift"; sourceTree = "<group>"; };
 		49BF2CE227083BD4009CA5F2 /* ImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCardCell.swift; sourceTree = "<group>"; };
 		49BF2CE727083E11009CA5F2 /* NoImageCardCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoImageCardCell.swift; sourceTree = "<group>"; };
@@ -668,8 +668,8 @@
 			isa = PBXGroup;
 			children = (
 				4962D989272D489E005B2F0F /* IntegralAuctionABI1.swift */,
-				49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift */,
-				49BCE1A92745229000F373DF /* integralDigitalSimplePaymentABI.swift */,
+				49BC4BD527434F1F00250D6E /* IntegralTangibleSimplePaymentABI1.swift */,
+				49BCE1A92745229000F373DF /* integralDigitalSimplePaymentABI1.swift */,
 			);
 			path = Integral;
 			sourceTree = "<group>";
@@ -960,7 +960,6 @@
 			children = (
 				492E009527200B0400A7C072 /* ListDetail */,
 				49221B7D2670FA190031A756 /* ParentListViewController.swift */,
-				49221B882670FC2F0031A756 /* TempViewController.swift */,
 				496F6FF72651AD6300E4056B /* ListViewController.swift */,
 				49054D5326CC785B00ECCB58 /* ParentListEditViewController.swift */,
 				49054D4E26CB66A300ECCB58 /* TangibleListEditViewController.swift */,
@@ -1128,7 +1127,8 @@
 				49F2A1812751275200569522 /* IntegralAuctionABI.swift */,
 				49452FDF2752D24100CA9E9C /* IntegralEscrowABI.swift */,
 				49452FE42752D96300CA9E9C /* SolireyABI.swift */,
-				49B9F8C82758162200E2528D /* IntegralSimplePaymentABI.swift */,
+				49B9F8C82758162200E2528D /* IntegralTangibleSimplePaymentABI.swift */,
+				496856EB27597AC60073B5C5 /* IntegralDigitalSimplePaymentABI.swift */,
 			);
 			path = "New Solirey";
 			sourceTree = "<group>";
@@ -1472,12 +1472,11 @@
 				4964E4602641B001005B3268 /* SignInViewController.swift in Sources */,
 				497329AA271B92A6000EC673 /* ButtonWithShadow.swift in Sources */,
 				493BF9F3264C6B4B00B9C9D2 /* PasswordResetViewController.swift in Sources */,
-				49221B892670FC2F0031A756 /* TempViewController.swift in Sources */,
 				4933336B26828E4600B8BFC2 /* ProfileListViewController.swift in Sources */,
 				4964E45C2641B001005B3268 /* AppDelegate.swift in Sources */,
 				49DEFF5B268649A3004C2DD0 /* DocumentPicker.swift in Sources */,
 				493BF9CD264C493200B9C9D2 /* WalletButtonView.swift in Sources */,
-				49BC4BD627434F1F00250D6E /* IntegralTangibleSimplePaymentABI.swift in Sources */,
+				49BC4BD627434F1F00250D6E /* IntegralTangibleSimplePaymentABI1.swift in Sources */,
 				493BF9B5264AC18700B9C9D2 /* WalletGenerationController.swift in Sources */,
 				4914149D270D0AD0005E93BA /* DigitalAssetViewController + OnlineDirect.swift in Sources */,
 				4964E4E526436875005B3268 /* DissolveTransitionAnimator.swift in Sources */,
@@ -1489,7 +1488,7 @@
 				499702AB2673F75E001DD80A /* MessageCell.swift in Sources */,
 				4964E57C26499FBE005B3268 /* UnregisteredWalletViewController.swift in Sources */,
 				492E009727200B3900A7C072 /* IntegratedSimplePaymentDetailViewController.swift in Sources */,
-				49BCE1AA2745229000F373DF /* integralDigitalSimplePaymentABI.swift in Sources */,
+				49BCE1AA2745229000F373DF /* integralDigitalSimplePaymentABI1.swift in Sources */,
 				4964E4D226430FBE005B3268 /* AppExtensions.swift in Sources */,
 				49BC4BDB2743C09700250D6E /* ParentPostViewController + SimplePayment.swift in Sources */,
 				49141498270D0A27005E93BA /* DigitalAssetViewController + Auction.swift in Sources */,
@@ -1520,6 +1519,7 @@
 				490D275D267ECEA1003500C1 /* ProgressModalViewController.swift in Sources */,
 				49E759AD26669ACB0064BB34 /* ParentPostViewController.swift in Sources */,
 				4900962D270E76FE00EDB593 /* PostViewController + Resale.swift in Sources */,
+				496856EC27597AC60073B5C5 /* IntegralDigitalSimplePaymentABI.swift in Sources */,
 				4969A27427036DAD0093068C /* CustomTabBarController.swift in Sources */,
 				49054D3D26CA29DA00ECCB58 /* ListDetailViewController + GetStatus.swift in Sources */,
 				499F9962266C061A00FC6CDE /* ParentNavViewController.swift in Sources */,
@@ -1581,7 +1581,7 @@
 				4964E5342648C68A005B3268 /* WalletViewController.swift in Sources */,
 				49F2A1822751275200569522 /* IntegralAuctionABI.swift in Sources */,
 				4964E53B2648C940005B3268 /* CoreDataModel.xcdatamodeld in Sources */,
-				49B9F8C92758162200E2528D /* IntegralSimplePaymentABI.swift in Sources */,
+				49B9F8C92758162200E2528D /* IntegralTangibleSimplePaymentABI.swift in Sources */,
 				49BF2CE827083E11009CA5F2 /* NoImageCardCell.swift in Sources */,
 				49054D5426CC785C00ECCB58 /* ParentListEditViewController.swift in Sources */,
 				49B72B4C26F6F8CD000C7F34 /* ChatViewController + ContextMenu.swift in Sources */,

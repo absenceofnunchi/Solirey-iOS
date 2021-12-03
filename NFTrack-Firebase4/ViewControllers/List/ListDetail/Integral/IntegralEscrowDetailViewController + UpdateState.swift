@@ -91,6 +91,18 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
                 fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
+            ),
+            StandardAlertContent(
+                index: 2,
+                titleString: "Tip",
+                titleColor: UIColor.white,
+                body: [
+                    "": "\"Failed to locally sign a transaction\" usually means wrong password.",
+                ],
+                isEditable: false,
+                fieldViewHeight: 100,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
             )
         ]
         
@@ -243,13 +255,31 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
         }
     }
     
-    func transferToken(for method: SolireyContract.ContractMethods) {
-        self.transactionService.preLaunch(transactionToEstimate: { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
-            guard let getSolireryEstimate = self?.getSolireryEstimate else {
+    func transferToken(method: SolireyContract.ContractMethods) {
+        self.transactionService.preLaunch (transactionToEstimate: { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
+            guard let getSolireyMethodEstimate = self?.transactionService.getSolireyMethodEstimate else {
                 return Fail(error: PostingError.generalError(reason: "Unable to estimate gas."))
                     .eraseToAnyPublisher()
             }
-            return getSolireryEstimate(method)
+            
+            guard let tokenId = self?.post.tokenID else {
+                return Fail(error: PostingError.generalError(reason: "Unable to get the ID for the smart contract."))
+                    .eraseToAnyPublisher()
+            }
+            
+            guard let currentAddress = Web3swiftService.currentAddress else {
+                return Fail(error: PostingError.generalError(reason: "Unable to fetch the user's current wallet address."))
+                    .eraseToAnyPublisher()
+            }
+            
+            guard let buyerAddressString = self?.post.buyerHash,
+                  let buyerAddress = EthereumAddress(buyerAddressString) else {
+                return Fail(error: PostingError.generalError(reason: "Unable to fetch the buyer's wallet address."))
+                    .eraseToAnyPublisher()
+            }
+                        
+            let transactionParameters: [AnyObject] = [currentAddress, buyerAddress, tokenId] as [AnyObject]
+            return getSolireyMethodEstimate(method, transactionParameters)
             
         }) { [weak self] (estimates, txPackage, error) in
             if let error = error {
@@ -266,44 +296,6 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
                 )
             }
         }
-    }
-    
-    final func getSolireryEstimate(
-        method: SolireyContract.ContractMethods
-    ) -> AnyPublisher<TxPackage, PostingError> {
-        return Future<TxPackage, PostingError> { [weak self] promise in
-            guard let solireyContractAddress = ContractAddresses.solireyContractAddress else {
-                promise(.failure(.generalError(reason: "Unable to prepare the contract address.")))
-                return
-            }
-            
-            guard let tokenId = self?.post.tokenID else {
-                promise(.failure(.generalError(reason: "Unable to get the ID for the smart contract.")))
-                return
-            }
-            
-            guard let currentAddress = Web3swiftService.currentAddress else {
-                promise(.failure(.generalError(reason: "Unable to fetch the user's current wallet address.")))
-                return
-            }
-            
-            guard let buyerAddressString = self?.post.buyerHash,
-                  let buyerAddress = EthereumAddress(buyerAddressString) else {
-                promise(.failure(.generalError(reason: "Unable to fetch the buyer's wallet address.")))
-                return
-            }
-            
-            let param: [AnyObject] = [currentAddress, buyerAddress, tokenId] as [AnyObject]
-            self?.transactionService.prepareTransactionForWritingWithGasEstimate(
-                method: method.rawValue,
-                abi: solireyABI,
-                param: param,
-                contractAddress: solireyContractAddress,
-                amountString: nil,
-                promise: promise
-            )
-        }
-        .eraseToAnyPublisher()
     }
     
     func executeSolirey(
@@ -332,6 +324,18 @@ extension IntegralEscrowDetailViewController: HandleError, CoreSpotlightDelegate
                 ],
                 isEditable: false,
                 fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            ),
+            StandardAlertContent(
+                index: 2,
+                titleString: "Tip",
+                titleColor: UIColor.white,
+                body: [
+                    "": "\"Failed to locally sign a transaction\" usually means wrong password.",
+                ],
+                isEditable: false,
+                fieldViewHeight: 100,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
             )

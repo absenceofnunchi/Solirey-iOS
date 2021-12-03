@@ -33,18 +33,20 @@ extension ParentPostViewController {
         //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
         //            return
         //        }
-        
+        let isDigital = self.postType == .digital ? true : false
+
         switch mintParameters.saleConfigValue {
             case .tangibleNewSaleInPersonDirectPaymentIntegral,
                  .digitalNewSaleOnlineDirectPaymentIntegral:
                 self.transactionService.preLaunch (transactionToEstimate: { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
                     guard let processIntegralSimplePayment = self?.processIntegralSimplePayment,
-                          let category = PostType(rawValue: mintParameters.postType) else {
+                          let solireyContractAddress = ContractAddresses.solireyContractAddress else {
                         return Fail(error: PostingError.generalError(reason: "Unable to estimate gas."))
                             .eraseToAnyPublisher()
                     }
-                    
-                    let isDigital = category == .digital
+                                        
+                    self?.socketDelegate = SocketDelegate(contractAddress: solireyContractAddress, topics: [Topics.SimplePaymentMint])
+
                     let parameters: [AnyObject] = [priceInWei] as [AnyObject]
                     return processIntegralSimplePayment(.createPayment, parameters, isDigital)
                 }) { [weak self] (estimates, txPackage, error) in
@@ -57,7 +59,9 @@ extension ParentPostViewController {
                         self?.executeIntegralSimplePayment(
                             estimates: estimates,
                             mintParameters: mintParameters,
-                            txPackage: txPackage
+                            txPackage: txPackage,
+                            isDigital: isDigital,
+                            isResale: false
                         )
                     }
                 }
@@ -65,16 +69,21 @@ extension ParentPostViewController {
             case .tangibleResaleInPersonDirectPaymentIntegral,
                  .digitalResaleOnlineDirectPaymentIntegral:
                 self.transactionService.preLaunch (transactionToEstimate: { [weak self] () -> AnyPublisher<TxPackage, PostingError> in
-                    guard let processIntegralSimplePayment = self?.processIntegralSimplePayment,
-                          let category = PostType(rawValue: mintParameters.postType),
+                    guard let getSolireyMethodEstimate = self?.transactionService.getSolireyMethodEstimate,
+                          let currentAddress = Web3swiftService.currentAddress,
+                          let integralTangibleSimplePaymentAddress = ContractAddresses.integralTangibleSimplePaymentAddress,
+                          let solireyContractAddress = ContractAddresses.solireyContractAddress,
                           let tokenId = self?.post?.tokenID else {
                         return Fail(error: PostingError.generalError(reason: "Unable to estimate gas."))
                             .eraseToAnyPublisher()
                     }
                     
-                    let isDigital = category == .digital
-                    let parameters: [AnyObject] = [priceInWei, tokenId] as [AnyObject]
-                    return processIntegralSimplePayment(.resell, parameters, isDigital)
+                    self?.socketDelegate = SocketDelegate(contractAddress: solireyContractAddress, topics: [Topics.Solirey.transfer])
+                    
+                    let values: [AnyObject] = [priceInWei, currentAddress] as [AnyObject]
+                    let encodedData = ABIEncoder.encode(types: [.uint(bits: 256), .address], values: values) as AnyObject
+                    let transactionParameters: [AnyObject] = [currentAddress, integralTangibleSimplePaymentAddress, tokenId, encodedData] as [AnyObject]
+                    return getSolireyMethodEstimate(.safeTransferFrom, transactionParameters)
                     
                 }) { [weak self] (estimates, txPackage, error) in
                     if let error = error {
@@ -86,7 +95,9 @@ extension ParentPostViewController {
                         self?.executeIntegralSimplePayment(
                             estimates: estimates,
                             mintParameters: mintParameters,
-                            txPackage: txPackage
+                            txPackage: txPackage,
+                            isDigital: isDigital,
+                            isResale: true
                         )
                     }
                 }

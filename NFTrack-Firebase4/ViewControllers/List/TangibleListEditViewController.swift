@@ -429,7 +429,6 @@ class TangibleListEditViewController: ParentListEditViewController, PreviewDeleg
                                         break
                                 }
                             } receiveValue: { [weak self] (urlStrings) in
-                                print("urlStrings", urlStrings)
                                 let imagesString: [String] = urlStrings.compactMap { $0 }
                                 self?.delegate?.didUpdatePost(title: itemTitle, desc: desc, imagesString: imagesString)
                             }

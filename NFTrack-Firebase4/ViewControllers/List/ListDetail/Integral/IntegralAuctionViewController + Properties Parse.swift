@@ -121,6 +121,9 @@ extension IntegralAuctionViewController {
                         convertedHighestBidder = highestBidder.address
                     }
                     
+                    // For verifying against the amount that the user is bidding.
+                    self.startingBidRetainer = startingBidInEth
+                    
                     let auctionInfo = AuctionInfo(
                         beneficiary: beneficiary.address,
                         auctionEndTime: auctionEndDate,

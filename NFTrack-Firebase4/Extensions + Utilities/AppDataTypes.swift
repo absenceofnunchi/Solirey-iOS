@@ -1062,6 +1062,10 @@ struct InfoText {
     static let auctionEnded = """
     The auction has already ended!
     """
+    
+    static let digitalDescription = """
+    The description and the title are not modifiable for auctions once you deploy so please take time to create a descriptive message for the potential buyers!
+    """
 }
 
 // MARK: - SmartContractProperty
@@ -1146,13 +1150,14 @@ struct ContractAddresses {
     static let NFTrackABIRevisedAddress = EthereumAddress("0xd3F95b3292Cbc7543228B6edEDFA42b474651e8D")
 //    static let integralAuctionAddress = EthereumAddress("0x6d23ebe8d9ff75fe79fc0f4ae4b75b811cad2daa")
     static let solireyMintContractAddress = EthereumAddress("0x273a9c24096dEe6071CED1c386dB8cFD857DF017")
-    static let integralTangibleSimplePaymentAddress = EthereumAddress("0x05bc22ee90ba837defa936121e22a62e829258b7")
-    static let integralDigitalSimplePaymentAddress = EthereumAddress("0xaeac8835ac763ef79949587e7e058349e44f96dd")
+//    static let integralTangibleSimplePaymentAddress = EthereumAddress("0x05bc22ee90ba837defa936121e22a62e829258b7")
+//    static let integralDigitalSimplePaymentAddress = EthereumAddress("0xaeac8835ac763ef79949587e7e058349e44f96dd")
     // new
     static let solireyContractAddress = EthereumAddress("0x60176252b09ab6c35963705dc91733fa889a18d9")
     static let integralAuctionAddress = EthereumAddress("0x99c4134da005acd565ae697930d7d68888bb566c")
     static let integralEscrowAddress = EthereumAddress("0x8338707ca4cd8db48a64809039face701010852a")
-    static let integralSimplePayment = EthereumAddress("0x52fbfeebb8ca0f97c87837845d92a1df7f36f3e5")
+    static let integralTangibleSimplePaymentAddress = EthereumAddress("0xeF2D2F8ECd0D2d1B6BB57dF838DDdf7260Ae566d")
+    static let integralDigitalSimplePaymentAddress = EthereumAddress("0x051135242444aa60916beb3f00f171ed88b8fe32")
 }
 
 struct ShippingInfo {

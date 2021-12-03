@@ -64,6 +64,18 @@ extension DigitalAssetViewController {
                 fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
+            ),
+            StandardAlertContent(
+                index: 2,
+                titleString: "Tip",
+                titleColor: UIColor.white,
+                body: [
+                    "": "\"Failed to locally sign a transaction\" usually means wrong password.",
+                ],
+                isEditable: false,
+                fieldViewHeight: 100,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
             )
         ]
         

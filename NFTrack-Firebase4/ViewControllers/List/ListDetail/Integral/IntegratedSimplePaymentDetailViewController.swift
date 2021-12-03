@@ -193,6 +193,22 @@ extension IntegratedSimplePaymentDetailViewController {
                 resaleVC.title = "Resale"
                 navigationController?.pushViewController(resaleVC, animated: true)
                 break
+            case 11:
+                guard let postType = PostType(rawValue: self.post.type) else { return }
+                
+                if postType == .digital {
+                    let listEditVC = DigitalListEditViewController()
+                    listEditVC.delegate = self
+                    listEditVC.post = post
+                    self.navigationController?.pushViewController(listEditVC, animated: true)
+                } else {
+                    let listEditVC = TangibleListEditViewController()
+                    listEditVC.delegate = self
+                    listEditVC.post = post
+                    listEditVC.userId = userId
+                    self.navigationController?.pushViewController(listEditVC, animated: true)
+                }
+                break
             default:
                 break
         }
@@ -290,6 +306,18 @@ extension IntegratedSimplePaymentDetailViewController: HandleError {
                 fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
+            ),
+            StandardAlertContent(
+                index: 2,
+                titleString: "Tip",
+                titleColor: UIColor.white,
+                body: [
+                    "": "\"Failed to locally sign a transaction\" usually means wrong password.",
+                ],
+                isEditable: false,
+                fieldViewHeight: 100,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
             )
         ]
         
@@ -361,7 +389,7 @@ extension IntegratedSimplePaymentDetailViewController: HandleError {
                                                 for: self) {
                                                 DispatchQueue.main.async {
                                                     self?.dismiss(animated: true, completion: nil)
-                                                    self?.navigationController?.popViewController(animated: true)
+                                                    self?.navigationController?.popToRootViewController(animated: true)
                                                 }
                                             } completion: {}
                                             break
@@ -422,13 +450,16 @@ extension IntegratedSimplePaymentDetailViewController: HandleError {
                     "transferDate": Date(),
                     "confirmReceivedDate": Date(),
                     "buyerUserId": userId,
-                    "status": SimplePaymentStatus.complete.rawValue,
+                    "status": SimplePaymentStatus.transferred.rawValue,
                     "isWithdrawn": false,
                     "isAdminWithdrawn": false
                 ]
                 break
             case .withdraw:
-                postData = ["isWithdrawn": true]
+                postData = [
+                    "status": SimplePaymentStatus.complete.rawValue,
+                    "isWithdrawn": true
+                ]
                 break
             case .abort:
                 postData = ["status": SimplePaymentStatus.aborted.rawValue]
@@ -514,28 +545,5 @@ extension IntegratedSimplePaymentDetailViewController {
         }
         
         activityIndicatorView.stopAnimating()
-    }
-    
-    // for testing
-    func getInfo() {
-        let parameters: [AnyObject] = [41, "9d78038e487b15758beb4d90ea733b626c1fb7a7d756fb8a77c2fa1de838f730"] as [AnyObject]
-        Deferred { [weak self] in
-            Future<SmartContractProperty, PostingError> { promise in
-                self?.transactionService.prepareTransactionForReading(
-                    method: SolireyContract.ContractMethods.getInfo.rawValue,
-                    parameters: parameters,
-                    abi: integralTangibleSimplePaymentABI,
-                    contractAddress: ContractAddresses.integralTangibleSimplePaymentAddress!,
-                    promise: promise
-                )
-            }
-            .eraseToAnyPublisher()
-        }
-        .sink { (completion) in
-            print(completion)
-        } receiveValue: { (properties) in
-            print("properties", properties)
-        }
-        .store(in: &storage)
     }
 }

@@ -38,7 +38,7 @@ class ParentPostViewController: UIViewController, ButtonPanelConfigurable, Token
     var titleTextField: UITextField!
     var priceLabel: UILabel!
     var priceTextField: UITextField!
-    var priceInfoButton: UIButton!
+    var descInfoButton: UIButton!
     var priceLabelConstraintHeight: NSLayoutConstraint!
     var priceTextFieldConstraintHeight: NSLayoutConstraint!
     var descLabel: UILabel!
@@ -320,10 +320,17 @@ extension ParentPostViewController {
         scrollView.addSubview(titleTextField)
         
         descLabel = createTitleLabel(text: "Description")
+        descLabel.isUserInteractionEnabled = true
         scrollView.addSubview(descLabel)
+        
+        descInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
+        descInfoButton.tag = 30
+        descInfoButton.translatesAutoresizingMaskIntoConstraints = false
+        descLabel.addSubview(descInfoButton)
         
         descTextView = UITextView()
         descTextView.delegate = self
+        descTextView.allowsEditingTextAttributes = true
         descTextView.autocorrectionType = .yes
         descTextView.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 245/255)
         descTextView.layer.cornerRadius = 10
@@ -421,10 +428,6 @@ extension ParentPostViewController {
         
         priceLabel = createTitleLabel(text: "Price")
         scrollView.addSubview(priceLabel)
-        
-        priceInfoButton = UIButton.systemButton(with: infoImage, target: self, action: #selector(buttonPressed(_:)))
-        priceInfoButton.translatesAutoresizingMaskIntoConstraints = false
-        priceLabel.addSubview(priceInfoButton)
         
         priceTextField = createTextField(delegate: self)
         priceTextField.delegate = self
@@ -597,8 +600,8 @@ extension ParentPostViewController {
         priceLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
         priceLabelConstraintHeight.isActive = true
         
-        priceInfoButton.trailingAnchor.constraint(equalTo: priceLabel.trailingAnchor).isActive = true
-        priceInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        descInfoButton.trailingAnchor.constraint(equalTo: descLabel.trailingAnchor).isActive = true
+        descInfoButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
         
         priceTextField.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 0.9).isActive = true
         priceTextField.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor).isActive = true
@@ -647,7 +650,7 @@ extension ParentPostViewController {
     @objc func buttonPressed(_ sender: UIButton) {
         let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
         feedbackGenerator.impactOccurred()
-        
+                
         switch sender.tag {
             case 3:
                 if let categoryText = self.pickerLabel.text,
@@ -760,6 +763,10 @@ extension ParentPostViewController {
                 break
             case 24:
                 let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Pricing", detail: InfoText.pricing)])
+                self.present(infoVC, animated: true, completion: nil)
+                break
+            case 30:
+                let infoVC = InfoViewController(infoModelArr: [InfoModel(title: "Desciption", detail: InfoText.digitalDescription)])
                 self.present(infoVC, animated: true, completion: nil)
                 break
             default:

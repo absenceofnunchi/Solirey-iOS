@@ -67,6 +67,18 @@ extension DigitalAssetViewController {
                 fieldViewHeight: 40,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
+            ),
+            StandardAlertContent(
+                index: 2,
+                titleString: "Tip",
+                titleColor: UIColor.white,
+                body: [
+                    "": "\"Failed to locally sign a transaction\" usually means wrong password.",
+                ],
+                isEditable: false,
+                fieldViewHeight: 100,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
             )
         ]
         
@@ -227,26 +239,6 @@ extension DigitalAssetViewController {
         }
     }
     
-    // MARK: - Resell
-    final func getSafeTransferFromEstimate(transactionParameters: [AnyObject]) -> AnyPublisher<TxPackage, PostingError> {
-        return Future<TxPackage, PostingError> { [weak self] promise in
-            guard let solireyContractAddress = ContractAddresses.solireyContractAddress else {
-                promise(.failure(PostingError.generalError(reason: "Unable to get the contract address of the auction.")))
-                return
-            }
-            
-            self?.transactionService.prepareTransactionForWritingWithGasEstimate(
-                method: SolireyMethods.safeTransferFrom.rawValue,
-                abi: solireyABI,
-                param: transactionParameters,
-                contractAddress: solireyContractAddress,
-                amountString: nil,
-                promise: promise
-            )
-        }
-        .eraseToAnyPublisher()
-    }
-    
     func executeIntegralAuctionResale(
         estimates: (totalGasCost: String, balance: String, gasPriceInGwei: String),
         mintParameters: MintParameters,
@@ -273,6 +265,18 @@ extension DigitalAssetViewController {
                 ],
                 isEditable: false,
                 fieldViewHeight: 40,
+                messageTextAlignment: .left,
+                alertStyle: .noButton
+            ),
+            StandardAlertContent(
+                index: 2,
+                titleString: "Tip",
+                titleColor: UIColor.white,
+                body: [
+                    "": "\"Failed to locally sign a transaction\" usually means wrong password.",
+                ],
+                isEditable: false,
+                fieldViewHeight: 100,
                 messageTextAlignment: .left,
                 alertStyle: .noButton
             )

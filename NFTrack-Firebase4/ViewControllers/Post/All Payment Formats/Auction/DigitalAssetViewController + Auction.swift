@@ -44,8 +44,8 @@ extension DigitalAssetViewController {
         
 //        let startingBid = 100 as NSNumber
         
-//        let biddingTime = numOfDays.intValue * 60 * 60 * 24
-        let biddingTime = 150
+        let biddingTime = numOfDays.intValue * 60 * 60 * 24
+//        let biddingTime = 150
 
         mintParameters.biddingTime = biddingTime
         mintParameters.startingBid = startingBid
@@ -125,11 +125,11 @@ extension DigitalAssetViewController {
                         let encodedData = ABIEncoder.encode(types: [.uint(bits: 256), .uint(bits: 256)], values: values) as AnyObject
                         let transactionParameters: [AnyObject] = [currentAddress, auctionContractAddress, tokenId, encodedData] as [AnyObject]
                         
-                        guard let getSafeTransferFromEstimate = self?.getSafeTransferFromEstimate else {
+                        guard let getSolireyMethodEstimate = self?.transactionService.getSolireyMethodEstimate else {
                             return Fail(error: PostingError.generalError(reason: "Unable to estimate gas."))
                                 .eraseToAnyPublisher()
                         }
-                        return getSafeTransferFromEstimate(transactionParameters)
+                        return getSolireyMethodEstimate(.safeTransferFrom, transactionParameters)
                         
                     }) { [weak self] (estimates, txPackage, error) in
                         if let error = error {

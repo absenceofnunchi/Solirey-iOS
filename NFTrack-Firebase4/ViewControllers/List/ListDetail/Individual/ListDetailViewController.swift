@@ -133,7 +133,7 @@ class ListDetailViewController: ParentDetailViewController {
                 height: totalHeight
             )
             
-            self.scrollView.contentSize =  adjustedSize
+            self.scrollView.contentSize = adjustedSize
         }
     }
     
@@ -151,29 +151,29 @@ class ListDetailViewController: ParentDetailViewController {
         }
     }
     
-    final override func didUpdatePost(title: String, desc: String, imagesString: [String]?) {
-        self.title = title
-        descLabel.text = desc
-        
-        if let imagesString = imagesString,
-           imagesString.count > 0,
-           let firstImageString = imagesString.first {
-            pvc.galleries = imagesString
-            singlePageVC = SmallSinglePageViewController(gallery: firstImageString, galleries: imagesString)
-            imageHeightConstraint.constant = 250
-        } else {
-            pvc.galleries?.removeAll()
-//            singlePageVC = nil
-            imageHeightConstraint.constant = 0
-        }
-        
-        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
-        
-        // in case TangibleListEditVC gets pushed again
-        post.title = title
-        post.description = desc
-        post.files = imagesString
-    }
+//    final override func didUpdatePost(title: String, desc: String, imagesString: [String]?) {
+//        self.title = title
+//        descLabel.text = desc
+//        
+//        if let imagesString = imagesString,
+//           imagesString.count > 0,
+//           let firstImageString = imagesString.first {
+//            pvc.galleries = imagesString
+//            singlePageVC = SmallSinglePageViewController(gallery: firstImageString, galleries: imagesString)
+//            imageHeightConstraint.constant = 250
+//        } else {
+//            pvc.galleries?.removeAll()
+////            singlePageVC = nil
+//            imageHeightConstraint.constant = 0
+//        }
+//        
+//        pvc.setViewControllers([singlePageVC], direction: .forward, animated: false, completion: nil)
+//        
+//        // in case TangibleListEditVC gets pushed again
+//        post.title = title
+//        post.description = desc
+//        post.files = imagesString
+//    }
 }
 
 extension ListDetailViewController {
@@ -494,8 +494,7 @@ extension ListDetailViewController {
             }, receiveValue: { [weak self] (webSocketMessage) in
                 self?.isPending = true
                 
-                guard let topics = webSocketMessage["topics"] as? [String],
-                      let txHash = webSocketMessage["transactionHash"] as? String else { return }
+                guard let topics = webSocketMessage["topics"] as? [String] else { return }
                 
                 switch topics {
                     case _ where topics.contains(Topics.Transfer) || topics.contains(Topics.Transfer2):

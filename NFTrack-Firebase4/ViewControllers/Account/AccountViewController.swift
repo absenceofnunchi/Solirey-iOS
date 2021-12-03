@@ -258,15 +258,15 @@ extension AccountViewController {
             self?.showSpinner({
                 self?.localDatabase.deleteWallet { (error) in
                     if let error = error {
-                        self?.hideSpinner {}
+                        self?.hideSpinner()
                         self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                     } else {
                         let firebaseAuth = Auth.auth()
                         do {
                             try firebaseAuth.signOut()
-                            self?.hideSpinner {}
+                            self?.hideSpinner()
                         } catch let signOutError as NSError {
-                            self?.hideSpinner {}
+                            self?.hideSpinner()
                             self?.alert.showDetail("Error", with: "Error signing out: \(signOutError)", for: self)
                         }
                     }
@@ -291,6 +291,8 @@ extension AccountViewController {
                             if let error = error {
                                 self?.alert.showDetail("Error resetting the user", with: error.localizedDescription, for: self)
                             } else {
+                                
+                                
                                 self?.alert.showDetail("Success!", with: "You account has been successfully deleted.", for: self)
                             }
                         }

@@ -1470,4 +1470,26 @@ extension TransactionService {
         }
         .store(in: &self.storage)
     }
+    
+    final func getSolireyMethodEstimate(
+        method: SolireyContract.ContractMethods,
+        transactionParameters: [AnyObject]
+    ) -> AnyPublisher<TxPackage, PostingError> {
+        Future<TxPackage, PostingError> { [weak self] promise in
+            guard let solireyContractAddress = ContractAddresses.solireyContractAddress else {
+                promise(.failure(PostingError.generalError(reason: "Unable to get the contract address of the auction.")))
+                return
+            }
+            
+            self?.prepareTransactionForWritingWithGasEstimate(
+                method: method.rawValue,
+                abi: solireyABI,
+                param:transactionParameters,
+                contractAddress: solireyContractAddress,
+                amountString: nil,
+                promise: promise
+            )
+        }
+        .eraseToAnyPublisher()
+    }
 }
