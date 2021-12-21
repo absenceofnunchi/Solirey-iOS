@@ -20,7 +20,7 @@ class ReportViewController: UIViewController {
     var userId: String!
     var alert: Alerts!
     let TEXTVIEW_HEIGHT: CGFloat = 250
-    private var colorPatchView = UIView()
+    var colorPatchView = UIView()
     lazy var colorPatchViewHeight: NSLayoutConstraint = colorPatchView.heightAnchor.constraint(equalToConstant: 0)
     
     override func viewDidLoad() {
@@ -47,7 +47,7 @@ class ReportViewController: UIViewController {
 }
 
 extension ReportViewController {
-    func configure() {
+    @objc func configure() {
         title = "Report"
         self.hideKeyboardWhenTappedAround()
         view.backgroundColor = .white
@@ -71,20 +71,12 @@ extension ReportViewController {
         
         itemTitleLabel = createLabel(text: post.title)
         scrollView.addSubview(itemTitleLabel)
-//        itemTitleLabel = UILabelPadding()
-//        itemTitleLabel.text = post.title
-//        itemTitleLabel.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
-//        itemTitleLabel.lineBreakMode = .byTruncatingTail
-//        itemTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-//        scrollView.addSubview(itemTitleLabel)
         
         commentTitleLabel = createTitleLabel(text: "Comment")
         commentTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(commentTitleLabel)
         
         textView = UITextView()
-//        textView.layer.borderWidth = 0.7
-//        textView.layer.borderColor = UIColor.lightGray.cgColor
         textView.backgroundColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1)
         textView.layer.cornerRadius = 10
         textView.contentInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
@@ -104,7 +96,7 @@ extension ReportViewController {
         scrollView.addSubview(submitButton)
     }
     
-    func setConstraints() {
+    @objc func setConstraints() {
         NSLayoutConstraint.activate([
             customNavView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             customNavView.leadingAnchor.constraint(equalTo: view.leadingAnchor),

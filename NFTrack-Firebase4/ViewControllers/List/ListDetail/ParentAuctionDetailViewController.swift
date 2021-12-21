@@ -106,9 +106,9 @@ class ParentAuctionDetailViewController: ParentDetailViewController, UITextField
     // MARK: - configureUI
     override func configureUI() {
         super.configureUI()
-        self.hideKeyboardWhenTappedAround()
-        auctionButtonController = AuctionButtonController()
+        priceLabel.text = "N/A"
         
+        auctionButtonController = AuctionButtonController()
         title = post.title
         
         historyVC = HistoryViewController()

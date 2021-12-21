@@ -137,8 +137,6 @@ extension ParentPostViewController {
                 shippingInfo: self?.shippingInfo
             )
             
-            print("saleConfigValue", saleConfig.value as Any)
-
             if self?.post == nil {
                 self?.checkExistingId(id: convertedId) { (isDuplicate, err) in
                     if let _ = err {
@@ -251,39 +249,3 @@ extension ParentPostViewController {
     
     @objc dynamic func configureProgress() {}
 }
-
-extension ParentPostViewController {
-    @objc func mint1() {
-        for i in 0...10 {
-            FirebaseService.shared.db
-                .collection("post")
-                .document("\(i)")
-                .updateData([
-                    "sellerUserId": "vcHixrcSsLMpLiafMYrAmCvnlLU2",
-                    "senderAddress": "\(i)",
-                    "escrowHash": "\(i)",
-                    "auctionHash": "\(i)",
-                    "mintHash": "\(i)",
-                    "date": Date(),
-                    "title": "\(i)",
-                    "description": "\(i)",
-                    "price": "\(i)",
-                    "category": Category.realEstate.asString(),
-                    "status": AuctionStatus.ready.rawValue,
-                    "tags": ["example"],
-                    "itemIdentifier": "\(i)",
-                    "isReviewed": false,
-                    "type": "tangible",
-                    "deliveryMethod": "Shipping",
-                    "saleFormat": "Online Direct",
-                    "files": ["https://firebasestorage.googleapis.com/v0/b/nftrack-69488.appspot.com/o/vcHixrcSsLMpLiafMYrAmCvnlLU2%2FE366991C-B770-4A68-9CC7-862B793455CB.jpeg?alt=media&token=bbe4a96a-c5ea-4a77-8291-4357a7fc6963"],
-                    "IPFS": "NA",
-                    "paymentMethod": "Escrow",
-                    "bidderTokens": [],
-                    "bidders": []
-                ])
-        }
-    }
-}
-
-

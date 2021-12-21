@@ -44,6 +44,7 @@ class AccountViewController: UIViewController {
         applyBarTintColorToTheNavigationBar()
         configureUI()
         setConstraints()
+        showWarning()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -80,6 +81,33 @@ class AccountViewController: UIViewController {
         }
         
         balanceCardView.walletAddressLabel?.text = address.address
+    }
+    
+    final func showWarning() {
+        let hasBeenViewed = UserDefaults.standard.bool(forKey: "HasBeenViewed")
+        print("hasBeen", hasBeenViewed)
+        guard hasBeenViewed == false else { return }
+        
+        let content = [
+            StandardAlertContent(
+                titleString: "Important!",
+                body: ["": "Solirey is for demontrating the use cases of a blockchain only and uses the mock ETH for Rinkeby testnet. Do NOT transfer any real cryptocurrencies into the wallet. The app will not be responsible any loss incured from doing so."],
+                isEditable: false,
+                fieldViewHeight: 170,
+                messageTextAlignment: .left,
+                alertStyle: .oneButton
+            )
+        ]
+        
+        let alertVC = AlertViewController(height: 350, standardAlertContent: content)
+        alertVC.action = { [weak self] (modal, mainVC) in
+            mainVC.buttonAction = { _ in
+                self?.dismiss(animated: true, completion: {
+                    UserDefaults.standard.set(true, forKey: "HasBeenViewed")
+                })
+            }
+        }
+        present(alertVC, animated: true)
     }
 }
 
@@ -169,22 +197,37 @@ extension AccountViewController: UITableViewDelegate, UITableViewDataSource {
         switch indexPath.row {
             case 0:
                 didUpdateProfile()
+                break
             case 1:
                 didRequestPasswordReset()
+                break
             case 2:
                 let purchasesVC = PurchasesViewController()
                 self.navigationController?.pushViewController(purchasesVC, animated: true)
+                break
             case 3:
                 let collectFundsVC = CollectFundsViewController()
                 self.navigationController?.pushViewController(collectFundsVC, animated: true)
+                break
             case 4:
                 review()
+                break
             case 5:
-                print("feedback")
+                guard let userId = UserDefaults.standard.string(forKey: UserDefaultKeys.userId) else {
+                    self.alert.showDetail("User ID Fetch Error", with: "Please try re-logging in.", for: self)
+                    return
+                }
+                
+                let feedbackVC = FeedbackViewController()
+                feedbackVC.userId = userId
+                self.navigationController?.pushViewController(feedbackVC, animated: true)
+                break
             case 6:
                 didLogout()
+                break
             case 7:
                 didDeleteUser()
+                break
             default:
                 break
         }
@@ -282,18 +325,20 @@ extension AccountViewController {
             self?.showSpinner({
                 self?.localDatabase.deleteWallet { (error) in
                     if let error = error {
-                        self?.hideSpinner {}
                         self?.alert.showDetail("Sorry", with: error.localizedDescription, for: self)
                     } else {
-                        self?.hideSpinner {}
                         let user = Auth.auth().currentUser
                         user?.delete { error in
                             if let error = error {
-                                self?.alert.showDetail("Error resetting the user", with: error.localizedDescription, for: self)
+                                self?.alert.showDetail("Error deleting the user", with: error.localizedDescription, for: self)
                             } else {
-                                
-                                
-                                self?.alert.showDetail("Success!", with: "You account has been successfully deleted.", for: self)
+                                guard let uid = user?.uid else { return }
+                                FirebaseService.shared.db.collection("user").document(uid).delete { (error) in
+                                    if let error = error {
+                                        self?.alert.showDetail("Error deleting the user", with: error.localizedDescription, for: self)
+                                    }
+                                    self?.alert.showDetail("Success!", with: "You account has been successfully deleted.", for: self)
+                                }
                             }
                         }
                     }

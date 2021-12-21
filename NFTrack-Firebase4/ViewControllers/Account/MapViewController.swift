@@ -142,6 +142,7 @@ class MapViewController: AddressViewController, MKMapViewDelegate, SharableDeleg
             guard let mapView = self?.mapView else { return }
             mapView.removeAnnotations(mapView.annotations)
             mapView.addAnnotation(placemark)
+            print("placemark", placemark as Any)
             
             let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
             let region = MKCoordinateRegion(center: placemark.coordinate, span: span)

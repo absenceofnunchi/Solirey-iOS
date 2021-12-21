@@ -143,6 +143,7 @@ extension ParentDetailViewController: UsernameBannerConfigurable {
         view.backgroundColor = .white
         scrollView = UIScrollView()
         scrollView.delegate = self
+        scrollView.keyboardDismissMode = .onDrag
         view.addSubview(scrollView)
         scrollView.fill()
         

@@ -26,17 +26,17 @@ extension ParentPostViewController {
 //            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
 //            return
 //        }
-        guard let convertedPrice = Double(price) else {
-            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0.01 ETH.", for: self)
+        guard let convertedPrice = Double(price), convertedPrice > 0 else {
+            self.alert.showDetail("Price Limist", with: "The price has to be greater than 0 ETH.", for: self)
             return
         }
         let deposit = convertedPrice * Double(2)
         let finalDeposit = NSDecimalNumber(value: deposit)
         
-        //        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
-        //            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
-        //            return
-        //        }
+        guard let shippingAddress = self.addressLabel.text, !shippingAddress.isEmpty else {
+            self.alert.showDetail("Incomplete", with: "Please select the shipping restrictions.", for: self)
+            return
+        }
         
         switch mintParameters.saleConfigValue {
             case .tangibleNewSaleInPersonEscrowIndividual, .tangibleNewSaleShippingEscrowIndividual:
