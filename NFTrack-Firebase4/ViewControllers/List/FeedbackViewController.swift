@@ -10,6 +10,11 @@ import UIKit
 class FeedbackViewController: ReportViewController {
     final var subjectTextField: UITextField!
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setNavItem()
+    }
+    
     final override func configure() {
         title = "Feedback"
         self.hideKeyboardWhenTappedAround()
@@ -167,5 +172,43 @@ class FeedbackViewController: ReportViewController {
                     }
                 )
             }
+    }
+    
+    func setNavItem() {
+        let infoImage = UIImage(systemName: "info.circle")
+        let rightBarButtonItem = UIBarButtonItem(image: infoImage, style: .plain, target: self, action: #selector(navItemPresssed))
+        navigationItem.rightBarButtonItem = rightBarButtonItem
+    }
+    
+    @objc func navItemPresssed() {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
+        let buttonInfoArr = [
+            ButtonInfo(title: "Visit Website", tag: 500, backgroundColor: .black)
+        ]
+        
+        let infoVC = InfoViewController(
+            infoModelArr: [InfoModel(title: "About", detail: InfoText.aboutInfo)],
+            buttonInfoArr: buttonInfoArr
+        )
+        
+        infoVC.buttonAction = { [weak self] tag in
+            switch tag {
+                case 500:
+                    self?.dismiss(animated: true, completion: {
+//                        guard let url = URL(string: "https://buroku.gatsbyjs.io/") else { return }
+//                        UIApplication.shared.open(url)
+                        
+                        let webVC = WebViewController()
+                        webVC.urlString = "https://buroku.gatsbyjs.io/"
+                        self?.navigationController?.pushViewController(webVC, animated: true)
+                    })
+                default:
+                    break
+            }
+        }
+        
+        self.present(infoVC, animated: true, completion: nil)
     }
 }

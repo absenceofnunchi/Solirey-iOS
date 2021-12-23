@@ -136,6 +136,9 @@ extension ReportViewController {
     }
     
     @objc func buttonPressed(_ sender: UIButton) {
+        let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        feedbackGenerator.impactOccurred()
+        
         guard let userId = userId else {
             self.alert.showDetail("User ID Error", with: "Please make sure you're logged in.", for: self)
             return

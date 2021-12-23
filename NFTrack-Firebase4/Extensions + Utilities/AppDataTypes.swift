@@ -1066,6 +1066,10 @@ struct InfoText {
     static let digitalDescription = """
     The description and the title are not modifiable for auctions once you deploy so please take time to create a descriptive message for the potential buyers!
     """
+    
+    static let aboutInfo = """
+    Solirey was created and owned by Jongwoo Choi.
+    """
 }
 
 // MARK: - SmartContractProperty
