@@ -678,45 +678,45 @@ class OnlineStatus {
 
 1. Progress view when listing an item on blockchain.
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/1.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/1.png)
 
 2. Main catogories for listings.
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/2.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/2.png)
 
 3. Item listing detail displaying the description, price, user detail, user listing history, user review, payment method, delivery method, etc. 
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/3.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/3.png)
 
 4. Account settings
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/4.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/4.png)
 
 5. Wallet interface
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/5.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/5.png)
 
 6. Chat between a buyer and seller. Shows the received status indicator as well as the online/offline indicator
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/6.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/6.png)
 
 7. Chat inbox interface. Trailing swipe shortcuts to recipient, post, report, delete, etc.
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/7.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/7.png)
 
 8. Quick Unique Identifier check provides the ability to check the existence of an identifier in Firestore without going through the listing process.
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/8.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/8.png)
 
 9. A seller is able to specify the shipping availability by location or distance
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/9.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/9.png)
 
 10. The auction detail of a listed item shows the relevant information needed for a bidder
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/10.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/10.png)
 
 11. A visual indicator of the status of a sale.  The circles are filled out as the stage progresses.
 
-![](https://github.com/igibliss00/Solirey-iOS/blob/master/ReadmeAssets/11.png)
+![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/11.png)
 
