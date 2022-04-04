@@ -551,26 +551,3 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
     }
 }
 
-// 2
-// 123456@email.com (mclovin)
-// 123456
-// a9420edb3ac5a4eaece8dfa7c5fdd37b0358d7a7d51b1579b5ae94be9cce0842
-
-// posting
-// 10
-// 99@email.com (tasmanian)
-// 111111
-// 650ab63c9923856efde6471bb1249df2e5b0995e7a84826f4374feb7ad605079
-
-// test@email.com (N/A)
-// 123456
-// a3bf8a54341153d2890ece27123ec51438b1a5fe014ea71da7ee2422567c74b6
-
-// 100@email.com (Tom Cruise)
-// 123456
-
-// 1004@email.com (Hari Sheldon)
-// 111111
-
-// 1632dcab6587b4e63dfbc718a2439e0819867419c20446f63d528139aacf6e98
-// 111111
