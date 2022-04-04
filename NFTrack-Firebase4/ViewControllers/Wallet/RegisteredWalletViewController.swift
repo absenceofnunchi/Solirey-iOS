@@ -551,3 +551,4 @@ extension RegisteredWalletViewController: UITextFieldDelegate {
     }
 }
 
+    
