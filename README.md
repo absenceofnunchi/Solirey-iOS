@@ -676,6 +676,10 @@ class OnlineStatus {
 
 ## Screetshots
 
+Click on the following video for a demo walkthrough.
+
+[![Walkthrough demo](https://github.com/igibliss00/readmetest/blob/master/ReadmeAssets/0.png)](https://www.youtube.com/watch?v=F3M_vtlCZo8)
+
 1. Progress view when listing an item on blockchain.
 
 ![](https://github.com/igibliss00/Solirey-iOS/blob/main/ReadmeAssets/1.png)
